@@ -36,7 +36,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // long multi-batch scans can continue when the browser backgrounds
 // the page. The worker is registered only on HTTPS/localhost.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.3';
+const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.4';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -664,12 +664,31 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.3';
+const APP_VERSION = 'v2.3.0-rc2e.4';
 const APP_VERSION_DATE = '2026-04-30';
-const APP_VERSION_NAME = 'Test site stability and timeline polish';
+const APP_VERSION_NAME = 'Delete sync signal and CPF eligibility';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 
 const CHANGELOG = [
+  {
+    version: 'v2.3.0-rc2e.4',
+    date: '2026-04-30',
+    name: 'Delete sync signal and CPF eligibility',
+    sections: [
+      {
+        heading: 'Drive sync',
+        items: [
+          'Client deletion now sets a short-lived header sync pill state so Drive Trash success or queued trash is visible even after switching clients or refreshing.'
+        ]
+      },
+      {
+        heading: 'Profile rules',
+        items: [
+          'Foreigner profiles are no longer shown CPF LIFE controls, CPF LIFE timeline milestones, or CPF LIFE retirement income projections.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.3.0-rc2e.3',
     date: '2026-04-30',
@@ -5546,6 +5565,11 @@ function inferUploadIntent(files) {
   return { intent:'policy', confidence:'low', reason:'Defaulting to policy extraction' };
 }
 
+function isCpfEligibleProfile(profile = {}) {
+  const nationality = String(profile?.nationality || '').trim().toLowerCase();
+  return nationality !== 'foreigner';
+}
+
 function buildPolicyLifecycleEvents(policies, clientProfile = {}, opts = {}) {
   const active = (policies || []).filter(pol => !['matured','surrendered','lapsed'].includes(pol?.status));
   const currentAge = opts.age ?? getProfileAge(clientProfile) ?? 35;
@@ -5617,7 +5641,7 @@ function buildPolicyLifecycleEvents(policies, clientProfile = {}, opts = {}) {
     events.push({ year: nowYear + (retAge - currentAge), age: retAge, kind:'retirement', label:'Planned retirement age', subLabel:'Review income readiness', policyName:'Retirement', insurer:'', tone:'gold' });
   }
   const cpfStart = parseInt(clientProfile?.cpfStartAge || 65);
-  if (cpfStart && cpfStart >= currentAge && cpfStart - currentAge <= horizonYears) {
+  if (isCpfEligibleProfile(clientProfile) && cpfStart && cpfStart >= currentAge && cpfStart - currentAge <= horizonYears) {
     events.push({ year: nowYear + (cpfStart - currentAge), age: cpfStart, kind:'cpf_life', label:'CPF LIFE payout age', subLabel:'Confirm scheme and payout estimate', policyName:'CPF LIFE', insurer:'CPF', tone:'teal' });
   }
   const seen = new Set();
@@ -11774,11 +11798,45 @@ let _driveSyncInFlight = false;
 let _driveSyncJustSaved = false;
 let _driveLastFocusRefreshAt = 0;
 const LOCAL_DRIVE_WRITE_HOLD_MS = 15000;
+const CLIENT_DELETE_SYNC_STATUS_KEY = 'policylens_recent_client_delete_sync_status';
+const CLIENT_DELETE_SYNC_STATUS_TTL_MS = 10 * 60 * 1000;
 const _localDriveWriteHolds = new Map();
 // v2.3.0-rc2c.4f: Per-client throttle for refreshClientFromDrive (5s)
 const _lastRefreshTimes = new Map();
 function _notifySyncStatus() {
   window.dispatchEvent(new Event('policylens-sync-status-change'));
+}
+
+function setRecentClientDeleteSyncStatus(ds = {}, status = 'synced') {
+  try {
+    const payload = {
+      status,
+      clientId: ds.clientId || null,
+      clientName: ds.clientName || '',
+      at: new Date().toISOString(),
+      deviceName: getPolicyLensDeviceName(),
+    };
+    localStorage.setItem(CLIENT_DELETE_SYNC_STATUS_KEY, JSON.stringify(payload));
+    _notifySyncStatus();
+    setTimeout(_notifySyncStatus, CLIENT_DELETE_SYNC_STATUS_TTL_MS + 500);
+  } catch(_) {}
+}
+
+function getRecentClientDeleteSyncStatus() {
+  try {
+    const raw = localStorage.getItem(CLIENT_DELETE_SYNC_STATUS_KEY);
+    if (!raw) return null;
+    const payload = JSON.parse(raw);
+    const at = Date.parse(payload?.at || '');
+    if (!Number.isFinite(at) || Date.now() - at > CLIENT_DELETE_SYNC_STATUS_TTL_MS) {
+      localStorage.removeItem(CLIENT_DELETE_SYNC_STATUS_KEY);
+      return null;
+    }
+    return payload;
+  } catch(_) {
+    try { localStorage.removeItem(CLIENT_DELETE_SYNC_STATUS_KEY); } catch(_) {}
+    return null;
+  }
 }
 
 const POLICYLENS_ACTIVITY_LIMIT = 40;
@@ -11972,6 +12030,7 @@ async function queueClientTrashRequest(ds, reason) {
   );
   next.push(entry);
   await PolicyDB.saveSetting(PENDING_CLIENT_TRASH_KEY, next).catch(() => {});
+  setRecentClientDeleteSyncStatus(entry, 'queued');
   _notifySyncStatus();
   return true;
 }
@@ -11995,6 +12054,7 @@ async function flushPendingClientTrashQueue() {
         continue;
       }
       trashed++;
+      setRecentClientDeleteSyncStatus(item, 'synced');
       console.log('[ClientTrashQueue] Trashed queued client:', item.clientName || item.clientId || item.folderId || item.fileId);
     } catch (err) {
       console.warn('[ClientTrashQueue] Could not trash queued client yet:', item.clientName || item.clientId || '', err?.message || err);
@@ -17014,7 +17074,12 @@ function App() {
     await recordClientTrashTombstone(ds, 'client-destroy').catch(() => {});
     let clientTrashed = false;
     if (!isDriveLocalOnly() && getDriveStatus() === 'connected' && ds.folderId) {
-      try { await driveClient.trashFolder(ds.folderId); clientTrashed = true; } catch(e) { console.warn('[Destroy] Trash failed:', e.message); }
+      setRecentClientDeleteSyncStatus(ds, 'syncing');
+      try {
+        await driveClient.trashFolder(ds.folderId);
+        clientTrashed = true;
+        setRecentClientDeleteSyncStatus(ds, 'synced');
+      } catch(e) { console.warn('[Destroy] Trash failed:', e.message); }
     }
     if (!clientTrashed) await queueClientTrashRequest(ds, 'client-destroy').catch(() => {});
     await dbDel('drive_state', targetId);
@@ -17489,7 +17554,7 @@ function PresentMode() {
       const dividends = rc.policyDividends || 0;
       retData = {
         desired: rc.desiredMonthly || 0,
-        cpf: rc.cpfPayout?.mid || 0,
+        cpf: rc.cpfEligible === false ? 0 : (rc.cpfPayout?.mid || 0),
         annuity,
         dividends,
         policy: annuity + dividends,
@@ -18614,6 +18679,10 @@ function SyncStatusPill({ driveState }) {
     const iv = setInterval(h, 10000);
     return () => { window.removeEventListener('policylens-sync-status-change', h); clearInterval(iv); };
   }, []);
+  const deleteSyncStatus = getRecentClientDeleteSyncStatus();
+  const deleteSyncLabel = deleteSyncStatus
+    ? (deleteSyncStatus.status === 'syncing' ? 'Deleting from Drive' : deleteSyncStatus.status === 'queued' ? 'Delete queued for Drive' : 'Client deleted from Drive')
+    : '';
   useEffect(() => {
     let live = true;
     const clientId = driveState?.clientId;
@@ -18630,9 +18699,14 @@ function SyncStatusPill({ driveState }) {
   }, [driveState?.clientId]);
   // v2.3.0-rc2c.5o: Show minimal sync feedback on mobile (was: return null hiding all indication)
   if (isMobile) {
-    if (!driveState || getDriveStatus() !== 'connected' || isDriveLocalOnly()) return null;
-    const saving = _driveSyncInFlight || _driveSyncTimer !== null || driveState.pendingWrite;
-    if (driveState.pendingError) {
+    if ((!driveState && !deleteSyncStatus) || getDriveStatus() !== 'connected' || isDriveLocalOnly()) return null;
+    const saving = _driveSyncInFlight || _driveSyncTimer !== null || driveState?.pendingWrite;
+    if (deleteSyncStatus && !saving) {
+      return React.createElement('span', {
+        style: {fontSize:9,color:deleteSyncStatus.status === 'queued' ? 'var(--gold)' : 'var(--teal)',whiteSpace:'nowrap',flexShrink:0,padding:'0 4px'}
+      }, deleteSyncStatus.status === 'queued' ? 'Delete queued' : 'Delete synced');
+    }
+    if (driveState?.pendingError) {
       return React.createElement('span', {
         title: driveState.pendingError,
         style: {fontSize:9,color:'var(--red)',whiteSpace:'nowrap',flexShrink:0,padding:'0 4px'}
@@ -18643,8 +18717,8 @@ function SyncStatusPill({ driveState }) {
       style: {fontSize:9,color:saving?'var(--gold)':'var(--teal)',whiteSpace:'nowrap',flexShrink:0,padding:'0 4px'}
     }, saving ? (_driveSyncInFlight ? 'Uploading' : 'Queued') : 'Synced');
   }
-  if (!driveState || getDriveStatus() !== 'connected' || isDriveLocalOnly()) return null;
-  const isSaving = _driveSyncInFlight || _driveSyncTimer !== null || driveState.pendingWrite;
+  if ((!driveState && !deleteSyncStatus) || getDriveStatus() !== 'connected' || isDriveLocalOnly()) return null;
+  const isSaving = _driveSyncInFlight || _driveSyncTimer !== null || driveState?.pendingWrite;
   const ageLabel = (ts) => {
     if (!ts) return '';
     const diff = Date.now() - new Date(ts).getTime();
@@ -18661,21 +18735,27 @@ function SyncStatusPill({ driveState }) {
   let bg = 'var(--bg3)';
   let border = 'var(--border)';
   let title = 'Sync activity';
-  if (driveState.pendingError) {
+  if (driveState?.pendingError) {
     label = 'Sync retry needed';
     color = 'var(--red)';
     bg = 'var(--red-dim)';
     border = 'rgba(239,83,80,.25)';
     title = driveState.pendingError;
+  } else if (deleteSyncStatus) {
+    label = deleteSyncLabel;
+    color = deleteSyncStatus.status === 'queued' || deleteSyncStatus.status === 'syncing' ? 'var(--gold)' : 'var(--teal)';
+    bg = deleteSyncStatus.status === 'synced' ? 'rgba(91,168,160,.10)' : 'rgba(212,169,106,.10)';
+    border = deleteSyncStatus.status === 'synced' ? 'rgba(91,168,160,.24)' : 'rgba(212,169,106,.24)';
+    title = (deleteSyncStatus.clientName || 'Client') + (deleteSyncStatus.status === 'queued' ? ' is queued for Drive Trash' : deleteSyncStatus.status === 'syncing' ? ' is being moved to Drive Trash' : ' was moved to Drive Trash') + ' at ' + new Date(deleteSyncStatus.at).toLocaleString();
   } else if (_driveSyncInFlight) {
     label = 'Uploading to Drive';
     color = 'var(--gold)';
     title = 'Drive upload in progress';
-  } else if (_driveSyncTimer !== null || driveState.pendingWrite) {
+  } else if (_driveSyncTimer !== null || driveState?.pendingWrite) {
     label = 'Queued locally';
     color = 'var(--gold)';
     title = 'Changes are saved locally and queued for Drive';
-  } else if (driveState.lastSyncedAt) {
+  } else if (driveState?.lastSyncedAt) {
     label = 'Synced ' + ageLabel(driveState.lastSyncedAt);
     if (driveState.lastSyncDeviceName && driveState.lastSyncDeviceName !== getPolicyLensDeviceName()) {
       label += ' from ' + driveState.lastSyncDeviceName;
@@ -18698,7 +18778,7 @@ function SyncStatusPill({ driveState }) {
             <div style={{fontSize:11,fontWeight:800,color:'var(--text2)'}}>Sync Activity</div>
             <button onClick={()=>setOpen(false)} style={{background:'transparent',border:'none',color:'var(--text3)',fontSize:14,cursor:'pointer'}}>x</button>
           </div>
-          {driveState.pendingError && <div style={{fontSize:10,color:'var(--red)',background:'rgba(239,83,80,.08)',border:'1px solid rgba(239,83,80,.2)',borderRadius:7,padding:7,marginBottom:8}}>{driveState.pendingError}</div>}
+          {driveState?.pendingError && <div style={{fontSize:10,color:'var(--red)',background:'rgba(239,83,80,.08)',border:'1px solid rgba(239,83,80,.2)',borderRadius:7,padding:7,marginBottom:8}}>{driveState.pendingError}</div>}
           {(activity || []).slice(0, 7).length === 0 ? (
             <div style={{fontSize:10,color:'var(--text3)',padding:'8px 2px'}}>No recent activity yet.</div>
           ) : (activity || []).slice(0, 7).map(row => {
@@ -23814,6 +23894,7 @@ function ProfileTab() {
   // uses of `age` that predated the DOB/age-mode refactor — keeping the
   // alias is safer than rewriting each call site individually.
   const age = computedAge;
+  const cpfEligible = isCpfEligibleProfile(p);
   // ── AGE INPUT MODE ── EXPLICIT UI STATE (2026-04-09)
   // Must be a controlled useState, NOT derived from profile data.
   // Earlier implementation derived it from getProfileAgeSource(p),
@@ -24076,6 +24157,7 @@ function ProfileTab() {
 
         {/* CPF LIFE & Retirement Income */}
         <div className="resp-2col" style={{marginTop:12,gap:16}}>
+          {cpfEligible && (
           <div style={{background:'var(--bg3)',borderRadius:8,padding:12,border:'1px solid rgba(91,168,160,.2)'}}>
             <div style={{fontSize:10,fontWeight:700,color:'var(--green2)',textTransform:'uppercase',letterSpacing:'.5px',marginBottom:8}}>CPF LIFE Projection</div>
 
@@ -24279,7 +24361,8 @@ function ProfileTab() {
               )}
             </>)}
           </div>
-          <div style={{background:'var(--bg3)',borderRadius:8,padding:12,border:'1px solid rgba(157,138,191,.2)'}}>
+          )}
+          <div style={{background:'var(--bg3)',borderRadius:8,padding:12,border:'1px solid rgba(157,138,191,.2)',gridColumn:cpfEligible?'auto':'1 / -1'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
               <div style={{fontSize:10,fontWeight:700,color:'#9d8abf',textTransform:'uppercase',letterSpacing:'.5px'}}>Other Retirement Income</div>
               <button className="btn-secondary btn-sm" onClick={()=>set('otherRetIncome',[...(p.otherRetIncome||[]),{id:'ori_'+Date.now(),source:'',amount:'',appreciation:'2',fromAge:'65',toAge:'85'}])} style={{fontSize:9,padding:'2px 8px'}}>+ Add</button>
@@ -24402,9 +24485,9 @@ const RetirementLiteDashboard = memo(function RetirementLiteDashboard({data,age,
   const chartInst = useRef(null);
   const [shareMode,setShareMode] = useState(false);
 
-  const {desiredMonthly,cpfPayout,policyMonthlyIncome,policyDividends,lumpSum,otherMonthly,otherSources,timeline,cpfScheme,cpfStartAge} = data;
+  const {desiredMonthly,cpfEligible=true,cpfPayout,policyMonthlyIncome,policyDividends,lumpSum,otherMonthly,otherSources,timeline,cpfScheme,cpfStartAge} = data;
 
-  const totalAtRet = (cpfScheme!=='none'?cpfPayout.mid:0) + policyMonthlyIncome + policyDividends + otherMonthly;
+  const totalAtRet = (cpfEligible && cpfScheme!=='none'?cpfPayout.mid:0) + policyMonthlyIncome + policyDividends + otherMonthly;
   const gap = Math.max(0, desiredMonthly - totalAtRet);
   const coveragePct = desiredMonthly > 0 ? Math.min(100, Math.round(totalAtRet/desiredMonthly*100)) : 0;
   const yearsFromLump = gap > 0 && lumpSum > 0 ? Math.round(lumpSum / (gap * 12)) : 0;
@@ -24419,7 +24502,7 @@ const RetirementLiteDashboard = memo(function RetirementLiteDashboard({data,age,
       data:{
         labels:filtered.map(r=>r.age),
         datasets:[
-          {label:'CPF LIFE',data:filtered.map(r=>r.cpf),backgroundColor:'rgba(91,168,160,.7)',borderRadius:2,stack:'income'},
+          ...(cpfEligible ? [{label:'CPF LIFE',data:filtered.map(r=>r.cpf),backgroundColor:'rgba(91,168,160,.7)',borderRadius:2,stack:'income'}] : []),
           {label:'Policy Income',data:filtered.map(r=>r.policy),backgroundColor:'rgba(212,169,106,.7)',borderRadius:2,stack:'income'},
           {label:'Dividends',data:filtered.map(r=>r.dividends),backgroundColor:'rgba(157,138,191,.7)',borderRadius:2,stack:'income'},
           {label:'Other Income',data:filtered.map(r=>r.other),backgroundColor:'rgba(91,143,217,.5)',borderRadius:2,stack:'income'},
@@ -24436,7 +24519,7 @@ const RetirementLiteDashboard = memo(function RetirementLiteDashboard({data,age,
       }
     });
     return ()=>{if(chartInst.current)chartInst.current.destroy()};
-  },[timeline,retAge]);
+  },[timeline,retAge,cpfEligible]);
 
   // ── SHARE VIEW GENERATOR — Full condensed dashboard ──
   const generateShareView = () => {
@@ -24601,7 +24684,7 @@ ${premByMode.cash>0?'Cash: $'+Math.round(premByMode.cash).toLocaleString()+'/yr<
 <div class="section">🏖 Retirement Income at Age ${retAge}</div>
 <div class="card" style="margin-bottom:12px">
 <div style="font-size:10px;color:#a39580;margin-bottom:8px">Target: $${desiredMonthly.toLocaleString()}/mth (today's $${Math.round(data.baseDesired||desiredMonthly).toLocaleString()} + ${inflRate}% inflation × ${Math.max(0,retAge-(age||35))}yr)</div>
-${cpfScheme!=='none'?`<div class="row"><div style="display:flex;align-items:center;gap:6px"><span class="dot" style="background:#5ba8a0"></span>CPF LIFE (${cpfScheme} ${p.cpfPlan||'standard'})</div><div class="g" style="font-weight:600">$${cpfPayout.mid.toLocaleString()}</div></div>`:''}
+${cpfEligible&&cpfScheme!=='none'?`<div class="row"><div style="display:flex;align-items:center;gap:6px"><span class="dot" style="background:#5ba8a0"></span>CPF LIFE (${cpfScheme} ${p.cpfPlan||'standard'})</div><div class="g" style="font-weight:600">$${cpfPayout.mid.toLocaleString()}</div></div>`:''}
 ${policyMonthlyIncome>0?`<div class="row"><div style="display:flex;align-items:center;gap:6px"><span class="dot" style="background:#d4a96a"></span>Policy Income</div><div class="gd" style="font-weight:600">$${policyMonthlyIncome.toLocaleString()}</div></div>`:''}
 ${policyDividends>0?`<div class="row"><div style="display:flex;align-items:center;gap:6px"><span class="dot" style="background:#9d8abf"></span>Dividends</div><div class="p" style="font-weight:600">$${policyDividends.toLocaleString()}</div></div>`:''}
 ${otherSources.filter(s=>s.active).map(s=>`<div class="row"><div style="display:flex;align-items:center;gap:6px"><span class="dot" style="background:#5b8fd9"></span>${s.source||'Other'}</div><div class="b" style="font-weight:600">$${s.adjustedAmt.toLocaleString()}</div></div>`).join('')}
@@ -24646,7 +24729,7 @@ ${p.name?'Prepared for '+p.name+' by their financial consultant':''}
 </div>
 <script>
 new Chart(document.getElementById('retChart'),{type:'bar',data:{labels:${JSON.stringify(waterfallData.map(r=>r.age))},datasets:[
-{label:'CPF LIFE',data:${JSON.stringify(waterfallData.map(r=>r.cpf))},backgroundColor:'rgba(91,168,160,.7)',stack:'s',borderRadius:1},
+${cpfEligible?`{label:'CPF LIFE',data:${JSON.stringify(waterfallData.map(r=>r.cpf))},backgroundColor:'rgba(91,168,160,.7)',stack:'s',borderRadius:1},`:''}
 {label:'Policy',data:${JSON.stringify(waterfallData.map(r=>r.policy))},backgroundColor:'rgba(212,169,106,.7)',stack:'s',borderRadius:1},
 {label:'Dividends',data:${JSON.stringify(waterfallData.map(r=>r.dividends))},backgroundColor:'rgba(157,138,191,.7)',stack:'s',borderRadius:1},
 {label:'Other',data:${JSON.stringify(waterfallData.map(r=>r.other))},backgroundColor:'rgba(91,143,217,.5)',stack:'s',borderRadius:1},
@@ -24672,7 +24755,7 @@ new Chart(document.getElementById('retChart'),{type:'bar',data:{labels:${JSON.st
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:12,flexWrap:'wrap',gap:6}}>
         <div>
           <h3 style={{fontSize:14,fontWeight:600}}>Retirement Income Dashboard</h3>
-          <p style={{fontSize:10,color:'var(--text3)'}}>CPF LIFE + policy income + other sources vs desired lifestyle</p>
+          <p style={{fontSize:10,color:'var(--text3)'}}>{cpfEligible ? 'CPF LIFE + policy income + other sources vs desired lifestyle' : 'Policy income + other sources vs desired lifestyle'}</p>
         </div>
         <div style={{display:'flex',gap:6,flexShrink:0}}>
           <button className="btn-secondary btn-sm" data-action="preview" onClick={()=>setShareMode(!shareMode)} style={{fontSize:10}}>{shareMode?'Hide':'👁 Preview'}</button>
@@ -24687,11 +24770,11 @@ new Chart(document.getElementById('retChart'),{type:'bar',data:{labels:${JSON.st
           <div style={{fontSize:16,fontWeight:700}}>${desiredMonthly.toLocaleString()}</div>
           <div style={{fontSize:8,color:'var(--text3)'}}>per month</div>
         </div>
-        <div style={{background:'var(--bg3)',borderRadius:8,padding:'8px 10px',textAlign:'center'}}>
+        {cpfEligible && <div style={{background:'var(--bg3)',borderRadius:8,padding:'8px 10px',textAlign:'center'}}>
           <div style={{fontSize:8,color:'var(--green2)',textTransform:'uppercase',fontWeight:600}}>CPF LIFE</div>
           <div style={{fontSize:16,fontWeight:700,color:'var(--green2)'}}>${cpfScheme!=='none'?cpfPayout.mid.toLocaleString():'—'}</div>
           <div style={{fontSize:8,color:'var(--text3)'}}>{cpfScheme!=='none'?cpfScheme+' from '+cpfStartAge:'Not set'}</div>
-        </div>
+        </div>}
         <div style={{background:'var(--bg3)',borderRadius:8,padding:'8px 10px',textAlign:'center'}}>
           <div style={{fontSize:8,color:'var(--gold)',textTransform:'uppercase',fontWeight:600}}>Policy Income</div>
           <div style={{fontSize:16,fontWeight:700,color:'var(--gold)'}}>${(policyMonthlyIncome+policyDividends).toLocaleString()}</div>
@@ -24719,7 +24802,7 @@ new Chart(document.getElementById('retChart'),{type:'bar',data:{labels:${JSON.st
         {/* ── INCOME BREAKDOWN ── */}
         <div style={{background:'var(--bg3)',borderRadius:8,padding:12}}>
           <div style={{fontSize:11,fontWeight:600,marginBottom:8}}>At Age {retAge}</div>
-          {cpfScheme!=='none' && (
+          {cpfEligible && cpfScheme!=='none' && (
             <div style={{display:'flex',justifyContent:'space-between',padding:'5px 0',borderBottom:'1px solid var(--border)',fontSize:11}}>
               <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:8,height:8,borderRadius:'50%',background:'#5ba8a0'}}></span> CPF LIFE</span>
               <span style={{fontWeight:600,color:'var(--green2)'}}>${cpfPayout.mid.toLocaleString()}</span>
@@ -25525,12 +25608,13 @@ function Dashboard() {
     const inflationRate = getInflationPct(p, houseDefaults.inflationRate) / 100; // v2.0.3
     const yearsToRet = Math.max(0, retAge - (age||35));
     const desiredMonthly = Math.round(baseDesired * Math.pow(1 + inflationRate, yearsToRet));
-    const cpfScheme = p.cpfScheme || houseDefaults.cpfScheme;
+    const cpfEligible = isCpfEligibleProfile(p);
+    const cpfScheme = cpfEligible ? (p.cpfScheme || houseDefaults.cpfScheme) : 'none';
     const cpfPlan = p.cpfPlan || houseDefaults.cpfPlan;
     const cpfStartAge = parseInt(p.cpfStartAge) || houseDefaults.cpfStartAge;
     // Age-aware CPF LIFE payout
     let cpfPayout = {low:0, mid:0, high:0};
-    if(cpfScheme !== 'none') {
+    if(cpfEligible && cpfScheme !== 'none') {
       // ── Bug #9 fix: clients already in payout phase ──
       // If the client is already drawing CPF Life and has told us their
       // actual monthly payout, use that directly. The estimation chain
@@ -25578,7 +25662,7 @@ function Dashboard() {
       const yrInflation = Math.pow(1 + inflationRate, yr - (age||35));
       const desiredAtYr = Math.round(baseDesired * yrInflation);
       const row = {age:yr, cpf:0, policy:0, dividends:0, other:0, total:0, desired:desiredAtYr};
-      if(yr >= cpfStartAge && cpfScheme !== 'none') {
+      if(cpfEligible && yr >= cpfStartAge && cpfScheme !== 'none') {
         row.cpf = cpfPlan === 'escalating' ? Math.round(cpfPayout.mid * Math.pow(1.02, yr - cpfStartAge)) : cpfPayout.mid;
       }
       const cvRow = cvTimeline.find(r => r.age === yr);
@@ -25592,7 +25676,7 @@ function Dashboard() {
       row.total = row.cpf + row.policy + row.dividends + row.other;
       timeline.push(row);
     }
-    return { desiredMonthly, baseDesired, inflationRate: inflationRate*100, cpfPayout, policyMonthlyIncome, policyDividends, lumpSum, otherMonthly, otherSources, timeline, cpfScheme, cpfStartAge };
+    return { desiredMonthly, baseDesired, inflationRate: inflationRate*100, cpfEligible, cpfPayout, policyMonthlyIncome, policyDividends, lumpSum, otherMonthly, otherSources, timeline, cpfScheme, cpfStartAge };
   }, [p, cvTimeline, retAge, age, monthlyIncome]);
 
   // ── PUBLISH TO WINDOW CACHE ──
@@ -37887,14 +37971,16 @@ function ReportTab() {
       // dashboard since loading the app, or hasn't entered profile data),
       // the chart cell shows a friendly placeholder instead of crashing.
       let retTimeline = [];
+      let retCpfEligible = true;
       try {
         if(typeof window !== 'undefined' && window.__retirementLiteCache && Array.isArray(window.__retirementLiteCache.timeline)) {
           retTimeline = window.__retirementLiteCache.timeline;
+          retCpfEligible = window.__retirementLiteCache.cpfEligible !== false;
         }
       } catch(e) { console.warn('[Visual PDF] retirementLite cache read failed:', e); }
       const retFiltered = retTimeline.filter(r => r && r.age >= Math.max(55, retAge-2) && r.age <= 90);
       const retLabels = retFiltered.map(r => r.age);
-      const retCpfData = retFiltered.map(r => r.cpf || 0);
+      const retCpfData = retCpfEligible ? retFiltered.map(r => r.cpf || 0) : [];
       const retPolicyData = retFiltered.map(r => r.policy || 0);
       const retDividendsData = retFiltered.map(r => r.dividends || 0);
       const retOtherData = retFiltered.map(r => r.other || 0);
@@ -37926,7 +38012,7 @@ function ReportTab() {
           data:{
             labels:retLabels,
             datasets:[
-              {label:'CPF LIFE',     data:retCpfData,       backgroundColor:'rgba(91,168,160,0.85)',  borderRadius:2, stack:'income'},
+              ...(retCpfEligible ? [{label:'CPF LIFE',     data:retCpfData,       backgroundColor:'rgba(91,168,160,0.85)',  borderRadius:2, stack:'income'}] : []),
               {label:'Policy',       data:retPolicyData,    backgroundColor:'rgba(212,169,106,0.85)', borderRadius:2, stack:'income'},
               {label:'Dividends',    data:retDividendsData, backgroundColor:'rgba(157,138,191,0.85)', borderRadius:2, stack:'income'},
               {label:'Other',        data:retOtherData,     backgroundColor:'rgba(91,143,217,0.65)',  borderRadius:2, stack:'income'},
