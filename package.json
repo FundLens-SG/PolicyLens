@@ -1,6 +1,7 @@
 {
   "private": true,
   "scripts": {
+    "build:precompile": "node tools/precompile-index.mjs",
     "test:golden": "node tools/golden-family-routing-harness.mjs",
     "split:preview": "node tools/extract-index-modules.mjs --list"
   }

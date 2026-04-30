@@ -1,9 +1,10 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const indexPath = path.join(rootDir, 'index.html');
+const sourcePath = path.join(rootDir, 'src', 'index.babel.html');
+const indexPath = existsSync(sourcePath) ? sourcePath : path.join(rootDir, 'index.html');
 const indexHtml = readFileSync(indexPath, 'utf8');
 const args = new Set(process.argv.slice(2));
 
@@ -48,7 +49,7 @@ function findModules() {
 const modules = findModules();
 
 if (!modules.length) {
-  console.error('No // MODULE: markers found in index.html');
+  console.error(`No // MODULE: markers found in ${path.relative(rootDir, indexPath)}`);
   process.exit(1);
 }
 
@@ -57,8 +58,8 @@ if (args.has('--write')) {
   mkdirSync(outDir, { recursive: true });
   for (const mod of modules) {
     const header = [
-      '// Generated preview fragment from index.html.',
-      '// Canonical deploy source is still the repository root index.html; do not edit generated fragments directly.',
+      `// Generated preview fragment from ${path.relative(rootDir, indexPath).replace(/\\/g, '/')}.`,
+      '// Canonical source is src/index.babel.html; do not edit generated fragments directly.',
       ''
     ].join('\n');
     writeFileSync(path.join(outDir, mod.fileName), header + mod.source, 'utf8');
@@ -71,5 +72,5 @@ if (args.has('--write')) {
       `${String(mod.index + 1).padStart(2, '0')}  ${mod.name.padEnd(maxName)}  line ${String(mod.line).padStart(5)}  ${String(mod.lineCount).padStart(5)} lines`
     );
   }
-  console.log(`\n${modules.length} module boundaries found. Use --write to generate preview fragments under src/generated/.`);
+  console.log(`\n${modules.length} module boundaries found in ${path.relative(rootDir, indexPath)}. Use --write to generate preview fragments under src/generated/.`);
 }

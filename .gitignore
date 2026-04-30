@@ -11,3 +11,4 @@ documentai-service-account*.json*
 # Local Codex/Claude working artifacts.
 AGENTS.md
 rc*_diff.txt
+tools/.cache/
