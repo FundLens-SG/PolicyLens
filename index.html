@@ -36,7 +36,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // long multi-batch scans can continue when the browser backgrounds
 // the page. The worker is registered only on HTTPS/localhost.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.4';
+const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.5';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -664,12 +664,40 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.4';
+const APP_VERSION = 'v2.3.0-rc2e.5';
 const APP_VERSION_DATE = '2026-04-30';
-const APP_VERSION_NAME = 'Delete sync signal and CPF eligibility';
+const APP_VERSION_NAME = 'AI review and policy summary pilot';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 
 const CHANGELOG = [
+  {
+    version: 'v2.3.0-rc2e.5',
+    date: '2026-04-30',
+    name: 'AI review and policy summary pilot',
+    sections: [
+      {
+        heading: 'Dashboard',
+        items: [
+          'Policy Summary now starts with five concise advisor KPIs: active policies, annual premium, total protection, projected policy income, and review alerts.',
+          'Added four compact protection bars for Death/TPD, CI, Hospital, and Disability Income, plus a small retirement outlook strip and three next advisor actions.'
+        ]
+      },
+      {
+        heading: 'AI review',
+        items: [
+          'Extraction now asks the AI to triage documents before reading them: policy schedule, benefit illustration, rider, CPF/statement, profile document, duplicate, or unknown.',
+          'Imported candidates now carry policy fingerprints built from insurer, policy number, owner, life assured, premium, and source-page evidence.',
+          'Bulk Verify now includes an "AI found these policies" review table with confidence, triage type, fingerprint anchors, and one-click accept or merge actions.'
+        ]
+      },
+      {
+        heading: 'Learning loop',
+        items: [
+          'Correction memory now records document type, source evidence, and fingerprint context so recurring product aliases, insurer layout patterns, and OCR mistakes can be learned locally.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.3.0-rc2e.4',
     date: '2026-04-30',
@@ -3280,6 +3308,137 @@ function buildPolicyPageFingerprint(policy, meta = {}) {
   };
 }
 
+const DOCUMENT_TRIAGE_META = {
+  policy_schedule: { label:'Policy schedule', tone:'var(--teal)' },
+  benefit_illustration: { label:'BI / values', tone:'var(--gold)' },
+  rider: { label:'Rider', tone:'var(--blue2)' },
+  cpf_statement: { label:'CPF / statement', tone:'var(--teal)' },
+  portfolio_statement: { label:'Portfolio statement', tone:'var(--gold)' },
+  profile_doc: { label:'Profile doc', tone:'var(--text3)' },
+  duplicate: { label:'Possible duplicate', tone:'var(--red)' },
+  unknown: { label:'Unknown source', tone:'var(--text3)' },
+};
+
+function compactLocalHash(str) {
+  let h = 2166136261;
+  const s = String(str || '');
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(36);
+}
+
+function normalizeDocumentTriageType(raw) {
+  const key = normalizeTextKey(raw).replace(/\s+/g, '_');
+  if (!key) return '';
+  if (/benefit|illustration|values|bi/.test(key)) return 'benefit_illustration';
+  if (/rider|supplementary|waiver/.test(key)) return 'rider';
+  if (/cpf|cpfis|cpf_life|ordinary_account|special_account|medisave|srs/.test(key)) return 'cpf_statement';
+  if (/portfolio|sgfindex|statement|holdings|fund|platform/.test(key)) return 'portfolio_statement';
+  if (/profile|fact_find|application|nric|dependant|contact/.test(key)) return 'profile_doc';
+  if (/duplicate|same_policy/.test(key)) return 'duplicate';
+  if (/schedule|policy_summary|contract|particular/.test(key)) return 'policy_schedule';
+  if (DOCUMENT_TRIAGE_META[key]) return key;
+  return 'unknown';
+}
+
+function policyFingerprintEvidenceParts(policy = {}) {
+  const parts = [
+    policy.sourceImage, policy._sourceImage, policy.sourcePage, policy._sourcePage,
+    policy.documentTitle, policy._documentTitle, policy.tableType, policy.extractionNotes
+  ];
+  const evidence = policy._fieldEvidence || {};
+  Object.entries(evidence).forEach(([field, ev]) => {
+    if (!ev) return;
+    if (['policyNumber','policyOwner','lifeInsured','premiumAmount','annualPremium','sumAssured'].includes(field)) {
+      parts.push([field, ev.value, ev.sourceText, ev.page, ev.sourceImage].filter(Boolean).join(' '));
+    }
+  });
+  if (Array.isArray(policy.fieldEvidence)) {
+    policy.fieldEvidence.forEach(ev => {
+      if (ev) parts.push([ev.field, ev.valueText, ev.sourceText, ev.page, ev.sourceImage].filter(Boolean).join(' '));
+    });
+  }
+  return parts.map(v => String(v || '').trim()).filter(Boolean);
+}
+
+function buildPolicyIdentityFingerprint(policy = {}) {
+  const evidenceParts = policyFingerprintEvidenceParts(policy);
+  const insurer = normalizeCompactKey(policy.insurer);
+  const policyNumber = normalizePolicyKey(policy.policyNumber);
+  const owner = normalizePersonNameKey(policy.policyOwner || policy.documentOwner);
+  const lifeAssured = normalizePersonNameKey(policy.lifeInsured);
+  const premium = moneyNumber(policy.premiumAmount ?? policy.annualPremium);
+  const product = normalizeCompactKey(policy.productName || policy.policyName || policy.subType);
+  const sourceEvidence = evidenceParts.slice(0, 4);
+  const sourceHash = compactLocalHash(sourceEvidence.join('|') || [policy.sourcePage, policy.sourceImage, policy.documentTitle].filter(Boolean).join('|'));
+  const anchors = { insurer, policyNumber, owner, lifeAssured, premium: premium ? Math.round(premium) : 0, product, sourceHash };
+  const anchorId = [insurer, policyNumber || product, owner || lifeAssured, premium ? Math.round(premium) : '', sourceHash].filter(Boolean).join('|');
+  const anchorCount = [insurer, policyNumber, owner || lifeAssured, premium].filter(Boolean).length;
+  const confidence = policyNumber && insurer ? 'high' : anchorCount >= 3 ? 'medium' : 'low';
+  const label = [
+    policy.insurer || 'Unknown insurer',
+    policy.policyNumber ? '#' + policy.policyNumber : (policy.productName || policy.policyName || 'No policy number'),
+    policy.policyOwner || policy.lifeInsured || ''
+  ].filter(Boolean).join(' - ');
+  return { id: anchorId || sourceHash, label, confidence, anchors, sourceEvidence };
+}
+
+function classifyPolicyDocumentTriage(policy = {}, existingPolicies = []) {
+  const explicit = normalizeDocumentTriageType(policy.documentType);
+  const hay = normalizeTextKey([
+    policy.documentType, policy.documentTitle, policy.tableType, policy.extractionNotes,
+    policy.notes, policy.userRemarks, policy.productName, policy.policyName, policy.subType,
+    policy.sourceImage, policy.sourcePage, policy._fieldEvidence?.policyNumber?.sourceText,
+    policy._fieldEvidence?.premiumAmount?.sourceText
+  ].filter(Boolean).join(' '));
+  const reasons = [];
+  let matchedExisting = null;
+  try {
+    matchedExisting = (existingPolicies || []).find(ep => policiesLikelySamePolicy(ep, policy));
+  } catch(_) {}
+  if (matchedExisting) reasons.push('Matches an existing saved policy fingerprint.');
+  let type = matchedExisting ? 'duplicate' : explicit;
+  if (!type || type === 'unknown') {
+    if (/\b(cpf|cpfis|cpf life|ordinary account|special account|medisave|retirement account|srs)\b/.test(hay)) type = 'cpf_statement';
+    else if (/\b(rider|supplementary benefit|waiver|totalcare|extra rider|rider premium)\b/.test(hay) || policy.isPartialPage && (policy.riderList || (policy.riders || []).length)) type = 'rider';
+    else if (/\b(benefit illustration|illustrated|projection|cash value|surrender value|maturity value|payout table|income table)\b/.test(hay)) type = 'benefit_illustration';
+    else if (/\b(sgfindex|portfolio|holdings|fund statement|platform statement|investment statement)\b/.test(hay)) type = 'portfolio_statement';
+    else if (/\b(application|fact find|profile|particulars|nric|dependant|contact details)\b/.test(hay) && !(policy.policyNumber || moneyNumber(policy.premiumAmount))) type = 'profile_doc';
+    else if (policy.policyNumber || moneyNumber(policy.premiumAmount) || moneyNumber(policy.sumAssured)) type = 'policy_schedule';
+    else type = 'unknown';
+  }
+  if (explicit && explicit !== 'unknown') reasons.push('AI triaged source as ' + (DOCUMENT_TRIAGE_META[explicit]?.label || explicit) + '.');
+  if (type === 'policy_schedule') reasons.push('Policy number, premium, or benefit anchors are present.');
+  if (type === 'benefit_illustration') reasons.push('Values, projection, maturity, or payout table language detected.');
+  if (type === 'rider') reasons.push('Rider or supplementary benefit language detected.');
+  const confidence = matchedExisting ? 'high' : explicit && explicit !== 'unknown' ? 'high' : type === 'unknown' ? 'low' : 'medium';
+  return {
+    type,
+    label: DOCUMENT_TRIAGE_META[type]?.label || 'Unknown source',
+    confidence,
+    reasons: [...new Set(reasons)].slice(0, 3),
+    existingPolicyId: matchedExisting?.id || null,
+    existingPolicyLabel: matchedExisting ? (matchedExisting.productName || matchedExisting.policyName || matchedExisting.policyNumber || matchedExisting.insurer || 'Existing policy') : null,
+  };
+}
+
+function enhanceExtractedPolicyIntelligence(policy = {}, existingPolicies = []) {
+  const next = ensurePolicyFieldEvidence({ ...(policy || {}) }, { source: 'ai-review-intelligence' });
+  next.documentType = normalizeDocumentTriageType(next.documentType) || next.documentType || null;
+  next._policyFingerprint = next._policyFingerprint || buildPolicyIdentityFingerprint(next);
+  next._documentTriage = next._documentTriage || classifyPolicyDocumentTriage(next, existingPolicies);
+  if (next._documentTriage?.existingPolicyId && !next._knownPolicyMatch) {
+    next._knownPolicyMatch = {
+      id: next._documentTriage.existingPolicyId,
+      label: next._documentTriage.existingPolicyLabel,
+      reason: 'fingerprint-triage'
+    };
+  }
+  return next;
+}
+
 function ensurePolicyFieldEvidence(policy, meta = {}) {
   const next = mergeConfidenceArrayIntoMaps({...(policy || {})});
   const evidence = {...(next._fieldEvidence || {})};
@@ -3318,7 +3477,7 @@ function ensurePolicyFieldEvidence(policy, meta = {}) {
       reason: reason || reasonMap[field] || flag?.reason || 'Extracted from policy document.'
     };
   };
-  ['insurer','productName','policyName','policyNumber','policyOwner','lifeInsured','documentOwner','documentRole','documentGroupId','dob','policyOwnerDob','policyOwnerAge','lifeInsuredDob','lifeInsuredAge','premiumAmount','annualPremium','sumAssured','annuityPayout','annuityGuaranteedPayout','annuityNonGuaranteedPayout'].forEach(f => add(f));
+  ['insurer','productName','policyName','policyNumber','documentType','policyOwner','lifeInsured','documentOwner','documentRole','documentGroupId','dob','policyOwnerDob','policyOwnerAge','lifeInsuredDob','lifeInsuredAge','premiumAmount','annualPremium','sumAssured','annuityPayout','annuityGuaranteedPayout','annuityNonGuaranteedPayout'].forEach(f => add(f));
   next._fieldEvidence = evidence;
   next._pageFingerprint = next._pageFingerprint || buildPolicyPageFingerprint(next, meta);
   return next;
@@ -4365,10 +4524,10 @@ async function pdfToImages(pdfDoc, maxPages=12) {
 // CLEAN even if the FC never actually reviewed anything. Bumping the version
 // forces a re-extraction next time those same files are uploaded, and the
 // one-time cleanup in App init purges the stale entries from IndexedDB.
-const EXTRACT_PIPELINE_VERSION = 'v15.3-2026-04-27-family-sync-cockpit-ledger';
+const EXTRACT_PIPELINE_VERSION = 'v15.4-2026-04-30-ai-triage-fingerprint';
 
 // ── v15: PROMPT VERSIONING ──
-const EXTRACT_PROMPT_VERSION = 'v14.7-2026-04-27-family-sync-cockpit-ledger';
+const EXTRACT_PROMPT_VERSION = 'v14.8-2026-04-30-ai-triage-fingerprint';
 const OCR_PROMPT_VERSION = 'v17-2026-04-26-document-ai-default-proxy';
 
 // ── v2.0.9: MODULE-SCOPE EXTRACT_PROMPT ──
@@ -4424,7 +4583,10 @@ async function buildCorrectionFewShot() {
       for (const c of corrs.slice(0, 5)) {
         const aiVal = c.aiValue == null ? 'null' : JSON.stringify(c.aiValue);
         const corrVal = c.correctedValue == null ? 'null' : JSON.stringify(c.correctedValue);
-        lines.push('  • ' + (c.productName || '?') + ' → ' + c.field + ': AI returned ' + aiVal + ', correct value is ' + corrVal);
+        const hint = c.learningHint ? ' [' + c.learningHint + ']' : '';
+        const doc = c.documentType ? ' on ' + c.documentType : '';
+        const src = c.sourcePage ? ' source ' + c.sourcePage : '';
+        lines.push('  • ' + (c.productName || '?') + doc + hint + ' → ' + c.field + ': AI returned ' + aiVal + ', correct value is ' + corrVal + src);
       }
     }
     _correctionCacheText = '\n\n═══ PRIOR FC CORRECTIONS (learn from these — avoid repeating the same mistakes) ═══\n' +
@@ -4508,7 +4670,10 @@ async function buildInsurerFewShot(insurer) {
       for (const c of recent) {
         const aiVal = c.aiValue == null ? 'null' : JSON.stringify(c.aiValue);
         const corrVal = c.correctedValue == null ? 'null' : JSON.stringify(c.correctedValue);
-        lines.push('  • ' + (c.productName || '?') + ' → ' + c.field + ': AI returned ' + aiVal + ', correct value is ' + corrVal);
+        const hint = c.learningHint ? ' [' + c.learningHint + ']' : '';
+        const doc = c.documentType ? ' on ' + c.documentType : '';
+        const src = c.sourcePage ? ' source ' + c.sourcePage : '';
+        lines.push('  • ' + (c.productName || '?') + doc + hint + ' → ' + c.field + ': AI returned ' + aiVal + ', correct value is ' + corrVal + src);
       }
     }
   } catch (e) { /* non-fatal */ }
@@ -20062,6 +20227,12 @@ const POLICY_EXTRACTION_SCHEMA = {
       productName: { type: 'STRING', description: 'Official product name exactly as written on document' },
       policyName: { type: 'STRING', nullable: true, description: 'Display name if different from productName' },
       policyNumber: { type: 'STRING', nullable: true, description: 'Policy/contract number as-is from document' },
+      documentType: {
+        type: 'STRING',
+        enum: ['policy_schedule','benefit_illustration','rider','cpf_statement','portfolio_statement','profile_doc','duplicate','unknown'],
+        nullable: true,
+        description: 'Pre-extraction document triage category. Pick the visible source type before extracting fields: policy_schedule, benefit_illustration, rider, cpf_statement, portfolio_statement, profile_doc, duplicate, or unknown.'
+      },
       isPartialPage: {
         type: 'BOOLEAN',
         nullable: true,
@@ -25803,6 +25974,82 @@ function Dashboard() {
     };
   }, [policies, driveState]);
 
+  const policySummary = useMemo(() => {
+    const active = policies.filter(pol => !['matured','surrendered','lapsed'].includes(pol.status));
+    const incomeAnnual = Math.round((retirementLite.policyMonthlyIncome || 0) * 12);
+    const reviewAlerts =
+      advisorReview.missingCoreCount +
+      advisorReview.ownerQuestionCount +
+      gaps.filter(g => !g.isFlag && g.need > 0 && (g.cur / g.need) < 0.8).length +
+      (coverage.hasISP ? 0 : 1);
+    const pct = (cur, need, flag) => {
+      if (flag) return cur >= need ? 100 : cur > 0 ? 65 : 0;
+      if (!need) return 100;
+      return Math.max(0, Math.min(100, Math.round(cur / need * 100)));
+    };
+    const protectionBars = [
+      {
+        label:'Death/TPD',
+        cur:Math.min(coverage.death || 0, coverage.tpd || 0),
+        need:Math.max(reqDeath || 0, reqTPD || 0),
+        note:'Lowest of death and TPD versus target',
+        tone:'var(--blue2)'
+      },
+      {
+        label:'CI',
+        cur:(coverage.ci || 0) + (coverage.eci || 0),
+        need:reqCI || 0,
+        note:(coverage.eci || 0) > 0 ? 'Includes early CI shown separately below' : 'Critical illness cover',
+        tone:'var(--gold)'
+      },
+      {
+        label:'Hospital',
+        cur:coverage.hasISP ? (coverage.ispRider ? 1 : 0.65) : 0,
+        need:1,
+        flag:true,
+        note:coverage.hasISP ? (coverage.ispRider ? 'ISP with rider' : 'ISP only, rider gap') : 'No ISP detected',
+        tone:coverage.hasISP ? 'var(--teal)' : 'var(--red)'
+      },
+      {
+        label:'Disability Income',
+        cur:coverage.di || 0,
+        need:reqDI || 0,
+        monthly:true,
+        note:'Monthly DI benefit',
+        tone:'var(--teal)'
+      }
+    ].map(row => ({...row, pct:pct(row.cur, row.need, row.flag)}));
+    const retIncome = (retirementLite.policyMonthlyIncome || 0) + (retirementLite.otherMonthly || 0) + (retirementLite.cpfPayout?.mid || 0);
+    const retGap = retIncome - (retirementLite.desiredMonthly || 0);
+    const nextMilestone = lifecycleEvents[0] || null;
+    const actions = [];
+    if (advisorReview.missingCoreCount > 0) actions.push('Clean up ' + advisorReview.missingCoreCount + ' incomplete import field' + (advisorReview.missingCoreCount === 1 ? '' : 's') + '.');
+    if (advisorReview.ownerQuestionCount > 0) actions.push('Confirm owner versus life assured routing for ' + advisorReview.ownerQuestionCount + ' polic' + (advisorReview.ownerQuestionCount === 1 ? 'y' : 'ies') + '.');
+    const weakestGap = protectionBars.filter(b => !b.flag).sort((a,b) => a.pct - b.pct)[0];
+    if (weakestGap && weakestGap.pct < 80) actions.push('Prioritise ' + weakestGap.label + ' gap before adding more products.');
+    if (!coverage.hasISP) actions.push('Confirm hospitalisation cover before the meeting.');
+    if (premRatio > 15) actions.push('Review premium load: recurring premium is ' + premRatio + '% of income.');
+    if (nextMilestone) actions.push('Discuss next policy milestone: ' + nextMilestone.label + ' at age ' + nextMilestone.age + '.');
+    actions.push('Use Present Mode with the client, then export PDF and follow-up notes.');
+    return {
+      topTiles: [
+        {label:'Active policies', value:String(active.length), note:'In-force records', tone:'var(--teal)'},
+        {label:'Annual premium', value:fmt(premiumBreakdown.totalAnnual) + '/yr', note:premRatio ? premRatio + '% of income' : 'Recurring only', tone:premRatio > 15 ? 'var(--red)' : 'var(--gold)'},
+        {label:'Total protection', value:totalCoverage >= 1e6 ? '$' + (totalCoverage/1e6).toFixed(1) + 'M' : fmt(totalCoverage), note:'Current sum assured', tone:'var(--blue2)'},
+        {label:'Policy income', value:incomeAnnual ? fmt(incomeAnnual) + '/yr' : '-', note:'Projected at retirement', tone:'var(--teal)'},
+        {label:'Review alerts', value:String(reviewAlerts), note:reviewAlerts ? 'Needs advisor action' : 'No urgent flags', tone:reviewAlerts ? 'var(--gold)' : 'var(--teal)'},
+      ],
+      protectionBars,
+      retirement: {
+        monthlyIncome: retIncome,
+        desiredMonthly: retirementLite.desiredMonthly || 0,
+        gap: retGap,
+        next: nextMilestone,
+      },
+      actions: [...new Set(actions)].slice(0, 3)
+    };
+  }, [policies, retirementLite, advisorReview, gaps, coverage, reqDeath, reqTPD, reqCI, reqDI, lifecycleEvents, premiumBreakdown.totalAnnual, premRatio, totalCoverage]);
+
   if(policies.length === 0) return (
     <div className="fade-in" style={{textAlign:'center',padding:'40px 16px'}}>
       <input ref={welcomeCamRef} type="file" accept="image/*" capture="environment" style={{display:'none'}} onChange={e=>{handleWelcomeCamera(e.target.files);e.target.value='';}} />
@@ -25903,21 +26150,76 @@ function Dashboard() {
         )}
       </div>
 
-      {/* ═══ SUMMARY CARDS ═══ */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:8,marginBottom:14}}>
-        {[
-          {label:'Advisor mode',value:'Workbench',note:'Edit and verify',tone:'var(--teal)'},
-          {label:'Sync status',value:advisorReview.syncLabel,note:'Last-write safety',tone:advisorReview.syncTone},
-          {label:'Owner routing',value:advisorReview.ownerQuestionCount ? advisorReview.ownerQuestionCount + ' to check' : 'Clear',note:'Policy owner vs life assured',tone:advisorReview.ownerQuestionCount ? 'var(--gold)' : 'var(--teal)'},
-          {label:'Import quality',value:advisorReview.missingCoreCount ? advisorReview.missingCoreCount + ' incomplete' : 'Ready',note:advisorReview.activeCount + ' active policies',tone:advisorReview.missingCoreCount ? 'var(--gold)' : 'var(--teal)'},
-          {label:'Income policies',value:String(advisorReview.incomePolicyCount),note:'Payout/yield synced',tone:'var(--gold)'},
-        ].map(tile => (
-          <div key={tile.label} style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:10,padding:'10px 12px',minHeight:72}}>
-            <div style={{fontSize:9,color:'var(--text3)',fontWeight:800,textTransform:'uppercase',letterSpacing:'.5px'}}>{tile.label}</div>
-            <div style={{fontSize:13,color:tile.tone,fontWeight:800,marginTop:5,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{tile.value}</div>
-            <div style={{fontSize:9,color:'var(--text3)',marginTop:4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{tile.note}</div>
+      {/* Compact policy summary for advisor scan. */}
+      <div className="card" style={{marginBottom:14,padding:14,borderRadius:8,border:'1px solid rgba(212,169,106,.22)',background:'linear-gradient(180deg,rgba(212,169,106,.055),rgba(17,24,39,.94))'}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:12,flexWrap:'wrap',marginBottom:12}}>
+          <div>
+            <h3 style={{fontSize:14,fontWeight:900,margin:0,color:'var(--text)'}}>Policy Summary</h3>
+            <div style={{fontSize:10,color:'var(--text3)',marginTop:3}}>Concise view for the meeting: policies, protection, income, and next actions.</div>
           </div>
-        ))}
+          <div style={{fontSize:10,color:advisorReview.syncTone,fontWeight:800,border:'1px solid rgba(255,255,255,.08)',borderRadius:7,padding:'4px 8px',background:'rgba(0,0,0,.16)'}}>{advisorReview.syncLabel}</div>
+        </div>
+
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(136px,1fr))',gap:8,marginBottom:12}}>
+          {policySummary.topTiles.map(tile => (
+            <div key={tile.label} style={{background:'rgba(255,255,255,.025)',border:'1px solid rgba(255,255,255,.07)',borderRadius:8,padding:'10px 11px',minHeight:70}}>
+              <div style={{fontSize:9,color:'var(--text3)',fontWeight:800,textTransform:'uppercase',letterSpacing:'.45px'}}>{tile.label}</div>
+              <div style={{fontSize:17,color:tile.tone,fontWeight:900,marginTop:5,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{tile.value}</div>
+              <div style={{fontSize:9,color:'var(--text3)',marginTop:3,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{tile.note}</div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:9,marginBottom:12}}>
+          {policySummary.protectionBars.map(bar => {
+            const barColor = bar.pct >= 80 ? 'var(--teal)' : bar.pct >= 50 ? 'var(--gold)' : 'var(--red)';
+            const currentLabel = bar.flag ? bar.note : (bar.monthly ? fmt(bar.cur) + '/mth' : fmt(bar.cur));
+            const targetLabel = bar.flag ? '' : (bar.monthly ? fmt(bar.need) + '/mth target' : fmt(bar.need) + ' target');
+            return (
+              <div key={bar.label} style={{background:'rgba(0,0,0,.16)',border:'1px solid rgba(255,255,255,.065)',borderRadius:8,padding:'9px 10px'}}>
+                <div style={{display:'flex',justifyContent:'space-between',gap:8,alignItems:'center',marginBottom:6}}>
+                  <span style={{fontSize:11,fontWeight:900,color:'var(--text2)'}}>{bar.label}</span>
+                  <span style={{fontSize:11,fontWeight:900,color:barColor}}>{bar.pct}%</span>
+                </div>
+                <div style={{height:7,background:'rgba(255,255,255,.065)',borderRadius:999,overflow:'hidden'}}>
+                  <div style={{height:'100%',width:Math.min(100,bar.pct)+'%',background:barColor,borderRadius:999}} />
+                </div>
+                <div style={{fontSize:9,color:'var(--text3)',marginTop:6,display:'flex',justifyContent:'space-between',gap:8}}>
+                  <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{currentLabel}</span>
+                  {targetLabel && <span style={{whiteSpace:'nowrap'}}>{targetLabel}</span>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))',gap:10}}>
+          <div style={{background:'rgba(91,168,160,.065)',border:'1px solid rgba(91,168,160,.16)',borderRadius:8,padding:10}}>
+            <div style={{fontSize:9,color:'var(--text3)',fontWeight:800,textTransform:'uppercase',letterSpacing:'.45px'}}>Retirement outlook</div>
+            <div style={{fontSize:13,color:'var(--text2)',fontWeight:800,marginTop:5}}>
+              At retirement: {fmt(Math.round(policySummary.retirement.monthlyIncome))}/mth
+            </div>
+            <div style={{fontSize:10,color:policySummary.retirement.gap >= 0 ? 'var(--teal)' : 'var(--red)',fontWeight:800,marginTop:3}}>
+              {policySummary.retirement.desiredMonthly ? (policySummary.retirement.gap >= 0 ? 'Surplus ' : 'Gap ') + fmt(Math.abs(Math.round(policySummary.retirement.gap))) + '/mth versus target' : 'Set retirement income target in profile'}
+            </div>
+            {policySummary.retirement.next && (
+              <div style={{fontSize:9,color:'var(--text3)',marginTop:5,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
+                Next: {policySummary.retirement.next.label} at age {policySummary.retirement.next.age}
+              </div>
+            )}
+          </div>
+          <div style={{background:'rgba(212,169,106,.055)',border:'1px solid rgba(212,169,106,.16)',borderRadius:8,padding:10}}>
+            <div style={{fontSize:9,color:'var(--gold)',fontWeight:900,textTransform:'uppercase',letterSpacing:'.45px',marginBottom:7}}>3 advisor actions</div>
+            <div style={{display:'grid',gap:6}}>
+              {policySummary.actions.map((action, i) => (
+                <div key={action} style={{display:'grid',gridTemplateColumns:'20px 1fr',gap:7,alignItems:'start',fontSize:11,color:'var(--text2)'}}>
+                  <span style={{width:18,height:18,borderRadius:'50%',display:'inline-flex',alignItems:'center',justifyContent:'center',background:'rgba(212,169,106,.12)',border:'1px solid rgba(212,169,106,.22)',color:'var(--gold)',fontSize:9,fontWeight:900}}>{i+1}</span>
+                  <span style={{lineHeight:1.35}}>{action}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
       {lifecycleEvents.length > 0 && (() => {
@@ -25994,21 +26296,6 @@ function Dashboard() {
           </div>
         );
       })()}
-
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:14}}>
-        <div className="card card-sm"><div style={{color:'var(--text3)',fontSize:9,fontWeight:600,textTransform:'uppercase',letterSpacing:'.5px'}}>Active Policies</div><div style={{fontSize:22,fontWeight:700,marginTop:4}}>{policies.filter(p=>p.status!=='matured'&&p.status!=='surrendered'&&p.status!=='lapsed').length}</div><div style={{fontSize:10,color:'var(--text3)'}}>Total coverage: {totalCoverage>=1e6?'$'+(totalCoverage/1e6).toFixed(1)+'M':fmt(totalCoverage)}</div></div>
-        <div className="card card-sm" style={{borderLeft:`4px solid ${scoreColor}`,background:overallScore<50?'rgba(239,83,80,.04)':overallScore<80?'rgba(212,169,106,.04)':'rgba(91,168,160,.04)'}}>
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-            <div>
-              <div style={{color:scoreColor,fontSize:9,fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px'}}>{overallScore>=80?'✅ Well Protected':overallScore>=50?'⚠️ Needs Attention':'🚨 Underprotected'}</div>
-              <div style={{fontSize:28,fontWeight:800,color:scoreColor,marginTop:2}}>{overallScore}%</div>
-            </div>
-            <div style={{width:48,height:48,borderRadius:'50%',border:`3px solid ${scoreColor}`,display:'flex',alignItems:'center',justifyContent:'center',background:`${scoreColor}15`}}>
-              <svg viewBox="0 0 36 36" width="36" height="36"><circle cx="18" cy="18" r="16" fill="none" stroke="var(--border)" strokeWidth="3"/><circle cx="18" cy="18" r="16" fill="none" stroke={scoreColor} strokeWidth="3" strokeDasharray={`${overallScore} ${100-overallScore}`} strokeDashoffset="25" strokeLinecap="round"/></svg>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* ═══ PREMIUM BREAKDOWN ═══ */}
       <div className="card" style={{marginBottom:14,padding:14}}>
@@ -27860,11 +28147,23 @@ const QV_COMPLEX_FIELDS = new Set([
 ]);
 
 function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePolicy, onAccept, onClose, scanProgress, extractionLedger}) {
+  const hydrateSmartExtract = (p, idx, batchOverride) => {
+    const smart = enhanceExtractedPolicyIntelligence(p || {}, existingPolicies || []);
+    const gate = passesConfidenceGate(smart);
+    return {
+      ...smart,
+      _idx: idx,
+      _selected: p?._selected !== false,
+      _corrections: Array.isArray(p?._corrections) ? p._corrections : [],
+      _repoMatch: null,
+      _destination: (p?._destination || 'standalone'),
+      _batch: batchOverride || (p?._batch || 1),
+      _gateScore: smart._gateScore ?? gate.score,
+      _gateReasons: smart._gateReasons || gate.reasons,
+    };
+  };
   const [items, setItems] = useState(() => {
-    const mapped = extracted.map((p,i) => ({
-      ...p, _idx:i, _selected:true, _corrections:[], _repoMatch:null,
-      _destination: (p._destination||'standalone'), _batch: (p._batch||1),
-    }));
+    const mapped = extracted.map((p,i) => hydrateSmartExtract(p, i));
     // Persist to sessionStorage for refresh survival
     try { sessionStorage.setItem('policylens_pendingExtract', JSON.stringify(mapped.map(m => {const c={...m};delete c._repoMatch;return c;}))); } catch(e){}
     return mapped;
@@ -27900,10 +28199,10 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
     if(!extracted || extracted.length === 0) return;
     setItems(prev => {
       const existingIds = new Set(prev.map(it => it.id || it._idx));
-      const newItems = extracted.filter(p => !existingIds.has(p.id)).map((p,i) => ({
-        ...p, _idx: prev.length + i, _selected:true, _corrections:[], _repoMatch:null,
-        _destination: p._destination||'standalone', _batch: p._batch || Math.max(...prev.map(it=>it._batch||1), 0) + 1,
-      }));
+      const nextBatch = Math.max(...prev.map(it=>it._batch||1), 0) + 1;
+      const newItems = extracted
+        .filter(p => !existingIds.has(p.id))
+        .map((p,i) => hydrateSmartExtract(p, prev.length + i, p._batch || nextBatch));
       if(newItems.length === 0) return prev;
       const merged = [...prev, ...newItems];
       try { sessionStorage.setItem('policylens_pendingExtract', JSON.stringify(merged.map(m => {const c={...m};delete c._repoMatch;return c;}))); } catch(e){}
@@ -28081,6 +28380,17 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
                 correctedValue: correctedVal,
                 policyNumber: it.policyNumber || '',
                 category: it.category || '',
+                documentType: it.documentType || it._documentTriage?.type || '',
+                sourcePage: it.sourcePage || it._sourcePage || '',
+                sourceImage: it.sourceImage || it._sourceImage || '',
+                fingerprint: it._policyFingerprint?.id || '',
+                fingerprintAnchors: it._policyFingerprint?.anchors || {},
+                sourceEvidence: (it._policyFingerprint?.sourceEvidence || []).slice(0, 3),
+                learningHint: field === 'productName'
+                  ? 'product_alias'
+                  : field === 'insurer'
+                    ? 'insurer_layout_pattern'
+                    : (String(originalVal || '').toLowerCase() !== String(correctedVal || '').toLowerCase() ? 'ocr_or_field_mapping' : 'field_mapping'),
               });
               console.log('[CorrectionMemory] Recorded:', field, JSON.stringify(originalVal), '→', JSON.stringify(correctedVal), 'for', it.insurer, it.productName);
             } catch(e) { console.warn('[CorrectionMemory] Write failed:', e); }
@@ -28257,7 +28567,8 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
     const hasOwnerQuestion = /\(owner unclear\)/i.test(ownerLabel) || !!it._ownerRouteQuestion;
     const hasReviewReasons = (it._gateReasons || []).length > 0 || (it._reviewReasons || []).length > 0 || (it._reviewActions || []).length > 0;
     const hasMergeDecision = !!it._dupOf || !!it._knownPolicyMatch || !!it._mergeIntoExisting || (it._mergeConflicts || []).length > 0;
-    return (verifiable.length > 0 && !it._extractVerifiedAt) || !gate.pass || hasOwnerQuestion || hasReviewReasons || hasMergeDecision;
+    const hasTriageDecision = it._documentTriage?.type === 'duplicate' || it._documentTriage?.confidence === 'low';
+    return (verifiable.length > 0 && !it._extractVerifiedAt) || !gate.pass || hasOwnerQuestion || hasReviewReasons || hasMergeDecision || hasTriageDecision;
   };
   const needsReviewCount = items.filter(needsDecisionForItem).length;
   const verifiedCount = items.filter(it => it._extractVerifiedAt || (getVerifiableFields(it).length === 0 && it._extractConfidence !== undefined)).length;
@@ -28266,6 +28577,24 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
   const trustedHiddenCount = filtered.length - visibleVerifyItems.length;
   const ownerKeysInView = [...new Set(visibleVerifyItems.map(it => normalizePersonNameKey(ownerKeyForItem(it))).filter(Boolean))];
   const showOwnerLabels = ownerKeysInView.length > 1;
+  const triageCounts = items.reduce((acc, it) => {
+    const type = it._documentTriage?.type || 'unknown';
+    acc[type] = (acc[type] || 0) + 1;
+    return acc;
+  }, {});
+  const markAcceptedFromTable = (idx) => setItems(prev => prev.map(it => it._idx === idx ? {
+    ...it,
+    _selected: true,
+    _extractConfidence: {},
+    _extractVerifiedAt: it._extractVerifiedAt || Date.now()
+  } : it));
+  const markMergeFromTable = (idx) => setItems(prev => prev.map(it => it._idx === idx ? {
+    ...it,
+    _selected: true,
+    _mergeIntoExisting: true,
+    _extractConfidence: {},
+    _extractVerifiedAt: it._extractVerifiedAt || Date.now()
+  } : it));
 
   return (
     <div className="modal-overlay" onClick={e=>{if(e.target===e.currentTarget)onClose()}}>
@@ -28348,6 +28677,97 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
                 </button>
               );
             })}
+          </div>
+        )}
+
+        {items.length > 0 && (
+          <div style={{background:'rgba(91,168,160,.045)',border:'1px solid rgba(91,168,160,.16)',borderRadius:10,padding:10,margin:'0 0 10px'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:10,flexWrap:'wrap',marginBottom:8}}>
+              <div>
+                <div style={{fontSize:12,fontWeight:800,color:'var(--text)'}}>AI found these policies</div>
+                <div style={{fontSize:10,color:'var(--text3)',marginTop:2}}>Document triage, fingerprint anchors, and the fastest accept/merge path.</div>
+              </div>
+              <div style={{display:'flex',gap:5,flexWrap:'wrap',justifyContent:'flex-end'}}>
+                {Object.entries(triageCounts).map(([type,count]) => {
+                  const meta = DOCUMENT_TRIAGE_META[type] || DOCUMENT_TRIAGE_META.unknown;
+                  return (
+                    <span key={type} style={{fontSize:9,color:meta.tone,border:'1px solid rgba(255,255,255,.08)',background:'rgba(0,0,0,.12)',borderRadius:6,padding:'3px 6px',fontWeight:700}}>
+                      {meta.label}: {count}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+            <div style={{overflowX:'auto',border:'1px solid rgba(255,255,255,.06)',borderRadius:8}}>
+              <table style={{width:'100%',borderCollapse:'collapse',fontSize:10,minWidth:720}}>
+                <thead>
+                  <tr style={{background:'rgba(0,0,0,.18)',color:'var(--text3)',textTransform:'uppercase',letterSpacing:'.35px'}}>
+                    <th style={{padding:'7px 8px',textAlign:'left',width:42}}>Use</th>
+                    <th style={{padding:'7px 8px',textAlign:'left'}}>Document</th>
+                    <th style={{padding:'7px 8px',textAlign:'left'}}>Policy</th>
+                    <th style={{padding:'7px 8px',textAlign:'left'}}>Fingerprint anchors</th>
+                    <th style={{padding:'7px 8px',textAlign:'right'}}>Confidence</th>
+                    <th style={{padding:'7px 8px',textAlign:'right'}}>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((it, i) => {
+                    const triage = it._documentTriage || classifyPolicyDocumentTriage(it, existingPolicies || []);
+                    const meta = DOCUMENT_TRIAGE_META[triage.type] || DOCUMENT_TRIAGE_META.unknown;
+                    const fp = it._policyFingerprint || buildPolicyIdentityFingerprint(it);
+                    const anchors = [
+                      fp.anchors?.policyNumber ? 'No. ' + it.policyNumber : '',
+                      fp.anchors?.owner ? 'Owner ' + (it.policyOwner || it.documentOwner || fp.anchors.owner) : '',
+                      fp.anchors?.lifeAssured ? 'Life ' + (it.lifeInsured || fp.anchors.lifeAssured) : '',
+                      fp.anchors?.premium ? 'Prem $' + fp.anchors.premium.toLocaleString() : '',
+                      fp.anchors?.sourceHash ? 'Src ' + fp.anchors.sourceHash : ''
+                    ].filter(Boolean).slice(0, 4);
+                    const confScore = it._gateScore != null ? it._gateScore : passesConfidenceGate(it).score;
+                    const hasMatch = !!it._knownPolicyMatch || triage.type === 'duplicate';
+                    return (
+                      <tr key={(it.id || it._idx || i) + ':found'} style={{borderTop:i>0?'1px solid rgba(255,255,255,.055)':'none',background:it._selected?'transparent':'rgba(0,0,0,.16)',opacity:it._selected?1:.58}}>
+                        <td style={{padding:'7px 8px'}}>
+                          <input type="checkbox" checked={it._selected} onChange={()=>toggleSelect(it._idx)} style={{accentColor:'var(--gold)'}} />
+                        </td>
+                        <td style={{padding:'7px 8px',minWidth:125}}>
+                          <div style={{fontWeight:800,color:meta.tone}}>{meta.label}</div>
+                          <div style={{color:'var(--text3)',marginTop:2,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:180}}>{it.sourcePage || it.sourceImage || fp.sourceEvidence?.[0] || '-'}</div>
+                        </td>
+                        <td style={{padding:'7px 8px',minWidth:180}}>
+                          <div style={{fontWeight:800,color:'var(--text2)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:230}}>{it.productName || it.policyName || 'Untitled policy'}</div>
+                          <div style={{color:'var(--text3)',marginTop:2}}>{it.insurer || 'Unknown insurer'}{it.subType ? ' - ' + it.subType : ''}</div>
+                        </td>
+                        <td style={{padding:'7px 8px',minWidth:240}}>
+                          <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>
+                            {(anchors.length ? anchors : ['Weak fingerprint']).map(a => (
+                              <span key={a} style={{fontSize:9,color:'var(--text2)',background:'rgba(255,255,255,.035)',border:'1px solid rgba(255,255,255,.06)',borderRadius:5,padding:'2px 5px'}}>{a}</span>
+                            ))}
+                          </div>
+                          {triage.reasons?.[0] && <div style={{color:'var(--text3)',marginTop:3,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:300}}>{triage.reasons[0]}</div>}
+                        </td>
+                        <td style={{padding:'7px 8px',textAlign:'right',whiteSpace:'nowrap'}}>
+                          <span style={{fontWeight:900,color:confScore >= 75 ? 'var(--teal)' : 'var(--gold)'}}>{confScore}%</span>
+                          <div style={{fontSize:9,color:fp.confidence === 'high' ? 'var(--teal)' : fp.confidence === 'medium' ? 'var(--gold)' : 'var(--red)'}}>fingerprint {fp.confidence}</div>
+                        </td>
+                        <td style={{padding:'7px 8px',textAlign:'right',whiteSpace:'nowrap'}}>
+                          {hasMatch ? (
+                            <button onClick={()=>markMergeFromTable(it._idx)}
+                              style={{fontSize:10,padding:'4px 8px',borderRadius:6,border:'1px solid rgba(212,169,106,.28)',background:it._mergeIntoExisting?'rgba(91,168,160,.15)':'rgba(212,169,106,.10)',color:it._mergeIntoExisting?'var(--teal)':'var(--gold)',fontWeight:800,cursor:'pointer'}}>
+                              {it._mergeIntoExisting ? 'Will merge' : 'Merge'}
+                            </button>
+                          ) : (
+                            <button onClick={()=>markAcceptedFromTable(it._idx)}
+                              style={{fontSize:10,padding:'4px 8px',borderRadius:6,border:'1px solid rgba(91,168,160,.25)',background:it._extractVerifiedAt?'rgba(91,168,160,.15)':'rgba(91,168,160,.08)',color:'var(--teal)',fontWeight:800,cursor:'pointer'}}>
+                              {it._extractVerifiedAt ? 'Accepted' : 'Accept'}
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
@@ -29692,6 +30112,18 @@ function Policies() {
 
 For EACH policy or instrument, return a JSON object with:
 
+DOCUMENT TRIAGE FIRST (do this before extraction):
+Classify each source page/document into documentType:
+- policy_schedule: official policy schedule, policy summary, contract particulars, or statement with policy number/premium/benefits.
+- benefit_illustration: BI, illustrated values, projected cash values, surrender values, income/payout tables, or maturity projection pages.
+- rider: rider schedule, supplementary benefit page, ISP rider, waiver rider, CI/TPD/DI rider, or partial add-on page.
+- cpf_statement: CPF, CPFIS, CPF LIFE, CPF OA/SA/MA, SRS, or government retirement statement.
+- portfolio_statement: SGFinDex, insurer portfolio report, consolidated holdings, platform/fund statement, or investment statement.
+- profile_doc: fact find, application form, NRIC/profile page, contact details, dependant/family page without policy benefits.
+- duplicate: same insurer + policy number + owner/life assured + premium already appears in the same uploaded batch.
+- unknown: use only if the source type is genuinely unclear.
+Keep documentType on every returned object. If a page is profile_doc only and has no policy/instrument fields, return zero policies from that page but use its people/context to improve nearby owner/life assured routing.
+
 PRODUCT NAME RULE (CRITICAL):
 productName must be the SPECIFIC marketed product name as written in the document — "Elite Investment Plan", "Pro Achiever", "Achiever Accumulator", "Platinum Wealth Elite", "LifeReady Plus", "PRUShield Premier", "GREAT TotalCare". NEVER return a generic sub-type or category description as the productName. The following are NOT valid productNames and must never be returned: "Investment Linked Policy", "Investment-Linked Policy", "Life Insurance Policy", "Whole Life Plan", "Term Life Plan", "Insurance Plan", "ILP", "Annuity Plan". Those are subTypes, not product names. If you genuinely cannot find a specific marketed product name in the document, use your Singapore insurance product knowledge to infer the most likely product name from the insurer + subType + visible features — do NOT return empty string unless you truly have zero signal. For example: Manulife + Retirement Income (Par WL) → "RetireReady Plus"; Manulife + Retirement + Limited Pay 5 → "RetireReady Plus – Limited Pay 5"; Great Eastern + Whole Life + CI → "GREAT Flexi Life Cover". Always prefer a specific known product name over an empty string. If you have no signal at all, set productName to "" — but this should be rare. The sub-type goes in the separate "subType" field, not in productName.
 
@@ -30127,6 +30559,9 @@ For each policy, include an "extractionNotes" field (string, max 200 chars) summ
 - "Multi-page merger: page 1 had insurer/name, page 3 had premium table"
 - "Two similar entries with same insurer but different policy numbers — kept as separate policies"
 If extraction was straightforward, a simple "Clean extraction from policy schedule" suffices.
+
+FINGERPRINT ANCHORS:
+For every policy or instrument, preserve enough source evidence for a stable fingerprint: insurer, policyNumber if visible, policyOwner, lifeInsured, premiumAmount, premFrequency, sourcePage/sourceImage, documentTitle, and fieldEvidence rows for premium and policy number. If the document has no policy number, use the strongest visible anchor combination and explain the missing field in extractionNotes.
 
 ═══ OUTPUT FORMAT (STRICT) ═══
 
