@@ -695,7 +695,7 @@ const CHANGELOG = [{
     items: ['PolicyLens now reopens on the last workspace tab so advisors can continue from the exact client flow they left.', 'Dashboard and Policies empty states now point to the next best action instead of generic blank screens.', 'Drive sync status now uses calmer saved-locally/synced-to-Drive wording and reserves red states for actual risk.']
   }, {
     heading: 'AI review',
-    items: ['The AI found-these-policies table now labels decisions as Add new, Merge, Ignore duplicate, or Needs review for faster scan outcomes.']
+    items: ['The AI found-these-policies table now labels decisions as Add new, Merge, Ignore duplicate, or Needs review for faster scan outcomes.', 'Policy forms now surface subtle inline AI assists for extracted fields, with one-click Accept to confirm the suggestion without opening another modal.']
   }]
 }, {
   version: 'v2.3.0-rc2e.10',
@@ -48574,6 +48574,44 @@ function PolicyFormModal({
     if (onDraftChange) onDraftChange(nf);
     return nf;
   });
+  const [acceptedAiAssist, setAcceptedAiAssist] = useState({});
+  const aiFormSuggestions = useMemo(() => {
+    const hasAiEvidence = !!(form._pipelineVersion || form._extractConfidence || form._extractConfidenceReasons || form._derived || form._documentTriage || form._policyFingerprint || form.sourcePage || form.sourceImage);
+    if (!hasAiEvidence) return [];
+    const source = form.sourcePage || form._sourcePage || form.sourceImage || form._sourceImage || form._policyFingerprint?.sourceEvidence?.[0] || '';
+    const sourceSuffix = source ? ' based on ' + String(source).slice(0, 90) : '';
+    const displayValue = (field, value) => {
+      if (field === 'premFrequency') {
+        const labels = {
+          annual: 'Annual',
+          monthly: 'Monthly',
+          single: 'Single premium',
+          unknown: 'Unknown'
+        };
+        return labels[String(value || '').toLowerCase()] || String(value || '');
+      }
+      return String(value || '');
+    };
+    const reasonFor = field => {
+      const raw = form._extractConfidenceReasons?.[field] || form._derived?.[field]?.caption || form._derived?.[field]?.reason || '';
+      if (!raw) return '';
+      if (typeof raw === 'string') return raw;
+      return raw.reason || raw.caption || raw.note || '';
+    };
+    const fields = ['premFrequency', 'premiumStructure', 'paymentMethod', 'policyOwner', 'lifeInsured', 'category', 'subType'];
+    return fields.map(field => {
+      const value = form[field];
+      if (acceptedAiAssist[field] || value == null || value === '' || value === 'unknown') return null;
+      const reason = reasonFor(field);
+      const label = FIELD_LABELS[field] || field;
+      return {
+        field,
+        label,
+        value,
+        text: 'AI thinks ' + label.toLowerCase() + ' is ' + displayValue(field, value) + (reason ? ' - ' + reason : sourceSuffix) + '.'
+      };
+    }).filter(Boolean).slice(0, 3);
+  }, [form, acceptedAiAssist]);
 
   // ── DIRTY TRACKING + SAFE CLOSE ──
   // Capture initial form snapshot on mount. requestClose() compares against current
@@ -48973,7 +49011,53 @@ function PolicyFormModal({
     active: true,
     onFiles: files => scanIntoForm(files),
     label: "\uD83D\uDCCE Drop or paste policy docs here to auto-fill this form"
-  }), showFuzzy && !isEdit && /*#__PURE__*/React.createElement("div", {
+  }), aiFormSuggestions.length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "card",
+    style: {
+      marginBottom: 12,
+      padding: 12,
+      borderLeft: '3px solid var(--teal)',
+      background: 'rgba(91,168,160,.045)'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      fontWeight: 900,
+      color: 'var(--teal)',
+      textTransform: 'uppercase',
+      letterSpacing: '.45px',
+      marginBottom: 7
+    }
+  }, "Inline AI assist"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'grid',
+      gap: 6
+    }
+  }, aiFormSuggestions.map(s => /*#__PURE__*/React.createElement("div", {
+    key: s.field,
+    style: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      gap: 10,
+      flexWrap: 'wrap',
+      fontSize: 11,
+      color: 'var(--text2)'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      lineHeight: 1.35
+    }
+  }, s.text), /*#__PURE__*/React.createElement("button", {
+    className: "btn-secondary btn-sm",
+    onClick: () => {
+      set(s.field, s.value);
+      setAcceptedAiAssist(prev => ({
+        ...prev,
+        [s.field]: true
+      }));
+    }
+  }, "Accept"))))), showFuzzy && !isEdit && /*#__PURE__*/React.createElement("div", {
     className: "fuzzy-alert"
   }, /*#__PURE__*/React.createElement("h4", null, "\uD83D\uDD0D Possible Repository Matches"), /*#__PURE__*/React.createElement("p", {
     style: {
