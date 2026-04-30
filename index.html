@@ -36,7 +36,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // long multi-batch scans can continue when the browser backgrounds
 // the page. The worker is registered only on HTTPS/localhost.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.6';
+const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.7';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -664,12 +664,29 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.6';
-const APP_VERSION_DATE = '2026-04-30';
-const APP_VERSION_NAME = 'Bug sweep review stability';
+const APP_VERSION = 'v2.3.0-rc2e.7';
+const APP_VERSION_DATE = '2026-05-01';
+const APP_VERSION_NAME = 'Drive sync integrity sweep';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 
 const CHANGELOG = [
+  {
+    version: 'v2.3.0-rc2e.7',
+    date: '2026-05-01',
+    name: 'Drive sync integrity sweep',
+    sections: [
+      {
+        heading: 'Drive sync',
+        items: [
+          'Drive directory scans now paginate through every tier, client folder, and autosave file before reconciling local clients.',
+          'Partial Drive scans no longer purge local clients, preventing clients from disappearing when a folder query fails or only part of the Drive tree is reachable.',
+          'Drive writes now preserve autosave client metadata, and Drive pulls reject client-id mismatches instead of applying one client file into another client.',
+          'Conflict merges now respect policy deletion tombstones so policies deleted on one device are not resurrected by another device with stale offline data.',
+          'Profile and policy conflict merges now use per-field timestamps where available, reducing lost edits when two devices work offline and reconnect later.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.3.0-rc2e.6',
     date: '2026-04-30',
@@ -11900,11 +11917,11 @@ function buildDriveClientPayload(clientId, clientProfile, policies, metadata) {
   };
   const now = new Date().toISOString();
   const syncMeta = {
+    ...(metadata?.syncMeta || {}),
     deviceId: getPolicyLensDeviceId(),
     deviceName: getPolicyLensDeviceName(),
     userEmail: getPolicyLensUserEmail(),
-    updatedAt: now,
-    ...(metadata?.syncMeta || {})
+    updatedAt: now
   };
   return {
     schemaVersion: DRIVE_SCHEMA_VERSION,
@@ -11933,6 +11950,7 @@ function parseDriveClientFile(data) {
   }
   // v2.3.0-rc2c.5p: also return tier + lastReviewedAt (default null for old files)
   return {
+    clientId: data.clientId || null,
     clientProfile: cp,
     policies,
     tier: data.tier ?? null,
@@ -12205,10 +12223,7 @@ async function queueClientTrashRequest(ds, reason) {
     reason: reason || 'client-trash',
     queuedAt: new Date().toISOString()
   };
-  const next = queue.filter(q =>
-    (entry.clientId && q.clientId !== entry.clientId) ||
-    (!entry.clientId && (q.folderId || q.fileId) !== (entry.folderId || entry.fileId))
-  );
+  const next = queue.filter(q => !clientTrashTombstoneMatches(q, entry));
   next.push(entry);
   await PolicyDB.saveSetting(PENDING_CLIENT_TRASH_KEY, next).catch(() => {});
   setRecentClientDeleteSyncStatus(entry, 'queued');
@@ -12238,6 +12253,12 @@ async function flushPendingClientTrashQueue() {
       setRecentClientDeleteSyncStatus(item, 'synced');
       console.log('[ClientTrashQueue] Trashed queued client:', item.clientName || item.clientId || item.folderId || item.fileId);
     } catch (err) {
+      if (isDriveNotFoundError(err)) {
+        trashed++;
+        setRecentClientDeleteSyncStatus(item, 'synced');
+        console.log('[ClientTrashQueue] Queued client already missing from Drive:', item.clientName || item.clientId || item.folderId || item.fileId);
+        continue;
+      }
       console.warn('[ClientTrashQueue] Could not trash queued client yet:', item.clientName || item.clientId || '', err?.message || err);
       remaining.push(item);
     }
@@ -12585,6 +12606,15 @@ function isEmptySyncValue(v) {
 }
 
 function mergePolicyForDrive(local, remote) {
+  if (local?._fieldVersions || remote?._fieldVersions) {
+    const merged = mergePerField(local || {}, remote || {}, local?._fieldVersions || {}, remote?._fieldVersions || {});
+    return {
+      ...(remote || {}),
+      ...(local || {}),
+      ...merged.data,
+      _fieldVersions: merged.versions
+    };
+  }
   const localT = policySyncTime(local);
   const remoteT = policySyncTime(remote);
   const primary = remoteT > localT ? remote : local;
@@ -12597,6 +12627,15 @@ function mergePolicyForDrive(local, remote) {
 }
 
 function mergeProfileForDrive(local, remote) {
+  if (local?._fieldVersions || remote?._fieldVersions) {
+    const merged = mergePerField(local || {}, remote || {}, local?._fieldVersions || {}, remote?._fieldVersions || {});
+    return {
+      ...(remote || {}),
+      ...(local || {}),
+      ...merged.data,
+      _fieldVersions: merged.versions
+    };
+  }
   const localT = syncTimeMs(local?._syncUpdatedAt);
   const remoteT = syncTimeMs(remote?._syncUpdatedAt);
   const primary = remoteT > localT ? remote : local;
@@ -12620,6 +12659,11 @@ function dedupeScanSessionsForDrive(a, b) {
 }
 
 function mergeDrivePayloadsForConflict(localPayload, remoteRaw, clientId) {
+  if (remoteRaw?.clientId && clientId && remoteRaw.clientId !== clientId) {
+    const err = new Error('Drive client file mismatch: expected ' + clientId + ', found ' + remoteRaw.clientId);
+    err.code = 'drive-client-id-mismatch';
+    throw err;
+  }
   const remote = parseDriveClientFile(remoteRaw || {});
   const localDeleted = new Set(localPayload.deletedPolicyIds || []);
   const remoteDeleted = new Set(remote.deletedPolicyIds || []);
@@ -12632,14 +12676,13 @@ function mergeDrivePayloadsForConflict(localPayload, remoteRaw, clientId) {
   for (const id of ids) {
     const local = localById.get(id);
     const remotePolicy = remoteById.get(id);
-    if (localDeleted.has(id) && !local) continue;
-    if (remoteDeleted.has(id) && !remotePolicy && !local) continue;
+    if (localDeleted.has(id) || remoteDeleted.has(id)) continue;
     if (local && remotePolicy) {
       if (JSON.stringify(local) !== JSON.stringify(remotePolicy)) conflicts++;
       policies.push({ ...mergePolicyForDrive(local, remotePolicy), clientId });
     } else if (local) {
       policies.push({ ...local, clientId });
-    } else if (!localDeleted.has(id)) {
+    } else {
       policies.push({ ...remotePolicy, clientId });
     }
   }
@@ -12654,11 +12697,16 @@ function mergeDrivePayloadsForConflict(localPayload, remoteRaw, clientId) {
       scanSessions: dedupeScanSessionsForDrive(localPayload.scanSessions, remote.scanSessions),
     },
     conflicts,
-    remoteOnly: [...remoteById.keys()].filter(id => !localById.has(id) && !localDeleted.has(id)).length
+    remoteOnly: [...remoteById.keys()].filter(id => !localById.has(id) && !localDeleted.has(id) && !remoteDeleted.has(id)).length
   };
 }
 
 async function writeDrivePayloadToLocal(clientId, parsed, headRevisionId, existingDs) {
+  if (parsed?.clientId && parsed.clientId !== clientId) {
+    const err = new Error('Drive client file mismatch: expected ' + clientId + ', found ' + parsed.clientId);
+    err.code = 'drive-client-id-mismatch';
+    throw err;
+  }
   const driveProfile = parsed.clientProfile || {};
   const localDeletedIds = await getDeletedPolicyIds(clientId).catch(() => []);
   const deletedPolicyIds = Array.from(new Set([
@@ -12697,6 +12745,34 @@ async function writeDrivePayloadToLocal(clientId, parsed, headRevisionId, existi
   if (updatedDs) await PolicyDB.saveDriveState(updatedDs);
   await PolicyDB.deleteSyncOutbox(syncOutboxId(clientId)).catch(() => {});
   return { pulled: true, clientProfile: driveProfile, policies: drivePolicies, driveState: updatedDs, syncMeta: parsed.syncMeta || null };
+}
+
+async function removeLocalClientData(clientId, opts = {}) {
+  if (!clientId) return 0;
+  let removedPolicies = 0;
+  await dbDel('drive_state', clientId).catch(() => {});
+  const allPols = await dbGetAll('policies').catch(() => []);
+  for (const pol of (allPols || []).filter(p => p.clientId === clientId)) {
+    if (pol.id) {
+      await dbDel('policies', pol.id).catch(() => {});
+      removedPolicies++;
+    }
+  }
+  await dbDel('settings', 'clientProfile_' + clientId).catch(() => {});
+  await dbDel('settings', 'clientName_' + clientId).catch(() => {});
+  await PolicyDB.deleteSyncOutbox(syncOutboxId(clientId)).catch(() => {});
+  const scanSessions = await PolicyDB.getAllScanSessions().catch(() => []);
+  for (const session of (scanSessions || []).filter(s => s.clientId === clientId)) {
+    if (session.id) await dbDel('scan_sessions', session.id).catch(() => {});
+  }
+  const checkpointSummaries = await PolicyDB.getAllCheckpointSummaries().catch(() => []);
+  for (const cp of (checkpointSummaries || []).filter(c => c.clientId === clientId)) {
+    if (cp.id) await PolicyDB.deleteCheckpointSummary(cp.id).catch(() => {});
+  }
+  if (opts.dispatch !== false) {
+    try { window.dispatchEvent(new Event('policylens-clients-changed')); } catch(_) {}
+  }
+  return removedPolicies;
 }
 
 // ── Shared Drive write core (used by debounced dual-write + manual "Sync now") ──
@@ -13301,14 +13377,7 @@ async function refreshClientFromDrive(clientId, opts) {
     if (meta.trashed === true) {
       await recordClientTrashTombstone(ds, 'drive-remote-trash').catch(() => {});
       console.log('[DriveRefresh] Client', ds.clientName || clientId, 'was trashed — removing local data');
-      try {
-        await dbDel('drive_state', clientId);
-        const allPols = await dbGetAll('policies');
-        for (const pol of allPols.filter(p => p.clientId === clientId)) { if (pol.id) await dbDel('policies', pol.id); }
-        try { await dbDel('settings', 'clientProfile_' + clientId); } catch(_) {}
-        try { await dbDel('settings', 'clientName_' + clientId); } catch(_) {}
-      } catch (e) { console.warn('[DriveRefresh] Cleanup failed:', e.message); }
-      try { window.dispatchEvent(new Event('policylens-clients-changed')); } catch(_) {}
+      try { await removeLocalClientData(clientId); } catch (e) { console.warn('[DriveRefresh] Cleanup failed:', e.message); }
       try { window.dispatchEvent(new CustomEvent('policylens-client-trashed', { detail: { clientId, clientName: ds.clientName } })); } catch(_) {}
       try { toast('Client ' + (ds.clientName || '') + ' was deleted on another device', 'info', 4000); } catch(_) {}
       return { pulled: false, trashed: true };
@@ -13325,6 +13394,13 @@ async function refreshClientFromDrive(clientId, opts) {
     console.log('[DriveRefresh] Pulled', (result.policies || []).length, 'policies for', ds.clientName || clientId);
     return result;
   } catch (err) {
+    if (isDriveNotFoundError(err)) {
+      await recordClientTrashTombstone(ds, 'drive-missing-file').catch(() => {});
+      console.warn('[DriveRefresh] Client file missing for', ds.clientName || clientId, '- removing local data');
+      await removeLocalClientData(clientId).catch(e => console.warn('[DriveRefresh] Missing-file cleanup failed:', e?.message || e));
+      try { window.dispatchEvent(new CustomEvent('policylens-client-trashed', { detail: { clientId, clientName: ds.clientName } })); } catch(_) {}
+      return { pulled: false, trashed: true };
+    }
     console.warn('[DriveRefresh] Failed for', ds.clientName || clientId, ':', err.message);
     return false;
   }
@@ -13333,7 +13409,7 @@ async function refreshClientFromDrive(clientId, opts) {
 async function discoverDriveClients() {
   if (getDriveStatus() !== 'connected' || isDriveLocalOnly()) {
     console.log('[Discovery] Skipped — Drive not connected');
-    return { found: [], changedExisting: [], reconciledExisting: 0, skippedExisting: 0, errors: 0, driveClientIds: new Set(), hasFolderStructure: false };
+    return { found: [], changedExisting: [], reconciledExisting: 0, skippedExisting: 0, errors: 0, driveClientIds: new Set(), hasFolderStructure: false, scanComplete: false };
   }
   await flushPendingClientTrashQueue().catch(() => 0);
   const found = [];
@@ -13341,13 +13417,12 @@ async function discoverDriveClients() {
   const driveClientIds = new Set();
   let skippedExisting = 0, reconciledExisting = 0, errors = 0;
   let hasFolderStructure = false;
+  let scanComplete = true;
   try {
     // v2.3.0-rc2c.4b: Folder tree traversal (appProperties search is eventually consistent, misses new files)
     const rootId = await driveClient.ensureFolder();
-    const tierQ = encodeURIComponent("'" + rootId + "' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false");
-    const tierResp = await _driveFetch('https://www.googleapis.com/drive/v3/files?q=' + tierQ + '&fields=files(id,name)&pageSize=100');
-    const tierData = await tierResp.json();
-    const tierFolders = tierData.files || [];
+    const tierQ = driveQueryLiteral(rootId) + " in parents and mimeType='application/vnd.google-apps.folder' and trashed=false";
+    const tierFolders = await driveListFiles(tierQ, 'id,name', { pageSize: 100 });
     hasFolderStructure = tierFolders.length > 0; // v2.3.0-rc2c.4e: signal prior Drive use
     console.log('[Discovery] Found', tierFolders.length, 'tier folder(s)');
     const existingStates = await PolicyDB.getAllDriveStates().catch(() => []);
@@ -13356,28 +13431,29 @@ async function discoverDriveClients() {
     const trashTombstones = await getClientTrashTombstones().catch(() => []);
     for (const tier of tierFolders) {
       try {
-        const clientQ = encodeURIComponent("'" + tier.id + "' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false");
-        const clientResp = await _driveFetch('https://www.googleapis.com/drive/v3/files?q=' + clientQ + '&fields=files(id,name)&pageSize=100');
-        const clientData = await clientResp.json();
-        const clientFolders = clientData.files || [];
+        const clientQ = driveQueryLiteral(tier.id) + " in parents and mimeType='application/vnd.google-apps.folder' and trashed=false";
+        const clientFolders = await driveListFiles(clientQ, 'id,name', { pageSize: 100 });
         for (const cf of clientFolders) {
           try {
-            const fileQ = encodeURIComponent("'" + cf.id + "' in parents and mimeType='application/json' and trashed=false");
-            const fileResp = await _driveFetch('https://www.googleapis.com/drive/v3/files?q=' + fileQ + '&fields=files(id,name,headRevisionId,modifiedTime,appProperties)&pageSize=10');
-            const fileData = await fileResp.json();
-            const files = fileData.files || [];
+            const fileQ = driveQueryLiteral(cf.id) + " in parents and mimeType='application/json' and trashed=false";
+            const files = await driveListFiles(fileQ, 'id,name,headRevisionId,modifiedTime,appProperties', { pageSize: 100 });
             const autosave = files.find(f => (f.appProperties || {}).kind === 'autosave')
               || files.find(f => /^PolicyLens\s*[\u2014\-]/i.test(f.name || ''));
             if (!autosave) continue; // Empty orphan folder — skip silently
-            const ap = autosave.appProperties || {};
-            const clientId = ap.clientId;
-            if (!clientId) { errors++; continue; }
+            const clientId = await resolveDriveAutosaveClientId(autosave);
+            if (!clientId) { errors++; scanComplete = false; continue; }
             const tombstoneProbe = { clientId, fileId: autosave.id, folderId: cf.id, clientName: cf.name || '' };
             if (trashTombstones.some(t => clientTrashTombstoneMatches(t, tombstoneProbe))) {
               console.log('[Discovery] Skipping locally deleted client:', cf.name || clientId);
               continue;
             }
             driveClientIds.add(clientId); // v2.3.0-rc2c.4c: track ALL Drive clientIds (before dedup) for orphan purge
+            if (existingFileIds.has(autosave.id) && !existingClientIds.has(clientId)) {
+              console.warn('[Discovery] File/client mismatch for', cf.name || autosave.name || autosave.id, '- skipping reconciliation');
+              errors++;
+              scanComplete = false;
+              continue;
+            }
             if (existingClientIds.has(clientId) || existingFileIds.has(autosave.id)) {
               // v2.3.0-rc2c.4d+4f: Reconcile name + tier from Drive folder structure
               const localState = existingStates.find(s => s.clientId === clientId) || existingStates.find(s => s.fileId === autosave.id);
@@ -13426,13 +13502,13 @@ async function discoverDriveClients() {
               headRevisionId: autosave.headRevisionId || null,
               modifiedTime: autosave.modifiedTime || null,
             });
-          } catch (e) { console.warn('[Discovery] Client folder error:', cf.name, e.message); errors++; }
+          } catch (e) { console.warn('[Discovery] Client folder error:', cf.name, e.message); errors++; scanComplete = false; }
         }
-      } catch (e) { console.warn('[Discovery] Tier folder error:', tier.name, e.message); errors++; }
+      } catch (e) { console.warn('[Discovery] Tier folder error:', tier.name, e.message); errors++; scanComplete = false; }
     }
     console.log('[Discovery]', found.length, 'new,', skippedExisting, 'already known,', changedExisting.length, 'changed,', errors, 'errors');
-  } catch (err) { console.warn('[Discovery] Failed:', err.message); errors++; }
-  return { found, changedExisting, reconciledExisting, skippedExisting, errors, driveClientIds, hasFolderStructure };
+  } catch (err) { console.warn('[Discovery] Failed:', err.message); errors++; scanComplete = false; }
+  return { found, changedExisting, reconciledExisting, skippedExisting, errors, driveClientIds, hasFolderStructure, scanComplete: scanComplete && errors === 0 };
 }
 
 async function addDriveClientToLocal(f) {
@@ -13459,6 +13535,10 @@ async function addDriveClientToLocal(f) {
     return { added: true, policies: (result.policies || []).length };
   } catch (pullErr) {
     console.warn('[Discovery] Data pull failed for', f.clientName || f.clientId, pullErr.message);
+    if (pullErr?.code === 'drive-client-id-mismatch') {
+      await removeLocalClientData(f.clientId, { dispatch: false }).catch(() => {});
+      return { added: false, skipped: true, error: true, policies: 0 };
+    }
     return { added: true, partial: true, policies: 0 };
   }
 }
@@ -13478,13 +13558,7 @@ async function purgeOrphanClients(driveClientIds) {
     if (driveClientIds.has(ds.clientId)) continue;
     console.log('[Reconcile] Orphan client:', ds.clientName || ds.clientId, '— not in Drive, removing local data');
     try {
-      await dbDel('drive_state', ds.clientId);
-      const allPols = await dbGetAll('policies');
-      for (const pol of allPols.filter(p => p.clientId === ds.clientId)) {
-        if (pol.id) await dbDel('policies', pol.id);
-      }
-      try { await dbDel('settings', 'clientProfile_' + ds.clientId); } catch(_) {}
-      try { await dbDel('settings', 'clientName_' + ds.clientId); } catch(_) {}
+      await removeLocalClientData(ds.clientId, { dispatch: false });
       purged++;
     } catch (e) { console.warn('[Reconcile] Failed to purge', ds.clientName, e.message); }
   }
@@ -13796,6 +13870,46 @@ async function _driveFetch(url, opts) {
   return resp;
 }
 
+function isDriveNotFoundError(err) {
+  const msg = String(err?.message || err?.detail || '').toLowerCase();
+  return err?.status === 404 || err?.status === 410 || msg.includes('file not found') || msg.includes('not found');
+}
+
+function driveQueryLiteral(value) {
+  return "'" + String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
+}
+
+async function driveListFiles(query, fileFields, opts = {}) {
+  const files = [];
+  let pageToken = '';
+  do {
+    const params = new URLSearchParams();
+    params.set('q', query);
+    params.set('fields', 'nextPageToken,files(' + (fileFields || 'id,name') + ')');
+    params.set('pageSize', String(opts.pageSize || 100));
+    if (opts.orderBy) params.set('orderBy', opts.orderBy);
+    if (pageToken) params.set('pageToken', pageToken);
+    const resp = await _driveFetch('https://www.googleapis.com/drive/v3/files?' + params.toString(), opts.fetchOpts || {});
+    const data = await resp.json().catch(() => ({}));
+    files.push(...(data.files || []));
+    pageToken = data.nextPageToken || '';
+  } while (pageToken);
+  return files;
+}
+
+async function resolveDriveAutosaveClientId(file) {
+  const apId = String(file?.appProperties?.clientId || '').trim();
+  if (apId) return apId;
+  try {
+    const { content } = await driveClient.getFile(file.id);
+    const parsed = JSON.parse(content || '{}');
+    return String(parsed?.clientId || '').trim();
+  } catch (err) {
+    console.warn('[Discovery] Could not resolve clientId from autosave content:', file?.name || file?.id, err?.message || err);
+    return '';
+  }
+}
+
 // ──────────────────────────────────────────────
 // driveClient — public API
 // ──────────────────────────────────────────────
@@ -13910,11 +14024,10 @@ const driveClient = {
       driveLSDel(DRIVE_LS.folderId);
     }
     // 2. Search by name in My Drive root
-    const q = encodeURIComponent("name='" + DRIVE_FOLDER_NAME + "' and mimeType='application/vnd.google-apps.folder' and 'root' in parents and trashed=false");
-    const searchResp = await _driveFetch('https://www.googleapis.com/drive/v3/files?q=' + q + '&fields=files(id,name)');
-    const searchData = await searchResp.json();
-    if (searchData.files && searchData.files.length > 0) {
-      const id = searchData.files[0].id;
+    const q = "name=" + driveQueryLiteral(DRIVE_FOLDER_NAME) + " and mimeType='application/vnd.google-apps.folder' and 'root' in parents and trashed=false";
+    const searchFiles = await driveListFiles(q, 'id,name', { pageSize: 100 });
+    if (searchFiles.length > 0) {
+      const id = searchFiles[0].id;
       if (!isValidDriveFileId(id)) throw new Error('Drive returned an invalid PolicyLens folder id');
       driveLSSet(DRIVE_LS.folderId, id);
       console.log('[Drive] Found existing folder:', id);
@@ -13943,10 +14056,8 @@ const driveClient = {
   async listFiles() {
     const folderId = driveLSGet(DRIVE_LS.folderId);
     if (!folderId) throw new Error('PolicyLens folder not initialized');
-    const q = encodeURIComponent("'" + folderId + "' in parents and trashed=false");
-    const resp = await _driveFetch('https://www.googleapis.com/drive/v3/files?q=' + q + '&fields=files(id,name,headRevisionId,modifiedTime,size,appProperties)');
-    const data = await resp.json();
-    return data.files || [];
+    const q = driveQueryLiteral(folderId) + ' in parents and trashed=false';
+    return await driveListFiles(q, 'id,name,headRevisionId,modifiedTime,size,appProperties', { pageSize: 100 });
   },
 
   // ── createClientFile: multipart POST to create a new per-client JSON file ──
@@ -14007,7 +14118,7 @@ const driveClient = {
     const multipart =
       '--' + boundary + '\r\n' +
       'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
-      JSON.stringify({ name: newName, appProperties: { schemaVersion: String(DRIVE_SCHEMA_VERSION), kind: 'autosave' } }) + '\r\n' +
+      JSON.stringify({ name: newName, appProperties: { clientId: clientData.clientId, schemaVersion: String(DRIVE_SCHEMA_VERSION), kind: 'autosave' } }) + '\r\n' +
       '--' + boundary + '\r\n' +
       'Content-Type: application/json\r\n\r\n' +
       body + '\r\n' +
@@ -14029,13 +14140,12 @@ const driveClient = {
     const tierName = tier || 'Unassigned';
     if (_tierFolderCache[tierName]) return _tierFolderCache[tierName];
     const rootId = await driveClient.ensureFolder();
-    const q = encodeURIComponent("name='" + tierName + "' and '" + rootId + "' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false");
-    const resp = await _driveFetch('https://www.googleapis.com/drive/v3/files?q=' + q + '&fields=files(id,name)');
-    const data = await resp.json();
-    if (data.files && data.files.length > 0) {
-      if (!isValidDriveFileId(data.files[0].id)) throw new Error('Drive returned an invalid tier folder id');
-      _tierFolderCache[tierName] = data.files[0].id;
-      return data.files[0].id;
+    const q = 'name=' + driveQueryLiteral(tierName) + ' and ' + driveQueryLiteral(rootId) + " in parents and mimeType='application/vnd.google-apps.folder' and trashed=false";
+    const files = await driveListFiles(q, 'id,name', { pageSize: 100 });
+    if (files.length > 0) {
+      if (!isValidDriveFileId(files[0].id)) throw new Error('Drive returned an invalid tier folder id');
+      _tierFolderCache[tierName] = files[0].id;
+      return files[0].id;
     }
     const createResp = await _driveFetch('https://www.googleapis.com/drive/v3/files?fields=id', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -14051,13 +14161,12 @@ const driveClient = {
   async ensureClientFolder(tierFolderId, clientName) {
     const cacheKey = tierFolderId + '/' + clientName;
     if (_clientFolderCache[cacheKey]) return _clientFolderCache[cacheKey];
-    const q = encodeURIComponent("name='" + clientName.replace(/'/g, "\\'") + "' and '" + tierFolderId + "' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false");
-    const resp = await _driveFetch('https://www.googleapis.com/drive/v3/files?q=' + q + '&fields=files(id,name)');
-    const data = await resp.json();
-    if (data.files && data.files.length > 0) {
-      if (!isValidDriveFileId(data.files[0].id)) throw new Error('Drive returned an invalid client folder id');
-      _clientFolderCache[cacheKey] = data.files[0].id;
-      return data.files[0].id;
+    const q = 'name=' + driveQueryLiteral(clientName) + ' and ' + driveQueryLiteral(tierFolderId) + " in parents and mimeType='application/vnd.google-apps.folder' and trashed=false";
+    const files = await driveListFiles(q, 'id,name', { pageSize: 100 });
+    if (files.length > 0) {
+      if (!isValidDriveFileId(files[0].id)) throw new Error('Drive returned an invalid client folder id');
+      _clientFolderCache[cacheKey] = files[0].id;
+      return files[0].id;
     }
     const createResp = await _driveFetch('https://www.googleapis.com/drive/v3/files?fields=id', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -14075,12 +14184,11 @@ const driveClient = {
   async ensureCheckpointsFolder(clientFolderId) {
     const cacheKey = clientFolderId + '/checkpoints';
     if (_clientFolderCache[cacheKey]) return _clientFolderCache[cacheKey];
-    const q = encodeURIComponent("name='checkpoints' and '" + clientFolderId + "' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false");
-    const resp = await _driveFetch('https://www.googleapis.com/drive/v3/files?q=' + q + '&fields=files(id,name)');
-    const data = await resp.json();
-    if (data.files && data.files.length > 0) {
-      _clientFolderCache[cacheKey] = data.files[0].id;
-      return data.files[0].id;
+    const q = "name='checkpoints' and " + driveQueryLiteral(clientFolderId) + " in parents and mimeType='application/vnd.google-apps.folder' and trashed=false";
+    const files = await driveListFiles(q, 'id,name', { pageSize: 100 });
+    if (files.length > 0) {
+      _clientFolderCache[cacheKey] = files[0].id;
+      return files[0].id;
     }
     const createResp = await _driveFetch('https://www.googleapis.com/drive/v3/files?fields=id', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -14095,13 +14203,9 @@ const driveClient = {
   // v2.3.0-rc2c.2a.1: List checkpoint files in a client's checkpoints folder (Drive query).
   async listCheckpointFiles(clientFolderId) {
     const cpFolderId = await this.ensureCheckpointsFolder(clientFolderId);
-    const q = encodeURIComponent("'" + cpFolderId + "' in parents and trashed=false");
-    const resp = await _driveFetch(
-      'https://www.googleapis.com/drive/v3/files?q=' + q +
-      '&fields=files(id,name,size,modifiedTime)&orderBy=modifiedTime desc&pageSize=200'
-    );
-    const data = await resp.json();
-    return (data.files || []).map(f => ({
+    const q = driveQueryLiteral(cpFolderId) + ' in parents and trashed=false';
+    const files = await driveListFiles(q, 'id,name,size,modifiedTime', { orderBy: 'modifiedTime desc', pageSize: 200 });
+    return (files || []).map(f => ({
       driveFileId: f.id, filename: f.name,
       sizeBytes: f.size ? parseInt(f.size, 10) : 0,
       modifiedTime: f.modifiedTime
@@ -14129,10 +14233,8 @@ const driveClient = {
   },
 
   async listFolderFiles(folderId) {
-    const q = encodeURIComponent("'" + folderId + "' in parents and trashed=false");
-    const resp = await _driveFetch('https://www.googleapis.com/drive/v3/files?q=' + q + '&fields=files(id,name,headRevisionId,modifiedTime,size,appProperties)');
-    const data = await resp.json();
-    return data.files || [];
+    const q = driveQueryLiteral(folderId) + ' in parents and trashed=false';
+    return await driveListFiles(q, 'id,name,headRevisionId,modifiedTime,size,appProperties', { pageSize: 100 });
   },
 
   // ── getFile: fetch a file's content + metadata ──
@@ -15055,7 +15157,11 @@ function App() {
       }
       catch(e) { errors++; console.warn('[DirectorySync] Add failed for', f.clientName || f.clientId, e.message); }
     }
-    const purged = await purgeOrphanClients(result.driveClientIds);
+    const canPurge = result.scanComplete === true && result.driveClientIds && result.driveClientIds.size > 0;
+    const purged = canPurge ? await purgeOrphanClients(result.driveClientIds) : 0;
+    if (!canPurge && result.driveClientIds && result.driveClientIds.size > 0) {
+      console.warn('[DirectorySync] Skipped orphan purge because Drive directory scan was partial');
+    }
     const cleaned = result.hasFolderStructure ? await cleanupUnattachedPolicies() : 0;
     for (const ch of (result.changedExisting || [])) {
       if (_driveSyncInFlight || _driveSyncTimer !== null) break;
@@ -17026,7 +17132,8 @@ function App() {
           else if (isValidDriveFileId(sourceState.fileId)) await _driveFetch('https://www.googleapis.com/drive/v3/files/' + encodeURIComponent(sourceState.fileId), { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ trashed:true }) });
           sourceTrashed = !!(sourceState.folderId || isValidDriveFileId(sourceState.fileId));
         } catch(e) {
-          console.warn('[ClientMerge] Could not trash source Drive file/folder:', e?.message || e);
+          if (isDriveNotFoundError(e)) sourceTrashed = true;
+          else console.warn('[ClientMerge] Could not trash source Drive file/folder:', e?.message || e);
         }
       }
       if (!sourceTrashed) await queueClientTrashRequest(sourceState, 'client-merge').catch(() => {});
@@ -17260,14 +17367,17 @@ function App() {
         await driveClient.trashFolder(ds.folderId);
         clientTrashed = true;
         setRecentClientDeleteSyncStatus(ds, 'synced');
-      } catch(e) { console.warn('[Destroy] Trash failed:', e.message); }
+      } catch(e) {
+        if (isDriveNotFoundError(e)) {
+          clientTrashed = true;
+          setRecentClientDeleteSyncStatus(ds, 'synced');
+        } else {
+          console.warn('[Destroy] Trash failed:', e.message);
+        }
+      }
     }
     if (!clientTrashed) await queueClientTrashRequest(ds, 'client-destroy').catch(() => {});
-    await dbDel('drive_state', targetId);
-    const allPols = await dbGetAll('policies');
-    for (const pol of allPols.filter(p => p.clientId === targetId)) await dbDel('policies', pol.id);
-    try { await dbDel('settings', 'clientProfile_' + targetId); } catch(_) {}
-    try { await dbDel('settings', 'clientName_' + targetId); } catch(_) {}
+    await removeLocalClientData(targetId, { dispatch: false });
     const remaining = await PolicyDB.getAllDriveStates();
     if (targetId === activeClientIdRef.current && remaining.length > 0) {
       const next = remaining.reduce((a, b) => (a.lastSyncedAt || '') > (b.lastSyncedAt || '') ? a : b);
@@ -17307,13 +17417,22 @@ function App() {
             console.log('[Discovery] Pulled', (result.policies || []).length, 'policies for', f.clientName);
           } catch (pullErr) {
             console.warn('[Discovery] Data pull failed for', f.clientName, pullErr.message);
+            if (pullErr?.code === 'drive-client-id-mismatch') {
+              await removeLocalClientData(f.clientId, { dispatch: false }).catch(() => {});
+              errs++;
+              continue;
+            }
             try { toast('Could not load policies for ' + f.clientName + ' — will retry when you open this client', 'warning', 5000); } catch(_) {}
           }
           added++;
         } else if (choice === 'delete') {
           await recordClientTrashTombstone(f, 'discovery-delete').catch(() => {});
-          if (f.folderId) { await driveClient.trashFolder(f.folderId); }
-          else if (isValidDriveFileId(f.fileId)) { await _driveFetch('https://www.googleapis.com/drive/v3/files/' + encodeURIComponent(f.fileId), { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({trashed:true}) }); }
+          try {
+            if (f.folderId) { await driveClient.trashFolder(f.folderId); }
+            else if (isValidDriveFileId(f.fileId)) { await _driveFetch('https://www.googleapis.com/drive/v3/files/' + encodeURIComponent(f.fileId), { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({trashed:true}) }); }
+          } catch (trashErr) {
+            if (!isDriveNotFoundError(trashErr)) throw trashErr;
+          }
           console.log('[Discovery] Trashed:', f.clientName, f.folderId || f.fileId);
           deleted++;
         }
