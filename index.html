@@ -36,7 +36,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // long multi-batch scans can continue when the browser backgrounds
 // the page. The worker is registered only on HTTPS/localhost.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.10';
+const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.11';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -674,11 +674,30 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.10';
+const APP_VERSION = 'v2.3.0-rc2e.11';
 const APP_VERSION_DATE = '2026-05-01';
-const APP_VERSION_NAME = 'New client friction cut';
+const APP_VERSION_NAME = 'Frictionless advisor flow';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
+const APP_TAB_IDS = new Set(['profile', 'dashboard', 'policies', 'clients', 'repository', 'report', 'settings']);
+function getInitialPolicyLensTab() {
+  try {
+    const saved = localStorage.getItem('policylens_last_tab');
+    if (APP_TAB_IDS.has(saved)) return saved;
+  } catch (_) {}
+  return 'dashboard';
+}
 const CHANGELOG = [{
+  version: 'v2.3.0-rc2e.11',
+  date: '2026-05-01',
+  name: 'Frictionless advisor flow',
+  sections: [{
+    heading: 'Flow',
+    items: ['PolicyLens now reopens on the last workspace tab so advisors can continue from the exact client flow they left.', 'Dashboard and Policies empty states now point to the next best action instead of generic blank screens.', 'Drive sync status now uses calmer saved-locally/synced-to-Drive wording and reserves red states for actual risk.']
+  }, {
+    heading: 'AI review',
+    items: ['The AI found-these-policies table now labels decisions as Add new, Merge, Ignore duplicate, or Needs review for faster scan outcomes.']
+  }]
+}, {
   version: 'v2.3.0-rc2e.10',
   date: '2026-05-01',
   name: 'New client friction cut',
@@ -15137,7 +15156,17 @@ function OAuthReturnLoader() {
   }, _OAUTH_LOADER_MESSAGES[idx])));
 }
 function App() {
-  const [tab, setTab] = useState('dashboard');
+  const [tab, setTabState] = useState(getInitialPolicyLensTab);
+  const setTab = useCallback(nextTab => {
+    setTabState(prev => {
+      const resolved = typeof nextTab === 'function' ? nextTab(prev) : nextTab;
+      const safeTab = APP_TAB_IDS.has(resolved) ? resolved : 'dashboard';
+      try {
+        localStorage.setItem('policylens_last_tab', safeTab);
+      } catch (_) {}
+      return safeTab;
+    });
+  }, []);
   const [policies, setPolicies] = useState([]);
   const [repo, setRepo] = useState([]);
   const [apiKey, setApiKey] = useState('');
@@ -20542,7 +20571,7 @@ function SyncStatusPill({
     };
   }, []);
   const deleteSyncStatus = getRecentClientDeleteSyncStatus();
-  const deleteSyncLabel = deleteSyncStatus ? deleteSyncStatus.status === 'syncing' ? 'Deleting from Drive' : deleteSyncStatus.status === 'queued' ? 'Delete queued for Drive' : 'Client deleted from Drive' : '';
+  const deleteSyncLabel = deleteSyncStatus ? deleteSyncStatus.status === 'syncing' ? 'Saved locally · deleting from Drive' : deleteSyncStatus.status === 'queued' ? 'Saved locally · delete queued' : 'Saved locally · deleted from Drive' : '';
   useEffect(() => {
     let live = true;
     const clientId = driveState?.clientId;
@@ -20603,7 +20632,7 @@ function SyncStatusPill({
         flexShrink: 0,
         padding: '0 4px'
       }
-    }, saving ? _driveSyncInFlight ? 'Uploading' : 'Queued' : 'Synced');
+    }, saving ? _driveSyncInFlight ? 'Syncing' : 'Queued' : 'Synced');
   }
   if (!driveState && !deleteSyncStatus || getDriveStatus() !== 'connected' || isDriveLocalOnly()) return null;
   const isSaving = _driveSyncInFlight || _driveSyncTimer !== null || driveState?.pendingWrite;
@@ -20612,9 +20641,15 @@ function SyncStatusPill({
     const diff = Date.now() - new Date(ts).getTime();
     const sec = Math.max(0, Math.floor(diff / 1000));
     if (sec < 10) return 'just now';
-    if (sec < 60) return sec + 's ago';
-    if (sec < 3600) return Math.floor(sec / 60) + 'm ago';
-    if (sec < 86400) return Math.floor(sec / 3600) + 'h ago';
+    if (sec < 60) return sec + ' sec ago';
+    if (sec < 3600) {
+      const mins = Math.floor(sec / 60);
+      return mins + ' min' + (mins === 1 ? '' : 's') + ' ago';
+    }
+    if (sec < 86400) {
+      const hrs = Math.floor(sec / 3600);
+      return hrs + ' hr' + (hrs === 1 ? '' : 's') + ' ago';
+    }
     const d = new Date(ts);
     return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
   };
@@ -20624,7 +20659,7 @@ function SyncStatusPill({
   let border = 'var(--border)';
   let title = 'Sync activity';
   if (driveState?.pendingError) {
-    label = 'Sync retry needed';
+    label = 'Saved locally · Drive retry needed';
     color = 'var(--red)';
     bg = 'var(--red-dim)';
     border = 'rgba(239,83,80,.25)';
@@ -20636,23 +20671,23 @@ function SyncStatusPill({
     border = deleteSyncStatus.status === 'synced' ? 'rgba(91,168,160,.24)' : 'rgba(212,169,106,.24)';
     title = (deleteSyncStatus.clientName || 'Client') + (deleteSyncStatus.status === 'queued' ? ' is queued for Drive Trash' : deleteSyncStatus.status === 'syncing' ? ' is being moved to Drive Trash' : ' was moved to Drive Trash') + ' at ' + new Date(deleteSyncStatus.at).toLocaleString();
   } else if (_driveSyncInFlight) {
-    label = 'Uploading to Drive';
+    label = 'Saved locally · Syncing to Drive';
     color = 'var(--gold)';
-    title = 'Drive upload in progress';
+    title = 'Changes are saved locally. Drive upload is in progress.';
   } else if (_driveSyncTimer !== null || driveState?.pendingWrite) {
-    label = 'Queued locally';
+    label = 'Saved locally · Drive queued';
     color = 'var(--gold)';
     title = 'Changes are saved locally and queued for Drive';
   } else if (driveState?.lastSyncedAt) {
-    label = 'Synced ' + ageLabel(driveState.lastSyncedAt);
+    label = 'Saved locally · Synced to Drive · ' + ageLabel(driveState.lastSyncedAt);
     if (driveState.lastSyncDeviceName && driveState.lastSyncDeviceName !== getPolicyLensDeviceName()) {
       label += ' from ' + driveState.lastSyncDeviceName;
     }
     color = _driveSyncJustSaved ? 'var(--teal)' : 'var(--text3)';
-    title = 'Last synced ' + new Date(driveState.lastSyncedAt).toLocaleString();
+    title = 'Saved locally. Last Drive sync ' + new Date(driveState.lastSyncedAt).toLocaleString();
   } else {
-    label = 'Drive ready';
-    title = 'Drive is connected';
+    label = 'Saved locally · Drive ready';
+    title = 'Drive is connected. Local edits are saved first.';
   }
   return /*#__PURE__*/React.createElement("span", {
     style: {
@@ -33962,6 +33997,8 @@ function Dashboard() {
       actions: [...new Set(actions)].slice(0, 3)
     };
   }, [policies, retirementLite, advisorReview, gaps, coverage, reqDeath, reqTPD, reqCI, reqDI, lifecycleEvents, premiumBreakdown.totalAnnual, premRatio, totalCoverage]);
+  const hasProfileBasics = !!(p.name && String(p.name).trim() && profileHasAgeSource(p) && (parseFloat(p.annualIncome) > 0 || parseFloat(p.monthlyIncome) > 0));
+  const clientFirstLabel = p.name && String(p.name).trim().split(/\s+/)[0] || 'this client';
   if (policies.length === 0) return /*#__PURE__*/React.createElement("div", {
     className: "fade-in",
     style: {
@@ -34003,7 +34040,15 @@ function Dashboard() {
       fontWeight: 600,
       marginBottom: 8
     }
-  }, "Welcome to PolicyLens"), /*#__PURE__*/React.createElement("div", {
+  }, "Scan first policy"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: 'var(--text2)',
+      maxWidth: 520,
+      margin: '0 auto 12px',
+      lineHeight: 1.45
+    }
+  }, hasProfileBasics ? 'Start with one document for ' + clientFirstLabel + '. The dashboard will build itself from there.' : 'Start with one policy document. PolicyLens can also use it to fill client profile details for you.'), /*#__PURE__*/React.createElement("div", {
     style: {
       maxWidth: 560,
       margin: '16px auto 20px',
@@ -34046,7 +34091,7 @@ function Dashboard() {
       color: 'var(--gold2)',
       marginBottom: 4
     }
-  }, "Scan a Policy Document"), /*#__PURE__*/React.createElement("div", {
+  }, "Scan first policy"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 11,
       color: 'var(--text2)'
@@ -34237,7 +34282,43 @@ function Dashboard() {
     active: true,
     onFiles: handleDashDrop,
     label: "\uD83D\uDCCE Drop or paste any document \u2014 client profile, policy contracts, benefit illustrations"
-  }), showReview && /*#__PURE__*/React.createElement(ReviewSession, {
+  }), policies.length > 0 && !hasProfileBasics && /*#__PURE__*/React.createElement("div", {
+    className: "card",
+    style: {
+      marginBottom: 14,
+      padding: 14,
+      borderLeft: '3px solid var(--gold)',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      gap: 12,
+      flexWrap: 'wrap'
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      fontWeight: 800,
+      color: 'var(--gold)',
+      textTransform: 'uppercase',
+      letterSpacing: '.4px'
+    }
+  }, "Next best action"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 15,
+      fontWeight: 800,
+      color: 'var(--text)',
+      marginTop: 3
+    }
+  }, "Complete client profile"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--text3)',
+      marginTop: 3
+    }
+  }, "Add name, age source, and income so protection gaps and retirement outlook become reliable.")), /*#__PURE__*/React.createElement("button", {
+    className: "btn-primary btn-sm",
+    onClick: () => setTab('profile')
+  }, "Complete profile")), showReview && /*#__PURE__*/React.createElement(ReviewSession, {
     onClose: () => setShowReview(false)
   }), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -39439,13 +39520,14 @@ function BulkVerifyModal({
       padding: '7px 8px',
       textAlign: 'right'
     }
-  }, "Action"))), /*#__PURE__*/React.createElement("tbody", null, filtered.map((it, i) => {
+  }, "Decision"))), /*#__PURE__*/React.createElement("tbody", null, filtered.map((it, i) => {
     const triage = it._documentTriage || classifyPolicyDocumentTriage(it, existingPolicies || []);
     const meta = DOCUMENT_TRIAGE_META[triage.type] || DOCUMENT_TRIAGE_META.unknown;
     const fp = it._policyFingerprint || buildPolicyIdentityFingerprint(it);
     const anchors = [fp.anchors?.policyNumber ? 'No. ' + it.policyNumber : '', fp.anchors?.owner ? 'Owner ' + (it.policyOwner || it.documentOwner || fp.anchors.owner) : '', fp.anchors?.lifeAssured ? 'Life ' + (it.lifeInsured || fp.anchors.lifeAssured) : '', fp.anchors?.premium ? 'Prem $' + fp.anchors.premium.toLocaleString() : '', fp.anchors?.sourceHash ? 'Src ' + fp.anchors.sourceHash : ''].filter(Boolean).slice(0, 4);
     const confScore = it._gateScore != null ? it._gateScore : passesConfidenceGate(it).score;
     const hasMatch = !!it._knownPolicyMatch || triage.type === 'duplicate';
+    const needsReview = needsDecisionForItem(it);
     return /*#__PURE__*/React.createElement("tr", {
       key: (it.id || it._idx || i) + ':found',
       style: {
@@ -39554,7 +39636,24 @@ function BulkVerifyModal({
         textAlign: 'right',
         whiteSpace: 'nowrap'
       }
-    }, hasMatch ? /*#__PURE__*/React.createElement("button", {
+    }, !it._selected ? /*#__PURE__*/React.createElement("button", {
+      onClick: () => toggleSelect(it._idx),
+      style: {
+        fontSize: 10,
+        padding: '4px 8px',
+        borderRadius: 6,
+        border: '1px solid rgba(255,255,255,.10)',
+        background: 'rgba(255,255,255,.035)',
+        color: 'var(--text3)',
+        fontWeight: 800,
+        cursor: 'pointer'
+      }
+    }, "Ignored") : hasMatch ? /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'inline-flex',
+        gap: 5
+      }
+    }, /*#__PURE__*/React.createElement("button", {
       onClick: () => markMergeFromTable(it._idx),
       style: {
         fontSize: 10,
@@ -39566,7 +39665,31 @@ function BulkVerifyModal({
         fontWeight: 800,
         cursor: 'pointer'
       }
-    }, it._mergeIntoExisting ? 'Will merge' : 'Merge') : /*#__PURE__*/React.createElement("button", {
+    }, it._mergeIntoExisting ? 'Will merge' : 'Merge'), /*#__PURE__*/React.createElement("button", {
+      onClick: () => toggleSelect(it._idx),
+      style: {
+        fontSize: 10,
+        padding: '4px 8px',
+        borderRadius: 6,
+        border: '1px solid rgba(255,255,255,.10)',
+        background: 'rgba(255,255,255,.035)',
+        color: 'var(--text3)',
+        fontWeight: 800,
+        cursor: 'pointer'
+      }
+    }, "Ignore duplicate")) : needsReview ? /*#__PURE__*/React.createElement("button", {
+      onClick: () => toggleExpanded(it._idx),
+      style: {
+        fontSize: 10,
+        padding: '4px 8px',
+        borderRadius: 6,
+        border: '1px solid rgba(212,169,106,.28)',
+        background: 'rgba(212,169,106,.10)',
+        color: 'var(--gold)',
+        fontWeight: 800,
+        cursor: 'pointer'
+      }
+    }, "Needs review") : /*#__PURE__*/React.createElement("button", {
       onClick: () => markAcceptedFromTable(it._idx),
       style: {
         fontSize: 10,
@@ -39578,7 +39701,7 @@ function BulkVerifyModal({
         fontWeight: 800,
         cursor: 'pointer'
       }
-    }, it._extractVerifiedAt ? 'Accepted' : 'Accept')));
+    }, it._extractVerifiedAt ? 'Will add' : 'Add new')));
   }))))), viewMode === 'quick' && /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
@@ -46534,12 +46657,51 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       fontSize: 32,
       marginBottom: 8
     }
-  }, "\uD83D\uDCCB"), /*#__PURE__*/React.createElement("div", null, "No policies ", filter !== 'all' ? 'in this category' : '', " yet"), /*#__PURE__*/React.createElement("div", {
+  }, "\uD83D\uDCCB"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 15,
+      fontWeight: 800,
+      color: 'var(--text)'
+    }
+  }, filter !== 'all' ? 'No policies in this category' : 'Scan first policy'), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 11,
-      marginTop: 8
+      marginTop: 6,
+      maxWidth: 420,
+      marginLeft: 'auto',
+      marginRight: 'auto',
+      lineHeight: 1.45
     }
-  }, "\uD83D\uDCF7 Camera (snap multiple) \xB7 \uD83D\uDCC4 Upload (PDF, Excel, Word, images) \xB7 + Add manually")) : /*#__PURE__*/React.createElement(React.Fragment, null, (() => {
+  }, filter !== 'all' ? 'Switch back to All Categories or add a policy that belongs here.' : 'Upload one policy schedule, BI, rider page, CPF statement, or CRM screenshot. The AI will triage it before asking you to review fields.'), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8,
+      justifyContent: 'center',
+      flexWrap: 'wrap',
+      marginTop: 14
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "btn-primary btn-sm",
+    disabled: scanning,
+    onClick: () => uploadRef.current?.click()
+  }, "\uD83D\uDCC4 Upload"), /*#__PURE__*/React.createElement("button", {
+    className: "btn-secondary btn-sm",
+    disabled: scanning,
+    onClick: async () => {
+      const files = await openCameraModal();
+      if (files && files.length) {
+        stagePhotos(files);
+      }
+    }
+  }, "\uD83D\uDCF7 Camera"), /*#__PURE__*/React.createElement("button", {
+    className: "btn-secondary btn-sm",
+    disabled: scanning,
+    onClick: () => {
+      setEditing(null);
+      setScanResult(null);
+      setShowForm(true);
+    }
+  }, "+ Add manually"))) : /*#__PURE__*/React.createElement(React.Fragment, null, (() => {
     // Group policies into sections
     const isCPFLifePolicy = p => (p.insurer || '').toLowerCase().includes('cpf board') || (p.productName || '').toLowerCase().includes('cpf life');
     const insuranceGroups = [{
