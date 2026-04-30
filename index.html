@@ -36,7 +36,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // long multi-batch scans can continue when the browser backgrounds
 // the page. The worker is registered only on HTTPS/localhost.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.5';
+const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.6';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -664,12 +664,28 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.5';
+const APP_VERSION = 'v2.3.0-rc2e.6';
 const APP_VERSION_DATE = '2026-04-30';
-const APP_VERSION_NAME = 'AI review and policy summary pilot';
+const APP_VERSION_NAME = 'Bug sweep review stability';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 
 const CHANGELOG = [
+  {
+    version: 'v2.3.0-rc2e.6',
+    date: '2026-04-30',
+    name: 'Bug sweep review stability',
+    sections: [
+      {
+        heading: 'Bulk Verify',
+        items: [
+          'Fixed progressive extraction batches duplicating earlier unnumbered rows when the extracted array is re-sent with new items appended.',
+          'One-click Accept and Merge now clear the relevant review flags, so rows do not stay stuck in the advisor review queue after the FC has made a decision.',
+          'Duplicate and weak-triage rows now stop counting as unresolved once they have been explicitly merged or accepted.',
+          'Visual report policy cards now label monthly premiums as monthly with annual equivalent instead of incorrectly showing the raw monthly amount as yearly.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.3.0-rc2e.5',
     date: '2026-04-30',
@@ -28147,12 +28163,21 @@ const QV_COMPLEX_FIELDS = new Set([
 ]);
 
 function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePolicy, onAccept, onClose, scanProgress, extractionLedger}) {
-  const hydrateSmartExtract = (p, idx, batchOverride) => {
+  const extractedItemKey = (p, sourceIndex) => {
+    if (p?.id) return 'id:' + p.id;
+    if (p?._sourceExtractKey) return p._sourceExtractKey;
+    const fp = p?._policyFingerprint?.id || buildPolicyIdentityFingerprint(p || {}).id;
+    const fallback = fp || normalizeCompactKey([p?.insurer, p?.productName, p?.policyNumber, p?.sourcePage].filter(Boolean).join('|')).slice(0, 80);
+    return Number.isFinite(sourceIndex) ? ('slot:' + sourceIndex + '|fp:' + fallback) : ('fp:' + fallback);
+  };
+  const hydrateSmartExtract = (p, idx, batchOverride, sourceIndex = idx) => {
     const smart = enhanceExtractedPolicyIntelligence(p || {}, existingPolicies || []);
     const gate = passesConfidenceGate(smart);
     return {
       ...smart,
       _idx: idx,
+      _sourceExtractIndex: p?._sourceExtractIndex ?? sourceIndex,
+      _sourceExtractKey: extractedItemKey(smart, p?._sourceExtractIndex ?? sourceIndex),
       _selected: p?._selected !== false,
       _corrections: Array.isArray(p?._corrections) ? p._corrections : [],
       _repoMatch: null,
@@ -28163,7 +28188,7 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
     };
   };
   const [items, setItems] = useState(() => {
-    const mapped = extracted.map((p,i) => hydrateSmartExtract(p, i));
+    const mapped = extracted.map((p,i) => hydrateSmartExtract(p, i, p?._batch || 1, i));
     // Persist to sessionStorage for refresh survival
     try { sessionStorage.setItem('policylens_pendingExtract', JSON.stringify(mapped.map(m => {const c={...m};delete c._repoMatch;return c;}))); } catch(e){}
     return mapped;
@@ -28198,17 +28223,18 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
   useEffect(() => {
     if(!extracted || extracted.length === 0) return;
     setItems(prev => {
-      const existingIds = new Set(prev.map(it => it.id || it._idx));
+      const existingKeys = new Set(prev.map((it, i) => it._sourceExtractKey || extractedItemKey(it, it._sourceExtractIndex ?? i)));
       const nextBatch = Math.max(...prev.map(it=>it._batch||1), 0) + 1;
       const newItems = extracted
-        .filter(p => !existingIds.has(p.id))
-        .map((p,i) => hydrateSmartExtract(p, prev.length + i, p._batch || nextBatch));
+        .map((p, sourceIndex) => ({ p, sourceIndex, key: extractedItemKey(p, p?._sourceExtractIndex ?? sourceIndex) }))
+        .filter(row => !existingKeys.has(row.key))
+        .map((row,i) => hydrateSmartExtract(row.p, prev.length + i, row.p._batch || nextBatch, row.sourceIndex));
       if(newItems.length === 0) return prev;
       const merged = [...prev, ...newItems];
       try { sessionStorage.setItem('policylens_pendingExtract', JSON.stringify(merged.map(m => {const c={...m};delete c._repoMatch;return c;}))); } catch(e){}
       return merged;
     });
-  }, [extracted?.length]);
+  }, [extracted]);
 
   // Detect fund-like items
   const isFundLike = (item) => {
@@ -28333,6 +28359,9 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
   const markVerified = (idx) => setItems(prev => prev.map(it => it._idx===idx ? {
     ...it,
     _extractConfidence: {},
+    _gateReasons: [],
+    _reviewReasons: [],
+    _reviewActions: [],
     _extractVerifiedAt: it._extractVerifiedAt || Date.now()
   } : it));
 
@@ -28478,7 +28507,7 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
       // Strip UI state. Preserve _extractConfidence, _extractConfidenceReasons,
       // and _extractVerifiedAt — these form the audit trail of what the AI
       // flagged and when the FC reviewed it.
-      delete p._idx; delete p._selected; delete p._corrections; delete p._repoMatch;
+      delete p._idx; delete p._selected; delete p._sourceExtractIndex; delete p._sourceExtractKey; delete p._corrections; delete p._repoMatch;
       delete p._appliedRepo; delete p._destination; delete p._provider;
       delete p._expanded; delete p._dupOf;
       // Drop merge/conflict metadata — it served its purpose in the modal
@@ -28565,10 +28594,10 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
     const gate = passesConfidenceGate(it);
     const ownerLabel = ownerLabelForItem(it);
     const hasOwnerQuestion = /\(owner unclear\)/i.test(ownerLabel) || !!it._ownerRouteQuestion;
-    const hasReviewReasons = (it._gateReasons || []).length > 0 || (it._reviewReasons || []).length > 0 || (it._reviewActions || []).length > 0;
-    const hasMergeDecision = !!it._dupOf || !!it._knownPolicyMatch || !!it._mergeIntoExisting || (it._mergeConflicts || []).length > 0;
-    const hasTriageDecision = it._documentTriage?.type === 'duplicate' || it._documentTriage?.confidence === 'low';
-    return (verifiable.length > 0 && !it._extractVerifiedAt) || !gate.pass || hasOwnerQuestion || hasReviewReasons || hasMergeDecision || hasTriageDecision;
+    const hasReviewReasons = !it._extractVerifiedAt && ((it._gateReasons || []).length > 0 || (it._reviewReasons || []).length > 0 || (it._reviewActions || []).length > 0);
+    const hasMergeDecision = (!!it._dupOf || !!it._knownPolicyMatch || (it._mergeConflicts || []).length > 0) && !it._mergeIntoExisting;
+    const hasTriageDecision = (it._documentTriage?.type === 'duplicate' && !it._mergeIntoExisting) || (it._documentTriage?.confidence === 'low' && !it._extractVerifiedAt);
+    return (verifiable.length > 0 && !it._extractVerifiedAt) || (!gate.pass && !it._extractVerifiedAt) || hasOwnerQuestion || hasReviewReasons || hasMergeDecision || hasTriageDecision;
   };
   const needsReviewCount = items.filter(needsDecisionForItem).length;
   const verifiedCount = items.filter(it => it._extractVerifiedAt || (getVerifiableFields(it).length === 0 && it._extractConfidence !== undefined)).length;
@@ -28586,6 +28615,9 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
     ...it,
     _selected: true,
     _extractConfidence: {},
+    _gateReasons: [],
+    _reviewReasons: [],
+    _reviewActions: [],
     _extractVerifiedAt: it._extractVerifiedAt || Date.now()
   } : it));
   const markMergeFromTable = (idx) => setItems(prev => prev.map(it => it._idx === idx ? {
@@ -28593,6 +28625,9 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
     _selected: true,
     _mergeIntoExisting: true,
     _extractConfidence: {},
+    _gateReasons: [],
+    _reviewReasons: [],
+    _reviewActions: [],
     _extractVerifiedAt: it._extractVerifiedAt || Date.now()
   } : it));
 
@@ -39672,7 +39707,7 @@ function ReportTab() {
             body:g.items.map(pol=>[
               pol.productName||pol.policyName||'-',
               pol.insurer||'-',
-              (pol.currency||'SGD')+' '+(parseFloat(pol.annualPremium)||0).toLocaleString()+(pol.premFrequency==='monthly'?'/mth':pol.premSingle?'(SP)':'/yr'),
+              (pol.currency||'SGD')+' '+(parseFloat(pol.annualPremium)||0).toLocaleString()+(pol.premFrequency==='monthly'?'/mth':(pol.premSingle||pol.premiumStructure==='Single Premium'||pol.premFrequency==='single')?' (SP)':'/yr'),
               pol.paymentMethod||'Cash',
               pol.premSingle?'Single':(pol.premTerm||'-')+' yrs',
               pol.premWholeLife?'Whole Life':pol.premEndAge||'-',
@@ -39738,7 +39773,12 @@ function ReportTab() {
             const saVal = parseFloat(pol.sumAssured)||0;
             doc.text('Sum Assured '+(pol.currency||'SGD')+' '+(saVal>=1e6?(saVal/1e6).toFixed(1)+'M':saVal.toLocaleString()),W-M-4,y+6,{align:'right'});
             doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(170,170,170);
-            const premLabel = pol.premSingle||pol.premFrequency==='single'?fmt(parseFloat(pol.annualPremium)||0)+' Single Premium':fmt(parseFloat(pol.annualPremium)||0)+'/yr';
+            const premRaw = parseFloat(pol.annualPremium)||0;
+            const premLabel = pol.premSingle||pol.premiumStructure==='Single Premium'||pol.premFrequency==='single'
+              ? fmt(premRaw)+' Single Premium'
+              : pol.premFrequency==='monthly'
+                ? fmt(premRaw)+'/mth ('+fmt(premRaw*12)+'/yr)'
+                : fmt(premRaw)+'/yr';
             doc.text(premLabel+'  ·  '+(pol.paymentMethod||'Cash')+'  ·  '+(pol.status||'inforce'),W-M-4,y+12,{align:'right'});
           }
           y+=20;
