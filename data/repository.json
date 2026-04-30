@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "type": "riders",
+      "name": "Crisis Cover Benefit",
+      "insurer": "Prudential",
+      "description": "Covers 36 illness ",
+      "contributedBy": "CK",
+      "tags": [],
+      "id": "mnbqcs685ykqyg",
+      "createdAt": "2026-03-29T12:23:18.176Z",
+      "votes": []
+    }
+  ],
+  "lastUpdated": "2026-03-29T12:23:31.250Z"
+}

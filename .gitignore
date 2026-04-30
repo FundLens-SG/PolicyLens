@@ -1,0 +1,13 @@
+.claude/
+
+# Local secrets - never commit Google/AI credentials.
+secrets/
+*.service-account.json
+*service-account*.json
+documentai-service-account*.json*
+.env
+.env.*
+
+# Local Codex/Claude working artifacts.
+AGENTS.md
+rc*_diff.txt
