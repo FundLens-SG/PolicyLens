@@ -36,7 +36,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // long multi-batch scans can continue when the browser backgrounds
 // the page. The worker is registered only on HTTPS/localhost.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.17';
+const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.18';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -664,9 +664,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.17';
+const APP_VERSION = 'v2.3.0-rc2e.18';
 const APP_VERSION_DATE = '2026-05-01';
-const APP_VERSION_NAME = 'XLSX policy summary parser fix';
+const APP_VERSION_NAME = 'Progressive XLSX extraction restore';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 
 const APP_TAB_IDS = new Set(['profile','dashboard','policies','clients','repository','report','settings']);
@@ -679,6 +679,21 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.3.0-rc2e.18',
+    date: '2026-05-01',
+    name: 'Progressive XLSX extraction restore',
+    sections: [
+      {
+        heading: 'Extraction',
+        items: [
+          'Progressive spreadsheet extraction now uses the local XLSX policy-table parser before any AI call, restoring Excel imports on the main upload screen.',
+          'The same local spreadsheet parser is shared by both the progressive upload flow and the background job flow, so recognizable Excel summaries no longer depend on Anthropic timing out successfully.',
+          'Spreadsheet files only fall back to AI when no recognizable policy table can be found locally.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.3.0-rc2e.17',
     date: '2026-05-01',
@@ -4753,7 +4768,7 @@ async function pdfToImages(pdfDoc, maxPages=12) {
 // CLEAN even if the FC never actually reviewed anything. Bumping the version
 // forces a re-extraction next time those same files are uploaded, and the
 // one-time cleanup in App init purges the stale entries from IndexedDB.
-const EXTRACT_PIPELINE_VERSION = 'v15.5-2026-05-01-xlsx-summary-headers';
+const EXTRACT_PIPELINE_VERSION = 'v15.6-2026-05-01-progressive-xlsx-local';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.8-2026-04-30-ai-triage-fingerprint';
@@ -7945,6 +7960,60 @@ function applyColumnMap(rows, columnMap, categoryColumn) {
   }
   return policies;
 }
+function isSpreadsheetLikeFile(file) {
+  const type = (file?.type || '').toLowerCase();
+  const name = (file?.name || '').toLowerCase();
+  return /\.(xlsx|xls|csv)$/i.test(name) || type.includes('spreadsheet') || type.includes('excel') || type === 'text/csv';
+}
+async function extractSpreadsheetFilesLocally(files, opts = {}) {
+  const spreadsheetFiles = Array.from(files || []).filter(isSpreadsheetLikeFile);
+  if (spreadsheetFiles.length === 0 || typeof XLSX === 'undefined') return [];
+  const allPols = [];
+  for (const file of spreadsheetFiles) {
+    let sheets = [];
+    try {
+      sheets = await parseXlsxToStructured(file);
+    } catch (err) {
+      console.warn('[XlsxExtract] Local parser failed for', file?.name || 'spreadsheet', ':', err?.message || err);
+      continue;
+    }
+    for (const sheet of sheets) {
+      let colMap = null;
+      let catCol = null;
+      if (sheet.localMapConfidence >= 5) {
+        console.log('[XlsxExtract] Local column map for', sheet.sheetName, 'row', sheet.headerRow, 'confidence', sheet.localMapConfidence);
+        colMap = sheet.localColumnMap;
+        catCol = sheet.localCategoryColumn;
+      } else {
+        const cached = opts.allowCache === false ? null : await getCachedColumnMap(sheet.signature);
+        if (cached) {
+          console.log('[XlsxExtract] Cache hit for signature', sheet.signature.slice(0, 8));
+          colMap = cached.columnMap;
+          catCol = cached.categoryColumn;
+        } else {
+          console.log('[XlsxExtract] No confident local map for', sheet.sheetName, 'row', sheet.headerRow, 'confidence', sheet.localMapConfidence);
+          continue;
+        }
+      }
+      const policies = applyColumnMap(sheet.rows, colMap, catCol).map(p => ({
+        ...p,
+        sourceFile: p.sourceFile || cleanUploadFileName(file),
+        documentTitle: p.documentTitle || cleanUploadFileName(file),
+      }));
+      allPols.push(...policies);
+    }
+  }
+  if (allPols.length > 0) {
+    for (const p of allPols) {
+      try {
+        validateExtractedPolicy(p);
+        runDerivePass(p, null);
+        runValidatePass(p, null);
+      } catch(_) {}
+    }
+  }
+  return allPols;
+}
 
 // v2.3.0-rc2d.1: Column map cache helpers
 async function getCachedColumnMap(sig) { try { return await dbGet('column_map_cache', sig); } catch(_) { return null; } }
@@ -8629,40 +8698,8 @@ async function processJob(job) {
         const _isXlsx = file.name?.match(/\.(xlsx|xls|csv)$/i);
         if (_isXlsx && typeof XLSX !== 'undefined') {
           try {
-            const sheets = await parseXlsxToStructured(file);
-            if (sheets.length > 0) {
-              const allPols = [];
-              for (const sheet of sheets) {
-                let colMap, catCol;
-                if (sheet.localMapConfidence >= 7) {
-                  console.log('[XlsxExtract] Local column map for', sheet.sheetName, 'row', sheet.headerRow, 'confidence', sheet.localMapConfidence);
-                  colMap = sheet.localColumnMap;
-                  catCol = sheet.localCategoryColumn;
-                } else {
-                  const cached = await getCachedColumnMap(sheet.signature);
-                  if (cached) {
-                  console.log('[XlsxExtract] \u2713 Cache hit for signature', sheet.signature.slice(0,8));
-                  colMap = cached.columnMap;
-                  catCol = cached.categoryColumn;
-                  } else {
-                  console.log('[XlsxExtract] Cache miss — asking AI for column map');
-                  const result = await extractColumnMapViaAI(sheet.headers, sheet.rawSample);
-                  colMap = result.columnMap;
-                  catCol = result.categoryColumn;
-                  await cacheColumnMap(sheet.signature, sheet.headers, colMap, catCol);
-                  console.log('[XlsxExtract] \u2713 Column map cached for future uploads');
-                  }
-                }
-                allPols.push(...applyColumnMap(sheet.rows, colMap, catCol));
-              }
-              if (allPols.length > 0) {
-                for (const p of allPols) {
-                  try {
-                    validateExtractedPolicy(p);
-                    runDerivePass(p, null);
-                    runValidatePass(p, null);
-                  } catch(_) {}
-                }
+            const allPols = await extractSpreadsheetFilesLocally([file]);
+            if (allPols.length > 0) {
                 job.result = allPols;
                 job.stage = 'done';
                 job.status = 'done';
@@ -8672,7 +8709,6 @@ async function processJob(job) {
                 await PolicyDB.putJob(job);
                 console.log('[Queue] \u2713', job.fileName, '\u2192', allPols.length, 'policies via xlsx-structured');
                 break;
-              }
             }
             console.log('[XlsxExtract] No policies extracted — falling through to OCR path');
           } catch (xlsxErr) {
@@ -32927,6 +32963,21 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
     // gate. Declaring it at function scope prevents a ReferenceError on
     // the precomputed path where the normal branch is skipped entirely.
     let expectedCount;
+    if (precomputedRawText == null && batchFiles.length > 0 && batchFiles.every(isSpreadsheetLikeFile)) {
+      try {
+        const localSpreadsheetPolicies = await extractSpreadsheetFilesLocally(batchFiles);
+        if (localSpreadsheetPolicies.length > 0) {
+          arr = localSpreadsheetPolicies;
+          expectedCount = localSpreadsheetPolicies.length;
+          console.log('[Extract] Local XLSX parser returned', arr.length, 'policies/instruments - skipping AI call');
+          try { toast('Extracted '+arr.length+' item'+(arr.length===1?'':'s')+' from spreadsheet locally', 'success', 3500); } catch(_) {}
+        } else {
+          console.log('[Extract] Local XLSX parser found no policy rows - falling back to AI');
+        }
+      } catch (localXlsxErr) {
+        console.warn('[Extract] Local XLSX parser failed - falling back to AI:', localXlsxErr?.message || localXlsxErr);
+      }
+    }
     if (precomputedRawText != null) {
       // ── PRECOMPUTED PATH (SW multi pre-fetch) ──
       // Parse the rawText Gemini response directly, bypassing content
