@@ -36,7 +36,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // long multi-batch scans can continue when the browser backgrounds
 // the page. The worker is registered only on HTTPS/localhost.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.11';
+const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.12';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -674,9 +674,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.11';
+const APP_VERSION = 'v2.3.0-rc2e.12';
 const APP_VERSION_DATE = '2026-05-01';
-const APP_VERSION_NAME = 'Frictionless advisor flow';
+const APP_VERSION_NAME = 'Drive login sync guard';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 const APP_TAB_IDS = new Set(['profile', 'dashboard', 'policies', 'clients', 'repository', 'report', 'settings']);
 function getInitialPolicyLensTab() {
@@ -687,6 +687,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.3.0-rc2e.12',
+  date: '2026-05-01',
+  name: 'Drive login sync guard',
+  sections: [{
+    heading: 'Sync safety',
+    items: ['Drive accounts now stay Drive-authoritative while Google Drive is checking, reconnecting, or silently refreshing, preventing legacy cached cloud policies from being re-imported on login.', 'Drive mode now runs Supabase app-settings sync only; client profiles and policies no longer pass through the legacy Supabase merge path.', 'Startup sync now shows a clear checking/syncing state instead of a stale last-synced timestamp or premature Reconnect prompt.']
+  }]
+}, {
   version: 'v2.3.0-rc2e.11',
   date: '2026-05-01',
   name: 'Frictionless advisor flow',
@@ -10759,7 +10767,8 @@ function setDriveLocalOnly(on) {
 // _driveFetch handles 401 retry; mount-time refresh handles expired tokens across sessions.
 let _driveAccessToken = null;
 let _driveTokenClient = null;
-let _driveStatus = 'disconnected'; // 'disconnected' | 'connected' | 'reconnect-needed'
+let _driveStatus = 'disconnected'; // 'disconnected' | 'checking' | 'connected' | 'reconnect-needed'
+let _driveStartupSyncInFlight = false;
 const _driveStatusListeners = new Set();
 function onDriveStatusChange(fn) {
   _driveStatusListeners.add(fn);
@@ -10773,9 +10782,37 @@ function setDriveStatus(s) {
       fn(s);
     } catch (_) {}
   });
+  try {
+    _notifySyncStatus();
+  } catch (_) {}
 }
 function getDriveStatus() {
   return _driveStatus;
+}
+function setDriveStartupSyncInFlight(on) {
+  const next = !!on;
+  if (_driveStartupSyncInFlight === next) return;
+  _driveStartupSyncInFlight = next;
+  try {
+    _notifySyncStatus();
+  } catch (_) {}
+}
+function hasPriorDriveConnectionIntent() {
+  try {
+    return driveLSGet(DRIVE_LS.hasEverConnected) === '1' || !!driveLSGet(DRIVE_LS.oauthGrantedAt) || !!driveLSGet(DRIVE_LS.folderId);
+  } catch (_) {
+    return false;
+  }
+}
+function isDriveClientDataAuthoritativeMode() {
+  try {
+    if (isDriveLocalOnly()) return false;
+    const status = getDriveStatus();
+    if (status === 'connected' || status === 'checking' || status === 'reconnect-needed') return true;
+    return hasPriorDriveConnectionIntent();
+  } catch (_) {
+    return false;
+  }
 }
 
 // v2.3.0-rc2c.3b.3: Drive mode = sole source of truth for client data.
@@ -10783,7 +10820,7 @@ function getDriveStatus() {
 // (no clientId scoping → causes cross-client duplication). App settings sync stays active.
 function isSupabaseClientDataSyncEnabled() {
   try {
-    return !(getDriveStatus() === 'connected' && !isDriveLocalOnly());
+    return !isDriveClientDataAuthoritativeMode();
   } catch (_) {
     return true;
   }
@@ -15307,6 +15344,7 @@ function App() {
       if (getDriveStatus() !== 'connected' || isDriveLocalOnly()) return;
       _postConnectDiscoveryRan = true;
       console.log('[Discovery] Post-connect scan triggered');
+      setDriveStartupSyncInFlight(true);
       try {
         const result = await discoverDriveClients();
         _discoveryCompletedThisSession = true;
@@ -15317,6 +15355,8 @@ function App() {
         if (summary.added || summary.refreshed || summary.reconciled || summary.purged) console.log('[Discovery] Post-connect directory sync:', summary);
       } catch (e) {
         console.warn('[Discovery] Post-connect scan failed:', e.message);
+      } finally {
+        setDriveStartupSyncInFlight(false);
       }
     };
     runAfterFirstPaint(runDiscoveryAndPurge, 600);
@@ -15825,9 +15865,6 @@ function App() {
     const FLAG = 'policylens_rc2c3b3_dedupe_done';
     if (localStorage.getItem(FLAG) === '1') return;
     if (!(getDriveStatus() === 'connected' && !isDriveLocalOnly())) {
-      try {
-        localStorage.setItem(FLAG, '1');
-      } catch (_) {}
       return;
     }
     (async () => {
@@ -15892,7 +15929,8 @@ function App() {
       const _hash = window.location.hash || '';
       const _search = window.location.search || '';
       const _hasOAuthReturn = _hash.includes('access_token=') || _hash.includes('error=') || _search.includes('code=');
-      if (!_hasOAuthReturn && driveLSGet(DRIVE_LS.oauthGrantedAt) && driveLSGet(DRIVE_LS.localOnlyMode) !== '1') {
+      if (!_hasOAuthReturn && hasPriorDriveConnectionIntent() && driveLSGet(DRIVE_LS.localOnlyMode) !== '1') {
+        setDriveStatus('checking');
         try {
           const raw = localStorage.getItem('policylens_drive_token');
           if (raw) {
@@ -15928,6 +15966,7 @@ function App() {
               // Token expired, userId mismatch, or malformed — clear it
               driveLSDel('policylens_drive_token');
               if (stored.userId && uid && stored.userId !== uid) {
+                setDriveStatus('reconnect-needed');
                 console.log('[Drive] Stored token userId mismatch — cleared (stored:', stored.userId?.slice(0, 8), 'current:', uid?.slice(0, 8) + ')');
               } else {
                 console.log('[Drive] Stored token expired — attempting silent refresh');
@@ -15941,12 +15980,20 @@ function App() {
                 }
               }
             }
-          } else if (driveLSGet(DRIVE_LS.oauthGrantedAt)) {
-            // No stored token but has prior grant — needs reconnect
-            setDriveStatus('reconnect-needed');
+          } else if (hasPriorDriveConnectionIntent()) {
+            console.log('[Drive] No stored token - attempting silent refresh');
+            const refreshed = await driveClient.refreshAccessToken();
+            if (refreshed) {
+              console.log('[Drive] Silent refresh succeeded on mount');
+              setDriveStatus('connected');
+            } else {
+              console.log('[Drive] Silent refresh failed - reconnect needed');
+              setDriveStatus('reconnect-needed');
+            }
           }
         } catch (e) {
           console.warn('[Drive] Token restore failed:', e);
+          if (getDriveStatus() === 'checking') setDriveStatus('reconnect-needed');
         }
       }
       const result = await _consumeOAuthRedirect();
@@ -16729,6 +16776,63 @@ function App() {
       const localPolicyCount = (policies || []).length;
       const liveCloudPolicies = cloudPolicies.filter(p => !p.deleted);
       const cloudPolicyCount = liveCloudPolicies.length;
+      const syncAppSettingsOnly = async () => {
+        let settingsChanges = 0;
+        const localSettingsVers = (await dbGet('settings', 'appSettingsVersions').catch(() => null))?.value || {};
+        const localBundle = {};
+        for (const key of SETTINGS_TO_SYNC) {
+          if (key === 'houseDefaults') localBundle[key] = houseDefaults;else if (key === 'tierDefinitions') localBundle[key] = tierDefinitions;else {
+            const rec = await dbGet('settings', key).catch(() => null);
+            if (rec?.value !== undefined) localBundle[key] = rec.value;
+          }
+        }
+        if (cloudSettings) {
+          const merged = mergePerField(localBundle, cloudSettings.data, localSettingsVers, cloudSettings.versions);
+          for (const key of Object.keys(merged.data)) {
+            if (!_syncFieldEqual(merged.data[key], localBundle[key])) {
+              await dbPut('settings', {
+                key,
+                value: merged.data[key]
+              });
+              settingsChanges++;
+              if (key === 'houseDefaults') {
+                setHouseDefaults({
+                  ...DEFAULT_HOUSE_VALUES,
+                  ...merged.data[key]
+                });
+              } else if (key === 'tierDefinitions' && Array.isArray(merged.data[key]) && merged.data[key].length > 0) {
+                setTierDefinitions_(merged.data[key]);
+              }
+            }
+          }
+          await dbPut('settings', {
+            key: 'appSettingsVersions',
+            value: merged.versions
+          });
+          if (!_syncDeepEqual(merged.data, cloudSettings.data) || !_syncDeepEqual(merged.versions, cloudSettings.versions)) {
+            sbAppSettingsPush(merged.data, merged.versions).catch(() => {});
+          }
+        } else if (Object.keys(localBundle).length > 0) {
+          const pushVers = {
+            ...localSettingsVers
+          };
+          for (const key of Object.keys(localBundle)) {
+            if (!pushVers[key]) pushVers[key] = Date.now();
+          }
+          sbAppSettingsPush(localBundle, pushVers).catch(() => {});
+          await dbPut('settings', {
+            key: 'appSettingsVersions',
+            value: pushVers
+          });
+        }
+        return settingsChanges;
+      };
+      if (!_clientSyncOn) {
+        const settingsChanges = await syncAppSettingsOnly();
+        lastSyncRef.current = Date.now();
+        console.log('[Sync] Settings-only sync done:', settingsChanges, 'settings changes');
+        return;
+      }
       if (!initialized) {
         // FIRST SYNC PATH
         // If both sides have data → reconcile via modal
@@ -16772,7 +16876,8 @@ function App() {
           }
           if ((policies || []).length > 0) {
             const reloaded = await dbGetAll('policies');
-            setPolicies(reloaded);
+            const activeCid = activeClientIdRef.current || activeClientId;
+            setPolicies(activeCid ? reloaded.filter(p => (p.clientId || activeCid) === activeCid) : reloaded);
           }
           await dbPut('settings', {
             key: 'cloudSyncInitialized',
@@ -16805,7 +16910,8 @@ function App() {
             await dbPut('policies', enriched);
           }
           const reloaded = await dbGetAll('policies');
-          setPolicies(reloaded);
+          const activeCid = activeClientIdRef.current || activeClientId;
+          setPolicies(activeCid ? reloaded.filter(p => (p.clientId || activeCid) === activeCid) : reloaded);
           await dbPut('settings', {
             key: 'cloudSyncInitialized',
             value: true
@@ -16914,7 +17020,8 @@ function App() {
       }
       if (policyChanges > 0) {
         const reloaded = await dbGetAll('policies');
-        setPolicies(reloaded);
+        const activeCid = activeClientIdRef.current || activeClientId;
+        setPolicies(activeCid ? reloaded.filter(p => (p.clientId || activeCid) === activeCid) : reloaded);
       }
       // No noisy per-table toasts. Cross-device updates are visible
       // because the UI updates reactively. A single toast is shown
@@ -20572,6 +20679,9 @@ function SyncStatusPill({
   }, []);
   const deleteSyncStatus = getRecentClientDeleteSyncStatus();
   const deleteSyncLabel = deleteSyncStatus ? deleteSyncStatus.status === 'syncing' ? 'Saved locally · deleting from Drive' : deleteSyncStatus.status === 'queued' ? 'Saved locally · delete queued' : 'Saved locally · deleted from Drive' : '';
+  const driveStatus = getDriveStatus();
+  const driveWasEnabled = !isDriveLocalOnly() && (!!driveState || !!deleteSyncStatus || hasPriorDriveConnectionIntent());
+  const checkingDrive = driveStatus === 'checking' || _driveStartupSyncInFlight;
   useEffect(() => {
     let live = true;
     const clientId = driveState?.clientId;
@@ -20598,19 +20708,7 @@ function SyncStatusPill({
   }, [driveState?.clientId]);
   // v2.3.0-rc2c.5o: Show minimal sync feedback on mobile (was: return null hiding all indication)
   if (isMobile) {
-    if (!driveState && !deleteSyncStatus || getDriveStatus() !== 'connected' || isDriveLocalOnly()) return null;
-    const saving = _driveSyncInFlight || _driveSyncTimer !== null || driveState?.pendingWrite;
-    if (deleteSyncStatus && !saving) {
-      return React.createElement('span', {
-        style: {
-          fontSize: 9,
-          color: deleteSyncStatus.status === 'queued' ? 'var(--gold)' : 'var(--teal)',
-          whiteSpace: 'nowrap',
-          flexShrink: 0,
-          padding: '0 4px'
-        }
-      }, deleteSyncStatus.status === 'queued' ? 'Delete queued' : 'Delete synced');
-    }
+    if (!driveWasEnabled) return null;
     if (driveState?.pendingError) {
       return React.createElement('span', {
         title: driveState.pendingError,
@@ -20623,6 +20721,30 @@ function SyncStatusPill({
         }
       }, 'Sync error');
     }
+    if (checkingDrive) {
+      return React.createElement('span', {
+        style: {
+          fontSize: 9,
+          color: 'var(--gold)',
+          whiteSpace: 'nowrap',
+          flexShrink: 0,
+          padding: '0 4px'
+        }
+      }, 'Checking Drive');
+    }
+    if (driveStatus !== 'connected') return null;
+    const saving = _driveSyncInFlight || _driveSyncTimer !== null || driveState?.pendingWrite;
+    if (deleteSyncStatus && !saving) {
+      return React.createElement('span', {
+        style: {
+          fontSize: 9,
+          color: deleteSyncStatus.status === 'queued' ? 'var(--gold)' : 'var(--teal)',
+          whiteSpace: 'nowrap',
+          flexShrink: 0,
+          padding: '0 4px'
+        }
+      }, deleteSyncStatus.status === 'queued' ? 'Delete queued' : 'Delete synced');
+    }
     if (!saving && !_driveSyncJustSaved) return null;
     return React.createElement('span', {
       style: {
@@ -20634,8 +20756,9 @@ function SyncStatusPill({
       }
     }, saving ? _driveSyncInFlight ? 'Syncing' : 'Queued' : 'Synced');
   }
-  if (!driveState && !deleteSyncStatus || getDriveStatus() !== 'connected' || isDriveLocalOnly()) return null;
-  const isSaving = _driveSyncInFlight || _driveSyncTimer !== null || driveState?.pendingWrite;
+  if (!driveWasEnabled) return null;
+  if (driveStatus !== 'connected' && !checkingDrive && !deleteSyncStatus && !driveState?.pendingError) return null;
+  const isSaving = checkingDrive || _driveSyncInFlight || _driveSyncTimer !== null || driveState?.pendingWrite;
   const ageLabel = ts => {
     if (!ts) return '';
     const diff = Date.now() - new Date(ts).getTime();
@@ -20670,6 +20793,12 @@ function SyncStatusPill({
     bg = deleteSyncStatus.status === 'synced' ? 'rgba(91,168,160,.10)' : 'rgba(212,169,106,.10)';
     border = deleteSyncStatus.status === 'synced' ? 'rgba(91,168,160,.24)' : 'rgba(212,169,106,.24)';
     title = (deleteSyncStatus.clientName || 'Client') + (deleteSyncStatus.status === 'queued' ? ' is queued for Drive Trash' : deleteSyncStatus.status === 'syncing' ? ' is being moved to Drive Trash' : ' was moved to Drive Trash') + ' at ' + new Date(deleteSyncStatus.at).toLocaleString();
+  } else if (checkingDrive) {
+    label = 'Saved locally · Checking Drive sync';
+    color = 'var(--gold)';
+    bg = 'rgba(212,169,106,.10)';
+    border = 'rgba(212,169,106,.24)';
+    title = 'PolicyLens is reconnecting to Drive. Local data is already available.';
   } else if (_driveSyncInFlight) {
     label = 'Saved locally · Syncing to Drive';
     color = 'var(--gold)';
@@ -20819,9 +20948,11 @@ function DriveReconnectBar() {
     const unsub = driveClient.onStatusChange(() => force(n => n + 1));
     return unsub;
   }, []);
-  if (getDriveStatus() === 'connected') return null;
+  const status = getDriveStatus();
+  const checking = status === 'checking' || _driveStartupSyncInFlight;
+  if (status === 'connected') return null;
   if (isDriveLocalOnly()) return null;
-  if (driveLSGet(DRIVE_LS.hasEverConnected) !== '1') return null;
+  if (!hasPriorDriveConnectionIntent()) return null;
   return /*#__PURE__*/React.createElement("div", {
     style: {
       background: 'rgba(212,169,106,.08)',
@@ -20835,7 +20966,14 @@ function DriveReconnectBar() {
       fontSize: 12,
       color: 'var(--text2)'
     }
-  }, /*#__PURE__*/React.createElement("span", null, "Google Drive disconnected \u2014 your changes are saving locally only."), /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("span", null, checking ? 'Checking Google Drive sync - your data is saved locally while PolicyLens reconnects.' : 'Google Drive disconnected - your changes are saving locally only.'), checking ? /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: 'var(--gold)',
+      fontSize: 11,
+      fontWeight: 700,
+      whiteSpace: 'nowrap'
+    }
+  }, "Syncing...") : /*#__PURE__*/React.createElement("button", {
     onClick: async () => {
       setBusy(true);
       try {
@@ -20859,7 +20997,7 @@ function DriveReconnectBar() {
       flexShrink: 0,
       opacity: busy ? .6 : 1
     }
-  }, busy ? 'Reconnecting\u2026' : 'Reconnect'));
+  }, busy ? 'Reconnecting...' : 'Reconnect'));
 }
 
 // ── v2.2.0-beta: Drive conflict resolution modal ──
