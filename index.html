@@ -36,7 +36,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // long multi-batch scans can continue when the browser backgrounds
 // the page. The worker is registered only on HTTPS/localhost.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.12';
+const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.13';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -674,9 +674,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.12';
+const APP_VERSION = 'v2.3.0-rc2e.13';
 const APP_VERSION_DATE = '2026-05-01';
-const APP_VERSION_NAME = 'Drive login sync guard';
+const APP_VERSION_NAME = 'Bulk client family tools';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 const APP_TAB_IDS = new Set(['profile', 'dashboard', 'policies', 'clients', 'repository', 'report', 'settings']);
 function getInitialPolicyLensTab() {
@@ -687,6 +687,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.3.0-rc2e.13',
+  date: '2026-05-01',
+  name: 'Bulk client family tools',
+  sections: [{
+    heading: 'Clients',
+    items: ['Clients tab now supports checkbox multi-select with select-all for the current filtered list.', 'Selected clients can be deleted in one confirmed batch instead of one-by-one.', 'Selected clients can be moved into an existing or newly typed family group for later household scans.']
+  }]
+}, {
   version: 'v2.3.0-rc2e.12',
   date: '2026-05-01',
   name: 'Drive login sync guard',
@@ -18229,7 +18237,7 @@ function App() {
   };
 
   // ── v2.2.0-rc1: Destroy client ──
-  const destroyClient = async (targetClient = null) => {
+  const destroyClient = async (targetClient = null, opts = {}) => {
     const targetId = typeof targetClient === 'string' ? targetClient : targetClient?.clientId || activeClientIdRef.current || activeClientId;
     if (!targetId) return;
     const statesBeforeDelete = await PolicyDB.getAllDriveStates().catch(() => []);
@@ -18286,7 +18294,7 @@ function App() {
     try {
       window.dispatchEvent(new Event('policylens-clients-changed'));
     } catch (_) {}
-    try {
+    if (!opts.silent) try {
       toast('Client destroyed. Drive files moved to Trash (30-day recovery).', 'success');
     } catch (_) {}
   };
@@ -21393,6 +21401,9 @@ function ClientsTab() {
     }
   });
   const [familyDrafts, setFamilyDrafts] = useState({});
+  const [selectedClientIds, setSelectedClientIds] = useState([]);
+  const [bulkFamilyDraft, setBulkFamilyDraft] = useState('');
+  const [bulkBusy, setBulkBusy] = useState(null);
   const [showNewClient, setShowNewClient] = useState(false);
   const [clientsGuardOpen, setClientsGuardOpen] = useState(false);
   useEffect(() => {
@@ -21653,6 +21664,88 @@ function ClientsTab() {
     });
     return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
   })();
+  const selectedSet = new Set(selectedClientIds);
+  const selectedStates = visibleStates.filter(ds => selectedSet.has(ds.clientId));
+  const visibleIds = filtered.map(ds => ds.clientId).filter(Boolean);
+  const visibleSelectedCount = visibleIds.filter(id => selectedSet.has(id)).length;
+  const allVisibleSelected = visibleIds.length > 0 && visibleSelectedCount === visibleIds.length;
+  const familyNameOptions = Array.from(new Set(visibleStates.map(ds => familyGroupFor(ds)).filter(Boolean))).sort((a, b) => a.localeCompare(b));
+  const toggleClientSelection = clientId => {
+    if (!clientId) return;
+    setSelectedClientIds(prev => prev.includes(clientId) ? prev.filter(id => id !== clientId) : [...prev, clientId]);
+  };
+  const toggleSelectAllVisible = () => {
+    setSelectedClientIds(prev => {
+      const next = new Set(prev);
+      if (allVisibleSelected) visibleIds.forEach(id => next.delete(id));else visibleIds.forEach(id => next.add(id));
+      return Array.from(next);
+    });
+  };
+  const clearSelection = () => setSelectedClientIds([]);
+  const applyBulkFamilyMove = async () => {
+    const value = String(bulkFamilyDraft || '').trim();
+    if (!selectedStates.length || bulkBusy) return;
+    if (!value) {
+      try {
+        toast('Choose or type a family name first', 'warning', 2500);
+      } catch (_) {}
+      return;
+    }
+    setBulkBusy('family');
+    try {
+      for (const ds of selectedStates) {
+        await saveFamilyGroupForClient(ds, value, {
+          silent: true
+        });
+      }
+      try {
+        window.dispatchEvent(new Event('policylens-clients-changed'));
+      } catch (_) {}
+      try {
+        toast('Moved ' + selectedStates.length + ' client' + (selectedStates.length === 1 ? '' : 's') + ' into ' + value, 'success', 2500);
+      } catch (_) {}
+      setSelectedClientIds([]);
+      setBulkFamilyDraft('');
+    } catch (err) {
+      try {
+        toast('Family move failed: ' + (err.message || err), 'error', 4000);
+      } catch (_) {}
+    } finally {
+      setBulkBusy(null);
+    }
+  };
+  const deleteSelectedClients = async () => {
+    if (!selectedStates.length || bulkBusy) return;
+    const names = selectedStates.map(ds => ds.clientName || 'Untitled').slice(0, 5).join(', ');
+    const more = selectedStates.length > 5 ? ' +' + (selectedStates.length - 5) + ' more' : '';
+    if (!confirm('Delete ' + selectedStates.length + ' selected client' + (selectedStates.length === 1 ? '' : 's') + '?\n\n' + names + more + '\n\nDrive folders/files will be moved to Trash when Drive is connected. This cannot be undone from PolicyLens.')) return;
+    setBulkBusy('delete');
+    try {
+      const ordered = [...selectedStates].sort((a, b) => (a.clientId === activeClientId ? 1 : 0) - (b.clientId === activeClientId ? 1 : 0));
+      for (const ds of ordered) {
+        await destroyClient(ds, {
+          silent: true
+        });
+      }
+      try {
+        toast('Deleted ' + ordered.length + ' client' + (ordered.length === 1 ? '' : 's') + '. Drive files moved to Trash where available.', 'success', 3500);
+      } catch (_) {}
+      setSelectedClientIds([]);
+    } catch (err) {
+      try {
+        toast('Bulk delete failed: ' + (err.message || err), 'error', 4500);
+      } catch (_) {}
+    } finally {
+      setBulkBusy(null);
+    }
+  };
+  const selectionCheckboxStyle = {
+    width: 16,
+    height: 16,
+    accentColor: 'var(--gold)',
+    cursor: 'pointer',
+    flexShrink: 0
+  };
   const renderClientCard = (ds, compactFamily = false, memberIndex = 0, memberCount = 1) => {
     const isActive = ds.clientId === activeClientId;
     const {
@@ -21674,7 +21767,7 @@ function ClientsTab() {
         onClick: () => openClientView(ds.clientId, 'profile'),
         style: {
           display: 'grid',
-          gridTemplateColumns: '22px minmax(0,1fr) auto',
+          gridTemplateColumns: '18px 22px minmax(0,1fr) auto',
           gap: 10,
           alignItems: 'stretch',
           padding: isMobile ? '10px 8px' : '10px 10px',
@@ -21683,7 +21776,20 @@ function ClientsTab() {
           borderBottom: memberIndex < memberCount - 1 ? '1px solid rgba(255,255,255,.055)' : 'none',
           transition: 'background .15s'
         }
-      }, /*#__PURE__*/React.createElement("div", {
+      }, /*#__PURE__*/React.createElement("input", {
+        type: "checkbox",
+        checked: selectedSet.has(ds.clientId),
+        title: 'Select ' + (ds.clientName || 'client'),
+        onClick: e => e.stopPropagation(),
+        onChange: e => {
+          e.stopPropagation();
+          toggleClientSelection(ds.clientId);
+        },
+        style: {
+          ...selectionCheckboxStyle,
+          alignSelf: 'center'
+        }
+      }), /*#__PURE__*/React.createElement("div", {
         style: {
           position: 'relative',
           width: 22
@@ -21861,7 +21967,17 @@ function ClientsTab() {
         justifyContent: 'space-between',
         gap: 8
       }
-    }, /*#__PURE__*/React.createElement("span", {
+    }, /*#__PURE__*/React.createElement("input", {
+      type: "checkbox",
+      checked: selectedSet.has(ds.clientId),
+      title: 'Select ' + (ds.clientName || 'client'),
+      onClick: e => e.stopPropagation(),
+      onChange: e => {
+        e.stopPropagation();
+        toggleClientSelection(ds.clientId);
+      },
+      style: selectionCheckboxStyle
+    }), /*#__PURE__*/React.createElement("span", {
       style: {
         fontSize: 14,
         fontWeight: 600,
@@ -22409,7 +22525,131 @@ function ClientsTab() {
       flexShrink: 0,
       lineHeight: 1
     }
-  }, isMobile ? '+' : '+ New Client'))), filtered.length === 0 && visibleStates.length === 0 && /*#__PURE__*/React.createElement("div", {
+  }, isMobile ? '+' : '+ New Client'))), filtered.length > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 10,
+      flexWrap: 'wrap',
+      margin: '-4px 0 12px',
+      padding: '8px 10px',
+      background: 'rgba(255,255,255,.018)',
+      border: '1px solid rgba(255,255,255,.06)',
+      borderRadius: 9
+    }
+  }, /*#__PURE__*/React.createElement("label", {
+    style: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 8,
+      fontSize: 11,
+      color: 'var(--text2)',
+      fontWeight: 700,
+      cursor: 'pointer'
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "checkbox",
+    ref: el => {
+      if (el) el.indeterminate = visibleSelectedCount > 0 && !allVisibleSelected;
+    },
+    checked: allVisibleSelected,
+    onChange: toggleSelectAllVisible,
+    style: selectionCheckboxStyle
+  }), /*#__PURE__*/React.createElement("span", null, "Select all"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 10,
+      color: 'var(--text3)',
+      fontWeight: 500
+    }
+  }, visibleSelectedCount, "/", filtered.length, " visible \xB7 ", selectedStates.length, " selected")), selectedStates.length > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 7,
+      flexWrap: 'wrap',
+      justifyContent: 'flex-end',
+      flex: 1
+    }
+  }, /*#__PURE__*/React.createElement("select", {
+    value: familyNameOptions.includes(bulkFamilyDraft) ? bulkFamilyDraft : '',
+    onChange: e => setBulkFamilyDraft(e.target.value),
+    disabled: !!bulkBusy,
+    style: {
+      height: 30,
+      minWidth: isMobile ? '100%' : 180,
+      padding: '5px 8px',
+      fontSize: 11,
+      borderRadius: 7,
+      background: 'var(--bg)',
+      border: '1px solid var(--border2)',
+      color: 'var(--text2)'
+    }
+  }, /*#__PURE__*/React.createElement("option", {
+    value: ""
+  }, "Move into family..."), familyNameOptions.map(name => /*#__PURE__*/React.createElement("option", {
+    key: name,
+    value: name
+  }, name))), /*#__PURE__*/React.createElement("input", {
+    value: bulkFamilyDraft,
+    onChange: e => setBulkFamilyDraft(e.target.value),
+    disabled: !!bulkBusy,
+    placeholder: "Or type new family name",
+    onKeyDown: e => {
+      if (e.key === 'Enter') applyBulkFamilyMove();
+    },
+    style: {
+      height: 30,
+      minWidth: isMobile ? '100%' : 190,
+      padding: '5px 9px',
+      fontSize: 11,
+      borderRadius: 7,
+      background: 'var(--bg)',
+      border: '1px solid var(--border2)',
+      color: 'var(--text2)'
+    }
+  }), /*#__PURE__*/React.createElement("button", {
+    onClick: applyBulkFamilyMove,
+    disabled: !!bulkBusy || !String(bulkFamilyDraft || '').trim(),
+    style: {
+      height: 30,
+      padding: '5px 10px',
+      fontSize: 11,
+      fontWeight: 800,
+      borderRadius: 7,
+      background: 'rgba(91,168,160,.12)',
+      color: 'var(--teal)',
+      border: '1px solid rgba(91,168,160,.28)',
+      opacity: bulkBusy || !String(bulkFamilyDraft || '').trim() ? 0.55 : 1
+    }
+  }, bulkBusy === 'family' ? 'Moving...' : 'Move to family'), /*#__PURE__*/React.createElement("button", {
+    onClick: deleteSelectedClients,
+    disabled: !!bulkBusy,
+    style: {
+      height: 30,
+      padding: '5px 10px',
+      fontSize: 11,
+      fontWeight: 800,
+      borderRadius: 7,
+      background: 'rgba(239,83,80,.10)',
+      color: 'var(--red)',
+      border: '1px solid rgba(239,83,80,.25)',
+      opacity: bulkBusy ? 0.55 : 1
+    }
+  }, bulkBusy === 'delete' ? 'Deleting...' : 'Delete selected'), /*#__PURE__*/React.createElement("button", {
+    onClick: clearSelection,
+    disabled: !!bulkBusy,
+    style: {
+      height: 30,
+      padding: '5px 8px',
+      fontSize: 11,
+      fontWeight: 700,
+      borderRadius: 7,
+      background: 'transparent',
+      color: 'var(--text3)',
+      border: '1px solid var(--border)'
+    }
+  }, "Clear"))), filtered.length === 0 && visibleStates.length === 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       textAlign: 'center',
       padding: '60px 20px',
@@ -22636,7 +22876,17 @@ function ClientsTab() {
         justifyContent: 'space-between',
         gap: 8
       }
-    }, /*#__PURE__*/React.createElement("span", {
+    }, /*#__PURE__*/React.createElement("input", {
+      type: "checkbox",
+      checked: selectedSet.has(ds.clientId),
+      title: 'Select ' + (ds.clientName || 'client'),
+      onClick: e => e.stopPropagation(),
+      onChange: e => {
+        e.stopPropagation();
+        toggleClientSelection(ds.clientId);
+      },
+      style: selectionCheckboxStyle
+    }), /*#__PURE__*/React.createElement("span", {
       style: {
         fontSize: 14,
         fontWeight: 600,

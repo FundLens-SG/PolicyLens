@@ -36,7 +36,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // long multi-batch scans can continue when the browser backgrounds
 // the page. The worker is registered only on HTTPS/localhost.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.12';
+const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.13';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -664,9 +664,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.12';
+const APP_VERSION = 'v2.3.0-rc2e.13';
 const APP_VERSION_DATE = '2026-05-01';
-const APP_VERSION_NAME = 'Drive login sync guard';
+const APP_VERSION_NAME = 'Bulk client family tools';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 
 const APP_TAB_IDS = new Set(['profile','dashboard','policies','clients','repository','report','settings']);
@@ -679,6 +679,21 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.3.0-rc2e.13',
+    date: '2026-05-01',
+    name: 'Bulk client family tools',
+    sections: [
+      {
+        heading: 'Clients',
+        items: [
+          'Clients tab now supports checkbox multi-select with select-all for the current filtered list.',
+          'Selected clients can be deleted in one confirmed batch instead of one-by-one.',
+          'Selected clients can be moved into an existing or newly typed family group for later household scans.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.3.0-rc2e.12',
     date: '2026-05-01',
@@ -17538,7 +17553,7 @@ function App() {
   };
 
   // ── v2.2.0-rc1: Destroy client ──
-  const destroyClient = async (targetClient = null) => {
+  const destroyClient = async (targetClient = null, opts = {}) => {
     const targetId = typeof targetClient === 'string'
       ? targetClient
       : (targetClient?.clientId || activeClientIdRef.current || activeClientId);
@@ -17579,7 +17594,7 @@ function App() {
     }
     // v2.3.0-rc2c.5u: Notify ClientsTab and other listeners that the client list changed
     try { window.dispatchEvent(new Event('policylens-clients-changed')); } catch(_) {}
-    try { toast('Client destroyed. Drive files moved to Trash (30-day recovery).', 'success'); } catch(_) {}
+    if (!opts.silent) try { toast('Client destroyed. Drive files moved to Trash (30-day recovery).', 'success'); } catch(_) {}
   };
 
   // v2.3.0-rc2c.3c: Apply discovery review choices (Add / Delete per found client)
@@ -19528,6 +19543,9 @@ function ClientsTab() {
   const [profilesByClient, setProfilesByClient] = useState({});
   const [familyMode, setFamilyMode] = useState(() => { try { return localStorage.getItem('policylens_clients_family_mode') === 'family' ? 'family' : 'list'; } catch(_) { return 'list'; } });
   const [familyDrafts, setFamilyDrafts] = useState({});
+  const [selectedClientIds, setSelectedClientIds] = useState([]);
+  const [bulkFamilyDraft, setBulkFamilyDraft] = useState('');
+  const [bulkBusy, setBulkBusy] = useState(null);
   const [showNewClient, setShowNewClient] = useState(false);
   const [clientsGuardOpen, setClientsGuardOpen] = useState(false);
   useEffect(() => {
@@ -19708,6 +19726,64 @@ function ClientsTab() {
     });
     return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
   })();
+  const selectedSet = new Set(selectedClientIds);
+  const selectedStates = visibleStates.filter(ds => selectedSet.has(ds.clientId));
+  const visibleIds = filtered.map(ds => ds.clientId).filter(Boolean);
+  const visibleSelectedCount = visibleIds.filter(id => selectedSet.has(id)).length;
+  const allVisibleSelected = visibleIds.length > 0 && visibleSelectedCount === visibleIds.length;
+  const familyNameOptions = Array.from(new Set(visibleStates.map(ds => familyGroupFor(ds)).filter(Boolean))).sort((a, b) => a.localeCompare(b));
+  const toggleClientSelection = (clientId) => {
+    if (!clientId) return;
+    setSelectedClientIds(prev => prev.includes(clientId) ? prev.filter(id => id !== clientId) : [...prev, clientId]);
+  };
+  const toggleSelectAllVisible = () => {
+    setSelectedClientIds(prev => {
+      const next = new Set(prev);
+      if (allVisibleSelected) visibleIds.forEach(id => next.delete(id));
+      else visibleIds.forEach(id => next.add(id));
+      return Array.from(next);
+    });
+  };
+  const clearSelection = () => setSelectedClientIds([]);
+  const applyBulkFamilyMove = async () => {
+    const value = String(bulkFamilyDraft || '').trim();
+    if (!selectedStates.length || bulkBusy) return;
+    if (!value) { try { toast('Choose or type a family name first', 'warning', 2500); } catch(_) {} return; }
+    setBulkBusy('family');
+    try {
+      for (const ds of selectedStates) {
+        await saveFamilyGroupForClient(ds, value, { silent: true });
+      }
+      try { window.dispatchEvent(new Event('policylens-clients-changed')); } catch(_) {}
+      try { toast('Moved ' + selectedStates.length + ' client' + (selectedStates.length === 1 ? '' : 's') + ' into ' + value, 'success', 2500); } catch(_) {}
+      setSelectedClientIds([]);
+      setBulkFamilyDraft('');
+    } catch (err) {
+      try { toast('Family move failed: ' + (err.message || err), 'error', 4000); } catch(_) {}
+    } finally {
+      setBulkBusy(null);
+    }
+  };
+  const deleteSelectedClients = async () => {
+    if (!selectedStates.length || bulkBusy) return;
+    const names = selectedStates.map(ds => ds.clientName || 'Untitled').slice(0, 5).join(', ');
+    const more = selectedStates.length > 5 ? ' +' + (selectedStates.length - 5) + ' more' : '';
+    if (!confirm('Delete ' + selectedStates.length + ' selected client' + (selectedStates.length === 1 ? '' : 's') + '?\n\n' + names + more + '\n\nDrive folders/files will be moved to Trash when Drive is connected. This cannot be undone from PolicyLens.')) return;
+    setBulkBusy('delete');
+    try {
+      const ordered = [...selectedStates].sort((a, b) => (a.clientId === activeClientId ? 1 : 0) - (b.clientId === activeClientId ? 1 : 0));
+      for (const ds of ordered) {
+        await destroyClient(ds, { silent: true });
+      }
+      try { toast('Deleted ' + ordered.length + ' client' + (ordered.length === 1 ? '' : 's') + '. Drive files moved to Trash where available.', 'success', 3500); } catch(_) {}
+      setSelectedClientIds([]);
+    } catch (err) {
+      try { toast('Bulk delete failed: ' + (err.message || err), 'error', 4500); } catch(_) {}
+    } finally {
+      setBulkBusy(null);
+    }
+  };
+  const selectionCheckboxStyle = {width:16,height:16,accentColor:'var(--gold)',cursor:'pointer',flexShrink:0};
   const renderClientCard = (ds, compactFamily=false, memberIndex=0, memberCount=1) => {
     const isActive = ds.clientId === activeClientId;
     const { clientPols, totalPrem } = clientStatsFor(ds);
@@ -19723,7 +19799,12 @@ function ClientsTab() {
       const reviewLabel = ds.lastReviewedAt ? 'reviewed ' + fmtRelativeTime(ds.lastReviewedAt) : 'not reviewed';
       return (
         <div key={ds.clientId} onClick={() => openClientView(ds.clientId, 'profile')}
-          style={{display:'grid',gridTemplateColumns:'22px minmax(0,1fr) auto',gap:10,alignItems:'stretch',padding:isMobile?'10px 8px':'10px 10px',cursor:'pointer',background:isActive?'rgba(212,169,106,.055)':'transparent',borderBottom:memberIndex < memberCount - 1?'1px solid rgba(255,255,255,.055)':'none',transition:'background .15s'}}>
+          style={{display:'grid',gridTemplateColumns:'18px 22px minmax(0,1fr) auto',gap:10,alignItems:'stretch',padding:isMobile?'10px 8px':'10px 10px',cursor:'pointer',background:isActive?'rgba(212,169,106,.055)':'transparent',borderBottom:memberIndex < memberCount - 1?'1px solid rgba(255,255,255,.055)':'none',transition:'background .15s'}}>
+          <input type="checkbox" checked={selectedSet.has(ds.clientId)}
+            title={'Select ' + (ds.clientName || 'client')}
+            onClick={e => e.stopPropagation()}
+            onChange={e => { e.stopPropagation(); toggleClientSelection(ds.clientId); }}
+            style={{...selectionCheckboxStyle,alignSelf:'center'}} />
           <div style={{position:'relative',width:22}}>
             <div style={{position:'absolute',left:10,top:memberIndex===0?'50%':0,bottom:memberIndex===memberCount-1?'50%':0,width:1,background:'rgba(201,169,110,.25)'}} />
             <div style={{position:'absolute',left:5,top:'50%',transform:'translateY(-50%)',width:11,height:11,borderRadius:'50%',background:isActive?'var(--gold)':'var(--bg)',border:isActive?'2px solid var(--gold)':'2px solid rgba(201,169,110,.45)',boxShadow:isActive?'0 0 0 3px rgba(212,169,106,.12)':'none'}} />
@@ -19764,6 +19845,11 @@ function ClientsTab() {
       <div key={ds.clientId} onClick={() => openClientView(ds.clientId, 'profile')}
         style={{background:isActive?'rgba(212,169,106,.06)':'var(--bg2)',border:isActive?'1px solid rgba(212,169,106,.4)':'1px solid var(--border)',borderRadius:10,padding:compactFamily?'10px 12px':'12px 14px',cursor:'pointer',transition:'border-color .15s'}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
+          <input type="checkbox" checked={selectedSet.has(ds.clientId)}
+            title={'Select ' + (ds.clientName || 'client')}
+            onClick={e => e.stopPropagation()}
+            onChange={e => { e.stopPropagation(); toggleClientSelection(ds.clientId); }}
+            style={selectionCheckboxStyle} />
           <span style={{fontSize:14,fontWeight:600,color:'var(--text)',flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{ds.clientName || 'Untitled'}</span>
           <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
             <TierPicker
@@ -19962,6 +20048,51 @@ function ClientsTab() {
           </button>
         </div>
       </div>
+      {filtered.length > 0 && (
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,flexWrap:'wrap',margin:'-4px 0 12px',padding:'8px 10px',background:'rgba(255,255,255,.018)',border:'1px solid rgba(255,255,255,.06)',borderRadius:9}}>
+          <label style={{display:'inline-flex',alignItems:'center',gap:8,fontSize:11,color:'var(--text2)',fontWeight:700,cursor:'pointer'}}>
+            <input type="checkbox"
+              ref={el => { if (el) el.indeterminate = visibleSelectedCount > 0 && !allVisibleSelected; }}
+              checked={allVisibleSelected}
+              onChange={toggleSelectAllVisible}
+              style={selectionCheckboxStyle} />
+            <span>Select all</span>
+            <span style={{fontSize:10,color:'var(--text3)',fontWeight:500}}>{visibleSelectedCount}/{filtered.length} visible · {selectedStates.length} selected</span>
+          </label>
+          {selectedStates.length > 0 && (
+            <div style={{display:'flex',alignItems:'center',gap:7,flexWrap:'wrap',justifyContent:'flex-end',flex:1}}>
+              <select value={familyNameOptions.includes(bulkFamilyDraft) ? bulkFamilyDraft : ''}
+                onChange={e => setBulkFamilyDraft(e.target.value)}
+                disabled={!!bulkBusy}
+                style={{height:30,minWidth:isMobile?'100%':180,padding:'5px 8px',fontSize:11,borderRadius:7,background:'var(--bg)',border:'1px solid var(--border2)',color:'var(--text2)'}}>
+                <option value="">Move into family...</option>
+                {familyNameOptions.map(name => <option key={name} value={name}>{name}</option>)}
+              </select>
+              <input value={bulkFamilyDraft}
+                onChange={e => setBulkFamilyDraft(e.target.value)}
+                disabled={!!bulkBusy}
+                placeholder="Or type new family name"
+                onKeyDown={e => { if (e.key === 'Enter') applyBulkFamilyMove(); }}
+                style={{height:30,minWidth:isMobile?'100%':190,padding:'5px 9px',fontSize:11,borderRadius:7,background:'var(--bg)',border:'1px solid var(--border2)',color:'var(--text2)'}} />
+              <button onClick={applyBulkFamilyMove}
+                disabled={!!bulkBusy || !String(bulkFamilyDraft || '').trim()}
+                style={{height:30,padding:'5px 10px',fontSize:11,fontWeight:800,borderRadius:7,background:'rgba(91,168,160,.12)',color:'var(--teal)',border:'1px solid rgba(91,168,160,.28)',opacity:(bulkBusy || !String(bulkFamilyDraft || '').trim())?0.55:1}}>
+                {bulkBusy === 'family' ? 'Moving...' : 'Move to family'}
+              </button>
+              <button onClick={deleteSelectedClients}
+                disabled={!!bulkBusy}
+                style={{height:30,padding:'5px 10px',fontSize:11,fontWeight:800,borderRadius:7,background:'rgba(239,83,80,.10)',color:'var(--red)',border:'1px solid rgba(239,83,80,.25)',opacity:bulkBusy?0.55:1}}>
+                {bulkBusy === 'delete' ? 'Deleting...' : 'Delete selected'}
+              </button>
+              <button onClick={clearSelection}
+                disabled={!!bulkBusy}
+                style={{height:30,padding:'5px 8px',fontSize:11,fontWeight:700,borderRadius:7,background:'transparent',color:'var(--text3)',border:'1px solid var(--border)'}}>
+                Clear
+              </button>
+            </div>
+          )}
+        </div>
+      )}
       {filtered.length === 0 && visibleStates.length === 0 && (
         <div style={{textAlign:'center',padding:'60px 20px',color:'var(--text3)'}}>
           <div style={{fontSize:40,marginBottom:12}}>👥</div>
@@ -20051,6 +20182,11 @@ function ClientsTab() {
             <div key={ds.clientId} onClick={() => openClientView(ds.clientId, 'profile')}
               style={{background:isActive?'rgba(212,169,106,.06)':'var(--bg2)',border:isActive?'1px solid rgba(212,169,106,.4)':'1px solid var(--border)',borderRadius:10,padding:'12px 14px',cursor:'pointer',transition:'border-color .15s'}}>
               <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
+                <input type="checkbox" checked={selectedSet.has(ds.clientId)}
+                  title={'Select ' + (ds.clientName || 'client')}
+                  onClick={e => e.stopPropagation()}
+                  onChange={e => { e.stopPropagation(); toggleClientSelection(ds.clientId); }}
+                  style={selectionCheckboxStyle} />
                 <span style={{fontSize:14,fontWeight:600,color:'var(--text)',flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{ds.clientName || 'Untitled'}</span>
                 <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
                   <TierPicker
