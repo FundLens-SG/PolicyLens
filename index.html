@@ -36,7 +36,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // long multi-batch scans can continue when the browser backgrounds
 // the page. The worker is registered only on HTTPS/localhost.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.20';
+const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.21';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -674,9 +674,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.20';
+const APP_VERSION = 'v2.3.0-rc2e.21';
 const APP_VERSION_DATE = '2026-05-02';
-const APP_VERSION_NAME = 'Lower-friction XLSX import';
+const APP_VERSION_NAME = 'Calmer extraction fallbacks';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 const APP_TAB_IDS = new Set(['profile', 'dashboard', 'policies', 'clients', 'repository', 'report', 'settings']);
 function getInitialPolicyLensTab() {
@@ -687,6 +687,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.3.0-rc2e.21',
+  date: '2026-05-02',
+  name: 'Calmer extraction fallbacks',
+  sections: [{
+    heading: 'Extraction',
+    items: ['Policy extraction now avoids Gemini strict response-schema mode for the full policy schema, preventing the 400 schema-constraint error from surfacing during otherwise successful imports.', 'HTML uploads are cleaned to visible page text before AI extraction, so downloaded portfolio dashboards no longer send noisy scripts/styles to the model.', 'The extraction progress card now uses three plain steps and hides technical ledger details behind a small toggle.']
+  }]
+}, {
   version: 'v2.3.0-rc2e.20',
   date: '2026-05-02',
   name: 'Lower-friction XLSX import',
@@ -4183,7 +4191,7 @@ async function pdfToImages(pdfDoc, maxPages = 12) {
 // CLEAN even if the FC never actually reviewed anything. Bumping the version
 // forces a re-extraction next time those same files are uploaded, and the
 // one-time cleanup in App init purges the stale entries from IndexedDB.
-const EXTRACT_PIPELINE_VERSION = 'v15.8-2026-05-02-xlsx-owner-source';
+const EXTRACT_PIPELINE_VERSION = 'v15.9-2026-05-02-schema-light-import';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.8-2026-04-30-ai-triage-fingerprint';
@@ -5706,7 +5714,7 @@ function collectDetectedClients(policies, currentProfile, allDriveStates) {
   const addDetected = (p, idx, detectedName, sourceField, ownerStrong, lifeInsuredStrong) => {
     let key = normalizePersonNameKey(detectedName);
     if (!key) return;
-    if (currentName && fuzzyNameMatch(detectedName, currentName) && sourceField === 'policyOwner') return;
+    if (currentName && fuzzyNameMatch(detectedName, currentName)) return;
     const displayName = cleanPersonDisplayName(detectedName);
     for (const [existingKey, existingInfo] of detected.entries()) {
       if (personNameLikelyTypoVariant(displayName, existingInfo.displayName)) {
@@ -7988,6 +7996,20 @@ async function _sha256Hex(str) {
   const buf = await crypto.subtle.digest('SHA-256', enc);
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
+function extractReadableTextFromHtml(rawHtml) {
+  const raw = String(rawHtml || '');
+  if (!raw.trim()) return '';
+  try {
+    if (typeof DOMParser !== 'undefined') {
+      const doc = new DOMParser().parseFromString(raw, 'text/html');
+      doc.querySelectorAll('script,style,noscript,svg,canvas').forEach(el => el.remove());
+      const title = doc.querySelector('title')?.textContent || '';
+      const body = doc.body?.innerText || doc.documentElement?.textContent || '';
+      return [title, body].filter(Boolean).join('\n').replace(/\s+\n/g, '\n').replace(/\n{3,}/g, '\n\n').replace(/[ \t]{2,}/g, ' ').trim();
+    }
+  } catch (_) {}
+  return raw.replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ').replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>').replace(/\s+/g, ' ').trim();
+}
 
 // v2.3.0-rc2d.1: Ask Claude Haiku to map spreadsheet columns to policy fields.
 async function extractColumnMapViaAI(headers, rawSample) {
@@ -8425,10 +8447,12 @@ async function processFile(file) {
 
   // ── Text files ──
   if (mime.startsWith('text/') || file.name?.match(/\.(txt|csv|json|md|html|htm)$/i)) {
-    const text = await file.text();
+    const rawText = await file.text();
+    const isHtml = mime === 'text/html' || file.name?.match(/\.(html|htm)$/i);
+    const text = isHtml ? extractReadableTextFromHtml(rawText) : rawText;
     return [{
       type: 'text',
-      text: '[File: ' + file.name + ']\n' + text.slice(0, 50000)
+      text: (isHtml ? '[HTML visible text: ' : '[File: ') + file.name + ']\n' + String(text || rawText).slice(0, 50000)
     }];
   }
 
@@ -8443,12 +8467,13 @@ async function processFile(file) {
     }
   } catch (e) {}
   // Unknown binary → force Anthropic (Claude handles more MIME types than Gemini)
+  const fallbackB64 = await readFileAsBase64(file);
   return [{
     type: 'document',
     source: {
       type: 'base64',
       media_type: mime,
-      data: b64
+      data: fallbackB64
     },
     _forceAnthropic: true
   }];
@@ -26041,6 +26066,20 @@ const POLICY_EXTRACTION_SCHEMA = {
     required: ['insurer', 'productName', 'category', 'premiumAmount', 'premFrequency']
   }
 };
+function isFullPolicyExtractionSchema(schema) {
+  const props = schema?.items?.properties || schema?.properties || {};
+  return !!(props.insurer && props.productName && props.policyNumber && props.premiumAmount && props.premFrequency && props.riders && props.fundAllocations);
+}
+function buildGeminiJsonGenerationConfig(maxTokens, responseSchema) {
+  const cfg = {
+    maxOutputTokens: maxTokens || 32000,
+    responseMimeType: 'application/json'
+  };
+  if (responseSchema && !isFullPolicyExtractionSchema(responseSchema)) {
+    cfg.responseSchema = responseSchema;
+  }
+  return cfg;
+}
 
 // ═══════════════════════════════════════════════════════════════
 // NETWORK / LIFECYCLE HELPERS — timeout wrapper + wake lock
@@ -27358,7 +27397,8 @@ async function geminiStructuredExtract(geminiKey, systemPrompt, contentBlocks, m
   }
   if (parts.length === 0) throw new Error('No content to extract from');
   const mediaCount = parts.filter(p => p.inlineData).length;
-  console.log('[Gemini Structured] Sending:', mediaCount, 'files +', parts.length - mediaCount, 'text blocks. Schema has', Object.keys(responseSchema?.items?.properties || {}).length, 'top-level fields.');
+  const usesStrictSchema = !!(responseSchema && !isFullPolicyExtractionSchema(responseSchema));
+  console.log('[Gemini Structured] Sending:', mediaCount, 'files +', parts.length - mediaCount, 'text blocks. Schema mode:', usesStrictSchema ? 'strict' : 'json-only', 'fields:', Object.keys(responseSchema?.items?.properties || {}).length);
 
   // Assemble the full request body once — we'll use it for either path.
   const bodyObj = {
@@ -27370,11 +27410,7 @@ async function geminiStructuredExtract(geminiKey, systemPrompt, contentBlocks, m
         text: systemPrompt
       }]
     },
-    generationConfig: {
-      maxOutputTokens: maxTokens || 32000,
-      responseMimeType: 'application/json',
-      responseSchema: responseSchema
-    }
+    generationConfig: buildGeminiJsonGenerationConfig(maxTokens || 32000, responseSchema)
   };
 
   // ── MODEL FALLBACK LIST ──
@@ -28613,7 +28649,7 @@ async function callAI(systemPrompt, contentBlocks, maxTokens, responseSchema) {
   // ── PREFERRED PATH: Gemini with structured output (responseSchema) ──
   // Used when the caller provides a schema — guaranteed-valid, type-safe JSON
   // in a single API call. Skips this for docx files (Gemini can't read them).
-  if (responseSchema && gk && !forceAnthropic && !isSpreadsheetTextOnly) {
+  if (responseSchema && gk && hasMedia && !forceAnthropic && !isSpreadsheetTextOnly && !isFullPolicyExtractionSchema(responseSchema)) {
     console.log('[AI] 🎯 Preferred: Gemini structured output (single call, guaranteed schema)');
     try {
       const result = await geminiStructuredExtract(gk, systemPrompt, contentBlocks, maxTokens, responseSchema);
@@ -28623,11 +28659,14 @@ async function callAI(systemPrompt, contentBlocks, maxTokens, responseSchema) {
       return result;
     } catch (structuredErr) {
       console.warn('[AI] Structured extract failed:', structuredErr.message);
+      const structuredErrMsg = String(structuredErr?.message || structuredErr || '');
+      const structuredErrLower = structuredErrMsg.toLowerCase();
+      const ledgerIsSchemaFallback = structuredErrLower.includes('(400)') || structuredErrLower.includes('invalid_argument') || structuredErrLower.includes('schema');
       emitExtractionLedger({
         stage: 'ai-extraction',
-        label: 'Gemini structured failed',
-        level: 'error',
-        detail: String(structuredErr?.message || structuredErr).slice(0, 420)
+        label: ledgerIsSchemaFallback ? 'AI fallback handled' : 'Gemini structured failed',
+        level: ledgerIsSchemaFallback ? 'warning' : 'error',
+        detail: ledgerIsSchemaFallback ? 'Gemini rejected strict schema; retrying with a simpler extraction path.' : structuredErrMsg.slice(0, 420)
       });
       // ── CLAUDE VISION FALLBACK ──
       // Gemini's full chain (2.5 → 3 → 3.1-lite) is exhausted. Before
@@ -42973,13 +43012,21 @@ function Policies() {
   }, [staged]);
   const [scanProgress, setScanProgress] = useState(null); // {batch, totalBatches, totalFiles, status, pctComplete}
   const [extractionLedger, setExtractionLedger] = useState([]);
+  const [showExtractionDetails, setShowExtractionDetails] = useState(false);
   useEffect(() => {
     const h = e => {
       const item = e.detail || {};
-      setExtractionLedger(prev => [{
+      const next = {
         at: item.at || Date.now(),
         ...item
-      }, ...prev].slice(0, 80));
+      };
+      const msg = String(next.detail || next.label || '').toLowerCase();
+      if (next.level === 'error' && /invalid_argument|schema|too many states|response_schema/.test(msg)) {
+        next.level = 'warning';
+        next.label = 'AI fallback handled';
+        next.detail = 'Gemini rejected a strict schema; PolicyLens is continuing with a simpler extraction path.';
+      }
+      setExtractionLedger(prev => [next, ...prev].slice(0, 80));
     };
     window.addEventListener('policylens-extraction-ledger', h);
     return () => window.removeEventListener('policylens-extraction-ledger', h);
@@ -46183,11 +46230,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
                       text: EXTRACT_PROMPT
                     }]
                   },
-                  generationConfig: {
-                    maxOutputTokens: 32000,
-                    responseMimeType: 'application/json',
-                    responseSchema: POLICY_EXTRACTION_SCHEMA
-                  }
+                  generationConfig: buildGeminiJsonGenerationConfig(32000, POLICY_EXTRACTION_SCHEMA)
                 });
                 allBodies.push(body);
               } catch (buildErr) {
@@ -47699,39 +47742,25 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
   }, scanProgress.status), (() => {
     const pct = Number(scanProgress.pctComplete || 0);
     const steps = [{
-      id: 'upload',
-      label: 'Upload',
-      done: true
+      id: 'prepare',
+      label: 'Prepare files',
+      done: pct > 10,
+      active: pct <= 10
     }, {
-      id: 'ocr-layout',
-      label: 'OCR/Layout',
-      done: extractionLedger.some(x => x.stage === 'ocr-layout' && x.level === 'success') || pct > 10,
-      active: pct <= 25
-    }, {
-      id: 'page-grouping',
-      label: 'Grouping',
-      done: pct > 25,
-      active: pct > 10 && pct <= 45
-    }, {
-      id: 'ai-extraction',
-      label: 'AI Extract',
-      done: pct > 70,
-      active: pct > 25 && pct < 100
+      id: 'read',
+      label: 'Read documents',
+      done: pct >= 100 || !!bulkExtracted,
+      active: pct > 10 && pct < 100
     }, {
       id: 'review',
-      label: 'Review',
+      label: 'Review policies',
       done: !!bulkExtracted,
       active: pct >= 100 && !bulkExtracted
-    }, {
-      id: 'sync',
-      label: 'Sync',
-      done: false,
-      active: false
     }];
     return /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'grid',
-        gridTemplateColumns: 'repeat(6,minmax(0,1fr))',
+        gridTemplateColumns: 'repeat(3,minmax(0,1fr))',
         gap: 6,
         marginTop: 10
       }
@@ -47757,22 +47786,29 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
     }, step.label))));
   })(), extractionLedger.length > 0 && /*#__PURE__*/React.createElement("div", {
     style: {
-      marginTop: 8,
+      marginTop: 8
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => setShowExtractionDetails(v => !v),
+    style: {
+      fontSize: 9,
+      color: 'var(--text3)',
+      background: 'transparent',
+      border: '1px solid rgba(255,255,255,.08)',
+      borderRadius: 6,
+      padding: '4px 8px',
+      cursor: 'pointer'
+    }
+  }, showExtractionDetails ? 'Hide technical details' : 'Show technical details'), showExtractionDetails && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 6,
       padding: '8px 10px',
       borderRadius: 7,
       border: '1px solid rgba(255,255,255,.06)',
       background: 'rgba(0,0,0,.12)'
     }
   }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 9,
-      fontWeight: 800,
-      color: 'var(--text3)',
-      textTransform: 'uppercase',
-      letterSpacing: '.35px',
-      marginBottom: 5
-    }
-  }, "Extraction ledger"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gap: 4
@@ -47781,7 +47817,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
     key: (row.at || 0) + ':' + i,
     style: {
       display: 'grid',
-      gridTemplateColumns: '90px minmax(0,1fr)',
+      gridTemplateColumns: '100px minmax(0,1fr)',
       gap: 8,
       fontSize: 10,
       color: row.level === 'error' ? 'var(--red)' : row.level === 'success' ? 'var(--teal)' : 'var(--text3)'
@@ -47798,7 +47834,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       textOverflow: 'ellipsis',
       whiteSpace: 'nowrap'
     }
-  }, row.fileName ? row.fileName + ' - ' : '', row.detail || ''))))), scanProgress.pctComplete > 0 && scanProgress.pctComplete < 100 && /*#__PURE__*/React.createElement("div", {
+  }, row.fileName ? row.fileName + ' - ' : '', row.detail || '')))))), scanProgress.pctComplete > 0 && scanProgress.pctComplete < 100 && /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 9,
       color: 'var(--text3)',
