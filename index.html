@@ -36,7 +36,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // long multi-batch scans can continue when the browser backgrounds
 // the page. The worker is registered only on HTTPS/localhost.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.19';
+const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.20';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -674,9 +674,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.19';
+const APP_VERSION = 'v2.3.0-rc2e.20';
 const APP_VERSION_DATE = '2026-05-02';
-const APP_VERSION_NAME = 'Smart XLSX enrichment';
+const APP_VERSION_NAME = 'Lower-friction XLSX import';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 const APP_TAB_IDS = new Set(['profile', 'dashboard', 'policies', 'clients', 'repository', 'report', 'settings']);
 function getInitialPolicyLensTab() {
@@ -687,6 +687,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.3.0-rc2e.20',
+  date: '2026-05-02',
+  name: 'Lower-friction XLSX import',
+  sections: [{
+    heading: 'Extraction',
+    items: ['Spreadsheet imports now carry their source as a policy schedule/table instead of showing "Unknown source" in Bulk Verify.', 'Excel policy-summary headers now provide the obvious document owner for import routing, so a single-client spreadsheet can create or reuse that client automatically when no client is active.', 'Bulk Verify no longer shows the missing-coverage checklist during import; coverage gaps belong in the dashboard/report after the policies are saved.']
+  }]
+}, {
   version: 'v2.3.0-rc2e.19',
   date: '2026-05-02',
   name: 'Smart XLSX enrichment',
@@ -2763,6 +2771,28 @@ function classifyPolicyDocumentTriage(policy = {}, existingPolicies = []) {
     existingPolicyLabel: matchedExisting ? matchedExisting.productName || matchedExisting.policyName || matchedExisting.policyNumber || matchedExisting.insurer || 'Existing policy' : null
   };
 }
+function ensureDocumentTriageObject(policy = {}, existingPolicies = []) {
+  const raw = policy?._documentTriage;
+  if (raw && typeof raw === 'object' && raw.type) {
+    const type = normalizeDocumentTriageType(raw.type);
+    return {
+      ...raw,
+      type: type || raw.type,
+      label: raw.label || DOCUMENT_TRIAGE_META[type]?.label || DOCUMENT_TRIAGE_META.unknown.label,
+      reasons: Array.isArray(raw.reasons) ? raw.reasons : []
+    };
+  }
+  const explicitType = normalizeDocumentTriageType(raw || policy?.documentType);
+  if (explicitType && explicitType !== 'unknown') {
+    return {
+      type: explicitType,
+      label: DOCUMENT_TRIAGE_META[explicitType]?.label || DOCUMENT_TRIAGE_META.unknown.label,
+      confidence: 'high',
+      reasons: ['Document type supplied by the extraction pipeline.']
+    };
+  }
+  return classifyPolicyDocumentTriage(policy, existingPolicies);
+}
 function enhanceExtractedPolicyIntelligence(policy = {}, existingPolicies = []) {
   const next = ensurePolicyFieldEvidence({
     ...(policy || {})
@@ -2771,7 +2801,7 @@ function enhanceExtractedPolicyIntelligence(policy = {}, existingPolicies = []) 
   });
   next.documentType = normalizeDocumentTriageType(next.documentType) || next.documentType || null;
   next._policyFingerprint = next._policyFingerprint || buildPolicyIdentityFingerprint(next);
-  next._documentTriage = next._documentTriage || classifyPolicyDocumentTriage(next, existingPolicies);
+  next._documentTriage = ensureDocumentTriageObject(next, existingPolicies);
   if (next._documentTriage?.existingPolicyId && !next._knownPolicyMatch) {
     next._knownPolicyMatch = {
       id: next._documentTriage.existingPolicyId,
@@ -4153,7 +4183,7 @@ async function pdfToImages(pdfDoc, maxPages = 12) {
 // CLEAN even if the FC never actually reviewed anything. Bumping the version
 // forces a re-extraction next time those same files are uploaded, and the
 // one-time cleanup in App init purges the stale entries from IndexedDB.
-const EXTRACT_PIPELINE_VERSION = 'v15.7-2026-05-02-smart-xlsx-enrichment';
+const EXTRACT_PIPELINE_VERSION = 'v15.8-2026-05-02-xlsx-owner-source';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.8-2026-04-30-ai-triage-fingerprint';
@@ -7563,6 +7593,73 @@ function xlsxRowsToCsvSample(headers, rows, limit = 8) {
   }
   return lines.join('\n');
 }
+function inferXlsxDocumentNameFromFile(fileName) {
+  const base = String(fileName || '').replace(/\.(xlsx|xls|csv)$/i, '').replace(/\b(policy|portfolio)\s+summary\b/ig, ' ').replace(/\bsummary\b/ig, ' ').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  const clean = cleanPersonDisplayName(base);
+  return normalizePersonNameKey(clean) ? clean : '';
+}
+function isLikelyXlsxProfileNameLine(line) {
+  const s = String(line || '').replace(/\s+/g, ' ').trim();
+  if (!s || s.length < 4) return false;
+  const lower = s.toLowerCase();
+  if (/\b(policy|portfolio)\s+summary\b|\b(summary|nric|fin|address|contact|phone|mobile|dob|d\.o\.b|date\s+of\s+birth|premium|total|amount|policy\s+no|policy\s+name)\b/.test(lower)) return false;
+  if (!/[a-z]/i.test(s)) return false;
+  const key = normalizePersonNameKey(s);
+  if (!key) return false;
+  const words = key.split(' ').filter(Boolean);
+  return words.length >= 2 || /\([^)]+\)/.test(s);
+}
+function extractXlsxDocumentProfile(matrix, headerRowIndex, sheetName, fileName) {
+  const profile = {
+    name: '',
+    nric: '',
+    dob: '',
+    phone: '',
+    address: '',
+    sourceSheet: sheetName || '',
+    sourceFile: fileName || '',
+    source: 'xlsx-header'
+  };
+  const scanLimit = Math.min(Array.isArray(matrix) ? matrix.length : 0, Math.max(0, Math.min(headerRowIndex > 0 ? headerRowIndex : 0, 40)));
+  for (let r = 0; r < scanLimit; r++) {
+    const cells = (matrix[r] || []).map(xlsxCellText);
+    const nonEmpty = cells.filter(Boolean);
+    if (nonEmpty.length === 0) continue;
+    const line = nonEmpty.join(' ').replace(/\s+/g, ' ').trim();
+    if (!profile.name) {
+      for (let c = 0; c < cells.length; c++) {
+        const label = cells[c] || '';
+        const nextCell = cells[c + 1] || '';
+        if (/^(client|customer|policyholder|life assured|insured|name)$/i.test(label.trim()) && isLikelyXlsxProfileNameLine(nextCell)) {
+          profile.name = cleanPersonDisplayName(nextCell);
+          break;
+        }
+      }
+      if (!profile.name && isLikelyXlsxProfileNameLine(line)) {
+        profile.name = cleanPersonDisplayName(line);
+      }
+    }
+    if (!profile.nric) {
+      const nric = line.match(/\b(?:nric|fin)\b\s*[:\-]?\s*([A-Z][0-9]{7}[A-Z])\b/i);
+      if (nric) profile.nric = nric[1].toUpperCase();
+    }
+    if (!profile.dob) {
+      const dob = line.match(/\b(?:d\.?\s*o\.?\s*b\.?|date\s+of\s+birth)\b\s*[:\-]?\s*([0-9]{1,2}[\/.\-][0-9]{1,2}[\/.\-][0-9]{2,4})\b/i);
+      if (dob) profile.dob = dob[1];
+    }
+    if (!profile.phone) {
+      const phone = line.match(/\b(?:contact|phone|mobile)(?:\s+no\.?)?\b\s*[:\-]?\s*(\+?\d[\d\s\-]{5,})/i);
+      if (phone) profile.phone = phone[1].replace(/\s+/g, ' ').trim();
+    }
+    if (!profile.address) {
+      const address = line.match(/\baddress\b\s*[:\-]?\s*(.{8,})$/i);
+      if (address) profile.address = address[1].trim();
+    }
+  }
+  if (!profile.name) profile.name = inferXlsxDocumentNameFromFile(fileName);
+  profile.name = cleanPersonDisplayName(profile.name);
+  return normalizePersonNameKey(profile.name) ? profile : null;
+}
 function inferXlsxColumnMap(headers) {
   const entries = headers.map(header => ({
     header,
@@ -7821,8 +7918,16 @@ function enrichSpreadsheetPolicyCandidate(policy, context = {}) {
       });
     }
   }
-  next._documentTriage = next._documentTriage || 'policy_schedule';
-  next.documentType = next.documentType || 'policy_schedule';
+  next.documentType = normalizeDocumentTriageType(next.documentType) || 'policy_schedule';
+  next._documentTriage = ensureDocumentTriageObject({
+    ...next,
+    _documentTriage: next._documentTriage || {
+      type: 'policy_schedule',
+      label: DOCUMENT_TRIAGE_META.policy_schedule.label,
+      confidence: 'high',
+      reasons: ['Parsed from spreadsheet policy table.']
+    }
+  });
   next.extractionNotes = next.extractionNotes || 'Parsed from spreadsheet';
   next._policyFingerprint = buildPolicyIdentityFingerprint(next);
   return next;
@@ -7862,6 +7967,7 @@ async function parseXlsxToStructured(file) {
     const signature = await _sha256Hex(normalized);
     const rawSample = xlsxRowsToCsvSample(headers, rows);
     const localMap = inferXlsxColumnMap(headers);
+    const documentProfile = extractXlsxDocumentProfile(matrix, headerRowIndex, sheetName, file?.name || '');
     results.push({
       sheetName,
       headers,
@@ -7871,7 +7977,8 @@ async function parseXlsxToStructured(file) {
       headerRow: headerRowIndex + 1,
       localColumnMap: localMap.columnMap,
       localCategoryColumn: localMap.categoryColumn,
-      localMapConfidence: localMap.confidence
+      localMapConfidence: localMap.confidence,
+      documentProfile
     });
   }
   return results;
@@ -7997,7 +8104,12 @@ function applyColumnMap(rows, columnMap, categoryColumn) {
     if (row.__sourceRow) policy.sourceRow = row.__sourceRow;
     policy.currency = policy.currency || 'SGD';
     policy.documentType = policy.documentType || 'policy_schedule';
-    policy._documentTriage = policy._documentTriage || 'policy_schedule';
+    policy._documentTriage = policy._documentTriage || {
+      type: 'policy_schedule',
+      label: DOCUMENT_TRIAGE_META.policy_schedule.label,
+      confidence: 'high',
+      reasons: ['Parsed from spreadsheet policy table.']
+    };
     policy.extractionNotes = policy.extractionNotes || 'Parsed from spreadsheet' + (policy.sourceSheet ? ' sheet "' + policy.sourceSheet + '"' : '') + (policy.sourceRow ? ', row ' + policy.sourceRow : '');
     delete policy._premiumColumnName;
     if (confidence.length > 0) policy._confidence = confidence;
@@ -8042,11 +8154,27 @@ async function extractSpreadsheetFilesLocally(files, opts = {}) {
           continue;
         }
       }
-      const policies = applyColumnMap(sheet.rows, colMap, catCol).map(p => ({
-        ...p,
-        sourceFile: p.sourceFile || fileName,
-        documentTitle: p.documentTitle || fileName
-      })).map(p => enrichSpreadsheetPolicyCandidate(p, {
+      const sheetProfile = sheet.documentProfile || null;
+      const policies = applyColumnMap(sheet.rows, colMap, catCol).map(p => {
+        const sourceDocument = {
+          ...(p.sourceDocument || {}),
+          sourceFile: p.sourceFile || fileName,
+          sourceSheet: p.sourceSheet || sheet.sheetName,
+          sourceRow: p.sourceRow || null
+        };
+        if (sheetProfile?.name) sourceDocument.clientName = sheetProfile.name;
+        if (sheetProfile?.nric) sourceDocument.nric = sheetProfile.nric;
+        if (sheetProfile?.dob) sourceDocument.dob = sheetProfile.dob;
+        if (sheetProfile?.phone) sourceDocument.phone = sheetProfile.phone;
+        return {
+          ...p,
+          sourceFile: p.sourceFile || fileName,
+          documentTitle: p.documentTitle || fileName,
+          documentOwner: p.documentOwner || sheetProfile?.name || '',
+          _xlsxProfile: p._xlsxProfile || sheetProfile || null,
+          sourceDocument
+        };
+      }).map(p => enrichSpreadsheetPolicyCandidate(p, {
         fileName,
         repo: repoList
       })).filter(Boolean);
@@ -40660,12 +40788,14 @@ function BulkVerifyModal({
     const weak = /^(unknown|null|n\/a|na|nil|same as|self|policy owner|owner|life insured|life assured)$/i;
     const owner = String(it?.policyOwner || '').trim();
     const life = String(it?.lifeInsured || '').trim();
+    const documentOwner = String(it?.documentOwner || it?.sourceDocument?.clientName || it?._xlsxProfile?.name || '').trim();
     if (owner && !weak.test(owner)) return 'Policy owner: ' + owner;
+    if (documentOwner && !weak.test(documentOwner)) return 'Document owner: ' + documentOwner;
     if (life && !weak.test(life)) return 'Life assured: ' + life + ' (owner unclear)';
     return '';
   };
-  const policyOwnerDisplay = it => ownerLabelForItem(it).replace(/^Policy owner:\s*/i, '').replace(/^Life assured:\s*/i, '') || 'Owner unclear';
-  const ownerKeyForItem = it => ownerLabelForItem(it).replace(/^Policy owner:\s*/i, '').replace(/^Life assured:\s*/i, '').replace(/\s*\(owner unclear\)\s*$/i, '');
+  const policyOwnerDisplay = it => ownerLabelForItem(it).replace(/^(Policy owner|Document owner):\s*/i, '').replace(/^Life assured:\s*/i, '') || 'Owner unclear';
+  const ownerKeyForItem = it => ownerLabelForItem(it).replace(/^(Policy owner|Document owner):\s*/i, '').replace(/^Life assured:\s*/i, '').replace(/\s*\(owner unclear\)\s*$/i, '');
   const needsDecisionForItem = it => {
     const verifiable = getVerifiableFields(it);
     const gate = passesConfidenceGate(it);
@@ -40673,7 +40803,8 @@ function BulkVerifyModal({
     const hasOwnerQuestion = /\(owner unclear\)/i.test(ownerLabel) || !!it._ownerRouteQuestion;
     const hasReviewReasons = !it._extractVerifiedAt && ((it._gateReasons || []).length > 0 || (it._reviewReasons || []).length > 0 || (it._reviewActions || []).length > 0);
     const hasMergeDecision = (!!it._dupOf || !!it._knownPolicyMatch || (it._mergeConflicts || []).length > 0) && !it._mergeIntoExisting;
-    const hasTriageDecision = it._documentTriage?.type === 'duplicate' && !it._mergeIntoExisting || it._documentTriage?.confidence === 'low' && !it._extractVerifiedAt;
+    const triage = ensureDocumentTriageObject(it, existingPolicies || []);
+    const hasTriageDecision = triage?.type === 'duplicate' && !it._mergeIntoExisting || triage?.confidence === 'low' && !it._extractVerifiedAt;
     return verifiable.length > 0 && !it._extractVerifiedAt || !gate.pass && !it._extractVerifiedAt || hasOwnerQuestion || hasReviewReasons || hasMergeDecision || hasTriageDecision;
   };
   const needsReviewCount = items.filter(needsDecisionForItem).length;
@@ -40684,7 +40815,7 @@ function BulkVerifyModal({
   const ownerKeysInView = [...new Set(visibleVerifyItems.map(it => normalizePersonNameKey(ownerKeyForItem(it))).filter(Boolean))];
   const showOwnerLabels = ownerKeysInView.length > 1;
   const triageCounts = items.reduce((acc, it) => {
-    const type = it._documentTriage?.type || 'unknown';
+    const type = ensureDocumentTriageObject(it, existingPolicies || []).type || 'unknown';
     acc[type] = (acc[type] || 0) + 1;
     return acc;
   }, {});
@@ -40996,7 +41127,7 @@ function BulkVerifyModal({
       textAlign: 'right'
     }
   }, "Decision"))), /*#__PURE__*/React.createElement("tbody", null, filtered.map((it, i) => {
-    const triage = it._documentTriage || classifyPolicyDocumentTriage(it, existingPolicies || []);
+    const triage = ensureDocumentTriageObject(it, existingPolicies || []);
     const meta = DOCUMENT_TRIAGE_META[triage.type] || DOCUMENT_TRIAGE_META.unknown;
     const fp = it._policyFingerprint || buildPolicyIdentityFingerprint(it);
     const anchors = [fp.anchors?.policyNumber ? 'No. ' + it.policyNumber : '', fp.anchors?.owner ? 'Owner ' + (it.policyOwner || it.documentOwner || fp.anchors.owner) : '', fp.anchors?.lifeAssured ? 'Life ' + (it.lifeInsured || fp.anchors.lifeAssured) : '', fp.anchors?.premium ? 'Prem $' + fp.anchors.premium.toLocaleString() : '', fp.anchors?.sourceHash ? 'Src ' + fp.anchors.sourceHash : ''].filter(Boolean).slice(0, 4);
@@ -41380,7 +41511,7 @@ function BulkVerifyModal({
       overflowY: 'auto',
       overflowX: 'hidden'
     }
-  }, items.length > 0 && (() => {
+  }, false && items.length > 0 && (() => {
     const cats = {
       life: false,
       ci: false,
@@ -43034,6 +43165,44 @@ function Policies() {
     if (states.length === 1) return states[0].clientId;
     if (cid) console.warn('[Import] Ignoring stale active client id during import:', cid);
     return null;
+  };
+  const inferSingleOwnerFromImportBatch = (incomingPolicies = []) => {
+    const list = Array.isArray(incomingPolicies) ? incomingPolicies : [];
+    if (list.length === 0) return null;
+    const seen = new Map();
+    const addName = (raw, source) => {
+      const display = cleanPersonDisplayName(raw || '').trim();
+      if (!display || isWeakPolicyOwnerValue(display)) return;
+      const key = normalizePersonNameKey(display);
+      if (!key) return;
+      const existing = seen.get(key) || {
+        name: display,
+        count: 0,
+        sources: new Set()
+      };
+      existing.name = preferPersonDisplayName(existing.name, display);
+      existing.count += 1;
+      existing.sources.add(source || 'policy');
+      seen.set(key, existing);
+    };
+    for (const item of list) {
+      const sourceDoc = item?.sourceDocument || {};
+      const xlsxProfile = item?._xlsxProfile || {};
+      const candidates = [[item?.documentOwner, 'document-owner'], [sourceDoc.clientName, 'source-document'], [xlsxProfile.name, 'xlsx-header'], [item?.policyOwner, 'policy-owner']];
+      const hit = candidates.find(([name]) => {
+        const display = cleanPersonDisplayName(name || '').trim();
+        return display && !isWeakPolicyOwnerValue(display) && normalizePersonNameKey(display);
+      });
+      if (hit) addName(hit[0], hit[1]);
+    }
+    if (seen.size !== 1) return null;
+    const only = Array.from(seen.values())[0];
+    if (only.count < Math.max(1, Math.ceil(list.length * 0.7))) return null;
+    return {
+      name: only.name,
+      count: only.count,
+      source: Array.from(only.sources).join(', ')
+    };
   };
   const buildOwnerRoutedPolicy = (policy, assignment, targetClientName, routeName, opts = {}) => {
     const info = assignment?.info || {};
@@ -49282,9 +49451,20 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       let mergedCount = 0;
       const acceptedPolicyIds = [];
       let importClientId = await resolveActiveImportClientId();
+      let autoImportClient = null;
       if (!importClientId) {
-        toast('No active client found. Open or create the intended owner/client, then import again.', 'error', 7000);
-        return;
+        const inferredOwner = inferSingleOwnerFromImportBatch(selected);
+        if (inferredOwner?.name) {
+          autoImportClient = await ensureOwnerRouteClient(inferredOwner.name, '');
+          importClientId = autoImportClient?.clientId || null;
+          if (importClientId) {
+            toast((autoImportClient.created ? 'Created' : 'Using') + ' client ' + (autoImportClient.clientName || inferredOwner.name) + ' for this import.', 'success', 4500);
+          }
+        }
+        if (!importClientId) {
+          toast('Pick or create the intended client first, or upload a spreadsheet with one clear client name in the header.', 'error', 7000);
+          return;
+        }
       }
       if (selected && selected.length > 0) {
         const [beforePolicies, beforeProfileRec] = await Promise.all([dbGetAll('policies').catch(() => []), dbGet('settings', 'clientProfile_' + importClientId).catch(() => null)]);
@@ -49341,6 +49521,10 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
         delete clean._ownerRoute;
         delete clean._ownerRoutedFrom;
         clean.clientId = importClientId;
+        if (autoImportClient?.clientName) {
+          clean.documentOwner = clean.documentOwner || autoImportClient.clientName;
+          if (!clean.policyOwner || isWeakPolicyOwnerValue(clean.policyOwner)) clean.policyOwner = autoImportClient.clientName;
+        }
         const currentClientPolicies = (policies || []).filter(ep => (ep.clientId || importClientId) === importClientId);
 
         // Tier 1: explicit _knownPolicyMatch from extraction-time detection,
