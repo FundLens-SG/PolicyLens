@@ -36,7 +36,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // long multi-batch scans can continue when the browser backgrounds
 // the page. The worker is registered only on HTTPS/localhost.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.18';
+const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.19';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -674,9 +674,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.18';
-const APP_VERSION_DATE = '2026-05-01';
-const APP_VERSION_NAME = 'Progressive XLSX extraction restore';
+const APP_VERSION = 'v2.3.0-rc2e.19';
+const APP_VERSION_DATE = '2026-05-02';
+const APP_VERSION_NAME = 'Smart XLSX enrichment';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 const APP_TAB_IDS = new Set(['profile', 'dashboard', 'policies', 'clients', 'repository', 'report', 'settings']);
 function getInitialPolicyLensTab() {
@@ -687,6 +687,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.3.0-rc2e.19',
+  date: '2026-05-02',
+  name: 'Smart XLSX enrichment',
+  sections: [{
+    heading: 'Extraction',
+    items: ['Spreadsheet imports now infer obvious insurers from product names and repository matches before the verify screen.', 'CPF, government scheme, and profile summary rows are filtered out of policy imports instead of becoming fake policies.', 'High-confidence repository matches now pre-fill insurer and classification fields while preserving source sheet and row evidence.']
+  }]
+}, {
   version: 'v2.3.0-rc2e.18',
   date: '2026-05-01',
   name: 'Progressive XLSX extraction restore',
@@ -4145,7 +4153,7 @@ async function pdfToImages(pdfDoc, maxPages = 12) {
 // CLEAN even if the FC never actually reviewed anything. Bumping the version
 // forces a re-extraction next time those same files are uploaded, and the
 // one-time cleanup in App init purges the stale entries from IndexedDB.
-const EXTRACT_PIPELINE_VERSION = 'v15.6-2026-05-01-progressive-xlsx-local';
+const EXTRACT_PIPELINE_VERSION = 'v15.7-2026-05-02-smart-xlsx-enrichment';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.8-2026-04-30-ai-triage-fingerprint';
@@ -6598,6 +6606,7 @@ function matchRepoForPolicy(policy, repo) {
   if (!policy || !policy.insurer || !policy.productName || !repo || !Array.isArray(repo)) return null;
   const polInsurer = normaliseTextForMatch(policy.insurer);
   const polProduct = normaliseTextForMatch(policy.productName);
+  const polProductCompact = normalizeCompactKey(policy.productName);
   const polCode = policy.productCode ? normaliseTextForMatch(policy.productCode) : '';
   if (polInsurer.length < 3 || polProduct.length < 4) return null;
   const candidates = [];
@@ -6605,12 +6614,13 @@ function matchRepoForPolicy(policy, repo) {
     if (!r || !r.insurer || !r.productName) continue;
     const rInsurer = normaliseTextForMatch(r.insurer);
     const rProduct = normaliseTextForMatch(r.productName);
+    const rProductCompact = normalizeCompactKey(r.productName);
     const rCode = r.productCode ? normaliseTextForMatch(r.productCode) : '';
     // Insurer must match exactly (normalised) — prevents cross-insurer confusion
     if (rInsurer !== polInsurer) continue;
     // Product name: bidirectional substring match (e.g. "AIA Gen3 II" matches repo "AIA Gen3")
-    const exactName = polProduct === rProduct;
-    const substringName = !exactName && (polProduct.includes(rProduct) || rProduct.includes(polProduct));
+    const exactName = polProduct === rProduct || polProductCompact === rProductCompact;
+    const substringName = !exactName && (polProduct.includes(rProduct) || rProduct.includes(polProduct) || polProductCompact.length >= 4 && rProductCompact.length >= 4 && (polProductCompact.includes(rProductCompact) || rProductCompact.includes(polProductCompact)));
     const codeMatch = polCode && rCode && polCode === rCode;
     if (!exactName && !substringName && !codeMatch) continue;
     // Scoring
@@ -6619,6 +6629,29 @@ function matchRepoForPolicy(policy, repo) {
     candidates.push({
       repo: r,
       score
+    });
+  }
+  if (candidates.length === 0) return null;
+  candidates.sort((a, b) => b.score - a.score || b.repo.productName.length - a.repo.productName.length);
+  return candidates[0];
+}
+function matchRepoForPolicyLoose(policy, repo) {
+  if (!policy || !policy.productName || !repo || !Array.isArray(repo)) return null;
+  const polProduct = normaliseTextForMatch(policy.productName);
+  const polProductCompact = normalizeCompactKey(policy.productName);
+  if (polProduct.length < 4 || GENERIC_PRODUCT_NAMES.has(polProduct)) return null;
+  const candidates = [];
+  for (const r of repo) {
+    if (!r || !r.productName) continue;
+    const rProduct = normaliseTextForMatch(r.productName);
+    const rProductCompact = normalizeCompactKey(r.productName);
+    if (rProduct.length < 4 || rProductCompact.length < 4) continue;
+    const exactName = polProduct === rProduct || polProductCompact === rProductCompact;
+    const substringName = !exactName && (polProduct.includes(rProduct) || rProduct.includes(polProduct) || polProductCompact.includes(rProductCompact) || rProductCompact.includes(polProductCompact));
+    if (!exactName && !substringName) continue;
+    candidates.push({
+      repo: r,
+      score: exactName ? 0.94 : 0.90
     });
   }
   if (candidates.length === 0) return null;
@@ -6636,6 +6669,17 @@ function reconcilePolicyAgainstRepo(policy, repo) {
   if (!match || match.score < 0.90) return null;
   const r = match.repo;
   const changes = [];
+
+  // INSURER - fill only. Document value wins when it exists.
+  if ((!policy.insurer || /^unknown$/i.test(String(policy.insurer).trim())) && r.insurer) {
+    changes.push({
+      field: 'insurer',
+      from: policy.insurer || null,
+      to: r.insurer,
+      action: 'filled'
+    });
+    policy.insurer = r.insurer;
+  }
 
   // CATEGORY — fill or override (classification authority)
   if (!policy.category && r.category) {
@@ -7565,16 +7609,13 @@ function normalizeXlsxPremiumFrequency(value) {
 }
 function inferXlsxPolicyCategory(policy) {
   const t = [policy.productName, policy.subType, policy.category].filter(Boolean).join(' ').toLowerCase();
-  if (/careshield|eldershield/.test(t)) return 'CareShield';
-  if (/shield|hospital|medisave/.test(t)) return 'ISP';
-  if (/critical|ci\b|cancer/.test(t)) return 'Critical Illness';
-  if (/accident|\bpa\b/.test(t)) return 'Personal Accident';
-  if (/disability|income protection|\bdii\b/.test(t)) return 'Disability Income';
-  if (/retire|annuity|payout/.test(t)) return 'Retirement';
-  if (/endow|education|saving/.test(t)) return 'Endowment';
-  if (/ilp|investment[-\s]*linked|wealth|portfolio|fund/.test(t)) return 'ILP';
-  if (/maternity|pregnancy/.test(t)) return 'Maternity';
-  return 'Life';
+  if (/careshield|eldershield|shield|hospital|medisave/.test(t)) return 'health';
+  if (/critical|ci\b|cancer|accident|\bpa\b|disability|income protection|\bdii\b|term|whole|life/.test(t)) return 'protection';
+  if (/retire|annuity|payout/.test(t)) return 'retirement';
+  if (/endow|education|saving/.test(t)) return 'savings';
+  if (/ilp|investment[-\s]*linked|wealth|portfolio|fund/.test(t)) return 'investment';
+  if (/maternity|pregnancy/.test(t)) return 'maternity';
+  return 'protection';
 }
 function inferXlsxPolicySubType(policy) {
   const t = [policy.productName, policy.subType, policy.category].filter(Boolean).join(' ').toLowerCase();
@@ -7587,6 +7628,204 @@ function inferXlsxPolicySubType(policy) {
   if (/endow|saving/.test(t)) return 'Endowment';
   if (/ilp|investment[-\s]*linked|wealth/.test(t)) return 'ILP (Investment)';
   return '';
+}
+function normalizeXlsxStorageCategory(value) {
+  const key = String(value || '').trim().toLowerCase();
+  if (!key) return '';
+  if (CATEGORIES[key]) return key;
+  if (/cash|fixed deposit|t[-\s]*bill|bond|ssb|deposit|money market/.test(key)) return 'cash_investments';
+  if (/retire|annuity|cpf life|income plan|payout/.test(key)) return 'retirement';
+  if (/shield|hospital|medisave|medical|health|careshield|eldershield/.test(key)) return 'health';
+  if (/maternity|pregnancy/.test(key)) return 'maternity';
+  if (/ilp|investment|unit trust|wealth|portfolio|fund/.test(key)) return 'investment';
+  if (/endow|saving|education/.test(key)) return 'savings';
+  if (/life|critical|ci\b|accident|\bpa\b|disability|term|whole|protection/.test(key)) return 'protection';
+  return '';
+}
+function isMissingXlsxInsurer(value) {
+  const s = String(value || '').trim().toLowerCase();
+  return !s || s === 'unknown' || s === 'unknown insurer' || s === '-' || s === 'n/a' || s === 'na';
+}
+function inferInsurerFromProductName(productName) {
+  const t = normalizeTextKey(productName);
+  const c = normalizeCompactKey(productName);
+  if (!t && !c) return '';
+  const rules = [{
+    re: /\baia\b|^aiagen|^aiaplatinum|^aias[a-z0-9]*|^prime life|^prime secure/i,
+    name: 'AIA'
+  }, {
+    re: /manulife|manulink|investready|incomegen|retireready|lifeready|manuprotect/i,
+    name: 'Manulife'
+  }, {
+    re: /china life/i,
+    name: 'China Life'
+  }, {
+    re: /\bge\b|gepremier|premierlife|great eastern|greateastern|greatlife/i,
+    name: 'Great Eastern'
+  }, {
+    re: /ntuc|income insurance|incomeshield|gro\s*cash|grocash|cashsure|cashsurance/i,
+    name: 'NTUC Income'
+  }, {
+    re: /prudential|\bpru\b|prulife|pruwealth/i,
+    name: 'Prudential'
+  }, {
+    re: /singlife|aviva/i,
+    name: 'Singlife'
+  }, {
+    re: /hsbc life/i,
+    name: 'HSBC Life'
+  }, {
+    re: /tokio marine/i,
+    name: 'Tokio Marine'
+  }, {
+    re: /etiqa/i,
+    name: 'Etiqa'
+  }, {
+    re: /fwd/i,
+    name: 'FWD'
+  }, {
+    re: /zurich/i,
+    name: 'Zurich'
+  }];
+  const hay = t + ' ' + c;
+  const hit = rules.find(rule => rule.re.test(hay));
+  return hit ? normalizeInsurerName(hit.name) : '';
+}
+function clearXlsxConfidence(policy, fields) {
+  const set = new Set(Array.isArray(fields) ? fields : [fields]);
+  if (Array.isArray(policy._confidence)) {
+    policy._confidence = policy._confidence.filter(entry => !set.has(entry?.field));
+    if (policy._confidence.length === 0) delete policy._confidence;
+  }
+  if (policy._extractConfidence) {
+    for (const f of set) delete policy._extractConfidence[f];
+    if (Object.keys(policy._extractConfidence).length === 0) delete policy._extractConfidence;
+  }
+  if (policy._extractConfidenceReasons) {
+    for (const f of set) delete policy._extractConfidenceReasons[f];
+    if (Object.keys(policy._extractConfidenceReasons).length === 0) delete policy._extractConfidenceReasons;
+  }
+}
+function isSpreadsheetNonPolicyRow(policy) {
+  const product = String(policy.productName || policy.policyName || '').trim();
+  const productKey = normalizeTextKey(product);
+  const hay = normalizeTextKey([product, policy.policyNumber, policy.insurer, policy.category, policy.subType, policy.sourceSheet].filter(Boolean).join(' '));
+  const pn = String(policy.policyNumber || '').trim();
+  const pnKey = normalizeTextKey(pn);
+  const hasRealPolicyNumber = normalizePolicyKey(pn).length >= 4 && !/^(year|age|date|dob|name|turn|turn at|turn 55|cpf)$/.test(pnKey);
+  const hasInsurer = !isMissingXlsxInsurer(policy.insurer);
+  const premium = moneyNumber(policy.premiumAmount ?? policy.annualPremium);
+  const hasFinancial = premium > 0 || moneyNumber(policy.sumAssured) > 0 || moneyNumber(policy.cashValue) > 0;
+  if (!hasRealPolicyNumber && !hasInsurer && !hasFinancial) return true;
+  if (/^(name|client name|insured name|policy summary|summary|policy name|policy no|policy number)$/i.test(productKey)) return true;
+  if (/^(income|investment|insurance|wealth|govt schemes|government schemes|government scheme)$/i.test(productKey) && !hasRealPolicyNumber && !hasFinancial) return true;
+  if (/\b(cpf retirement sum|cpf retirement account|retirement sum|govt schemes|government schemes|government scheme)\b/.test(hay) && !hasInsurer) return true;
+  if (/\b(nric|date of birth|dob|address|contact no|phone|email|gender|smoker|nationality)\b/.test(hay) && !hasRealPolicyNumber && !hasInsurer) return true;
+  if (premium > 100000000 && !hasInsurer && !hasRealPolicyNumber) return true;
+  return false;
+}
+function addXlsxFieldEvidence(policy, field, sourceText, confidence = 'high', reason = 'Parsed from spreadsheet row.') {
+  if (policy[field] === undefined || policy[field] === null || policy[field] === '') return;
+  policy._fieldEvidence = {
+    ...(policy._fieldEvidence || {})
+  };
+  if (policy._fieldEvidence[field]) return;
+  policy._fieldEvidence[field] = {
+    value: policy[field],
+    confidence,
+    sourceImage: policy.sourceFile || policy._sourceFile || null,
+    sourceText,
+    page: policy.sourcePage || policy._sourcePage || null,
+    boundingBox: null,
+    reason
+  };
+}
+function attachXlsxSourceEvidence(policy, fileName) {
+  const sheetLabel = policy.sourceSheet ? 'sheet "' + policy.sourceSheet + '"' : 'spreadsheet';
+  const rowLabel = policy.sourceRow ? ', row ' + policy.sourceRow : '';
+  const sourceText = [fileName, sheetLabel + rowLabel].filter(Boolean).join(' / ');
+  policy.sourceFile = policy.sourceFile || fileName;
+  policy._sourceFile = policy._sourceFile || fileName;
+  policy.documentTitle = policy.documentTitle || fileName;
+  policy._documentTitle = policy._documentTitle || fileName;
+  policy.sourcePage = policy.sourcePage || (policy.sourceSheet ? policy.sourceSheet + (policy.sourceRow ? ' row ' + policy.sourceRow : '') : '');
+  policy._sourcePage = policy._sourcePage || policy.sourcePage;
+  ['productName', 'policyNumber', 'policyOwner', 'lifeInsured', 'insurer', 'premiumAmount', 'annualPremium', 'sumAssured', 'cashValue'].forEach(field => addXlsxFieldEvidence(policy, field, sourceText));
+}
+function applyHighConfidenceRepoMatchToPolicy(policy, match, reason = 'repo-match') {
+  if (!policy || !match || !match.repo || match.score < 0.90) return policy;
+  const r = match.repo;
+  const filled = [];
+  if (isMissingXlsxInsurer(policy.insurer) && r.insurer) {
+    policy.insurer = normalizeInsurerName(r.insurer);
+    filled.push('insurer');
+  }
+  if (r.category) {
+    const cat = normalizeXlsxStorageCategory(r.category) || r.category;
+    if (cat && policy.category !== cat) {
+      policy.category = cat;
+      filled.push('category');
+    }
+  }
+  if (r.subType && policy.subType !== r.subType) {
+    policy.subType = r.subType;
+    filled.push('subType');
+  }
+  if (!policy.currency && r.currency) {
+    policy.currency = r.currency;
+    filled.push('currency');
+  }
+  if (!policy.productCode && r.productCode) {
+    policy.productCode = r.productCode;
+    filled.push('productCode');
+  }
+  if (filled.length) {
+    clearXlsxConfidence(policy, filled);
+    policy._repoMatchAutoApplied = {
+      productName: r.productName,
+      insurer: r.insurer,
+      score: match.score,
+      reason
+    };
+  }
+  return policy;
+}
+function enrichSpreadsheetPolicyCandidate(policy, context = {}) {
+  const fileName = context.fileName || policy.sourceFile || policy.documentTitle || 'Spreadsheet';
+  const repoList = Array.isArray(context.repo) ? context.repo : [];
+  const next = {
+    ...policy
+  };
+  next.category = normalizeXlsxStorageCategory(next.category) || normalizeXlsxStorageCategory(inferXlsxPolicyCategory(next)) || next.category;
+  if (next.insurer) next.insurer = normalizeInsurerName(next.insurer);
+  if (isMissingXlsxInsurer(next.insurer)) {
+    const inferred = inferInsurerFromProductName(next.productName || next.policyName);
+    if (inferred) {
+      next.insurer = inferred;
+      clearXlsxConfidence(next, 'insurer');
+      addXlsxFieldEvidence(next, 'insurer', 'Inferred from spreadsheet product name: ' + (next.productName || next.policyName), 'medium', 'Insurer inferred from product naming pattern.');
+    }
+  }
+  const repoMatch = matchRepoForPolicy(next, repoList) || matchRepoForPolicyLoose(next, repoList);
+  if (repoMatch && repoMatch.score >= 0.90) applyHighConfidenceRepoMatchToPolicy(next, repoMatch, 'spreadsheet-repo-match');
+  next.category = normalizeXlsxStorageCategory(next.category) || next.category;
+  if (isSpreadsheetNonPolicyRow(next)) return null;
+  attachXlsxSourceEvidence(next, fileName);
+  if (isMissingXlsxInsurer(next.insurer)) {
+    next._confidence = Array.isArray(next._confidence) ? next._confidence : [];
+    if (!next._confidence.some(entry => entry?.field === 'insurer')) {
+      next._confidence.push({
+        field: 'insurer',
+        level: 'low',
+        reason: 'Spreadsheet row did not identify the insurer and no safe product/repository inference matched.'
+      });
+    }
+  }
+  next._documentTriage = next._documentTriage || 'policy_schedule';
+  next.documentType = next.documentType || 'policy_schedule';
+  next.extractionNotes = next.extractionNotes || 'Parsed from spreadsheet';
+  next._policyFingerprint = buildPolicyIdentityFingerprint(next);
+  return next;
 }
 
 // v2.3.0-rc2d.1: Parse XLSX/CSV to structured rows + compute header signature for column-map cache.
@@ -7680,6 +7919,9 @@ function applyColumnMap(rows, columnMap, categoryColumn) {
   const policies = [];
   for (const row of rows) {
     const policy = {};
+    policy._rawSpreadsheetRow = {
+      ...row
+    };
     const confidence = [];
     for (const [field, colName] of Object.entries(columnMap || {})) {
       if (!colName) continue;
@@ -7710,7 +7952,7 @@ function applyColumnMap(rows, columnMap, categoryColumn) {
     }
     if (categoryColumn && row[categoryColumn]) {
       const t = String(row[categoryColumn]).toLowerCase();
-      policy.category = /critical|ci\b/.test(t) ? 'Critical Illness' : /shield|isp|hospital/.test(t) ? 'ISP' : /retire|annuity/.test(t) ? 'Retirement' : /endow|saving/.test(t) ? 'Endowment' : /disability|dii/.test(t) ? 'Disability Income' : /accident|pa\b/.test(t) ? 'Personal Accident' : /careshield|eldershield/.test(t) ? 'CareShield' : /ilp|investment.*link/.test(t) ? 'ILP' : /unit trust/.test(t) ? 'Unit Trust' : /maternity/.test(t) ? 'Maternity' : 'Life';
+      policy.category = normalizeXlsxStorageCategory(/critical|ci\b/.test(t) ? 'Critical Illness' : /shield|isp|hospital/.test(t) ? 'ISP' : /retire|annuity/.test(t) ? 'Retirement' : /endow|saving/.test(t) ? 'Endowment' : /disability|dii/.test(t) ? 'Disability Income' : /accident|pa\b/.test(t) ? 'Personal Accident' : /careshield|eldershield/.test(t) ? 'CareShield' : /ilp|investment.*link/.test(t) ? 'ILP' : /unit trust/.test(t) ? 'Unit Trust' : /maternity/.test(t) ? 'Maternity' : 'Life');
     }
     if (!policy.policyNumber && !policy.productName && !policy.insurer) continue;
     if (!policy.category) {
@@ -7721,6 +7963,7 @@ function applyColumnMap(rows, columnMap, categoryColumn) {
         reason: 'Category inferred from spreadsheet policy fields'
       });
     }
+    policy.category = normalizeXlsxStorageCategory(policy.category) || policy.category;
     if (!policy.subType) {
       const inferredSubType = inferXlsxPolicySubType(policy);
       if (inferredSubType) {
@@ -7771,7 +8014,9 @@ async function extractSpreadsheetFilesLocally(files, opts = {}) {
   const spreadsheetFiles = Array.from(files || []).filter(isSpreadsheetLikeFile);
   if (spreadsheetFiles.length === 0 || typeof XLSX === 'undefined') return [];
   const allPols = [];
+  const repoList = Array.isArray(opts.repo) ? opts.repo : typeof SEED_REPOSITORY !== 'undefined' ? SEED_REPOSITORY : [];
   for (const file of spreadsheetFiles) {
+    const fileName = cleanUploadFileName(file);
     let sheets = [];
     try {
       sheets = await parseXlsxToStructured(file);
@@ -7799,9 +8044,12 @@ async function extractSpreadsheetFilesLocally(files, opts = {}) {
       }
       const policies = applyColumnMap(sheet.rows, colMap, catCol).map(p => ({
         ...p,
-        sourceFile: p.sourceFile || cleanUploadFileName(file),
-        documentTitle: p.documentTitle || cleanUploadFileName(file)
-      }));
+        sourceFile: p.sourceFile || fileName,
+        documentTitle: p.documentTitle || fileName
+      })).map(p => enrichSpreadsheetPolicyCandidate(p, {
+        fileName,
+        repo: repoList
+      })).filter(Boolean);
       allPols.push(...policies);
     }
   }
@@ -40006,15 +40254,14 @@ function BulkVerifyModal({
   // Find repo matches for each item
   useEffect(() => {
     setItems(prev => prev.map(item => {
-      const q = ((item.productName || '') + (item.insurer || '')).toLowerCase();
-      if (!q || q.length < 3) return item;
-      const match = repo.find(r => {
-        const t = ((r.productName || '') + (r.insurer || '')).toLowerCase();
-        return t.includes(q) || q.includes(t) || item.productName && r.productName && r.productName.toLowerCase() === item.productName.toLowerCase() && r.insurer === item.insurer;
-      });
+      if (!item?.productName || !repo || !Array.isArray(repo)) return item;
+      const match = matchRepoForPolicy(item, repo) || matchRepoForPolicyLoose(item, repo);
+      const autoApplied = match && match.score >= 0.90 ? applyHighConfidenceRepoMatchToPolicy({
+        ...item
+      }, match, 'bulk-verify-repo-match') : item;
       return {
-        ...item,
-        _repoMatch: match || null
+        ...autoApplied,
+        _repoMatch: match?.repo || null
       };
     }));
   }, [repo]);
@@ -44928,7 +45175,9 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
     let expectedCount;
     if (precomputedRawText == null && batchFiles.length > 0 && batchFiles.every(isSpreadsheetLikeFile)) {
       try {
-        const localSpreadsheetPolicies = await extractSpreadsheetFilesLocally(batchFiles);
+        const localSpreadsheetPolicies = await extractSpreadsheetFilesLocally(batchFiles, {
+          repo
+        });
         if (localSpreadsheetPolicies.length > 0) {
           arr = localSpreadsheetPolicies;
           expectedCount = localSpreadsheetPolicies.length;
