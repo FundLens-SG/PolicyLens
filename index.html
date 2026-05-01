@@ -36,7 +36,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // long multi-batch scans can continue when the browser backgrounds
 // the page. The worker is registered only on HTTPS/localhost.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.13';
+const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.14';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -674,9 +674,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.13';
+const APP_VERSION = 'v2.3.0-rc2e.14';
 const APP_VERSION_DATE = '2026-05-01';
-const APP_VERSION_NAME = 'Bulk client family tools';
+const APP_VERSION_NAME = 'Client family removal and delete persistence';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 const APP_TAB_IDS = new Set(['profile', 'dashboard', 'policies', 'clients', 'repository', 'report', 'settings']);
 function getInitialPolicyLensTab() {
@@ -687,6 +687,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.3.0-rc2e.14',
+  date: '2026-05-01',
+  name: 'Client family removal and delete persistence',
+  sections: [{
+    heading: 'Clients',
+    items: ['Selected clients can now be removed from their family group in one bulk action.', 'Deleting the active/last local client now clears stale legacy profile keys so the client cannot reappear after refresh.', 'Bulk client actions keep the same select-all workflow while adding a dedicated remove-family command.']
+  }]
+}, {
   version: 'v2.3.0-rc2e.13',
   date: '2026-05-01',
   name: 'Bulk client family tools',
@@ -11717,6 +11725,12 @@ async function writeDrivePayloadToLocal(clientId, parsed, headRevisionId, existi
 async function removeLocalClientData(clientId, opts = {}) {
   if (!clientId) return 0;
   let removedPolicies = 0;
+  const deletedProfileRec = await dbGet('settings', 'clientProfile_' + clientId).catch(() => null);
+  const deletedNameRec = await dbGet('settings', 'clientName_' + clientId).catch(() => null);
+  let activeWasDeleted = false;
+  try {
+    activeWasDeleted = localStorage.getItem('policylens_active_client_id') === clientId;
+  } catch (_) {}
   await dbDel('drive_state', clientId).catch(() => {});
   const allPols = await dbGetAll('policies').catch(() => []);
   for (const pol of (allPols || []).filter(p => p.clientId === clientId)) {
@@ -11727,6 +11741,22 @@ async function removeLocalClientData(clientId, opts = {}) {
   }
   await dbDel('settings', 'clientProfile_' + clientId).catch(() => {});
   await dbDel('settings', 'clientName_' + clientId).catch(() => {});
+  if (activeWasDeleted || opts.clearLegacySettings) {
+    await dbDel('settings', 'clientProfile').catch(() => {});
+    await dbDel('settings', 'clientName').catch(() => {});
+    try {
+      localStorage.removeItem('policylens_active_client_id');
+    } catch (_) {}
+  } else {
+    const deletedName = String(deletedProfileRec?.value?.name || deletedNameRec?.value || '').trim();
+    const legacyProfileRec = await dbGet('settings', 'clientProfile').catch(() => null);
+    const legacyNameRec = await dbGet('settings', 'clientName').catch(() => null);
+    const legacyName = String(legacyProfileRec?.value?.name || legacyNameRec?.value || '').trim();
+    if (deletedName && legacyName && personNameEquivalent(deletedName, legacyName)) {
+      await dbDel('settings', 'clientProfile').catch(() => {});
+      await dbDel('settings', 'clientName').catch(() => {});
+    }
+  }
   await PolicyDB.deleteSyncOutbox(syncOutboxId(clientId)).catch(() => {});
   const scanSessions = await PolicyDB.getAllScanSessions().catch(() => []);
   for (const session of (scanSessions || []).filter(s => s.clientId === clientId)) {
@@ -21714,6 +21744,31 @@ function ClientsTab() {
       setBulkBusy(null);
     }
   };
+  const removeSelectedFromFamily = async () => {
+    if (!selectedStates.length || bulkBusy) return;
+    setBulkBusy('family-clear');
+    try {
+      for (const ds of selectedStates) {
+        await saveFamilyGroupForClient(ds, '', {
+          silent: true
+        });
+      }
+      try {
+        window.dispatchEvent(new Event('policylens-clients-changed'));
+      } catch (_) {}
+      try {
+        toast('Removed ' + selectedStates.length + ' client' + (selectedStates.length === 1 ? '' : 's') + ' from family groups', 'success', 2500);
+      } catch (_) {}
+      setSelectedClientIds([]);
+      setBulkFamilyDraft('');
+    } catch (err) {
+      try {
+        toast('Remove from family failed: ' + (err.message || err), 'error', 4000);
+      } catch (_) {}
+    } finally {
+      setBulkBusy(null);
+    }
+  };
   const deleteSelectedClients = async () => {
     if (!selectedStates.length || bulkBusy) return;
     const names = selectedStates.map(ds => ds.clientName || 'Untitled').slice(0, 5).join(', ');
@@ -22623,6 +22678,20 @@ function ClientsTab() {
       opacity: bulkBusy || !String(bulkFamilyDraft || '').trim() ? 0.55 : 1
     }
   }, bulkBusy === 'family' ? 'Moving...' : 'Move to family'), /*#__PURE__*/React.createElement("button", {
+    onClick: removeSelectedFromFamily,
+    disabled: !!bulkBusy,
+    style: {
+      height: 30,
+      padding: '5px 10px',
+      fontSize: 11,
+      fontWeight: 800,
+      borderRadius: 7,
+      background: 'rgba(255,255,255,.035)',
+      color: 'var(--text2)',
+      border: '1px solid rgba(255,255,255,.10)',
+      opacity: bulkBusy ? 0.55 : 1
+    }
+  }, bulkBusy === 'family-clear' ? 'Removing...' : 'Remove from family'), /*#__PURE__*/React.createElement("button", {
     onClick: deleteSelectedClients,
     disabled: !!bulkBusy,
     style: {
