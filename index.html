@@ -36,7 +36,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // long multi-batch scans can continue when the browser backgrounds
 // the page. The worker is registered only on HTTPS/localhost.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.16';
+const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.17';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -674,9 +674,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.16';
+const APP_VERSION = 'v2.3.0-rc2e.17';
 const APP_VERSION_DATE = '2026-05-01';
-const APP_VERSION_NAME = 'Drive sync bridge hardening';
+const APP_VERSION_NAME = 'XLSX policy summary parser fix';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 const APP_TAB_IDS = new Set(['profile', 'dashboard', 'policies', 'clients', 'repository', 'report', 'settings']);
 function getInitialPolicyLensTab() {
@@ -687,6 +687,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.3.0-rc2e.17',
+  date: '2026-05-01',
+  name: 'XLSX policy summary parser fix',
+  sections: [{
+    heading: 'Extraction',
+    items: ['Spreadsheet extraction now detects the real policy header row inside title-heavy Excel summaries instead of assuming row 1 is the header.', 'Common policy summary columns such as Policy Name, Policy No., Sum Assured, Net Cash Value, Payment Amount Due, Start Date, and Premium end date are mapped locally before any AI call.', 'Text-only spreadsheet fallback now skips Gemini structured-output schema first, avoiding the 400 schema constraint error on Excel summaries.']
+  }]
+}, {
   version: 'v2.3.0-rc2e.16',
   date: '2026-05-01',
   name: 'Drive sync bridge hardening',
@@ -4129,7 +4137,7 @@ async function pdfToImages(pdfDoc, maxPages = 12) {
 // CLEAN even if the FC never actually reviewed anything. Bumping the version
 // forces a re-extraction next time those same files are uploaded, and the
 // one-time cleanup in App init purges the stale entries from IndexedDB.
-const EXTRACT_PIPELINE_VERSION = 'v15.4-2026-04-30-ai-triage-fingerprint';
+const EXTRACT_PIPELINE_VERSION = 'v15.5-2026-05-01-xlsx-summary-headers';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.8-2026-04-30-ai-triage-fingerprint';
@@ -7388,6 +7396,190 @@ async function downscaleImageIfNeeded(file) {
     throw e;
   }
 }
+function xlsxCellText(value) {
+  return String(value ?? '').replace(/\u00a0/g, ' ').trim();
+}
+function normalizeXlsxHeaderName(value) {
+  return xlsxCellText(value).toLowerCase().replace(/[$()]/g, ' ').replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function scoreXlsxPolicyHeaderRow(cells) {
+  let score = 0;
+  let policyClues = 0;
+  for (const raw of cells || []) {
+    const h = normalizeXlsxHeaderName(raw);
+    if (!h) continue;
+    if (/^(no|s no|serial no)$/.test(h)) score += 0.5;
+    if (/\bpolicy\b/.test(h)) {
+      score += 2;
+      policyClues++;
+    }
+    if (/\b(policy|certificate|contract)\s*(no|number)\b/.test(h)) {
+      score += 4;
+      policyClues += 2;
+    }
+    if (/\bpolicy\s*(name|plan)\b|\bplan\s*name\b|\bproduct\s*name\b/.test(h)) {
+      score += 4;
+      policyClues += 2;
+    }
+    if (/\binsurer\b|\bcompany\b|\bprovider\b/.test(h)) {
+      score += 3;
+      policyClues++;
+    }
+    if (/\blife\s*(assured|insured)\b|\bassured\s*life\b/.test(h)) {
+      score += 3;
+      policyClues++;
+    }
+    if (/\bowner\b|\bpolicy\s*owner\b|\bpayer\b/.test(h)) score += 2;
+    if (/\bsum\s*(assured|insured)\b|\bcoverage\s*amount\b|\bface\s*amount\b/.test(h)) {
+      score += 3;
+      policyClues++;
+    }
+    if (/\bpremium\b|\bpayment\s*amount\s*due\b|\bamount\s*due\b/.test(h)) {
+      score += 2;
+      policyClues++;
+    }
+    if (/\bcash\s*value\b|\bsurrender\s*value\b/.test(h)) score += 2;
+    if (/\b(start|commencement|inception|issue)\s*date\b/.test(h)) score += 1;
+    if (/\bmaturity\s*date\b|\bpremium\s*end\s*date\b/.test(h)) score += 1;
+  }
+  return policyClues > 0 ? score : 0;
+}
+function findXlsxPolicyHeaderRow(matrix) {
+  let bestIndex = -1;
+  let bestScore = 0;
+  const limit = Math.min(matrix.length, 80);
+  for (let i = 0; i < limit; i++) {
+    const cells = matrix[i] || [];
+    const nonEmpty = cells.filter(v => xlsxCellText(v)).length;
+    if (nonEmpty < 2) continue;
+    const score = scoreXlsxPolicyHeaderRow(cells);
+    if (score > bestScore) {
+      bestScore = score;
+      bestIndex = i;
+    }
+  }
+  return bestScore >= 6 ? bestIndex : -1;
+}
+function makeUniqueXlsxHeaders(cells) {
+  let last = -1;
+  for (let i = 0; i < cells.length; i++) {
+    if (xlsxCellText(cells[i])) last = i;
+  }
+  const seen = {};
+  const headers = [];
+  for (let i = 0; i <= last; i++) {
+    let header = xlsxCellText(cells[i]) || 'Column ' + (i + 1);
+    const key = normalizeXlsxHeaderName(header) || 'column ' + (i + 1);
+    seen[key] = (seen[key] || 0) + 1;
+    if (seen[key] > 1) header += ' ' + seen[key];
+    headers.push(header);
+  }
+  return headers;
+}
+function buildXlsxRowsFromHeader(matrix, headerIndex, headers, sheetName) {
+  const rows = [];
+  let blankRun = 0;
+  for (let r = headerIndex + 1; r < matrix.length; r++) {
+    const cells = matrix[r] || [];
+    const hasData = headers.some((_, c) => xlsxCellText(cells[c]));
+    if (!hasData) {
+      blankRun++;
+      if (rows.length > 0 && blankRun >= 20) break;
+      continue;
+    }
+    blankRun = 0;
+    if (scoreXlsxPolicyHeaderRow(cells.slice(0, headers.length)) >= 6) continue;
+    const row = {
+      __sourceSheet: sheetName,
+      __sourceRow: r + 1
+    };
+    headers.forEach((h, c) => {
+      row[h] = xlsxCellText(cells[c]);
+    });
+    rows.push(row);
+  }
+  return rows;
+}
+function csvEscapeCell(value) {
+  const s = String(value ?? '');
+  return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+function xlsxRowsToCsvSample(headers, rows, limit = 8) {
+  const lines = [headers.map(csvEscapeCell).join(',')];
+  for (const row of rows.slice(0, limit)) {
+    lines.push(headers.map(h => csvEscapeCell(row[h])).join(','));
+  }
+  return lines.join('\n');
+}
+function inferXlsxColumnMap(headers) {
+  const entries = headers.map(header => ({
+    header,
+    norm: normalizeXlsxHeaderName(header)
+  }));
+  const find = (patterns, rejectPatterns = []) => {
+    const hit = entries.find(({
+      norm
+    }) => patterns.some(rx => rx.test(norm)) && !rejectPatterns.some(rx => rx.test(norm)));
+    return hit ? hit.header : null;
+  };
+  const columnMap = {
+    policyNumber: find([/\b(policy|certificate|contract)\s*(no|number)\b/, /\bpolicy\s*#\b/]),
+    insurer: find([/\binsurer\b/, /\binsurance\s*company\b/, /\bprovider\b/]),
+    policyOwner: find([/\bpolicy\s*owner\b/, /\bowner\b/, /\bproposer\b/]),
+    lifeInsured: find([/\blife\s*(assured|insured)\b/, /\bassured\s*life\b/]),
+    productName: find([/\bpolicy\s*(name|plan)\b/, /\bplan\s*name\b/, /\bproduct\s*name\b/]),
+    subType: find([/\bsub\s*type\b/, /\bpolicy\s*type\b/, /\bplan\s*type\b/]),
+    sumAssured: find([/\bsum\s*(assured|insured)\b/, /\bcoverage\s*amount\b/, /\bface\s*amount\b/]),
+    cashValue: find([/\bnet\s*cash\s*value\b/, /\bcash\s*value\b/, /\bsurrender\s*value\b/]),
+    premiumAmount: find([/\bpayment\s*amount\s*due\b/, /\bamount\s*due\b/, /\bpremium\s*amount\b/, /\bregular\s*premium\b/, /\bannual\s*premium\b/, /\bpremium\b/], [/\bend\b/, /\bterm\b/, /\bmode\b/, /\bfrequency\b/]),
+    premiumMode: find([/\bpremium\s*(mode|frequency)\b/, /\bpayment\s*(mode|frequency)\b/, /\bhow\s*often\b/]),
+    premiumTerm: find([/\bpremium\s*term\b/, /\bpayment\s*term\b/]),
+    inceptionDate: find([/\b(start|commencement|inception|issue|effective)\s*date\b/]),
+    maturityDate: find([/\bmaturity\s*date\b/]),
+    premiumEndDate: find([/\bpremium\s*end\s*date\b/, /\bpremium\s*expiry\b/, /\bpaid\s*up\s*date\b/, /\blast\s*premium\b/])
+  };
+  const categoryColumn = find([/\bcategory\b/, /\bclass\b/, /\bcoverage\s*type\b/]);
+  const confidence = (columnMap.policyNumber ? 3 : 0) + (columnMap.productName ? 3 : 0) + (columnMap.sumAssured ? 2 : 0) + (columnMap.premiumAmount ? 2 : 0) + (columnMap.insurer ? 1 : 0) + (columnMap.cashValue ? 1 : 0);
+  return {
+    columnMap,
+    categoryColumn,
+    confidence
+  };
+}
+function normalizeXlsxPremiumFrequency(value) {
+  const s = String(value || '').toLowerCase();
+  if (/single|one[\s-]*time|lump/.test(s)) return 'single';
+  if (/month|mth/.test(s)) return 'monthly';
+  if (/quarter/.test(s)) return 'quarterly';
+  if (/semi|half/.test(s)) return 'semiannual';
+  if (/annual|year|yr|p\.?a\.?/.test(s)) return 'annual';
+  return '';
+}
+function inferXlsxPolicyCategory(policy) {
+  const t = [policy.productName, policy.subType, policy.category].filter(Boolean).join(' ').toLowerCase();
+  if (/careshield|eldershield/.test(t)) return 'CareShield';
+  if (/shield|hospital|medisave/.test(t)) return 'ISP';
+  if (/critical|ci\b|cancer/.test(t)) return 'Critical Illness';
+  if (/accident|\bpa\b/.test(t)) return 'Personal Accident';
+  if (/disability|income protection|\bdii\b/.test(t)) return 'Disability Income';
+  if (/retire|annuity|payout/.test(t)) return 'Retirement';
+  if (/endow|education|saving/.test(t)) return 'Endowment';
+  if (/ilp|investment[-\s]*linked|wealth|portfolio|fund/.test(t)) return 'ILP';
+  if (/maternity|pregnancy/.test(t)) return 'Maternity';
+  return 'Life';
+}
+function inferXlsxPolicySubType(policy) {
+  const t = [policy.productName, policy.subType, policy.category].filter(Boolean).join(' ').toLowerCase();
+  if (/term/.test(t)) return 'Term Life';
+  if (/whole|vivo|life/.test(t) && parseFloat(policy.cashValue || 0) > 0) return 'Whole Life';
+  if (/shield|hospital/.test(t)) return 'Integrated Shield Plan';
+  if (/critical|ci\b|cancer/.test(t)) return 'Critical Illness';
+  if (/accident|\bpa\b/.test(t)) return 'Personal Accident';
+  if (/retire|annuity/.test(t)) return 'Retirement';
+  if (/endow|saving/.test(t)) return 'Endowment';
+  if (/ilp|investment[-\s]*linked|wealth/.test(t)) return 'ILP (Investment)';
+  return '';
+}
 
 // v2.3.0-rc2d.1: Parse XLSX/CSV to structured rows + compute header signature for column-map cache.
 async function parseXlsxToStructured(file) {
@@ -7407,34 +7599,32 @@ async function parseXlsxToStructured(file) {
   for (const sheetName of workbook.SheetNames) {
     const ws = workbook.Sheets[sheetName];
     if (!ws || !ws['!ref']) continue;
-    const rows = XLSX.utils.sheet_to_json(ws, {
+    const matrix = XLSX.utils.sheet_to_json(ws, {
+      header: 1,
       defval: '',
-      raw: false
+      raw: false,
+      blankrows: false
     });
-    if (rows.length === 0) continue;
-    const headers = Object.keys(rows[0]).filter(h => h && h.trim());
+    const headerRowIndex = findXlsxPolicyHeaderRow(matrix);
+    if (headerRowIndex < 0) continue;
+    const headers = makeUniqueXlsxHeaders(matrix[headerRowIndex] || []);
     if (headers.length === 0) continue;
-    const normalized = headers.map(h => h.toLowerCase().replace(/\s+/g, ' ').trim()).sort().join('|');
+    const rows = buildXlsxRowsFromHeader(matrix, headerRowIndex, headers, sheetName);
+    if (rows.length === 0) continue;
+    const normalized = headers.map(h => normalizeXlsxHeaderName(h)).sort().join('|');
     const signature = await _sha256Hex(normalized);
-    const sampleRange = XLSX.utils.encode_range({
-      s: {
-        r: 0,
-        c: 0
-      },
-      e: {
-        r: Math.min(5, rows.length),
-        c: Math.min(headers.length, 20) - 1
-      }
-    });
-    const rawSample = XLSX.utils.sheet_to_csv(ws, {
-      range: sampleRange
-    });
+    const rawSample = xlsxRowsToCsvSample(headers, rows);
+    const localMap = inferXlsxColumnMap(headers);
     results.push({
       sheetName,
       headers,
       rows,
       signature,
-      rawSample
+      rawSample,
+      headerRow: headerRowIndex + 1,
+      localColumnMap: localMap.columnMap,
+      localCategoryColumn: localMap.categoryColumn,
+      localMapConfidence: localMap.confidence
     });
   }
   return results;
@@ -7482,18 +7672,32 @@ function applyColumnMap(rows, columnMap, categoryColumn) {
   const policies = [];
   for (const row of rows) {
     const policy = {};
-    for (const [field, colName] of Object.entries(columnMap)) {
+    const confidence = [];
+    for (const [field, colName] of Object.entries(columnMap || {})) {
       if (!colName) continue;
       const val = row[colName];
       if (val == null || val === '') continue;
-      if (field === 'sumAssured' || field === 'annualPremium' || field === 'cashValue') {
+      const targetField = {
+        premiumMode: 'premFrequency',
+        premiumTerm: 'premTerm'
+      }[field] || field;
+      if (targetField === 'sumAssured' || targetField === 'annualPremium' || targetField === 'premiumAmount' || targetField === 'cashValue') {
         const num = parseFloat(String(val).replace(/[^\d.-]/g, ''));
-        policy[field] = isNaN(num) ? 0 : num;
-      } else if (field === 'premiumTerm') {
+        const cleanNum = isNaN(num) ? 0 : num;
+        if (targetField === 'premiumAmount' || targetField === 'annualPremium') {
+          policy.premiumAmount = cleanNum;
+          policy.annualPremium = cleanNum;
+          policy._premiumColumnName = colName;
+        } else {
+          policy[targetField] = cleanNum;
+        }
+      } else if (targetField === 'premTerm') {
         const num = parseInt(String(val).replace(/[^\d]/g, ''), 10);
-        policy[field] = isNaN(num) ? 0 : num;
+        policy.premTerm = isNaN(num) ? 0 : num;
+      } else if (targetField === 'premFrequency') {
+        policy.premFrequency = normalizeXlsxPremiumFrequency(val) || String(val).trim();
       } else {
-        policy[field] = String(val).trim();
+        policy[targetField] = String(val).trim();
       }
     }
     if (categoryColumn && row[categoryColumn]) {
@@ -7501,6 +7705,51 @@ function applyColumnMap(rows, columnMap, categoryColumn) {
       policy.category = /critical|ci\b/.test(t) ? 'Critical Illness' : /shield|isp|hospital/.test(t) ? 'ISP' : /retire|annuity/.test(t) ? 'Retirement' : /endow|saving/.test(t) ? 'Endowment' : /disability|dii/.test(t) ? 'Disability Income' : /accident|pa\b/.test(t) ? 'Personal Accident' : /careshield|eldershield/.test(t) ? 'CareShield' : /ilp|investment.*link/.test(t) ? 'ILP' : /unit trust/.test(t) ? 'Unit Trust' : /maternity/.test(t) ? 'Maternity' : 'Life';
     }
     if (!policy.policyNumber && !policy.productName && !policy.insurer) continue;
+    if (!policy.category) {
+      policy.category = inferXlsxPolicyCategory(policy);
+      confidence.push({
+        field: 'category',
+        level: 'medium',
+        reason: 'Category inferred from spreadsheet policy fields'
+      });
+    }
+    if (!policy.subType) {
+      const inferredSubType = inferXlsxPolicySubType(policy);
+      if (inferredSubType) {
+        policy.subType = inferredSubType;
+        confidence.push({
+          field: 'subType',
+          level: 'medium',
+          reason: 'Sub-type inferred from spreadsheet policy name and values'
+        });
+      }
+    }
+    if (!policy.premFrequency && (policy.premiumAmount != null || policy.annualPremium != null)) {
+      const headerFrequency = normalizeXlsxPremiumFrequency(policy._premiumColumnName || '');
+      policy.premFrequency = headerFrequency || 'unknown';
+      confidence.push({
+        field: 'premFrequency',
+        level: 'medium',
+        reason: headerFrequency ? 'Premium frequency inferred from spreadsheet column header' : 'Spreadsheet shows premium amount but no clear frequency'
+      });
+    }
+    if (policy.premiumAmount != null && policy.annualPremium == null) policy.annualPremium = policy.premiumAmount;
+    if (policy.annualPremium != null && policy.premiumAmount == null) policy.premiumAmount = policy.annualPremium;
+    if (!policy.insurer) {
+      confidence.push({
+        field: 'insurer',
+        level: 'low',
+        reason: 'Spreadsheet did not include an insurer column'
+      });
+    }
+    if (row.__sourceSheet) policy.sourceSheet = row.__sourceSheet;
+    if (row.__sourceRow) policy.sourceRow = row.__sourceRow;
+    policy.currency = policy.currency || 'SGD';
+    policy.documentType = policy.documentType || 'policy_schedule';
+    policy._documentTriage = policy._documentTriage || 'policy_schedule';
+    policy.extractionNotes = policy.extractionNotes || 'Parsed from spreadsheet' + (policy.sourceSheet ? ' sheet "' + policy.sourceSheet + '"' : '') + (policy.sourceRow ? ', row ' + policy.sourceRow : '');
+    delete policy._premiumColumnName;
+    if (confidence.length > 0) policy._confidence = confidence;
     policies.push(policy);
   }
   return policies;
@@ -8348,22 +8597,35 @@ async function processJob(job) {
                 const allPols = [];
                 for (const sheet of sheets) {
                   let colMap, catCol;
-                  const cached = await getCachedColumnMap(sheet.signature);
-                  if (cached) {
-                    console.log('[XlsxExtract] \u2713 Cache hit for signature', sheet.signature.slice(0, 8));
-                    colMap = cached.columnMap;
-                    catCol = cached.categoryColumn;
+                  if (sheet.localMapConfidence >= 7) {
+                    console.log('[XlsxExtract] Local column map for', sheet.sheetName, 'row', sheet.headerRow, 'confidence', sheet.localMapConfidence);
+                    colMap = sheet.localColumnMap;
+                    catCol = sheet.localCategoryColumn;
                   } else {
-                    console.log('[XlsxExtract] Cache miss — asking AI for column map');
-                    const result = await extractColumnMapViaAI(sheet.headers, sheet.rawSample);
-                    colMap = result.columnMap;
-                    catCol = result.categoryColumn;
-                    await cacheColumnMap(sheet.signature, sheet.headers, colMap, catCol);
-                    console.log('[XlsxExtract] \u2713 Column map cached for future uploads');
+                    const cached = await getCachedColumnMap(sheet.signature);
+                    if (cached) {
+                      console.log('[XlsxExtract] \u2713 Cache hit for signature', sheet.signature.slice(0, 8));
+                      colMap = cached.columnMap;
+                      catCol = cached.categoryColumn;
+                    } else {
+                      console.log('[XlsxExtract] Cache miss — asking AI for column map');
+                      const result = await extractColumnMapViaAI(sheet.headers, sheet.rawSample);
+                      colMap = result.columnMap;
+                      catCol = result.categoryColumn;
+                      await cacheColumnMap(sheet.signature, sheet.headers, colMap, catCol);
+                      console.log('[XlsxExtract] \u2713 Column map cached for future uploads');
+                    }
                   }
                   allPols.push(...applyColumnMap(sheet.rows, colMap, catCol));
                 }
                 if (allPols.length > 0) {
+                  for (const p of allPols) {
+                    try {
+                      validateExtractedPolicy(p);
+                      runDerivePass(p, null);
+                      runValidatePass(p, null);
+                    } catch (_) {}
+                  }
                   job.result = allPols;
                   job.stage = 'done';
                   job.status = 'done';
@@ -27941,11 +28203,12 @@ async function callAI(systemPrompt, contentBlocks, maxTokens, responseSchema) {
   }
   const hasMedia = contentBlocks.some(b => b.type === 'image' || b.type === 'document');
   const textParts = contentBlocks.filter(b => b.type === 'text').map(b => b.text).join('\n');
+  const isSpreadsheetTextOnly = !hasMedia && /\[Spreadsheet:/i.test(textParts);
 
   // ── PREFERRED PATH: Gemini with structured output (responseSchema) ──
   // Used when the caller provides a schema — guaranteed-valid, type-safe JSON
   // in a single API call. Skips this for docx files (Gemini can't read them).
-  if (responseSchema && gk && !forceAnthropic) {
+  if (responseSchema && gk && !forceAnthropic && !isSpreadsheetTextOnly) {
     console.log('[AI] 🎯 Preferred: Gemini structured output (single call, guaranteed schema)');
     try {
       const result = await geminiStructuredExtract(gk, systemPrompt, contentBlocks, maxTokens, responseSchema);
