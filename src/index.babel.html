@@ -36,7 +36,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // long multi-batch scans can continue when the browser backgrounds
 // the page. The worker is registered only on HTTPS/localhost.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.14';
+const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.15';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -664,9 +664,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.14';
+const APP_VERSION = 'v2.3.0-rc2e.15';
 const APP_VERSION_DATE = '2026-05-01';
-const APP_VERSION_NAME = 'Client family removal and delete persistence';
+const APP_VERSION_NAME = 'Drive duplicate sync bridge guard';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 
 const APP_TAB_IDS = new Set(['profile','dashboard','policies','clients','repository','report','settings']);
@@ -679,6 +679,21 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.3.0-rc2e.15',
+    date: '2026-05-01',
+    name: 'Drive duplicate sync bridge guard',
+    sections: [
+      {
+        heading: 'Drive sync',
+        items: [
+          'Drive pulls now compact safe duplicate policies before writing into local IndexedDB, preventing policy counts from piling up after refresh or reconnect.',
+          'Conflict merges now tombstone duplicate policy IDs and upload the cleaned client file back to Drive, so other devices stop re-importing the same duplicates.',
+          'The sync bridge keeps Drive cleanup queued locally first, preserving edit flow even when Drive reconnects a few seconds after login.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.3.0-rc2e.14',
     date: '2026-05-01',
@@ -12822,11 +12837,11 @@ function mergeDrivePayloadsForConflict(localPayload, remoteRaw, clientId) {
   const remote = parseDriveClientFile(remoteRaw || {});
   const localDeleted = new Set(localPayload.deletedPolicyIds || []);
   const remoteDeleted = new Set(remote.deletedPolicyIds || []);
-  const deletedPolicyIds = Array.from(new Set([...localDeleted, ...remoteDeleted])).slice(-500);
+  let deletedPolicyIds = Array.from(new Set([...localDeleted, ...remoteDeleted])).slice(-500);
   const localById = new Map((localPayload.policies || []).filter(p => p && p.id).map(p => [p.id, p]));
   const remoteById = new Map((remote.policies || []).filter(p => p && p.id).map(p => [p.id, p]));
   const ids = new Set([...localById.keys(), ...remoteById.keys()]);
-  const policies = [];
+  let policies = [];
   let conflicts = 0;
   for (const id of ids) {
     const local = localById.get(id);
@@ -12840,6 +12855,13 @@ function mergeDrivePayloadsForConflict(localPayload, remoteRaw, clientId) {
     } else {
       policies.push({ ...remotePolicy, clientId });
     }
+  }
+  const compacted = compactDuplicatePolicyList(policies);
+  if (compacted.removed.length) {
+    const duplicateIds = compacted.removed.map(p => p?.id).filter(Boolean);
+    deletedPolicyIds = Array.from(new Set([...deletedPolicyIds, ...duplicateIds])).slice(-500);
+    policies = compacted.policies;
+    conflicts += compacted.removed.length;
   }
   return {
     payload: {
@@ -12864,12 +12886,24 @@ async function writeDrivePayloadToLocal(clientId, parsed, headRevisionId, existi
   }
   const driveProfile = parsed.clientProfile || {};
   const localDeletedIds = await getDeletedPolicyIds(clientId).catch(() => []);
-  const deletedPolicyIds = Array.from(new Set([
+  let deletedPolicyIds = Array.from(new Set([
     ...(Array.isArray(parsed.deletedPolicyIds) ? parsed.deletedPolicyIds : []),
     ...(Array.isArray(localDeletedIds) ? localDeletedIds : [])
   ])).slice(-500);
   const deletedSet = new Set(deletedPolicyIds);
-  const drivePolicies = (parsed.policies || []).filter(pol => !pol?.id || !deletedSet.has(pol.id));
+  let drivePolicies = (parsed.policies || []).filter(pol => !pol?.id || !deletedSet.has(pol.id)).map(pol => ({ ...pol, clientId }));
+  const compacted = compactDuplicatePolicyList(drivePolicies);
+  const duplicateRemovedIds = compacted.removed.map(p => p?.id).filter(Boolean);
+  if (duplicateRemovedIds.length) {
+    deletedPolicyIds = Array.from(new Set([...deletedPolicyIds, ...duplicateRemovedIds])).slice(-500);
+    drivePolicies = compacted.policies.map(pol => ({ ...pol, clientId }));
+    recordActivity(clientId, {
+      type: 'sync-duplicate-cleanup',
+      label: 'Cleaned Drive duplicates',
+      detail: duplicateRemovedIds.length + ' duplicate polic' + (duplicateRemovedIds.length === 1 ? 'y' : 'ies'),
+      level: 'warning'
+    }).catch(() => {});
+  }
   if (driveProfile) await dbPut('settings', { key: 'clientProfile_' + clientId, value: driveProfile });
   if (driveProfile?.name != null) await dbPut('settings', { key: 'clientName_' + clientId, value: driveProfile.name || '' }).catch(() => {});
   const oldPols = await dbGetAll('policies');
@@ -12899,6 +12933,10 @@ async function writeDrivePayloadToLocal(clientId, parsed, headRevisionId, existi
   } : null;
   if (updatedDs) await PolicyDB.saveDriveState(updatedDs);
   await PolicyDB.deleteSyncOutbox(syncOutboxId(clientId)).catch(() => {});
+  if (duplicateRemovedIds.length && getDriveStatus() === 'connected' && !isDriveLocalOnly()) {
+    await markDriveSyncPending(clientId, 'drive-duplicate-cleanup').catch(() => null);
+    _driveSyncDebounced(() => flushDriveSyncOutbox({ reason: 'drive-duplicate-cleanup' }), 1800);
+  }
   return { pulled: true, clientProfile: driveProfile, policies: drivePolicies, driveState: updatedDs, syncMeta: parsed.syncMeta || null };
 }
 
