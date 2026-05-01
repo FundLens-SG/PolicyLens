@@ -36,7 +36,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.22';
+const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.23';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -664,9 +664,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.22';
+const APP_VERSION = 'v2.3.0-rc2e.23';
 const APP_VERSION_DATE = '2026-05-02';
-const APP_VERSION_NAME = 'Foreground extraction and snap mode';
+const APP_VERSION_NAME = 'Extraction cancel and delete sync';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 
 const APP_TAB_IDS = new Set(['profile','dashboard','policies','clients','repository','report','settings']);
@@ -679,6 +679,27 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.3.0-rc2e.23',
+    date: '2026-05-02',
+    name: 'Extraction cancel and delete sync',
+    sections: [
+      {
+        heading: 'Sync',
+        items: [
+          'Client deletes now publish the Drive clients manifest immediately after local removal and broadcast a delete nudge to other open devices.',
+          'Drive discovery now purges local clients from manifest tombstones even when the deleted client was the only remaining Drive client on that device.'
+        ]
+      },
+      {
+        heading: 'Extraction',
+        items: [
+          'Brief tab switches during extraction no longer trigger the harsh background-interrupted path; only meaningful background time changes the error guidance.',
+          'The extraction Cancel button now immediately stops the visible run, clears the failure banner, and returns staged files to queued for retry.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.3.0-rc2e.22',
     date: '2026-05-02',
@@ -6192,6 +6213,7 @@ const STAGE_CONCURRENCY = { preprocessing: 3, ocr: 2, extracting: 1, postprocess
 // fetchWithTimeout links to this so every API call is cancellable
 // without threading the signal through every intermediate function.
 let _extractAbortController = null;
+let _extractCancelRequested = false;
 
 // ── v14: NORMALIZE CLAUDE/GEMINI RESPONSE TO STRING ──
 // Claude vision can return content blocks [{type:'text',text:'...'},...],
@@ -14648,7 +14670,7 @@ async function refreshClientFromDrive(clientId, opts) {
 async function discoverDriveClients() {
   if (getDriveStatus() !== 'connected' || isDriveLocalOnly()) {
     console.log('[Discovery] Skipped — Drive not connected');
-    return { found: [], changedExisting: [], reconciledExisting: 0, skippedExisting: 0, errors: 0, driveClientIds: new Set(), hasFolderStructure: false, scanComplete: false };
+    return { found: [], changedExisting: [], reconciledExisting: 0, skippedExisting: 0, errors: 0, driveClientIds: new Set(), trashTombstones: [], hasFolderStructure: false, scanComplete: false };
   }
   await flushPendingClientTrashQueue().catch(() => 0);
   const found = [];
@@ -14658,6 +14680,7 @@ async function discoverDriveClients() {
   let skippedExisting = 0, reconciledExisting = 0, errors = 0;
   let hasFolderStructure = false;
   let scanComplete = true;
+  let trashTombstones = [];
   try {
     // v2.3.0-rc2c.4b: Folder tree traversal (appProperties search is eventually consistent, misses new files)
     const rootId = await driveClient.ensureFolder();
@@ -14668,7 +14691,7 @@ async function discoverDriveClients() {
     const existingStates = await PolicyDB.getAllDriveStates().catch(() => []);
     const existingClientIds = new Set(existingStates.map(s => s.clientId));
     const existingFileIds = new Set(existingStates.map(s => s.fileId).filter(isValidDriveFileId));
-    let trashTombstones = await getClientTrashTombstones().catch(() => []);
+    trashTombstones = await getClientTrashTombstones().catch(() => []);
     try {
       const manifestResult = await readDriveClientsManifest();
       const manifest = manifestResult?.manifest || parseDriveClientsManifest({});
@@ -14839,7 +14862,7 @@ async function discoverDriveClients() {
     }
     console.log('[Discovery]', found.length, 'new,', skippedExisting, 'already known,', changedExisting.length, 'changed,', errors, 'errors');
   } catch (err) { console.warn('[Discovery] Failed:', err.message); errors++; scanComplete = false; }
-  return { found, changedExisting, reconciledExisting, skippedExisting, errors, driveClientIds, hasFolderStructure, scanComplete: scanComplete && errors === 0 };
+  return { found, changedExisting, reconciledExisting, skippedExisting, errors, driveClientIds, trashTombstones, hasFolderStructure, scanComplete: scanComplete && errors === 0 };
 }
 
 async function addDriveClientToLocal(f) {
@@ -14872,6 +14895,40 @@ async function addDriveClientToLocal(f) {
     }
     return { added: true, partial: true, policies: 0 };
   }
+}
+
+async function purgeTombstonedClients(tombstones = []) {
+  const list = Array.isArray(tombstones) ? tombstones.filter(Boolean) : [];
+  if (!list.length) return 0;
+  const localStates = await PolicyDB.getAllDriveStates().catch(() => []);
+  let purged = 0;
+  for (const ds of localStates || []) {
+    if (ds?.localOnly) continue;
+    const tomb = list.find(t => clientTrashTombstoneMatches(t, ds));
+    if (!tomb) continue;
+    const tombMs = syncTimeMs(tomb.trashedAt || tomb.queuedAt);
+    const pendingMs = syncTimeMs(ds.pendingSince || ds.updatedAt || ds.lastSyncedAt);
+    if (ds.pendingWrite && pendingMs && tombMs && pendingMs > tombMs) {
+      setClientSyncPhase(ds.clientId, 'conflict', {
+        reason: 'remote-delete',
+        message: 'Remote delete conflicts with an unsynced local edit'
+      });
+      continue;
+    }
+    console.log('[Reconcile] Tombstoned client:', ds.clientName || ds.clientId, '- removing local data');
+    try {
+      await recordClientTrashTombstone({ ...ds, ...tomb }, tomb.reason || 'manifest-trash').catch(() => {});
+      await removeLocalClientData(ds.clientId, { dispatch: false });
+      try { window.dispatchEvent(new CustomEvent('policylens-client-trashed', { detail: { clientId: ds.clientId, clientName: ds.clientName || tomb.clientName || '' } })); } catch(_) {}
+      purged++;
+    } catch (e) {
+      console.warn('[Reconcile] Failed to purge tombstoned client', ds.clientName || ds.clientId, e?.message || e);
+    }
+  }
+  if (purged > 0) {
+    window.dispatchEvent(new Event('policylens-clients-changed'));
+  }
+  return purged;
 }
 
 // v2.3.0-rc2c.4c: Remove local drive_state entries that no longer exist in Drive.
@@ -16495,9 +16552,13 @@ function App() {
   }, []);
 
   const applyDriveDirectorySync = async (result, opts={}) => {
-    if (!result) return { added:0, refreshed:0, reconciled:0, purged:0, cleaned:0, errors:0 };
+    if (!result) return { added:0, refreshed:0, reconciled:0, purged:0, tombstoned:0, cleaned:0, errors:0 };
     let added = 0, refreshed = 0, errors = result.errors || 0;
     const reconciled = result.reconciledExisting || 0;
+    const tombstoned = await purgeTombstonedClients(result.trashTombstones || result.tombstones || []).catch(e => {
+      console.warn('[DirectorySync] Tombstone purge failed:', e?.message || e);
+      return 0;
+    });
     for (const f of (result.found || [])) {
       try {
         const addResult = await addDriveClientToLocal(f);
@@ -16522,7 +16583,7 @@ function App() {
         }
       } catch(e) { errors++; console.warn('[DirectorySync] Refresh failed for', ch.clientName || ch.clientId, e.message); }
     }
-    if (added || refreshed || reconciled || purged || cleaned) {
+    if (added || refreshed || reconciled || purged || tombstoned || cleaned) {
       scheduleDriveClientsManifestSync('directory-sync', 900);
       try { window.dispatchEvent(new Event('policylens-clients-changed')); } catch(_) {}
       if (!opts.silent) {
@@ -16530,11 +16591,11 @@ function App() {
         if (added) parts.push('added '+added);
         if (refreshed) parts.push('updated '+refreshed);
         if (reconciled) parts.push('reconciled '+reconciled);
-        if (purged) parts.push('removed '+purged);
+        if (purged || tombstoned) parts.push('removed '+(purged + tombstoned));
         try { toast('Drive sync: '+parts.join(', '), 'success', 3000); } catch(_) {}
       }
     }
-    return { added, refreshed, reconciled, purged, cleaned, errors };
+    return { added, refreshed, reconciled, purged, tombstoned, cleaned, errors };
   };
 
   // v2.3.0-rc2c.4: Post-connect discovery — fires once per session after Drive connects.
@@ -16555,7 +16616,7 @@ function App() {
         _discoveryCompletedThisSession = true;
         _driveHasFolderStructure = result.hasFolderStructure;
         const summary = await applyDriveDirectorySync(result, { silent:true });
-        if (summary.added || summary.refreshed || summary.reconciled || summary.purged) console.log('[Discovery] Post-connect directory sync:', summary);
+        if (summary.added || summary.refreshed || summary.reconciled || summary.purged || summary.tombstoned) console.log('[Discovery] Post-connect directory sync:', summary);
       } catch (e) { console.warn('[Discovery] Post-connect scan failed:', e.message); }
       finally { setDriveStartupSyncInFlight(false); }
     };
@@ -16690,7 +16751,7 @@ function App() {
         _discoveryCompletedThisSession = true;
         _driveHasFolderStructure = result.hasFolderStructure;
         const summary = await applyDriveDirectorySync(result, { silent:true });
-        if (summary.added || summary.refreshed || summary.reconciled || summary.purged) {
+        if (summary.added || summary.refreshed || summary.reconciled || summary.purged || summary.tombstoned) {
           console.log('[DirectorySync]', reason, summary);
         }
       } catch(e) { console.warn('[DirectorySync] Failed:', e.message); }
@@ -16733,8 +16794,8 @@ function App() {
           if (flushed) { try { toast('Uploaded ' + flushed + ' pending client update' + (flushed===1?'':'s'), 'success', 2500); } catch(_) {} }
           const directory = await discoverDriveClients();
           const summary = await applyDriveDirectorySync(directory, { silent:true });
-          if (summary.added || summary.refreshed || summary.reconciled || summary.purged) {
-            try { toast('Drive sync: added '+summary.added+', updated '+summary.refreshed+', reconciled '+summary.reconciled+', removed '+summary.purged, 'success', 3000); } catch(_) {}
+          if (summary.added || summary.refreshed || summary.reconciled || summary.purged || summary.tombstoned) {
+            try { toast('Drive sync: added '+summary.added+', updated '+summary.refreshed+', reconciled '+summary.reconciled+', removed '+((summary.purged || 0) + (summary.tombstoned || 0)), 'success', 3000); } catch(_) {}
           }
         }
         if (!activeClientId) { try { toast('No active client', 'warning', 2000); } catch(_) {} return; }
@@ -16801,6 +16862,25 @@ function App() {
       if (busy) return;
       busy = true;
       try {
+        if (detail.deleted || detail.reason === 'client-destroy' || detail.reason === 'client-trash') {
+          const localDs = await PolicyDB.getDriveState(detail.clientId).catch(() => null);
+          const tombstone = {
+            ...(detail.tombstone || {}),
+            clientId: detail.clientId,
+            clientName: detail.clientName || localDs?.clientName || '',
+            reason: detail.reason || 'realtime-delete',
+            trashedAt: detail.at || new Date().toISOString()
+          };
+          await recordClientTrashTombstone(tombstone, 'realtime-delete').catch(() => {});
+          if (localDs && !localDs.localOnly) {
+            await removeLocalClientData(detail.clientId, { dispatch: false }).catch(e => console.warn('[DriveRealtime] Delete cleanup failed:', e?.message || e));
+            try { window.dispatchEvent(new CustomEvent('policylens-client-trashed', { detail: { clientId: detail.clientId, clientName: tombstone.clientName } })); } catch(_) {}
+            try { toast('Client deleted on ' + (detail.deviceName || 'another device'), 'info', 3000); } catch(_) {}
+          } else {
+            try { window.dispatchEvent(new Event('policylens-clients-changed')); } catch(_) {}
+          }
+          return;
+        }
         const activeCid = activeClientIdRef.current;
         if (detail.clientId === activeCid) {
           _lastRefreshTimes.delete(activeCid);
@@ -18778,6 +18858,22 @@ function App() {
     }
     if (!clientTrashed) await queueClientTrashRequest(ds, 'client-destroy').catch(() => {});
     await removeLocalClientData(targetId, { dispatch: false });
+    if (!isDriveLocalOnly() && getDriveStatus() === 'connected') {
+      clearTimeout(_driveManifestSyncTimer);
+      _driveManifestSyncTimer = null;
+      syncDriveClientsManifest('client-destroy-final').then(ok => {
+        if (!ok) scheduleDriveClientsManifestSync('client-destroy-final-retry', 1000);
+      }).catch(e => {
+        console.warn('[Destroy] Immediate manifest sync failed:', e?.message || e);
+        scheduleDriveClientsManifestSync('client-destroy-final-retry', 1000);
+      });
+      broadcastDriveSyncPing(targetId, {
+        reason: 'client-destroy',
+        deleted: true,
+        clientName: ds.clientName || '',
+        tombstone: clientTrashFingerprint(ds)
+      }).catch(() => {});
+    }
     const remaining = await PolicyDB.getAllDriveStates();
     if (targetId === activeClientIdRef.current && remaining.length > 0) {
       const next = remaining.reduce((a, b) => (a.lastSyncedAt || '') > (b.lastSyncedAt || '') ? a : b);
@@ -22263,23 +22359,30 @@ function buildGeminiJsonGenerationConfig(maxTokens, responseSchema) {
 // but short enough that a hung request surfaces within two minutes.
 async function fetchWithTimeout(url, options = {}, timeoutMs = 120000) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, timeoutMs);
   // ── v13: Link to extraction-level AbortController ──
   // If the user hits Cancel, _extractAbortController.abort() fires,
   // which cascades into this controller and kills the in-flight fetch.
   const extSignal = _extractAbortController?.signal;
   if (extSignal?.aborted) throw new DOMException('Extraction cancelled', 'AbortError');
-  const onExtAbort = () => controller.abort();
+  const onExtAbort = () => controller.abort(new DOMException('Extraction cancelled', 'AbortError'));
   extSignal?.addEventListener('abort', onExtAbort);
   try {
     const resp = await fetch(url, {...options, signal: controller.signal});
     return resp;
   } catch(err) {
     if(err.name === 'AbortError') {
-      if (extSignal?.aborted) {
+      if (_extractCancelRequested || extSignal?.aborted) {
         throw new DOMException('Extraction cancelled', 'AbortError');
       }
-      throw new Error('Request timed out after '+Math.round(timeoutMs/1000)+'s. If you tabbed out of the app during extraction, mobile Chrome may have suspended the request. Please try again and keep the app in the foreground.');
+      if (timedOut) {
+        throw new Error('Request timed out after '+Math.round(timeoutMs/1000)+'s.');
+      }
+      throw new Error('Request was interrupted before the AI returned a response. Please retry; if it keeps happening, keep PolicyLens open during the scan.');
     }
     throw err;
   } finally {
@@ -33857,6 +33960,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
     const abortCtrl = new AbortController();
     extractAbortRef.current = abortCtrl;
     _extractAbortController = abortCtrl;
+    _extractCancelRequested = false;
     // Reset pendingBatchRef for this run
     pendingBatchRef.current = [];
 
@@ -33872,26 +33976,35 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
     // Both are best-effort. Wake lock is unsupported on older iOS. The
     // flag-and-messaging layer works everywhere.
     const releaseWakeLock = await acquireWakeLock('policy-extraction');
-    let wasBackgrounded = false;
+    const TAB_AWAY_GRACE_MS = 15000;
+    let backgroundStartedAt = 0;
+    let backgroundedTotalMs = 0;
+    let backgroundWarned = false;
     // Hoisted: bgDiag is assigned further down (after the SW update
     // check runs), but the visibility handler closure needs to read
     // it to decide whether the "tabbed away" warning is relevant.
     // When bg mode is ACTIVE, tabbing away is safe — the SW is
     // handling the extraction and the warning is a false alarm.
     let bgDiag = null;
+    const currentBackgroundedMs = () => backgroundedTotalMs + (backgroundStartedAt ? Date.now() - backgroundStartedAt : 0);
+    const wasBackgroundedLongEnough = () => !bgDiag?.overall && currentBackgroundedMs() >= TAB_AWAY_GRACE_MS;
     const onVisibilityChange = () => {
       if(document.visibilityState === 'hidden') {
-        wasBackgrounded = true;
+        if (!backgroundStartedAt) backgroundStartedAt = Date.now();
         if (bgDiag?.overall) {
           console.log('[Extract] Tab backgrounded — SW multi path is active, extraction will continue');
         } else {
           console.warn('[Extract] Tab backgrounded during extraction — request may fail');
         }
-      } else if(document.visibilityState === 'visible' && wasBackgrounded) {
+      } else if(document.visibilityState === 'visible' && backgroundStartedAt) {
+        const hiddenMs = Date.now() - backgroundStartedAt;
+        backgroundedTotalMs += Math.max(0, hiddenMs);
+        backgroundStartedAt = 0;
         // Only warn if background mode was NOT active. When bg mode is
         // active, the SW is handling the extraction and the user
         // tabbing away is expected and safe.
-        if (!bgDiag?.overall) {
+        if (!bgDiag?.overall && hiddenMs >= TAB_AWAY_GRACE_MS && !backgroundWarned) {
+          backgroundWarned = true;
           try { toast('⚠️ You tabbed away during extraction — the API call may have been killed by the browser. Check for an error below.', 'warning', 8000); } catch(e) {}
         }
       }
@@ -34228,7 +34341,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
     // ── FOREGROUND EXTRACTION MODE ──
     // Long AI requests stay in the visible page; browsers are not reliable
     // enough here to promise background survival.
-    bgDiag = { overall:false, reason:'Keep this tab open until extraction finishes.' };
+    bgDiag = { overall:false, reason:'Brief switches are okay; long backgrounding can pause browser requests.' };
     // Service-worker background extraction is disabled for reliability.
     console.log('[Extract] Extraction mode: foreground-only');
 
@@ -34458,7 +34571,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
           setScanning(false);
           setScanProgress(null);
           const emptyFailPayload = {
-            reason: wasBackgrounded
+            reason: wasBackgroundedLongEnough()
               ? 'Extraction returned empty — you tabbed away while it was running, which kills Chrome background fetches on mobile. Try again with PolicyLens in the foreground.'
               : 'AI could not extract policies from the uploaded documents. This usually means the images are unclear, the document is too short, or the AI hit a transient error. Try clearer photos or retry.',
             files: filesSnapshot,
@@ -35251,7 +35364,8 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       // the browser suspending the fetch. When bg mode is active, tab-away
       // is safe and the error is something else entirely.
       // ── v13: CANCELLATION CHECK ──
-      if(e && e.name === 'AbortError' && errMsg.includes('cancelled')) {
+      const abortWasUserCancel = _extractCancelRequested || (e && e.name === 'AbortError' && (errMsg.includes('cancel') || errMsg.includes('abort')));
+      if(abortWasUserCancel) {
         msg = '🛑 Extraction cancelled — no policies imported.';
       // ── v13: RATE-LIMIT ERROR CLASSIFICATION ──
       // Detect HTTP 429/503/529 from Gemini and Claude separately from
@@ -35263,7 +35377,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       // indicates a genuine fetch failure ("Failed to fetch", "NetworkError").
       // Other TypeErrors (e.g. ".trim is not a function") are code bugs
       // and must NOT show the misleading "API calls are being blocked" toast.
-      } else if(wasBackgrounded && !bgDiag?.overall && (errMsg.includes('networkerror') || errMsg.includes('failed to fetch') || errMsg.includes('timed out') || errMsg.includes('abort') || (e instanceof TypeError && (errMsg.includes('fetch') || errMsg.includes('network'))))) {
+      } else if(wasBackgroundedLongEnough() && (errMsg.includes('networkerror') || errMsg.includes('failed to fetch') || errMsg.includes('timed out') || errMsg.includes('abort') || (e instanceof TypeError && (errMsg.includes('fetch') || errMsg.includes('network'))))) {
         msg = '🚫 Extraction interrupted — you tabbed away from PolicyLens while files were still uploading.\n\nMobile Chrome suspends background tabs to save battery, which kills in-flight API calls to Gemini/Claude.\n\nFix: Tap Upload again and keep PolicyLens in the foreground until extraction completes. The screen wake lock should prevent this, but it was either unsupported or overridden.';
       } else if(errMsg.includes('networkerror') || errMsg.includes('failed to fetch') || (e instanceof TypeError && (errMsg.includes('fetch') || errMsg.includes('network')))) {
         msg = '🚫 Network Error — API calls are being blocked.\n\nCommon causes:\n\n';
@@ -35285,7 +35399,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
         msg = '⏱ Extraction timed out.\n\nThis usually happens when:\n\n1. The tab was backgrounded (mobile Chrome suspends fetches)\n2. The files are very large and the AI is slow to respond\n3. Network connection is unstable\n\nFix: Try again with the app in foreground, or upload fewer files per batch.';
       }
       // ── v13: On cancel, drop pendingBatchRef (no partial writes) ──
-      const wasCancelled = e && e.name === 'AbortError' && errMsg.includes('cancelled');
+      const wasCancelled = abortWasUserCancel;
       if (wasCancelled) {
         toast(msg, 'info', 5000);
         pendingBatchRef.current = [];
@@ -35316,7 +35430,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       // remain so user can retry, but no partial-write confusion.
       if (!wasCancelled) {
         const mainFailPayload = {
-          reason: (wasBackgrounded && !bgDiag?.overall)
+          reason: wasBackgroundedLongEnough()
             ? 'Chrome killed the extraction when you tabbed away. PolicyLens needs to stay in the foreground while scanning.'
             : msg.split('\n')[0] || 'Extraction failed. See details in the error toast.',
           files: filesSnapshot,
@@ -35335,6 +35449,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       // ── v13: Clear abort controller ──
       extractAbortRef.current = null;
       _extractAbortController = null;
+      _extractCancelRequested = false;
       // Always clean up the wake lock, visibility listener, and
       // beforeunload guard — whether extraction succeeded, failed, or was
       // interrupted. Without this the screen would stay on and the
@@ -35501,9 +35616,19 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
               <div style={{fontSize:12,fontWeight:600,color:'var(--gold)'}}>✨ AI Extraction</div>
               {/* ── v15: CANCEL BUTTON — stops ticker + marks jobs cancelled ── */}
               <button onClick={() => {
+                _extractCancelRequested = true;
                 try { extractAbortRef.current?.abort(); } catch(_) {}
                 try { _extractAbortController?.abort(); } catch(_) {}
                 stopTicker(true);
+                if (progressiveTimerRef.current) { clearTimeout(progressiveTimerRef.current); progressiveTimerRef.current = null; }
+                progressiveSessionRef.current = false;
+                setChainingNext(false);
+                setScanning(false);
+                setScanProgress(null);
+                try { sessionStorage.removeItem('policylens_scanning_active'); } catch(_) {}
+                setScanFailure(null);
+                scanFailureRef.current = null;
+                setStaged(prev => prev.map(s => s._status === 'extracting' ? {...s, _status:'queued', _jobStage:null, _jobError:null} : s));
                 toast('🛑 Extraction cancelled','info',3000);
               }} style={{
                 fontSize:10,fontWeight:600,padding:'2px 8px',borderRadius:4,
@@ -35581,7 +35706,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
                 color: scanProgress.bgMode === 'active' ? 'var(--teal)' : 'var(--gold)'}}>
                 {scanProgress.bgMode === 'active'
                   ? 'Extraction running'
-                  : 'Keep this tab open while scanning'}
+                  : 'Best kept open for long scans'}
                 {scanProgress.bgMode !== 'active' && scanProgress.bgModeReason && (
                   <div style={{fontSize:8,color:'var(--text3)',fontWeight:400,marginTop:3}}>
                     {scanProgress.bgModeReason}
@@ -42589,7 +42714,9 @@ function DriveConnectionCard() {
     if (discoverBusy) return; setDiscoverBusy(true);
     try {
       const result = await discoverDriveClients();
+      const tombstoned = await purgeTombstonedClients(result.trashTombstones || []);
       if (result.found.length > 0) { window.dispatchEvent(new CustomEvent('policylens-discovery-found',{detail:{found:result.found}})); toast('Found '+result.found.length+' client'+(result.found.length===1?'':'s')+' to review','info',4000); }
+      else if (tombstoned > 0) { toast('Removed '+tombstoned+' deleted client'+(tombstoned===1?'':'s')+' from this device','info',4000); }
       else if (result.skippedExisting > 0 && result.errors === 0) { toast('All '+result.skippedExisting+' Drive client'+(result.skippedExisting===1?'':'s')+' already on this device','info',4000); }
       else if (result.errors > 0) { toast('Discovery completed with '+result.errors+' error(s)','warning',5000); }
       else { toast('No client files found in Drive','info',4000); }
@@ -42647,13 +42774,14 @@ function DriveDiscoveryCard() {
       _discoveryCompletedThisSession = true;
       _driveHasFolderStructure = result.hasFolderStructure;
       // v2.3.0-rc2c.4c: Purge orphans as part of manual discover
+      const tombstoned = await purgeTombstonedClients(result.trashTombstones || []);
       const purged = await purgeOrphanClients(result.driveClientIds);
       if (result.hasFolderStructure) await cleanupUnattachedPolicies();
       if (result.found.length > 0) {
         window.dispatchEvent(new CustomEvent('policylens-discovery-found', { detail: { found: result.found } }));
         toast('Found ' + result.found.length + ' client' + (result.found.length===1?'':'s') + ' to review', 'info', 4000);
-      } else if (purged > 0) {
-        toast('Removed ' + purged + ' orphan client' + (purged===1?'':'s') + ' no longer in Drive', 'info', 4000);
+      } else if (purged > 0 || tombstoned > 0) {
+        toast('Removed ' + (purged + tombstoned) + ' client' + ((purged + tombstoned)===1?'':'s') + ' no longer in Drive', 'info', 4000);
       } else if (result.skippedExisting > 0 && result.errors === 0) {
         toast('All ' + result.skippedExisting + ' Drive client' + (result.skippedExisting===1?'':'s') + ' already on this device', 'info', 4000);
       } else if (result.errors > 0) {
