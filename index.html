@@ -32,11 +32,11 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // ═══════════════════════════════════════════════════════════════
 // v2.3.0-rc2d.13: SERVICE WORKER REGISTRATION
 // ───────────────────────────────────────────────────────────────
-// PolicyLens uses a lightweight Service Worker extraction relay so
-// long multi-batch scans can continue when the browser backgrounds
-// the page. The worker is registered only on HTTPS/localhost.
+// PolicyLens keeps the Service Worker for app updates/cache control.
+// Extraction stays in the foreground because long AI requests are not
+// reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.21';
+const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.22';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -674,9 +674,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.21';
+const APP_VERSION = 'v2.3.0-rc2e.22';
 const APP_VERSION_DATE = '2026-05-02';
-const APP_VERSION_NAME = 'Calmer extraction fallbacks';
+const APP_VERSION_NAME = 'Foreground extraction and snap mode';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 const APP_TAB_IDS = new Set(['profile', 'dashboard', 'policies', 'clients', 'repository', 'report', 'settings']);
 function getInitialPolicyLensTab() {
@@ -687,6 +687,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.3.0-rc2e.22',
+  date: '2026-05-02',
+  name: 'Foreground extraction and snap mode',
+  sections: [{
+    heading: 'Scanning',
+    items: ['Staged PDFs, spreadsheets, HTML, and text uploads now render as clean file tiles instead of broken image previews.', 'Extraction now presents itself as a foreground process and no longer claims background mode will keep long AI requests alive.', 'The Policies camera button now opens a continuous Snap Mode with a wider live preview for repeated in-person page capture.']
+  }]
+}, {
   version: 'v2.3.0-rc2e.21',
   date: '2026-05-02',
   name: 'Calmer extraction fallbacks',
@@ -4191,7 +4199,7 @@ async function pdfToImages(pdfDoc, maxPages = 12) {
 // CLEAN even if the FC never actually reviewed anything. Bumping the version
 // forces a re-extraction next time those same files are uploaded, and the
 // one-time cleanup in App init purges the stale entries from IndexedDB.
-const EXTRACT_PIPELINE_VERSION = 'v15.9-2026-05-02-schema-light-import';
+const EXTRACT_PIPELINE_VERSION = 'v15.10-2026-05-02-foreground-snap-mode';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.8-2026-04-30-ai-triage-fingerprint';
@@ -5497,6 +5505,56 @@ function stagedFileLabel(files) {
   }
   const parts = nonZero.map(([t, n]) => n + ' ' + (n > 1 ? nouns[t][1] : nouns[t][0])).join(', ');
   return '\uD83D\uDCCE ' + files.length + ' files staged (' + parts + ')';
+}
+function stagedPreviewUrl(file) {
+  const type = String(file?.type || '').toLowerCase();
+  if (!type.startsWith('image/')) return null;
+  return URL.createObjectURL(file);
+}
+function revokeStagedPreview(item) {
+  if (!item?.preview) return;
+  try {
+    URL.revokeObjectURL(item.preview);
+  } catch (_) {}
+}
+function stagedFileKind(file) {
+  const name = String(file?.name || '').toLowerCase();
+  const type = String(file?.type || '').toLowerCase();
+  if (type.startsWith('image/')) return {
+    label: 'IMG',
+    tone: 'var(--blue2)'
+  };
+  if (type === 'application/pdf' || name.endsWith('.pdf')) return {
+    label: 'PDF',
+    tone: 'var(--red)'
+  };
+  if (name.endsWith('.xlsx') || name.endsWith('.xls') || name.endsWith('.csv')) return {
+    label: 'XLS',
+    tone: 'var(--green2)'
+  };
+  if (name.endsWith('.docx') || name.endsWith('.doc')) return {
+    label: 'DOC',
+    tone: 'var(--gold)'
+  };
+  if (name.endsWith('.html') || name.endsWith('.htm')) return {
+    label: 'HTML',
+    tone: 'var(--teal)'
+  };
+  if (name.endsWith('.txt') || name.endsWith('.rtf')) return {
+    label: 'TXT',
+    tone: 'var(--text2)'
+  };
+  return {
+    label: 'FILE',
+    tone: 'var(--text3)'
+  };
+}
+function stagedFileShortName(file) {
+  const name = String(file?.name || 'file');
+  if (name.length <= 18) return name;
+  const dot = name.lastIndexOf('.');
+  const ext = dot > 0 ? name.slice(dot) : '';
+  return name.slice(0, Math.max(8, 18 - ext.length - 1)) + '...' + ext;
 }
 function inferUploadIntent(files) {
   const list = Array.from(files || []);
@@ -27466,7 +27524,7 @@ async function geminiStructuredExtract(geminiKey, systemPrompt, contentBlocks, m
   // v2.3.0-rc2d.12: this now uses a plain Service Worker fetch relay
   // instead of Chrome Background Fetch, so it can survive tab backgrounding
   // without the old download-style queue stalls.
-  const USE_SW_SINGLE_EXTRACT = true;
+  const USE_SW_SINGLE_EXTRACT = false;
   if (USE_SW_SINGLE_EXTRACT) {
     try {
       if (await swExtractIsAvailable()) {
@@ -35509,7 +35567,7 @@ function Dashboard() {
     const newStaged = [];
     for (const f of Array.from(files)) newStaged.push({
       file: f,
-      preview: URL.createObjectURL(f)
+      preview: stagedPreviewUrl(f)
     });
     setWelcomeStaged(prev => [...prev, ...newStaged].slice(0, 200));
   };
@@ -35708,7 +35766,7 @@ function Dashboard() {
       if (files && files.length) {
         const newStaged = files.map(f => ({
           file: f,
-          preview: URL.createObjectURL(f)
+          preview: stagedPreviewUrl(f)
         }));
         setWelcomeStaged(prev => [...prev, ...newStaged].slice(0, 200));
       }
@@ -35756,7 +35814,7 @@ function Dashboard() {
         if (files.length) {
           const newStaged = files.map(f => ({
             file: f,
-            preview: URL.createObjectURL(f)
+            preview: stagedPreviewUrl(f)
           }));
           setWelcomeStaged(prev => [...prev, ...newStaged].slice(0, 200));
         }
@@ -35863,7 +35921,7 @@ function Dashboard() {
       if (files && files.length) {
         const newStaged = files.map(f => ({
           file: f,
-          preview: URL.createObjectURL(f)
+          preview: stagedPreviewUrl(f)
         }));
         setWelcomeStaged(prev => [...prev, ...newStaged].slice(0, 200));
       }
@@ -35874,7 +35932,7 @@ function Dashboard() {
   }, "\u2728 Extract All"), /*#__PURE__*/React.createElement("button", {
     className: "btn-danger btn-sm",
     onClick: () => {
-      welcomeStaged.forEach(s => URL.revokeObjectURL(s.preview));
+      welcomeStaged.forEach(revokeStagedPreview);
       setWelcomeStaged([]);
     }
   }, "Clear"))), /*#__PURE__*/React.createElement("div", {
@@ -35884,33 +35942,66 @@ function Dashboard() {
       overflowX: 'auto',
       paddingBottom: 4
     }
-  }, welcomeStaged.map((s, i) => /*#__PURE__*/React.createElement("div", {
-    key: i,
-    style: {
-      position: 'relative',
-      flexShrink: 0
-    }
-  }, /*#__PURE__*/React.createElement("img", {
-    src: s.preview,
-    style: {
-      width: 60,
-      height: 60,
-      objectFit: 'cover',
-      borderRadius: 8,
-      border: '1px solid var(--border2)'
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      position: 'absolute',
-      bottom: 2,
-      left: 2,
-      background: 'rgba(0,0,0,.6)',
-      color: '#fff',
-      fontSize: 9,
-      padding: '1px 4px',
-      borderRadius: 4
-    }
-  }, i + 1)))), /*#__PURE__*/React.createElement("div", {
+  }, welcomeStaged.map((s, i) => {
+    const kind = stagedFileKind(s.file);
+    return /*#__PURE__*/React.createElement("div", {
+      key: i,
+      style: {
+        position: 'relative',
+        flexShrink: 0
+      }
+    }, s.preview ? /*#__PURE__*/React.createElement("img", {
+      src: s.preview,
+      style: {
+        width: 60,
+        height: 60,
+        objectFit: 'cover',
+        borderRadius: 8,
+        border: '1px solid var(--border2)'
+      }
+    }) : /*#__PURE__*/React.createElement("div", {
+      title: s.file?.name || kind.label,
+      style: {
+        width: 60,
+        height: 60,
+        borderRadius: 8,
+        border: '1px solid var(--border2)',
+        background: 'var(--bg3)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 2,
+        padding: 4
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 13,
+        fontWeight: 800,
+        color: kind.tone
+      }
+    }, kind.label), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 8,
+        color: 'var(--text3)',
+        maxWidth: 52,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap'
+      }
+    }, stagedFileShortName(s.file))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: 'absolute',
+        bottom: 2,
+        left: 2,
+        background: 'rgba(0,0,0,.6)',
+        color: '#fff',
+        fontSize: 9,
+        padding: '1px 4px',
+        borderRadius: 4
+      }
+    }, i + 1));
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 10,
       color: 'var(--text3)',
@@ -39328,12 +39419,17 @@ function SnapGoCapture({
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
-            facingMode: 'environment',
+            facingMode: {
+              ideal: 'environment'
+            },
             width: {
               ideal: 1920
             },
             height: {
-              ideal: 1080
+              ideal: 1440
+            },
+            aspectRatio: {
+              ideal: 1.333333
             },
             frameRate: {
               max: 30
@@ -39346,6 +39442,18 @@ function SnapGoCapture({
           return;
         }
         streamRef.current = stream;
+        try {
+          const track = stream.getVideoTracks?.()[0];
+          const caps = track?.getCapabilities?.();
+          if (caps?.zoom && track?.applyConstraints) {
+            const minZoom = typeof caps.zoom.min === 'number' ? caps.zoom.min : 1;
+            await track.applyConstraints({
+              advanced: [{
+                zoom: minZoom
+              }]
+            });
+          }
+        } catch (_) {}
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           videoRef.current.play().catch(() => {});
@@ -39407,6 +39515,14 @@ function SnapGoCapture({
   const handleDone = () => {
     stopStream();
     const files = captures.map(c => c.file);
+    captures.forEach(c => {
+      if (c.preview) {
+        try {
+          URL.revokeObjectURL(c.preview);
+        } catch (_) {}
+      }
+    });
+    PolicyDB.clearCaptures().catch(() => {});
     console.log('[SnapGo] Done —', files.length, 'captures queued for extraction');
     // Try exiting fullscreen
     try {
@@ -39416,6 +39532,13 @@ function SnapGoCapture({
   };
   const handleClose = () => {
     stopStream();
+    captures.forEach(c => {
+      if (c.preview) {
+        try {
+          URL.revokeObjectURL(c.preview);
+        } catch (_) {}
+      }
+    });
     try {
       if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     } catch (_) {}
@@ -39484,7 +39607,8 @@ function SnapGoCapture({
     style: {
       width: '100%',
       height: '100%',
-      objectFit: 'cover'
+      objectFit: 'contain',
+      background: '#000'
     }
   }), /*#__PURE__*/React.createElement("canvas", {
     ref: canvasRef,
@@ -42984,6 +43108,7 @@ function Policies() {
   const [scanResult, setScanResult] = useState(null);
   const [staged, setStaged] = useState([]);
   const [unsentCaptures, setUnsentCaptures] = useState([]);
+  const [snapGoOpen, setSnapGoOpen] = useState(false);
   // Check for unsent snap captures on mount
   useEffect(() => {
     PolicyDB.getUnsentCaptures().then(caps => {
@@ -44274,7 +44399,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
     for (const f of processed) {
       newStaged.push({
         file: f,
-        preview: URL.createObjectURL(f),
+        preview: stagedPreviewUrl(f),
         _status: 'queued',
         _detectedInsurer: null
       });
@@ -44315,14 +44440,23 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
   const removeStaged = idx => {
     setStaged(prev => {
       const n = [...prev];
-      URL.revokeObjectURL(n[idx].preview);
+      revokeStagedPreview(n[idx]);
       n.splice(idx, 1);
       return n;
     });
   };
   const clearStaged = () => {
-    staged.forEach(s => URL.revokeObjectURL(s.preview));
+    staged.forEach(revokeStagedPreview);
     setStaged([]);
+  };
+  const startSnapMode = async () => {
+    if (scanning) return;
+    if (navigator.mediaDevices?.getUserMedia) {
+      setSnapGoOpen(true);
+      return;
+    }
+    const files = await openCameraModal();
+    if (files && files.length) stagePhotos(files);
   };
 
   // ── PROGRESSIVE EXTRACTION TRIGGER (feature c) ──
@@ -44594,7 +44728,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
           const s = statuses && statuses[i];
           return {
             file: f,
-            preview: URL.createObjectURL(f),
+            preview: stagedPreviewUrl(f),
             _status: s === 'extracting' ? 'queued' : s || 'queued'
           };
         });
@@ -46108,17 +46242,15 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
     // doesn't wipe in-memory work.
     let completedBatches = 0;
 
-    // ── BACKGROUND MODE DIAGNOSTIC ──
-    // Checks whether the Service Worker extraction relay is active for
-    // this origin/browser before the long scan starts.
-    try {
-      bgDiag = await swExtractDiagnostic();
-    } catch (e) {
-      console.warn('[Extract] Diagnostic failed:', e);
-    }
-    console.log('[Extract] Background mode:', bgDiag?.overall ? 'ACTIVE' : 'foreground-only', '—', bgDiag?.reason || 'unknown');
-    // Request notification permission (idempotent, one-time per device)
-    ensureNotificationPermission().catch(() => {});
+    // ── FOREGROUND EXTRACTION MODE ──
+    // Long AI requests stay in the visible page; browsers are not reliable
+    // enough here to promise background survival.
+    bgDiag = {
+      overall: false,
+      reason: 'Keep this tab open until extraction finishes.'
+    };
+    // Service-worker background extraction is disabled for reliability.
+    console.log('[Extract] Extraction mode: foreground-only');
     setScanProgress({
       batch: 0,
       totalBatches,
@@ -46126,7 +46258,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       status: 'Preparing...',
       pctComplete: 0,
       startTime: Date.now(),
-      bgMode: bgDiag?.overall ? 'active' : 'foreground',
+      bgMode: 'foreground',
       bgModeReason: bgDiag?.reason || null
     });
 
@@ -46147,7 +46279,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
     // v2.3.0-rc2d.12: this is back on, but now uses the plain relay in
     // sw.js instead of Background Fetch, which avoids the earlier ghost
     // fetch / batch restart behavior.
-    const USE_SW_MULTI_PREFETCH = true;
+    const USE_SW_MULTI_PREFETCH = false;
     let precomputedPromises = null;
     if (USE_SW_MULTI_PREFETCH && batches.length > 1) {
       try {
@@ -46344,7 +46476,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
           pctComplete: Math.round(b / totalBatches * 100),
           startTime: scanStartTime,
           eta: etaText,
-          bgMode: bgDiag?.overall ? 'active' : 'foreground',
+          bgMode: 'foreground',
           bgModeReason: bgDiag?.reason || null
         });
 
@@ -47150,7 +47282,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
           totalFiles: allFiles.length,
           status: b + 1 < totalBatches ? `Batch ${b + 1} done (${allExtracted.length} policies). Extracting next...` : `All ${totalBatches} batches complete! ${allExtracted.length} policies extracted.`,
           pctComplete: Math.round((b + 1) / totalBatches * 100),
-          bgMode: bgDiag?.overall ? 'active' : 'foreground',
+          bgMode: 'foreground',
           bgModeReason: bgDiag?.reason || null
         });
 
@@ -47374,7 +47506,12 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
   const uploadRef = useRef(null);
   return /*#__PURE__*/React.createElement("div", {
     className: "fade-in"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, snapGoOpen && /*#__PURE__*/React.createElement(SnapGoCapture, {
+    onDone: files => {
+      setSnapGoOpen(false);
+      if (files && files.length) stagePhotos(files);
+    }
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -47439,13 +47576,8 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
   }), /*#__PURE__*/React.createElement("button", {
     className: "btn-secondary btn-sm",
     disabled: scanning,
-    title: isMobile ? 'Camera' : scanning ? 'Finish current extraction first' : 'Camera',
-    onClick: async () => {
-      const files = await openCameraModal();
-      if (files && files.length) {
-        stagePhotos(files);
-      }
-    }
+    title: isMobile ? 'Snap Mode' : scanning ? 'Finish current extraction first' : 'Snap Mode',
+    onClick: startSnapMode
   }, "\uD83D\uDCF7", !isMobile && ' Camera'), /*#__PURE__*/React.createElement("button", {
     className: "btn-secondary btn-sm",
     disabled: scanning,
@@ -47863,7 +47995,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       lineHeight: 1.35,
       color: scanProgress.bgMode === 'active' ? 'var(--teal)' : 'var(--gold)'
     }
-  }, scanProgress.bgMode === 'active' ? 'Background mode ON — safe to tab away, extraction will continue' : 'Foreground only — keep PolicyLens open', scanProgress.bgMode !== 'active' && scanProgress.bgModeReason && /*#__PURE__*/React.createElement("div", {
+  }, scanProgress.bgMode === 'active' ? 'Extraction running' : 'Keep this tab open while scanning', scanProgress.bgMode !== 'active' && scanProgress.bgModeReason && /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 8,
       color: 'var(--text3)',
@@ -48094,12 +48226,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       }
     }, /*#__PURE__*/React.createElement("button", {
       className: "btn-secondary btn-sm",
-      onClick: async () => {
-        const files = await openCameraModal();
-        if (files && files.length) {
-          stagePhotos(files);
-        }
-      }
+      onClick: startSnapMode
     }, "+ Take More"), /*#__PURE__*/React.createElement("button", {
       className: "btn-primary btn-sm",
       onClick: () => {
@@ -48184,6 +48311,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       const badgeColor = badge.color;
       const badgeIcon = badge.icon;
       const frameOpacity = status === 'done' ? 0.55 : 1;
+      const fileKind = stagedFileKind(s.file);
       return /*#__PURE__*/React.createElement("div", {
         key: i,
         style: {
@@ -48192,7 +48320,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
           opacity: frameOpacity,
           transition: 'opacity .3s'
         }
-      }, /*#__PURE__*/React.createElement("img", {
+      }, s.preview ? /*#__PURE__*/React.createElement("img", {
         src: s.preview,
         style: {
           width: 72,
@@ -48201,7 +48329,39 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
           borderRadius: 8,
           border: '2px solid ' + badgeColor
         }
-      }), /*#__PURE__*/React.createElement("button", {
+      }) : /*#__PURE__*/React.createElement("div", {
+        title: s.file?.name || fileKind.label,
+        style: {
+          width: 72,
+          height: 72,
+          borderRadius: 8,
+          border: '2px solid ' + badgeColor,
+          background: 'var(--bg3)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 3,
+          padding: 5
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 15,
+          fontWeight: 800,
+          color: fileKind.tone,
+          lineHeight: 1
+        }
+      }, fileKind.label), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 8,
+          color: 'var(--text3)',
+          maxWidth: 60,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          textAlign: 'center'
+        }
+      }, stagedFileShortName(s.file))), /*#__PURE__*/React.createElement("button", {
         onClick: () => removeStaged(i),
         style: {
           position: 'absolute',
@@ -48386,12 +48546,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
   }, "\uD83D\uDCC4 Upload"), /*#__PURE__*/React.createElement("button", {
     className: "btn-secondary btn-sm",
     disabled: scanning,
-    onClick: async () => {
-      const files = await openCameraModal();
-      if (files && files.length) {
-        stagePhotos(files);
-      }
-    }
+    onClick: startSnapMode
   }, "\uD83D\uDCF7 Camera"), /*#__PURE__*/React.createElement("button", {
     className: "btn-secondary btn-sm",
     disabled: scanning,
@@ -49362,9 +49517,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
           progressiveTimerRef.current = null;
         }
         setStaged(prev => {
-          prev.forEach(s => {
-            if (s.preview) URL.revokeObjectURL(s.preview);
-          });
+          prev.forEach(revokeStagedPreview);
           return [];
         });
       }
@@ -49403,9 +49556,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
           progressiveTimerRef.current = null;
         }
         setStaged(prev => {
-          prev.forEach(s => {
-            if (s.preview) URL.revokeObjectURL(s.preview);
-          });
+          prev.forEach(revokeStagedPreview);
           return [];
         });
       }
@@ -49439,9 +49590,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
           progressiveTimerRef.current = null;
         }
         setStaged(prev => {
-          prev.forEach(s => {
-            if (s.preview) URL.revokeObjectURL(s.preview);
-          });
+          prev.forEach(revokeStagedPreview);
           return [];
         });
       }
@@ -49475,9 +49624,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
         progressiveTimerRef.current = null;
       }
       setStaged(prev => {
-        prev.forEach(s => {
-          if (s.preview) URL.revokeObjectURL(s.preview);
-        });
+        prev.forEach(revokeStagedPreview);
         return [];
       });
       setBulkExtracted(null);
@@ -49657,9 +49804,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
         progressiveTimerRef.current = null;
       }
       setStaged(prev => {
-        prev.forEach(s => {
-          if (s.preview) URL.revokeObjectURL(s.preview);
-        });
+        prev.forEach(revokeStagedPreview);
         return [];
       });
       setBulkExtracted(null);

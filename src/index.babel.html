@@ -32,11 +32,11 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // ═══════════════════════════════════════════════════════════════
 // v2.3.0-rc2d.13: SERVICE WORKER REGISTRATION
 // ───────────────────────────────────────────────────────────────
-// PolicyLens uses a lightweight Service Worker extraction relay so
-// long multi-batch scans can continue when the browser backgrounds
-// the page. The worker is registered only on HTTPS/localhost.
+// PolicyLens keeps the Service Worker for app updates/cache control.
+// Extraction stays in the foreground because long AI requests are not
+// reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.21';
+const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.22';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -664,9 +664,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.21';
+const APP_VERSION = 'v2.3.0-rc2e.22';
 const APP_VERSION_DATE = '2026-05-02';
-const APP_VERSION_NAME = 'Calmer extraction fallbacks';
+const APP_VERSION_NAME = 'Foreground extraction and snap mode';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 
 const APP_TAB_IDS = new Set(['profile','dashboard','policies','clients','repository','report','settings']);
@@ -679,6 +679,21 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.3.0-rc2e.22',
+    date: '2026-05-02',
+    name: 'Foreground extraction and snap mode',
+    sections: [
+      {
+        heading: 'Scanning',
+        items: [
+          'Staged PDFs, spreadsheets, HTML, and text uploads now render as clean file tiles instead of broken image previews.',
+          'Extraction now presents itself as a foreground process and no longer claims background mode will keep long AI requests alive.',
+          'The Policies camera button now opens a continuous Snap Mode with a wider live preview for repeated in-person page capture.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.3.0-rc2e.21',
     date: '2026-05-02',
@@ -4836,7 +4851,7 @@ async function pdfToImages(pdfDoc, maxPages=12) {
 // CLEAN even if the FC never actually reviewed anything. Bumping the version
 // forces a re-extraction next time those same files are uploaded, and the
 // one-time cleanup in App init purges the stale entries from IndexedDB.
-const EXTRACT_PIPELINE_VERSION = 'v15.9-2026-05-02-schema-light-import';
+const EXTRACT_PIPELINE_VERSION = 'v15.10-2026-05-02-foreground-snap-mode';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.8-2026-04-30-ai-triage-fingerprint';
@@ -6022,6 +6037,37 @@ function stagedFileLabel(files) {
   }
   const parts = nonZero.map(([t,n])=>n+' '+(n>1?nouns[t][1]:nouns[t][0])).join(', ');
   return '\uD83D\uDCCE '+files.length+' files staged ('+parts+')';
+}
+
+function stagedPreviewUrl(file) {
+  const type = String(file?.type || '').toLowerCase();
+  if (!type.startsWith('image/')) return null;
+  return URL.createObjectURL(file);
+}
+
+function revokeStagedPreview(item) {
+  if (!item?.preview) return;
+  try { URL.revokeObjectURL(item.preview); } catch (_) {}
+}
+
+function stagedFileKind(file) {
+  const name = String(file?.name || '').toLowerCase();
+  const type = String(file?.type || '').toLowerCase();
+  if (type.startsWith('image/')) return { label:'IMG', tone:'var(--blue2)' };
+  if (type === 'application/pdf' || name.endsWith('.pdf')) return { label:'PDF', tone:'var(--red)' };
+  if (name.endsWith('.xlsx') || name.endsWith('.xls') || name.endsWith('.csv')) return { label:'XLS', tone:'var(--green2)' };
+  if (name.endsWith('.docx') || name.endsWith('.doc')) return { label:'DOC', tone:'var(--gold)' };
+  if (name.endsWith('.html') || name.endsWith('.htm')) return { label:'HTML', tone:'var(--teal)' };
+  if (name.endsWith('.txt') || name.endsWith('.rtf')) return { label:'TXT', tone:'var(--text2)' };
+  return { label:'FILE', tone:'var(--text3)' };
+}
+
+function stagedFileShortName(file) {
+  const name = String(file?.name || 'file');
+  if (name.length <= 18) return name;
+  const dot = name.lastIndexOf('.');
+  const ext = dot > 0 ? name.slice(dot) : '';
+  return name.slice(0, Math.max(8, 18 - ext.length - 1)) + '...' + ext;
 }
 
 function inferUploadIntent(files) {
@@ -23347,7 +23393,7 @@ async function geminiStructuredExtract(geminiKey, systemPrompt, contentBlocks, m
   // v2.3.0-rc2d.12: this now uses a plain Service Worker fetch relay
   // instead of Chrome Background Fetch, so it can survive tab backgrounding
   // without the old download-style queue stalls.
-  const USE_SW_SINGLE_EXTRACT = true;
+  const USE_SW_SINGLE_EXTRACT = false;
   if (USE_SW_SINGLE_EXTRACT) {
     try {
       if (await swExtractIsAvailable()) {
@@ -27661,7 +27707,7 @@ function Dashboard() {
   const handleWelcomeCamera = (files) => {
     if(!files||!files.length) return;
     const newStaged = [];
-    for(const f of Array.from(files)) newStaged.push({file:f, preview:URL.createObjectURL(f)});
+    for(const f of Array.from(files)) newStaged.push({file:f, preview:stagedPreviewUrl(f)});
     setWelcomeStaged(prev => [...prev, ...newStaged].slice(0,200));
   };
 
@@ -27809,14 +27855,14 @@ function Dashboard() {
 
       {/* ── Camera CTA ── */}
       <div style={{maxWidth:420,margin:'0 auto 20px'}}>
-        <button onClick={async()=>{const files=await openCameraModal();if(files&&files.length){const newStaged=files.map(f=>({file:f,preview:URL.createObjectURL(f)}));setWelcomeStaged(prev=>[...prev,...newStaged].slice(0,200));}}}
+        <button onClick={async()=>{const files=await openCameraModal();if(files&&files.length){const newStaged=files.map(f=>({file:f,preview:stagedPreviewUrl(f)}));setWelcomeStaged(prev=>[...prev,...newStaged].slice(0,200));}}}
           style={{width:'100%',background:'linear-gradient(135deg,rgba(212,169,106,.15),rgba(212,169,106,.05))',border:'2px dashed var(--gold3)',borderRadius:16,padding:'24px 20px',cursor:'pointer',transition:'all .2s'}}>
           <div style={{fontSize:40,marginBottom:6}}>📷</div>
           <div style={{fontSize:15,fontWeight:600,color:'var(--gold2)',marginBottom:4}}>Scan first policy</div>
           <div style={{fontSize:11,color:'var(--text2)'}}>Snap a photo of any policy contract, benefit illustration, or CRM screen</div>
         </button>
         <div style={{display:'flex',gap:8,marginTop:8}}>
-          <button onClick={()=>{const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.multiple=true;inp.onchange=e=>{const files=Array.from(e.target.files);if(files.length){const newStaged=files.map(f=>({file:f,preview:URL.createObjectURL(f)}));setWelcomeStaged(prev=>[...prev,...newStaged].slice(0,200));}};inp.click();}}
+          <button onClick={()=>{const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.multiple=true;inp.onchange=e=>{const files=Array.from(e.target.files);if(files.length){const newStaged=files.map(f=>({file:f,preview:stagedPreviewUrl(f)}));setWelcomeStaged(prev=>[...prev,...newStaged].slice(0,200));}};inp.click();}}
             style={{flex:1,background:'var(--bg3)',border:'1px solid var(--border2)',borderRadius:10,padding:'12px 8px',cursor:'pointer',textAlign:'center'}}>
             <div style={{fontSize:20}}>🖼</div><div style={{fontSize:10,color:'var(--text2)',marginTop:2}}>Gallery</div>
           </button>
@@ -27837,18 +27883,27 @@ function Dashboard() {
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
             <div style={{fontSize:13,fontWeight:600}}>{stagedFileLabel(welcomeStaged)}</div>
             <div style={{display:'flex',gap:6}}>
-              <button className="btn-secondary btn-sm" onClick={async()=>{const files=await openCameraModal();if(files&&files.length){const newStaged=files.map(f=>({file:f,preview:URL.createObjectURL(f)}));setWelcomeStaged(prev=>[...prev,...newStaged].slice(0,200));}}}>+ More</button>
+              <button className="btn-secondary btn-sm" onClick={async()=>{const files=await openCameraModal();if(files&&files.length){const newStaged=files.map(f=>({file:f,preview:stagedPreviewUrl(f)}));setWelcomeStaged(prev=>[...prev,...newStaged].slice(0,200));}}}>+ More</button>
               <button className="btn-primary btn-sm" onClick={handleWelcomeExtract}>✨ Extract All</button>
-              <button className="btn-danger btn-sm" onClick={()=>{welcomeStaged.forEach(s=>URL.revokeObjectURL(s.preview));setWelcomeStaged([]);}}>Clear</button>
+              <button className="btn-danger btn-sm" onClick={()=>{welcomeStaged.forEach(revokeStagedPreview);setWelcomeStaged([]);}}>Clear</button>
             </div>
           </div>
           <div style={{display:'flex',gap:8,overflowX:'auto',paddingBottom:4}}>
-            {welcomeStaged.map((s,i) => (
+            {welcomeStaged.map((s,i) => {
+              const kind = stagedFileKind(s.file);
+              return (
               <div key={i} style={{position:'relative',flexShrink:0}}>
-                <img src={s.preview} style={{width:60,height:60,objectFit:'cover',borderRadius:8,border:'1px solid var(--border2)'}} />
+                {s.preview ? (
+                  <img src={s.preview} style={{width:60,height:60,objectFit:'cover',borderRadius:8,border:'1px solid var(--border2)'}} />
+                ) : (
+                  <div title={s.file?.name || kind.label} style={{width:60,height:60,borderRadius:8,border:'1px solid var(--border2)',background:'var(--bg3)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:2,padding:4}}>
+                    <div style={{fontSize:13,fontWeight:800,color:kind.tone}}>{kind.label}</div>
+                    <div style={{fontSize:8,color:'var(--text3)',maxWidth:52,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{stagedFileShortName(s.file)}</div>
+                  </div>
+                )}
                 <div style={{position:'absolute',bottom:2,left:2,background:'rgba(0,0,0,.6)',color:'#fff',fontSize:9,padding:'1px 4px',borderRadius:4}}>{i+1}</div>
               </div>
-            ))}
+            );})}
           </div>
           <div style={{fontSize:10,color:'var(--text3)',marginTop:6}}>Take all the photos you need, then hit Extract All</div>
         </div>
@@ -29160,11 +29215,25 @@ function SnapGoCapture({ onDone }) {
     (async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { max: 30 } },
+          video: {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1920 },
+            height: { ideal: 1440 },
+            aspectRatio: { ideal: 1.333333 },
+            frameRate: { max: 30 }
+          },
           audio: false,
         });
         if (!mounted) { stream.getTracks().forEach(t => t.stop()); return; }
         streamRef.current = stream;
+        try {
+          const track = stream.getVideoTracks?.()[0];
+          const caps = track?.getCapabilities?.();
+          if (caps?.zoom && track?.applyConstraints) {
+            const minZoom = typeof caps.zoom.min === 'number' ? caps.zoom.min : 1;
+            await track.applyConstraints({ advanced: [{ zoom: minZoom }] });
+          }
+        } catch (_) {}
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           videoRef.current.play().catch(() => {});
@@ -29213,6 +29282,8 @@ function SnapGoCapture({ onDone }) {
   const handleDone = () => {
     stopStream();
     const files = captures.map(c => c.file);
+    captures.forEach(c => { if (c.preview) { try { URL.revokeObjectURL(c.preview); } catch (_) {} } });
+    PolicyDB.clearCaptures().catch(() => {});
     console.log('[SnapGo] Done —', files.length, 'captures queued for extraction');
     // Try exiting fullscreen
     try { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch (_) {}
@@ -29221,6 +29292,7 @@ function SnapGoCapture({ onDone }) {
 
   const handleClose = () => {
     stopStream();
+    captures.forEach(c => { if (c.preview) { try { URL.revokeObjectURL(c.preview); } catch (_) {} } });
     try { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch (_) {}
     onDone([]);
   };
@@ -29244,7 +29316,7 @@ function SnapGoCapture({ onDone }) {
   return (
     <div style={{position:'fixed',inset:0,zIndex:10000,background:'#000'}}>
       {/* Camera viewfinder */}
-      <video ref={videoRef} autoPlay playsInline muted style={{width:'100%',height:'100%',objectFit:'cover'}} />
+      <video ref={videoRef} autoPlay playsInline muted style={{width:'100%',height:'100%',objectFit:'contain',background:'#000'}} />
       <canvas ref={canvasRef} style={{display:'none'}} />
 
       {/* Flash overlay */}
@@ -31278,6 +31350,7 @@ function Policies() {
   const [scanResult, setScanResult] = useState(null);
   const [staged, setStaged] = useState([]);
   const [unsentCaptures, setUnsentCaptures] = useState([]);
+  const [snapGoOpen, setSnapGoOpen] = useState(false);
   // Check for unsent snap captures on mount
   useEffect(() => {
     PolicyDB.getUnsentCaptures().then(caps => { if (caps.length > 0) setUnsentCaptures(caps); }).catch(() => {});
@@ -32431,7 +32504,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
     });
     const newStaged = [];
     for(const f of processed){
-      newStaged.push({file:f, preview:URL.createObjectURL(f), _status:'queued', _detectedInsurer:null});
+      newStaged.push({file:f, preview:stagedPreviewUrl(f), _status:'queued', _detectedInsurer:null});
     }
     setStaged(prev => [...prev, ...newStaged].slice(0,200));
     // ── PRE-CLASSIFY: detect insurer from first image (UX #13) ──
@@ -32456,9 +32529,19 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
     }
   };
   const removeStaged = (idx) => {
-    setStaged(prev => { const n=[...prev]; URL.revokeObjectURL(n[idx].preview); n.splice(idx,1); return n; });
+    setStaged(prev => { const n=[...prev]; revokeStagedPreview(n[idx]); n.splice(idx,1); return n; });
   };
-  const clearStaged = () => { staged.forEach(s=>URL.revokeObjectURL(s.preview)); setStaged([]); };
+  const clearStaged = () => { staged.forEach(revokeStagedPreview); setStaged([]); };
+
+  const startSnapMode = async () => {
+    if (scanning) return;
+    if (navigator.mediaDevices?.getUserMedia) {
+      setSnapGoOpen(true);
+      return;
+    }
+    const files = await openCameraModal();
+    if (files && files.length) stagePhotos(files);
+  };
 
   // ── PROGRESSIVE EXTRACTION TRIGGER (feature c) ──
   // Wrapper around handleExtract that:
@@ -32707,7 +32790,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
           const s = statuses && statuses[i];
           return {
             file: f,
-            preview: URL.createObjectURL(f),
+            preview: stagedPreviewUrl(f),
             _status: s === 'extracting' ? 'queued' : (s || 'queued'),
           };
         });
@@ -34142,19 +34225,17 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
     // doesn't wipe in-memory work.
     let completedBatches = 0;
 
-    // ── BACKGROUND MODE DIAGNOSTIC ──
-    // Checks whether the Service Worker extraction relay is active for
-    // this origin/browser before the long scan starts.
-    try { bgDiag = await swExtractDiagnostic(); }
-    catch (e) { console.warn('[Extract] Diagnostic failed:', e); }
-    console.log('[Extract] Background mode:', bgDiag?.overall ? 'ACTIVE' : 'foreground-only', '—', bgDiag?.reason || 'unknown');
-    // Request notification permission (idempotent, one-time per device)
-    ensureNotificationPermission().catch(()=>{});
+    // ── FOREGROUND EXTRACTION MODE ──
+    // Long AI requests stay in the visible page; browsers are not reliable
+    // enough here to promise background survival.
+    bgDiag = { overall:false, reason:'Keep this tab open until extraction finishes.' };
+    // Service-worker background extraction is disabled for reliability.
+    console.log('[Extract] Extraction mode: foreground-only');
 
     setScanProgress({
       batch:0, totalBatches, totalFiles:allFiles.length,
       status:'Preparing...', pctComplete:0, startTime:Date.now(),
-      bgMode: bgDiag?.overall ? 'active' : 'foreground',
+      bgMode: 'foreground',
       bgModeReason: bgDiag?.reason || null,
     });
 
@@ -34175,7 +34256,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
     // v2.3.0-rc2d.12: this is back on, but now uses the plain relay in
     // sw.js instead of Background Fetch, which avoids the earlier ghost
     // fetch / batch restart behavior.
-    const USE_SW_MULTI_PREFETCH = true;
+    const USE_SW_MULTI_PREFETCH = false;
     let precomputedPromises = null;
     if (USE_SW_MULTI_PREFETCH && batches.length > 1) {
       try {
@@ -34335,7 +34416,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
           );
         }
         const etaText = remaining > 60 ? `~${Math.ceil(remaining/60)} min left` : `~${remaining}s left`;
-        setScanProgress({batch:b+1, totalBatches, totalFiles:allFiles.length, status:`Extracting batch ${b+1} of ${totalBatches} (${batches[b].length} files)...`, pctComplete:Math.round(b/totalBatches*100), startTime:scanStartTime, eta:etaText, bgMode: bgDiag?.overall ? 'active' : 'foreground', bgModeReason: bgDiag?.reason || null});
+        setScanProgress({batch:b+1, totalBatches, totalFiles:allFiles.length, status:`Extracting batch ${b+1} of ${totalBatches} (${batches[b].length} files)...`, pctComplete:Math.round(b/totalBatches*100), startTime:scanStartTime, eta:etaText, bgMode: 'foreground', bgModeReason: bgDiag?.reason || null});
 
         // Pick up the precomputed rawText for this batch if the SW
         // multi path is active. Each resolver promise resolves when its
@@ -35061,7 +35142,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       }
       // (no per-batch setBulkExtracted — flushed after final batch below)
 
-      setScanProgress({batch:b+1, totalBatches, totalFiles:allFiles.length, status:b+1<totalBatches?`Batch ${b+1} done (${allExtracted.length} policies). Extracting next...`:`All ${totalBatches} batches complete! ${allExtracted.length} policies extracted.`, pctComplete:Math.round((b+1)/totalBatches*100), bgMode: bgDiag?.overall ? 'active' : 'foreground', bgModeReason: bgDiag?.reason || null});
+      setScanProgress({batch:b+1, totalBatches, totalFiles:allFiles.length, status:b+1<totalBatches?`Batch ${b+1} done (${allExtracted.length} policies). Extracting next...`:`All ${totalBatches} batches complete! ${allExtracted.length} policies extracted.`, pctComplete:Math.round((b+1)/totalBatches*100), bgMode: 'foreground', bgModeReason: bgDiag?.reason || null});
 
       // ── PER-BATCH NOTIFICATION ──
       // Fires a notification after every batch completes. Uses tag
@@ -35283,6 +35364,12 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
 
   return (
     <div className="fade-in">
+      {snapGoOpen && (
+        <SnapGoCapture onDone={(files) => {
+          setSnapGoOpen(false);
+          if (files && files.length) stagePhotos(files);
+        }} />
+      )}
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16,flexWrap:'wrap',gap:8}}>
         <div style={{display:'flex',alignItems:'center',gap:8}}>
           <h2 style={{fontSize:18,fontWeight:600}}>Policies</h2>
@@ -35294,7 +35381,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
         <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
           <input ref={cameraRef} type="file" accept="image/*" capture="environment" style={{display:'none'}} onChange={e=>{stagePhotos(e.target.files);e.target.value='';}} />
           <input ref={uploadRef} type="file" accept="image/*,.pdf,.xlsx,.xls,.csv,.doc,.docx,.html,.htm,.txt,.rtf" multiple style={{display:'none'}} onChange={e=>{stagePhotos(Array.from(e.target.files));e.target.value='';}} />
-          <button className="btn-secondary btn-sm" disabled={scanning} title={isMobile?'Camera':(scanning?'Finish current extraction first':'Camera')} onClick={async()=>{const files=await openCameraModal();if(files&&files.length){stagePhotos(files);}}}>
+          <button className="btn-secondary btn-sm" disabled={scanning} title={isMobile?'Snap Mode':(scanning?'Finish current extraction first':'Snap Mode')} onClick={startSnapMode}>
             📷{!isMobile && ' Camera'}
           </button>
           <button className="btn-secondary btn-sm" disabled={scanning} title={isMobile?'Gallery':(scanning?'Finish current extraction first':'Gallery')} onClick={()=>{const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.multiple=true;inp.onchange=e=>{const files=Array.from(e.target.files);if(files.length){stagePhotos(files);}};inp.click();}}>
@@ -35469,12 +35556,9 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
           {scanProgress.pctComplete > 0 && scanProgress.pctComplete < 100 && (
             <div style={{fontSize:9,color:'var(--text3)',marginTop:4}}>You can review extracted policies below while remaining batches process</div>
           )}
-          {/* ── BACKGROUND MODE STATUS BADGE ── */}
-          {/* Shows whether the extraction is running in Service Worker
-              relay mode (safe to tab away) or foreground-only mode
-              (must keep app open). Computed by swExtractDiagnostic()
-              at the start of handleExtract and threaded through every
-              setScanProgress call. On iOS this is always foreground. */}
+          {/* Extraction mode status badge. Long AI requests are kept in-page
+              because browser background execution is not reliable enough to
+              promise safe tab switching. */}
           {scanProgress.bgMode && (
             <div
               title={scanProgress.bgModeReason || ''}
@@ -35496,8 +35580,8 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
               <div style={{fontSize:10,fontWeight:600,lineHeight:1.35,
                 color: scanProgress.bgMode === 'active' ? 'var(--teal)' : 'var(--gold)'}}>
                 {scanProgress.bgMode === 'active'
-                  ? 'Background mode ON — safe to tab away, extraction will continue'
-                  : 'Foreground only — keep PolicyLens open'}
+                  ? 'Extraction running'
+                  : 'Keep this tab open while scanning'}
                 {scanProgress.bgMode !== 'active' && scanProgress.bgModeReason && (
                   <div style={{fontSize:8,color:'var(--text3)',fontWeight:400,marginTop:3}}>
                     {scanProgress.bgModeReason}
@@ -35673,7 +35757,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
             <div style={{display:'flex',gap:6}}>
               {/* Take More — always enabled so progressive mode
                   lets the FC keep shooting while extraction runs */}
-              <button className="btn-secondary btn-sm" onClick={async()=>{const files=await openCameraModal();if(files&&files.length){stagePhotos(files);}}}>+ Take More</button>
+              <button className="btn-secondary btn-sm" onClick={startSnapMode}>+ Take More</button>
               {/* Extract button — label depends on session state.
                   Fresh: "Extract All" (manual one-shot)
                   Progressive active: "Done taking photos" (flushes
@@ -35724,9 +35808,17 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
               const badgeColor = badge.color;
               const badgeIcon = badge.icon;
               const frameOpacity = status === 'done' ? 0.55 : 1;
+              const fileKind = stagedFileKind(s.file);
               return (
                 <div key={i} style={{position:'relative',flexShrink:0,opacity:frameOpacity,transition:'opacity .3s'}}>
-                  <img src={s.preview} style={{width:72,height:72,objectFit:'cover',borderRadius:8,border:'2px solid '+badgeColor}} />
+                  {s.preview ? (
+                    <img src={s.preview} style={{width:72,height:72,objectFit:'cover',borderRadius:8,border:'2px solid '+badgeColor}} />
+                  ) : (
+                    <div title={s.file?.name || fileKind.label} style={{width:72,height:72,borderRadius:8,border:'2px solid '+badgeColor,background:'var(--bg3)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:3,padding:5}}>
+                      <div style={{fontSize:15,fontWeight:800,color:fileKind.tone,lineHeight:1}}>{fileKind.label}</div>
+                      <div style={{fontSize:8,color:'var(--text3)',maxWidth:60,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',textAlign:'center'}}>{stagedFileShortName(s.file)}</div>
+                    </div>
+                  )}
                   <button onClick={()=>removeStaged(i)} style={{position:'absolute',top:-4,right:-4,width:18,height:18,borderRadius:'50%',background:'var(--red)',color:'#fff',border:'none',fontSize:10,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>×</button>
                   <div
                     title={s._jobError || displayStatus}
@@ -35811,7 +35903,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
           </div>
           <div style={{display:'flex',gap:8,justifyContent:'center',flexWrap:'wrap',marginTop:14}}>
             <button className="btn-primary btn-sm" disabled={scanning} onClick={()=>uploadRef.current?.click()}>📄 Upload</button>
-            <button className="btn-secondary btn-sm" disabled={scanning} onClick={async()=>{const files=await openCameraModal();if(files&&files.length){stagePhotos(files);}}}>📷 Camera</button>
+            <button className="btn-secondary btn-sm" disabled={scanning} onClick={startSnapMode}>📷 Camera</button>
             <button className="btn-secondary btn-sm" disabled={scanning} onClick={()=>{setEditing(null);setScanResult(null);setShowForm(true)}}>+ Add manually</button>
           </div>
         </div>
@@ -36162,7 +36254,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
             progressiveSessionRef.current = false;
             if (progressiveTimerRef.current) { clearTimeout(progressiveTimerRef.current); progressiveTimerRef.current = null; }
             setStaged(prev => {
-              prev.forEach(s => { if (s.preview) URL.revokeObjectURL(s.preview); });
+              prev.forEach(revokeStagedPreview);
               return [];
             });
           }
@@ -36187,7 +36279,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
             progressiveSessionRef.current = false;
             if (progressiveTimerRef.current) { clearTimeout(progressiveTimerRef.current); progressiveTimerRef.current = null; }
             setStaged(prev => {
-              prev.forEach(s => { if (s.preview) URL.revokeObjectURL(s.preview); });
+              prev.forEach(revokeStagedPreview);
               return [];
             });
           }
@@ -36208,7 +36300,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
             progressiveSessionRef.current = false;
             if (progressiveTimerRef.current) { clearTimeout(progressiveTimerRef.current); progressiveTimerRef.current = null; }
             setStaged(prev => {
-              prev.forEach(s => { if (s.preview) URL.revokeObjectURL(s.preview); });
+              prev.forEach(revokeStagedPreview);
               return [];
             });
           }
@@ -36227,7 +36319,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
         progressiveSessionRef.current = false;
         if (progressiveTimerRef.current) { clearTimeout(progressiveTimerRef.current); progressiveTimerRef.current = null; }
         setStaged(prev => {
-          prev.forEach(s => { if (s.preview) URL.revokeObjectURL(s.preview); });
+          prev.forEach(revokeStagedPreview);
           return [];
         });
         setBulkExtracted(null);
@@ -36381,7 +36473,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
         progressiveSessionRef.current = false;
         if (progressiveTimerRef.current) { clearTimeout(progressiveTimerRef.current); progressiveTimerRef.current = null; }
         setStaged(prev => {
-          prev.forEach(s => { if (s.preview) URL.revokeObjectURL(s.preview); });
+          prev.forEach(revokeStagedPreview);
           return [];
         });
         setBulkExtracted(null);
