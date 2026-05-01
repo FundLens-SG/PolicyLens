@@ -36,7 +36,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // long multi-batch scans can continue when the browser backgrounds
 // the page. The worker is registered only on HTTPS/localhost.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.15';
+const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.16';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -664,9 +664,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.15';
+const APP_VERSION = 'v2.3.0-rc2e.16';
 const APP_VERSION_DATE = '2026-05-01';
-const APP_VERSION_NAME = 'Drive duplicate sync bridge guard';
+const APP_VERSION_NAME = 'Drive sync bridge hardening';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 
 const APP_TAB_IDS = new Set(['profile','dashboard','policies','clients','repository','report','settings']);
@@ -679,6 +679,21 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.3.0-rc2e.16',
+    date: '2026-05-01',
+    name: 'Drive sync bridge hardening',
+    sections: [
+      {
+        heading: 'Drive sync',
+        items: [
+          'Added a Drive clients manifest that records client file pointers, revisions, and delete tombstones so discovery does not rely only on slow folder walking.',
+          'New policy saves now use deterministic fingerprint IDs where enough insurer, policy number, person, product, premium, or source evidence exists, preventing repeat scans from creating fresh rows.',
+          'Drive sync now runs through a per-client phase coordinator for checking, queued, uploading, pulling, conflict, failed, and idle states, giving the UI and guards one shared sync truth.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.3.0-rc2e.15',
     date: '2026-05-01',
@@ -3550,6 +3565,39 @@ function buildPolicyIdentityFingerprint(policy = {}) {
   return { id: anchorId || sourceHash, label, confidence, anchors, sourceEvidence };
 }
 
+function isTransientPolicyId(id) {
+  const s = String(id || '').trim();
+  return !s || /^p[a-z0-9]{9,18}$/i.test(s);
+}
+
+function deterministicPolicyId(policy = {}, clientId = '') {
+  const fp = policy._policyFingerprint || buildPolicyIdentityFingerprint(policy);
+  const a = fp?.anchors || {};
+  const person = a.owner || a.lifeAssured || normalizePersonNameKey(policy.policyOwner || policy.lifeInsured || policy.documentOwner);
+  const insurer = a.insurer || normalizeCompactKey(policy.insurer);
+  const policyNumber = a.policyNumber || normalizePolicyKey(policy.policyNumber);
+  const product = a.product || normalizeCompactKey(policy.productName || policy.policyName || policy.subType);
+  const premium = a.premium || Math.round(moneyNumber(policy.premiumAmount ?? policy.annualPremium) || 0);
+  const sourceHash = a.sourceHash || fp?.id || '';
+  let parts = [];
+  if (policyNumber && insurer) {
+    parts = ['number', clientId || '', insurer, policyNumber, person || '', premium || ''];
+  } else if (insurer && product && person && premium) {
+    parts = ['anchors', clientId || '', insurer, product, person, premium];
+  } else if (insurer && product && person && sourceHash) {
+    parts = ['source', clientId || '', insurer, product, person, sourceHash];
+  }
+  const key = parts.map(v => String(v || '').trim()).filter(Boolean).join('|');
+  if (!key || key.length < 16) return '';
+  return 'plp_' + compactLocalHash(key);
+}
+
+function assignDeterministicPolicyId(policy = {}, clientId = '') {
+  if (!policy || !isTransientPolicyId(policy.id)) return policy;
+  const stableId = deterministicPolicyId(policy, clientId || policy.clientId || '');
+  return stableId ? { ...policy, id: stableId } : policy;
+}
+
 function classifyPolicyDocumentTriage(policy = {}, existingPolicies = []) {
   const explicit = normalizeDocumentTriageType(policy.documentType);
   const hay = normalizeTextKey([
@@ -3659,7 +3707,8 @@ function normalizePolicyForStorage(policy, meta = {}) {
     pageGrouping: true,
     insuranceExtraction: true
   };
-  return ensurePolicyFieldEvidence(next, meta);
+  next = ensurePolicyFieldEvidence(next, meta);
+  return assignDeterministicPolicyId(next, next.clientId || meta.clientId || '');
 }
 
 function isWeakPolicyOwnerValue(name) {
@@ -12097,7 +12146,7 @@ function buildDriveClientPayload(clientId, clientProfile, policies, metadata) {
     schemaVersion: DRIVE_SCHEMA_VERSION,
     clientId,
     clientProfile: stripVersions(clientProfile) || {},
-    policies: (policies || []).map(stripVersions),
+    policies: (policies || []).map(pol => stripVersions(assignDeterministicPolicyId(pol, clientId))),
     // v2.3.0-rc2c.5p: tier + lastReviewedAt now sourced from caller (was hardcoded null)
     tier: metadata?.tier ?? null,
     lastReviewedAt: metadata?.lastReviewedAt ?? null,
@@ -12170,10 +12219,42 @@ const LOCAL_DRIVE_WRITE_HOLD_MS = 15000;
 const CLIENT_DELETE_SYNC_STATUS_KEY = 'policylens_recent_client_delete_sync_status';
 const CLIENT_DELETE_SYNC_STATUS_TTL_MS = 10 * 60 * 1000;
 const _localDriveWriteHolds = new Map();
+const DRIVE_CLIENTS_MANIFEST_NAME = 'clients-manifest.json';
+const DRIVE_CLIENTS_MANIFEST_VERSION = 1;
+const DRIVE_CLIENTS_MANIFEST_CACHE_KEY = 'driveClientsManifest';
+const CLIENT_SYNC_PHASES = new Set(['idle','checking','queued','uploading','pulling','conflict','failed']);
+const _clientSyncPhases = new Map();
+let _driveManifestSyncTimer = null;
+let _driveManifestSyncInFlight = false;
 // v2.3.0-rc2c.4f: Per-client throttle for refreshClientFromDrive (5s)
 const _lastRefreshTimes = new Map();
 function _notifySyncStatus() {
   window.dispatchEvent(new Event('policylens-sync-status-change'));
+}
+
+function setClientSyncPhase(clientId, phase, detail = {}) {
+  if (!clientId) return null;
+  const safePhase = CLIENT_SYNC_PHASES.has(phase) ? phase : 'idle';
+  const entry = {
+    phase: safePhase,
+    clientId,
+    reason: detail.reason || '',
+    message: detail.message || '',
+    at: new Date().toISOString(),
+    deviceName: getPolicyLensDeviceName(),
+  };
+  if (safePhase === 'idle') _clientSyncPhases.delete(clientId);
+  else _clientSyncPhases.set(clientId, entry);
+  _notifySyncStatus();
+  return entry;
+}
+
+function getClientSyncPhase(clientId, driveState = null) {
+  const live = clientId ? _clientSyncPhases.get(clientId) : null;
+  if (live) return live;
+  if (driveState?.pendingError) return { phase:'failed', clientId, message:driveState.pendingError, reason:driveState.pendingReason || 'drive-sync', at:driveState.pendingSince || driveState.lastSyncedAt || new Date().toISOString() };
+  if (driveState?.pendingWrite) return { phase:'queued', clientId, reason:driveState.pendingReason || 'drive-sync', at:driveState.pendingSince || new Date().toISOString() };
+  return { phase:'idle', clientId, at:driveState?.lastSyncedAt || null };
 }
 
 function setRecentClientDeleteSyncStatus(ds = {}, status = 'synced') {
@@ -12384,6 +12465,7 @@ async function isClientTrashTombstoned(ds) {
 async function queueClientTrashRequest(ds, reason) {
   if (!ds || (!ds.folderId && !isValidDriveFileId(ds.fileId))) return false;
   await recordClientTrashTombstone(ds, reason || 'client-trash').catch(() => {});
+  scheduleDriveClientsManifestSync('client-trash-queued');
   const queue = await getPendingClientTrashQueue();
   const entry = {
     clientId: ds.clientId || null,
@@ -12434,8 +12516,173 @@ async function flushPendingClientTrashQueue() {
     }
   }
   await PolicyDB.saveSetting(PENDING_CLIENT_TRASH_KEY, remaining).catch(() => {});
-  if (trashed > 0) _notifySyncStatus();
+  if (trashed > 0) {
+    scheduleDriveClientsManifestSync('client-trash-flushed', 500);
+    _notifySyncStatus();
+  }
   return trashed;
+}
+
+function normalizeManifestClient(ds = {}) {
+  if (!ds?.clientId) return null;
+  return {
+    clientId: ds.clientId,
+    clientName: ds.clientName || '',
+    tier: ds.tier || UNASSIGNED_TIER,
+    familyGroup: ds.familyGroup || '',
+    fileId: isValidDriveFileId(ds.fileId) ? ds.fileId : null,
+    folderId: ds.folderId || null,
+    tierFolderId: ds.tierFolderId || null,
+    headRevisionId: ds.headRevisionId || null,
+    lastSyncedAt: ds.lastSyncedAt || null,
+    lastReviewedAt: ds.lastReviewedAt || null,
+    updatedAt: ds.lastSyncedAt || new Date().toISOString()
+  };
+}
+
+function parseDriveClientsManifest(raw = {}) {
+  const data = raw && typeof raw === 'object' ? raw : {};
+  const clients = Array.isArray(data.clients) ? data.clients.map(normalizeManifestClient).filter(Boolean) : [];
+  const tombstones = Array.isArray(data.tombstones) ? data.tombstones.map(t => ({
+    clientId: t.clientId || null,
+    clientName: t.clientName || '',
+    folderId: t.folderId || null,
+    fileId: isValidDriveFileId(t.fileId) ? t.fileId : null,
+    reason: t.reason || 'client-trash',
+    trashedAt: t.trashedAt || t.queuedAt || data.updatedAt || new Date().toISOString()
+  })).filter(t => t.clientId || t.folderId || t.fileId) : [];
+  return {
+    schemaVersion: data.schemaVersion || DRIVE_CLIENTS_MANIFEST_VERSION,
+    app: 'PolicyLens',
+    updatedAt: data.updatedAt || null,
+    updatedByDevice: data.updatedByDevice || '',
+    updatedByUser: data.updatedByUser || '',
+    clients,
+    tombstones
+  };
+}
+
+function mergeDriveClientsManifest(a, b) {
+  const left = parseDriveClientsManifest(a || {});
+  const right = parseDriveClientsManifest(b || {});
+  const clientMap = new Map();
+  const newer = (x, y) => syncTimeMs(x?.updatedAt || x?.lastSyncedAt || x?.trashedAt || x?.queuedAt) >= syncTimeMs(y?.updatedAt || y?.lastSyncedAt || y?.trashedAt || y?.queuedAt) ? x : y;
+  for (const c of [...left.clients, ...right.clients]) {
+    if (!c?.clientId) continue;
+    clientMap.set(c.clientId, clientMap.has(c.clientId) ? newer(c, clientMap.get(c.clientId)) : c);
+  }
+  const tombstoneMap = new Map();
+  for (const t of [...left.tombstones, ...right.tombstones]) {
+    const key = t.clientId || t.folderId || t.fileId;
+    if (!key) continue;
+    const existing = tombstoneMap.get(key);
+    tombstoneMap.set(key, existing ? newer(t, existing) : t);
+  }
+  const tombstones = Array.from(tombstoneMap.values()).slice(-300);
+  const tombstonedIds = new Set(tombstones.map(t => t.clientId).filter(Boolean));
+  const clients = Array.from(clientMap.values()).filter(c => !tombstonedIds.has(c.clientId));
+  return {
+    schemaVersion: DRIVE_CLIENTS_MANIFEST_VERSION,
+    app: 'PolicyLens',
+    updatedAt: new Date().toISOString(),
+    updatedByDevice: getPolicyLensDeviceName(),
+    updatedByUser: getPolicyLensUserEmail() || null,
+    clients,
+    tombstones
+  };
+}
+
+async function buildLocalDriveClientsManifest(reason) {
+  const [states, tombstones] = await Promise.all([
+    PolicyDB.getAllDriveStates().catch(() => []),
+    getClientTrashTombstones().catch(() => [])
+  ]);
+  return mergeDriveClientsManifest(null, {
+    updatedAt: new Date().toISOString(),
+    updatedByDevice: getPolicyLensDeviceName(),
+    updatedByUser: getPolicyLensUserEmail() || null,
+    clients: (states || []).map(normalizeManifestClient).filter(c => c && isValidDriveFileId(c.fileId)),
+    tombstones: tombstones || [],
+    reason: reason || 'manifest-sync'
+  });
+}
+
+async function findDriveClientsManifestFile(rootId) {
+  rootId = rootId || await driveClient.ensureFolder();
+  const q = 'name=' + driveQueryLiteral(DRIVE_CLIENTS_MANIFEST_NAME) + ' and ' + driveQueryLiteral(rootId) + " in parents and mimeType='application/json' and trashed=false";
+  const files = await driveListFiles(q, 'id,name,headRevisionId,modifiedTime,appProperties', { pageSize: 10 });
+  return files[0] || null;
+}
+
+async function readDriveClientsManifest() {
+  if (isDriveLocalOnly() || getDriveStatus() !== 'connected') return { manifest: parseDriveClientsManifest({}), fileId:null, headRevisionId:null };
+  const rootId = await driveClient.ensureFolder();
+  const file = await findDriveClientsManifestFile(rootId);
+  if (!file) return { manifest: parseDriveClientsManifest({}), fileId:null, headRevisionId:null };
+  const { meta, content } = await driveClient.getFile(file.id);
+  let parsed = {};
+  try { parsed = JSON.parse(content || '{}'); } catch(_) { parsed = {}; }
+  const manifest = parseDriveClientsManifest(parsed);
+  await PolicyDB.saveSetting(DRIVE_CLIENTS_MANIFEST_CACHE_KEY, { ...manifest, fileId:file.id, headRevisionId:meta?.headRevisionId || file.headRevisionId || null }).catch(() => {});
+  return { manifest, fileId:file.id, headRevisionId:meta?.headRevisionId || file.headRevisionId || null };
+}
+
+async function writeDriveClientsManifestFile(fileId, manifest) {
+  const rootId = await driveClient.ensureFolder();
+  const metadata = {
+    name: DRIVE_CLIENTS_MANIFEST_NAME,
+    parents: fileId ? undefined : [rootId],
+    mimeType: 'application/json',
+    appProperties: { kind:'clients-manifest', schemaVersion:String(DRIVE_CLIENTS_MANIFEST_VERSION) }
+  };
+  if (fileId) delete metadata.parents;
+  const body = JSON.stringify(manifest, null, 2);
+  const boundary = '----PolicyLensManifestBoundary' + Date.now();
+  const multipart =
+    '--' + boundary + '\r\n' +
+    'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+    JSON.stringify(metadata) + '\r\n' +
+    '--' + boundary + '\r\n' +
+    'Content-Type: application/json\r\n\r\n' +
+    body + '\r\n' +
+    '--' + boundary + '--';
+  const url = fileId
+    ? 'https://www.googleapis.com/upload/drive/v3/files/' + encodeURIComponent(fileId) + '?uploadType=multipart&fields=id,headRevisionId'
+    : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,headRevisionId';
+  const resp = await _driveFetch(url, { method: fileId ? 'PATCH' : 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + boundary }, body: multipart });
+  const result = await resp.json().catch(() => ({}));
+  if (!resp.ok || !isValidDriveFileId(result.id)) throw new Error('Drive manifest write failed: ' + (result?.error?.message || resp.status || 'missing file id'));
+  await PolicyDB.saveSetting(DRIVE_CLIENTS_MANIFEST_CACHE_KEY, { ...manifest, fileId:result.id, headRevisionId:result.headRevisionId || null }).catch(() => {});
+  return result;
+}
+
+async function syncDriveClientsManifest(reason) {
+  if (isDriveLocalOnly() || getDriveStatus() !== 'connected') return false;
+  if (_driveManifestSyncInFlight) return false;
+  _driveManifestSyncInFlight = true;
+  setClientSyncPhase('__manifest__', 'uploading', { reason: reason || 'clients-manifest' });
+  try {
+    const localManifest = await buildLocalDriveClientsManifest(reason);
+    const remote = await readDriveClientsManifest().catch(() => ({ manifest: parseDriveClientsManifest({}), fileId:null }));
+    const merged = mergeDriveClientsManifest(remote.manifest, localManifest);
+    await writeDriveClientsManifestFile(remote.fileId, merged);
+    return true;
+  } catch (err) {
+    console.warn('[DriveManifest] Sync failed:', err?.message || err);
+    return false;
+  } finally {
+    setClientSyncPhase('__manifest__', 'idle');
+    _driveManifestSyncInFlight = false;
+  }
+}
+
+function scheduleDriveClientsManifestSync(reason, delay = 2200) {
+  if (isDriveLocalOnly() || getDriveStatus() !== 'connected') return;
+  clearTimeout(_driveManifestSyncTimer);
+  _driveManifestSyncTimer = setTimeout(() => {
+    _driveManifestSyncTimer = null;
+    syncDriveClientsManifest(reason || 'manifest-sync').catch(e => console.warn('[DriveManifest] Scheduled sync failed:', e?.message || e));
+  }, delay);
 }
 
 function holdLocalDriveWrite(clientId, reason, ms) {
@@ -12586,6 +12833,7 @@ async function markDriveSyncPending(clientId, reason, extra) {
   const ds = await PolicyDB.getDriveState(clientId).catch(() => null);
   if (!ds) {
     await PolicyDB.deleteSyncOutbox(syncOutboxId(clientId)).catch(() => {});
+    setClientSyncPhase(clientId, 'idle');
     _notifySyncStatus();
     return null;
   }
@@ -12624,6 +12872,7 @@ async function markDriveSyncPending(clientId, reason, extra) {
       pendingError: null
     }).catch(() => {});
   }
+  setClientSyncPhase(clientId, 'queued', { reason: entry.reason });
   _notifySyncStatus();
   return entry;
 }
@@ -12646,6 +12895,7 @@ async function clearDriveSyncPending(clientId, patch) {
       lastSyncUserEmail: getPolicyLensUserEmail()
     }).catch(() => {});
   }
+  setClientSyncPhase(clientId, 'idle');
   _notifySyncStatus();
 }
 
@@ -12685,6 +12935,7 @@ async function failDriveSyncPending(clientId, err, reason) {
       pendingError: message
     }).catch(() => {});
   }
+  setClientSyncPhase(clientId, 'failed', { reason: reason || existing?.reason || 'edit', message });
   _notifySyncStatus();
 }
 
@@ -12709,6 +12960,7 @@ async function ensureDriveFileForClient(clientId, opts) {
   const existing = await PolicyDB.getDriveState(clientId).catch(() => null);
   if (existing && isValidDriveFileId(existing.fileId)) return true;
   const profileRec = await dbGet('settings', 'clientProfile_' + clientId).catch(() => null);
+  setClientSyncPhase(clientId, 'uploading', { reason: opts?.reason || 'create-drive-file' });
   const profile = opts?.profile || profileRec?.value || { name: opts?.clientName || existing?.clientName || 'Untitled' };
   const clientName = String(profile?.name || opts?.clientName || existing?.clientName || 'Untitled').trim() || 'Untitled';
   const tier = opts?.tier || existing?.tier || UNASSIGNED_TIER;
@@ -12744,6 +12996,8 @@ async function ensureDriveFileForClient(clientId, opts) {
   };
   await PolicyDB.saveDriveState(nextState);
   await PolicyDB.deleteSyncOutbox(syncOutboxId(clientId)).catch(() => {});
+  setClientSyncPhase(clientId, 'idle');
+  scheduleDriveClientsManifestSync('client-file-created', 500);
   recordActivity(clientId, {
     type: 'sync-saved',
     label: 'Created Drive client file',
@@ -12891,7 +13145,9 @@ async function writeDrivePayloadToLocal(clientId, parsed, headRevisionId, existi
     ...(Array.isArray(localDeletedIds) ? localDeletedIds : [])
   ])).slice(-500);
   const deletedSet = new Set(deletedPolicyIds);
-  let drivePolicies = (parsed.policies || []).filter(pol => !pol?.id || !deletedSet.has(pol.id)).map(pol => ({ ...pol, clientId }));
+  let drivePolicies = (parsed.policies || [])
+    .filter(pol => !pol?.id || !deletedSet.has(pol.id))
+    .map(pol => assignDeterministicPolicyId({ ...pol, clientId }, clientId));
   const compacted = compactDuplicatePolicyList(drivePolicies);
   const duplicateRemovedIds = compacted.removed.map(p => p?.id).filter(Boolean);
   if (duplicateRemovedIds.length) {
@@ -12933,6 +13189,8 @@ async function writeDrivePayloadToLocal(clientId, parsed, headRevisionId, existi
   } : null;
   if (updatedDs) await PolicyDB.saveDriveState(updatedDs);
   await PolicyDB.deleteSyncOutbox(syncOutboxId(clientId)).catch(() => {});
+  setClientSyncPhase(clientId, 'idle');
+  scheduleDriveClientsManifestSync('drive-pull-local-write');
   if (duplicateRemovedIds.length && getDriveStatus() === 'connected' && !isDriveLocalOnly()) {
     await markDriveSyncPending(clientId, 'drive-duplicate-cleanup').catch(() => null);
     _driveSyncDebounced(() => flushDriveSyncOutbox({ reason: 'drive-duplicate-cleanup' }), 1800);
@@ -12972,6 +13230,8 @@ async function removeLocalClientData(clientId, opts = {}) {
     }
   }
   await PolicyDB.deleteSyncOutbox(syncOutboxId(clientId)).catch(() => {});
+  setClientSyncPhase(clientId, 'idle');
+  scheduleDriveClientsManifestSync('client-local-remove');
   const scanSessions = await PolicyDB.getAllScanSessions().catch(() => []);
   for (const session of (scanSessions || []).filter(s => s.clientId === clientId)) {
     if (session.id) await dbDel('scan_sessions', session.id).catch(() => {});
@@ -13008,6 +13268,7 @@ async function _performDriveSync(ds, clientProfile, policies, opts) {
       lastSyncUserEmail: getPolicyLensUserEmail()
     });
     await clearDriveSyncPending(ds.clientId, { headRevisionId: newHead, lastSyncedAt: syncedAt });
+    scheduleDriveClientsManifestSync('client-file-synced', 500);
     recordActivity(ds.clientId, {
       type: 'sync-saved',
       label: 'Synced to Drive',
@@ -13024,6 +13285,7 @@ async function _performDriveSync(ds, clientProfile, policies, opts) {
     if (err instanceof DriveConflictError) {
       // v2.3.0-rc2c.5r: Auto-retry with fresh headRevisionId (last-write-wins).
       console.log('[Drive] Conflict detected - merging remote-only changes before retry');
+      setClientSyncPhase(ds.clientId, 'conflict', { reason: opts?.reason || 'drive-conflict' });
       try {
         const { meta, content } = await driveClient.getFile(ds.fileId);
         const remoteData = JSON.parse(content);
@@ -13047,6 +13309,7 @@ async function _performDriveSync(ds, clientProfile, policies, opts) {
           pendingWrite: false
         });
         await clearDriveSyncPending(freshDs.clientId, { headRevisionId: newHead, lastSyncedAt: syncedAt });
+        scheduleDriveClientsManifestSync('client-conflict-merged', 500);
         recordActivity(freshDs.clientId, {
           type: 'sync-merged',
           label: 'Synced after merge',
@@ -13088,6 +13351,7 @@ async function driveSyncClientById(clientId, opts) {
   if (!ds) return false;
   if (!isValidDriveFileId(ds.fileId)) {
     _driveSyncInFlight = true;
+    setClientSyncPhase(clientId, 'uploading', { reason: opts?.reason || 'create-drive-file' });
     _notifySyncStatus();
     try {
       return await ensureDriveFileForClient(clientId, opts || {});
@@ -13100,6 +13364,7 @@ async function driveSyncClientById(clientId, opts) {
     }
   }
   _driveSyncInFlight = true;
+  setClientSyncPhase(clientId, 'uploading', { reason: opts?.reason || 'drive-write' });
   _notifySyncStatus();
   try {
     let freshProfile = {};
@@ -13302,6 +13567,7 @@ async function _performTierMove(clientId, newTier, oldTier) {
     if (newTierFolderId === oldTierFolderId) return; // already in correct folder
     await driveClient.moveFolder(ds.folderId, newTierFolderId, oldTierFolderId);
     await PolicyDB.saveDriveState({...ds, tierFolderId: newTierFolderId, tier: newTier});
+    scheduleDriveClientsManifestSync('tier-move', 800);
     console.log('[TierMove] ✓ Moved', ds.clientName || clientId, '→', newTier);
     try { toast('✓ ' + (ds.clientName || 'Client') + ' moved to ' + newTier + ' tier', 'success', 3000); } catch(_) {}
   } catch (e) {
@@ -13324,6 +13590,7 @@ async function _performFolderRename(clientId, newName) {
     // Update IDB (re-read in case concurrent write changed other fields)
     const fresh = await PolicyDB.getDriveState(clientId).catch(() => ds);
     await PolicyDB.saveDriveState({...fresh, clientName: newName});
+    scheduleDriveClientsManifestSync('folder-rename', 800);
     // Refresh _clientFolderCache: remove stale old-name entry, set new-name entry
     if (ds.tierFolderId) {
       const oldKey = ds.tierFolderId + '/' + ds.clientName;
@@ -13582,6 +13849,7 @@ async function refreshClientFromDrive(clientId, opts) {
   const now = Date.now();
   if (!force && now - (_lastRefreshTimes.get(clientId) || 0) < 5000) return false;
   _lastRefreshTimes.set(clientId, now);
+  setClientSyncPhase(clientId, 'checking', { reason: opts?.reason || 'drive-refresh' });
   try {
     const meta = await driveClient.getFileMetadata(ds.fileId);
     // v2.3.0-rc2c.5p: Detect client trashed on another device — remove local data
@@ -13591,13 +13859,16 @@ async function refreshClientFromDrive(clientId, opts) {
       try { await removeLocalClientData(clientId); } catch (e) { console.warn('[DriveRefresh] Cleanup failed:', e.message); }
       try { window.dispatchEvent(new CustomEvent('policylens-client-trashed', { detail: { clientId, clientName: ds.clientName } })); } catch(_) {}
       try { toast('Client ' + (ds.clientName || '') + ' was deleted on another device', 'info', 4000); } catch(_) {}
+      setClientSyncPhase(clientId, 'idle');
       return { pulled: false, trashed: true };
     }
     if (meta.headRevisionId === ds.headRevisionId) {
       console.log('[DriveRefresh] Up to date:', ds.clientName || clientId);
+      setClientSyncPhase(clientId, 'idle');
       return false;
     }
     console.log('[DriveRefresh] Stale data for', ds.clientName || clientId, '— pulling');
+    setClientSyncPhase(clientId, 'pulling', { reason: opts?.reason || 'drive-refresh' });
     const { meta: fullMeta, content } = await driveClient.getFile(ds.fileId);
     const fileData = JSON.parse(content);
     const parsed = parseDriveClientFile(fileData);
@@ -13610,9 +13881,11 @@ async function refreshClientFromDrive(clientId, opts) {
       console.warn('[DriveRefresh] Client file missing for', ds.clientName || clientId, '- removing local data');
       await removeLocalClientData(clientId).catch(e => console.warn('[DriveRefresh] Missing-file cleanup failed:', e?.message || e));
       try { window.dispatchEvent(new CustomEvent('policylens-client-trashed', { detail: { clientId, clientName: ds.clientName } })); } catch(_) {}
+      setClientSyncPhase(clientId, 'idle');
       return { pulled: false, trashed: true };
     }
     console.warn('[DriveRefresh] Failed for', ds.clientName || clientId, ':', err.message);
+    setClientSyncPhase(clientId, 'failed', { reason: opts?.reason || 'drive-refresh', message: err?.message || String(err) });
     return false;
   }
 }
@@ -13626,6 +13899,7 @@ async function discoverDriveClients() {
   const found = [];
   const changedExisting = [];
   const driveClientIds = new Set();
+  const seenFoundClientIds = new Set();
   let skippedExisting = 0, reconciledExisting = 0, errors = 0;
   let hasFolderStructure = false;
   let scanComplete = true;
@@ -13639,7 +13913,93 @@ async function discoverDriveClients() {
     const existingStates = await PolicyDB.getAllDriveStates().catch(() => []);
     const existingClientIds = new Set(existingStates.map(s => s.clientId));
     const existingFileIds = new Set(existingStates.map(s => s.fileId).filter(isValidDriveFileId));
-    const trashTombstones = await getClientTrashTombstones().catch(() => []);
+    let trashTombstones = await getClientTrashTombstones().catch(() => []);
+    try {
+      const manifestResult = await readDriveClientsManifest();
+      const manifest = manifestResult?.manifest || parseDriveClientsManifest({});
+      if ((manifest.tombstones || []).length) {
+        for (const t of manifest.tombstones) await recordClientTrashTombstone(t, 'manifest-trash').catch(() => {});
+        trashTombstones = [...trashTombstones, ...(manifest.tombstones || [])];
+      }
+      if ((manifest.clients || []).length) hasFolderStructure = true;
+      for (const c of (manifest.clients || [])) {
+        if (!c?.clientId || !isValidDriveFileId(c.fileId)) continue;
+        if (trashTombstones.some(t => clientTrashTombstoneMatches(t, c))) {
+          console.log('[Discovery] Manifest skipped deleted client:', c.clientName || c.clientId);
+          continue;
+        }
+        let manifestMeta = null;
+        try {
+          manifestMeta = await driveClient.getFileMetadata(c.fileId);
+        } catch (metaErr) {
+          if (isDriveNotFoundError(metaErr)) {
+            await recordClientTrashTombstone(c, 'manifest-missing-file').catch(() => {});
+            console.log('[Discovery] Manifest skipped missing client file:', c.clientName || c.clientId);
+            continue;
+          }
+          console.warn('[Discovery] Manifest metadata check failed for', c.clientName || c.clientId, metaErr?.message || metaErr);
+          errors++;
+          scanComplete = false;
+          continue;
+        }
+        if (manifestMeta?.trashed === true) {
+          await recordClientTrashTombstone(c, 'manifest-trashed-file').catch(() => {});
+          console.log('[Discovery] Manifest skipped trashed client file:', c.clientName || c.clientId);
+          continue;
+        }
+        const manifestHeadRevisionId = manifestMeta?.headRevisionId || c.headRevisionId || null;
+        const manifestModifiedTime = manifestMeta?.modifiedTime || c.lastSyncedAt || null;
+        driveClientIds.add(c.clientId);
+        if (existingFileIds.has(c.fileId) && !existingClientIds.has(c.clientId)) {
+          console.warn('[Discovery] Manifest file/client mismatch for', c.clientName || c.fileId, '- skipping');
+          errors++;
+          scanComplete = false;
+          continue;
+        }
+        if (existingClientIds.has(c.clientId) || existingFileIds.has(c.fileId)) {
+          const localState = existingStates.find(s => s.clientId === c.clientId) || existingStates.find(s => s.fileId === c.fileId);
+          if (localState) {
+            const fileChanged = manifestHeadRevisionId && localState.headRevisionId !== manifestHeadRevisionId;
+            if (fileChanged) changedExisting.push({
+              clientId: c.clientId, fileId: c.fileId,
+              folderId: c.folderId || localState.folderId, tierFolderId: c.tierFolderId || localState.tierFolderId,
+              tier: c.tier || localState.tier || UNASSIGNED_TIER,
+              clientName: c.clientName || localState.clientName || '(unnamed)',
+              localHeadRevisionId: localState.headRevisionId || null,
+              headRevisionId: manifestHeadRevisionId,
+              modifiedTime: manifestModifiedTime,
+            });
+            const updated = { ...localState };
+            let needsSave = false;
+            for (const key of ['clientName','tier','folderId','tierFolderId','fileId','headRevisionId','familyGroup','lastReviewedAt']) {
+              if (c[key] != null && c[key] !== '' && updated[key] !== c[key]) {
+                updated[key] = c[key];
+                needsSave = true;
+              }
+            }
+            if (needsSave) {
+              await PolicyDB.saveDriveState(updated).catch(() => {});
+              if (c.clientName) await dbPut('settings', { key:'clientName_' + c.clientId, value:c.clientName }).catch(() => {});
+              reconciledExisting++;
+            }
+          }
+          skippedExisting++;
+          continue;
+        }
+        if (seenFoundClientIds.has(c.clientId)) continue;
+        found.push({
+          clientId: c.clientId, fileId: c.fileId,
+          folderId: c.folderId || null, tierFolderId: c.tierFolderId || null,
+          tier: c.tier || UNASSIGNED_TIER,
+          clientName: c.clientName || '(unnamed)',
+          headRevisionId: manifestHeadRevisionId,
+          modifiedTime: manifestModifiedTime,
+        });
+        seenFoundClientIds.add(c.clientId);
+      }
+    } catch (manifestErr) {
+      console.warn('[Discovery] Manifest read skipped:', manifestErr?.message || manifestErr);
+    }
     for (const tier of tierFolders) {
       try {
         const clientQ = driveQueryLiteral(tier.id) + " in parents and mimeType='application/vnd.google-apps.folder' and trashed=false";
@@ -13659,6 +14019,10 @@ async function discoverDriveClients() {
               continue;
             }
             driveClientIds.add(clientId); // v2.3.0-rc2c.4c: track ALL Drive clientIds (before dedup) for orphan purge
+            if (seenFoundClientIds.has(clientId) && !existingClientIds.has(clientId)) {
+              skippedExisting++;
+              continue;
+            }
             if (existingFileIds.has(autosave.id) && !existingClientIds.has(clientId)) {
               console.warn('[Discovery] File/client mismatch for', cf.name || autosave.name || autosave.id, '- skipping reconciliation');
               errors++;
@@ -13713,6 +14077,7 @@ async function discoverDriveClients() {
               headRevisionId: autosave.headRevisionId || null,
               modifiedTime: autosave.modifiedTime || null,
             });
+            seenFoundClientIds.add(clientId);
           } catch (e) { console.warn('[Discovery] Client folder error:', cf.name, e.message); errors++; scanComplete = false; }
         }
       } catch (e) { console.warn('[Discovery] Tier folder error:', tier.name, e.message); errors++; scanComplete = false; }
@@ -14212,6 +14577,7 @@ const driveClient = {
       }
       return true;
     } catch (_) {
+      setClientSyncPhase(clientId, 'idle');
       return false;
     }
   },
@@ -15402,6 +15768,7 @@ function App() {
       } catch(e) { errors++; console.warn('[DirectorySync] Refresh failed for', ch.clientName || ch.clientId, e.message); }
     }
     if (added || refreshed || reconciled || purged || cleaned) {
+      scheduleDriveClientsManifestSync('directory-sync', 900);
       try { window.dispatchEvent(new Event('policylens-clients-changed')); } catch(_) {}
       if (!opts.silent) {
         const parts = [];
@@ -17123,6 +17490,7 @@ function App() {
       return;
     }
     p.clientId = targetClientId;
+    p = assignDeterministicPolicyId(p, targetClientId);
     const latestPolicies = await dbGetAll('policies').catch(() => policies || []);
     const clientPols = (latestPolicies || []).filter(x => (x.clientId || targetClientId) === targetClientId);
     const inKey = _dedupKey(p);
@@ -17240,6 +17608,7 @@ function App() {
     const targetState = await PolicyDB.getDriveState(targetClientId).catch(() => null);
     let p = normalizePolicyForStorage({...incomingP, clientId: targetClientId}, { currentClientName: targetState?.clientName || '', source: opts.reason || 'policy-route' });
     delete p._ownerRoute; delete p._ownerRoutedFrom;
+    p = assignDeterministicPolicyId(p, targetClientId);
     if (!p.id) p.id = genId();
 
     const inKey = _dedupKey(p);
@@ -17635,6 +18004,7 @@ function App() {
       || (targetId === activeClientIdRef.current ? driveState : null);
     if (!ds) return;
     await recordClientTrashTombstone(ds, 'client-destroy').catch(() => {});
+    scheduleDriveClientsManifestSync('client-destroy');
     let clientTrashed = false;
     if (!isDriveLocalOnly() && getDriveStatus() === 'connected' && ds.folderId) {
       setRecentClientDeleteSyncStatus(ds, 'syncing');
@@ -17709,6 +18079,7 @@ function App() {
             if (!isDriveNotFoundError(trashErr)) throw trashErr;
           }
           console.log('[Discovery] Trashed:', f.clientName, f.folderId || f.fileId);
+          scheduleDriveClientsManifestSync('discovery-delete', 500);
           deleted++;
         }
       } catch (e) { console.warn('[Discovery] Apply failed for', f.clientName, e.message); errs++; }
@@ -19261,6 +19632,10 @@ function SyncStatusPill({ driveState }) {
   const driveStatus = getDriveStatus();
   const driveWasEnabled = !isDriveLocalOnly() && (!!driveState || !!deleteSyncStatus || hasPriorDriveConnectionIntent());
   const checkingDrive = driveStatus === 'checking' || _driveStartupSyncInFlight;
+  const syncPhaseState = checkingDrive
+    ? { phase:'checking', reason:'startup-sync', message:'Checking Google Drive sync' }
+    : getClientSyncPhase(driveState?.clientId, driveState);
+  const syncPhase = syncPhaseState?.phase || 'idle';
   useEffect(() => {
     let live = true;
     const clientId = driveState?.clientId;
@@ -19278,32 +19653,38 @@ function SyncStatusPill({ driveState }) {
   // v2.3.0-rc2c.5o: Show minimal sync feedback on mobile (was: return null hiding all indication)
   if (isMobile) {
     if (!driveWasEnabled) return null;
-    if (driveState?.pendingError) {
+    if (syncPhase === 'failed' || driveState?.pendingError) {
       return React.createElement('span', {
-        title: driveState.pendingError,
+        title: syncPhaseState?.message || driveState?.pendingError || 'Drive sync needs retry',
         style: {fontSize:9,color:'var(--red)',whiteSpace:'nowrap',flexShrink:0,padding:'0 4px'}
       }, 'Sync error');
     }
-    if (checkingDrive) {
+    if (syncPhase === 'checking') {
       return React.createElement('span', {
         style: {fontSize:9,color:'var(--gold)',whiteSpace:'nowrap',flexShrink:0,padding:'0 4px'}
       }, 'Checking Drive');
     }
     if (driveStatus !== 'connected') return null;
-    const saving = _driveSyncInFlight || _driveSyncTimer !== null || driveState?.pendingWrite;
+    const saving = ['queued','uploading','pulling','conflict'].includes(syncPhase) || _driveSyncTimer !== null;
     if (deleteSyncStatus && !saving) {
       return React.createElement('span', {
         style: {fontSize:9,color:deleteSyncStatus.status === 'queued' ? 'var(--gold)' : 'var(--teal)',whiteSpace:'nowrap',flexShrink:0,padding:'0 4px'}
       }, deleteSyncStatus.status === 'queued' ? 'Delete queued' : 'Delete synced');
     }
     if (!saving && !_driveSyncJustSaved) return null;
+    const mobileLabel =
+      syncPhase === 'pulling' ? 'Pulling' :
+      syncPhase === 'uploading' ? 'Syncing' :
+      syncPhase === 'conflict' ? 'Resolving' :
+      syncPhase === 'queued' || _driveSyncTimer !== null ? 'Queued' :
+      'Syncing';
     return React.createElement('span', {
       style: {fontSize:9,color:saving?'var(--gold)':'var(--teal)',whiteSpace:'nowrap',flexShrink:0,padding:'0 4px'}
-    }, saving ? (_driveSyncInFlight ? 'Syncing' : 'Queued') : 'Synced');
+    }, saving ? mobileLabel : 'Synced');
   }
   if (!driveWasEnabled) return null;
-  if (driveStatus !== 'connected' && !checkingDrive && !deleteSyncStatus && !driveState?.pendingError) return null;
-  const isSaving = checkingDrive || _driveSyncInFlight || _driveSyncTimer !== null || driveState?.pendingWrite;
+  if (driveStatus !== 'connected' && syncPhase !== 'checking' && !deleteSyncStatus && syncPhase !== 'failed' && !driveState?.pendingError) return null;
+  const isSaving = ['checking','queued','uploading','pulling','conflict'].includes(syncPhase) || _driveSyncTimer !== null;
   const ageLabel = (ts) => {
     if (!ts) return '';
     const diff = Date.now() - new Date(ts).getTime();
@@ -19326,32 +19707,40 @@ function SyncStatusPill({ driveState }) {
   let bg = 'var(--bg3)';
   let border = 'var(--border)';
   let title = 'Sync activity';
-  if (driveState?.pendingError) {
+  if (syncPhase === 'failed' || driveState?.pendingError) {
     label = 'Saved locally · Drive retry needed';
     color = 'var(--red)';
     bg = 'var(--red-dim)';
     border = 'rgba(239,83,80,.25)';
-    title = driveState.pendingError;
+    title = syncPhaseState?.message || driveState?.pendingError || 'Drive sync needs retry';
   } else if (deleteSyncStatus) {
     label = deleteSyncLabel;
     color = deleteSyncStatus.status === 'queued' || deleteSyncStatus.status === 'syncing' ? 'var(--gold)' : 'var(--teal)';
     bg = deleteSyncStatus.status === 'synced' ? 'rgba(91,168,160,.10)' : 'rgba(212,169,106,.10)';
     border = deleteSyncStatus.status === 'synced' ? 'rgba(91,168,160,.24)' : 'rgba(212,169,106,.24)';
     title = (deleteSyncStatus.clientName || 'Client') + (deleteSyncStatus.status === 'queued' ? ' is queued for Drive Trash' : deleteSyncStatus.status === 'syncing' ? ' is being moved to Drive Trash' : ' was moved to Drive Trash') + ' at ' + new Date(deleteSyncStatus.at).toLocaleString();
-  } else if (checkingDrive) {
+  } else if (syncPhase === 'checking') {
     label = 'Saved locally · Checking Drive sync';
     color = 'var(--gold)';
     bg = 'rgba(212,169,106,.10)';
     border = 'rgba(212,169,106,.24)';
     title = 'PolicyLens is reconnecting to Drive. Local data is already available.';
-  } else if (_driveSyncInFlight) {
+  } else if (syncPhase === 'pulling') {
+    label = 'Saved locally - Pulling Drive updates';
+    color = 'var(--gold)';
+    title = 'Local data is available. PolicyLens is applying newer Drive data.';
+  } else if (syncPhase === 'conflict') {
+    label = 'Saved locally - Resolving Drive conflict';
+    color = 'var(--gold)';
+    title = 'Local data is available. PolicyLens is merging Drive and local changes.';
+  } else if (syncPhase === 'uploading') {
     label = 'Saved locally · Syncing to Drive';
     color = 'var(--gold)';
     title = 'Changes are saved locally. Drive upload is in progress.';
-  } else if (_driveSyncTimer !== null || driveState?.pendingWrite) {
+  } else if (syncPhase === 'queued' || _driveSyncTimer !== null) {
     label = 'Saved locally · Drive queued';
     color = 'var(--gold)';
-    title = 'Changes are saved locally and queued for Drive';
+    title = 'Changes are saved locally and queued for Drive' + (syncPhaseState?.reason ? ': ' + syncPhaseState.reason : '');
   } else if (driveState?.lastSyncedAt) {
     label = 'Saved locally · Synced to Drive · ' + ageLabel(driveState.lastSyncedAt);
     if (driveState.lastSyncDeviceName && driveState.lastSyncDeviceName !== getPolicyLensDeviceName()) {
@@ -19375,7 +19764,7 @@ function SyncStatusPill({ driveState }) {
             <div style={{fontSize:11,fontWeight:800,color:'var(--text2)'}}>Sync Activity</div>
             <button onClick={()=>setOpen(false)} style={{background:'transparent',border:'none',color:'var(--text3)',fontSize:14,cursor:'pointer'}}>x</button>
           </div>
-          {driveState?.pendingError && <div style={{fontSize:10,color:'var(--red)',background:'rgba(239,83,80,.08)',border:'1px solid rgba(239,83,80,.2)',borderRadius:7,padding:7,marginBottom:8}}>{driveState.pendingError}</div>}
+          {(syncPhase === 'failed' || driveState?.pendingError) && <div style={{fontSize:10,color:'var(--red)',background:'rgba(239,83,80,.08)',border:'1px solid rgba(239,83,80,.2)',borderRadius:7,padding:7,marginBottom:8}}>{syncPhaseState?.message || driveState?.pendingError || 'Drive sync needs retry'}</div>}
           {(activity || []).slice(0, 7).length === 0 ? (
             <div style={{fontSize:10,color:'var(--text3)',padding:'8px 2px'}}>No recent activity yet.</div>
           ) : (activity || []).slice(0, 7).map(row => {
