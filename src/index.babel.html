@@ -664,9 +664,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.23';
+const APP_VERSION = 'v2.3.0-rc2e.24';
 const APP_VERSION_DATE = '2026-05-02';
-const APP_VERSION_NAME = 'Extraction cancel and delete sync';
+const APP_VERSION_NAME = 'Hard fix PDF and HTML extraction';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 
 const APP_TAB_IDS = new Set(['profile','dashboard','policies','clients','repository','report','settings']);
@@ -4872,7 +4872,7 @@ async function pdfToImages(pdfDoc, maxPages=12) {
 // CLEAN even if the FC never actually reviewed anything. Bumping the version
 // forces a re-extraction next time those same files are uploaded, and the
 // one-time cleanup in App init purges the stale entries from IndexedDB.
-const EXTRACT_PIPELINE_VERSION = 'v15.10-2026-05-02-foreground-snap-mode';
+const EXTRACT_PIPELINE_VERSION = 'v15.11-2026-05-02-pdf-html-hardfix';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.8-2026-04-30-ai-triage-fingerprint';
@@ -8322,8 +8322,20 @@ function extractReadableTextFromHtml(rawHtml) {
       const doc = new DOMParser().parseFromString(raw, 'text/html');
       doc.querySelectorAll('script,style,noscript,svg,canvas').forEach(el => el.remove());
       const title = doc.querySelector('title')?.textContent || '';
-      const body = doc.body?.innerText || doc.documentElement?.textContent || '';
-      return [title, body].filter(Boolean).join('\n')
+      const tableBlocks = Array.from(doc.querySelectorAll('table')).map((table, ti) => {
+        const rows = Array.from(table.querySelectorAll('tr')).map(tr =>
+          Array.from(tr.querySelectorAll('th,td'))
+            .map(td => (td.textContent || '').replace(/\s+/g, ' ').trim())
+            .filter(Boolean)
+            .join(' | ')
+        ).filter(Boolean);
+        return rows.length ? '[HTML TABLE '+(ti+1)+']\n' + rows.join('\n') : '';
+      }).filter(Boolean);
+      const headings = Array.from(doc.querySelectorAll('h1,h2,h3,h4,.section'))
+        .map(el => (el.textContent || '').replace(/\s+/g, ' ').trim())
+        .filter(Boolean);
+      const body = doc.body?.textContent || doc.documentElement?.textContent || '';
+      return [title, headings.join('\n'), tableBlocks.join('\n\n'), body].filter(Boolean).join('\n\n')
         .replace(/\s+\n/g, '\n')
         .replace(/\n{3,}/g, '\n\n')
         .replace(/[ \t]{2,}/g, ' ')
@@ -8341,6 +8353,119 @@ function extractReadableTextFromHtml(rawHtml) {
     .replace(/&gt;/gi, '>')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function isHtmlLikeFile(file) {
+  const type = String(file?.type || '').toLowerCase();
+  const name = String(file?.name || '').toLowerCase();
+  return type === 'text/html' || /\.(html|htm)$/i.test(name);
+}
+
+function policyLensHtmlCategory(sectionText) {
+  const s = String(sectionText || '').toLowerCase();
+  if (s.includes('protection')) return 'protection';
+  if (s.includes('health') || s.includes('hospital')) return 'health';
+  if (s.includes('retirement') || s.includes('annuity')) return 'retirement';
+  if (s.includes('savings') || s.includes('endowment')) return 'savings';
+  if (s.includes('investment') || s.includes('wealth')) return 'investment';
+  if (s.includes('cash') || s.includes('fixed deposit') || s.includes('t-bill') || s.includes('ssb')) return 'cash_investments';
+  return '';
+}
+
+function parsePolicyLensAmountText(text) {
+  const raw = String(text || '').replace(/\u00a0/g, ' ').trim();
+  if (!raw) return null;
+  const match = raw.match(/-?\$?\s*([\d,]+(?:\.\d+)?)/);
+  if (!match) return null;
+  return parseFloat(match[1].replace(/,/g, ''));
+}
+
+function parsePolicyLensPremiumText(text) {
+  const raw = String(text || '').replace(/\u00a0/g, ' ').trim();
+  const amount = parsePolicyLensAmountText(raw);
+  if (amount == null) return { premiumAmount:null, premFrequency:'unknown', premiumStructure:null };
+  const lower = raw.toLowerCase();
+  if (/\bsp\b|single/.test(lower)) return { premiumAmount:amount, premFrequency:'single', premiumStructure:'Single Premium' };
+  if (/\/\s*m|monthly|month/.test(lower)) return { premiumAmount:amount, premFrequency:'monthly', premiumStructure:'Regular Premium' };
+  if (/\/\s*y|annual|year|yr/.test(lower)) return { premiumAmount:amount, premFrequency:'annual', premiumStructure:'Regular Premium' };
+  return { premiumAmount:amount, premFrequency:'unknown', premiumStructure:null };
+}
+
+function inferSubTypeFromPolicyLensHtml(subType, category) {
+  const s = String(subType || '').trim();
+  if (s) return s;
+  if (category === 'cash_investments') return 'Other';
+  if (category === 'investment') return 'Unit Trust';
+  return '';
+}
+
+async function extractPolicyLensHtmlFilesLocally(files) {
+  const out = [];
+  for (const file of Array.from(files || [])) {
+    if (!isHtmlLikeFile(file)) return [];
+    const raw = await file.text();
+    if (!/PolicyLens/i.test(raw) || !/Policy Portfolio/i.test(raw)) return [];
+    let doc = null;
+    if (typeof DOMParser !== 'undefined') {
+      doc = new DOMParser().parseFromString(raw, 'text/html');
+    }
+    if (!doc) return [];
+    doc.querySelectorAll('script,style,noscript,svg,canvas').forEach(el => el.remove());
+    const titleText = (doc.querySelector('h1')?.textContent || doc.querySelector('title')?.textContent || cleanUploadFileName(file)).replace(/\s+/g, ' ').trim();
+    const ownerMatch = titleText.match(/^(.+?)(?:'s|\s+Policy Summary|\s+Portfolio Dashboard|\s+\u2014|\s+-)/i);
+    const ownerName = (ownerMatch?.[1] || '').trim();
+    const tables = Array.from(doc.querySelectorAll('table'));
+    let currentSection = '';
+    for (const table of tables) {
+      const rows = Array.from(table.querySelectorAll('tr'));
+      for (const tr of rows) {
+        const cells = Array.from(tr.querySelectorAll('td,th')).map(td => (td.textContent || '').replace(/\s+/g, ' ').trim());
+        if (!cells.some(Boolean)) continue;
+        if (cells.length === 1 || tr.querySelector('td[colspan],th[colspan]')) {
+          const sectionText = cells.join(' ');
+          if (policyLensHtmlCategory(sectionText) || /insurance|portfolio|protection|investment|health|retirement|savings/i.test(sectionText)) {
+            currentSection = sectionText;
+          }
+          continue;
+        }
+        if (cells.length < 5) continue;
+        const insurer = cells[0] || '';
+        const productName = cells[1] || '';
+        if (!insurer || !productName || /^insurer|provider$/i.test(insurer) || /^policy|product$/i.test(productName)) continue;
+        const category = policyLensHtmlCategory(currentSection) || policyLensHtmlCategory(productName) || 'investment';
+        const premium = parsePolicyLensPremiumText(cells[4]);
+        const sumAssured = parsePolicyLensAmountText(cells[3]);
+        const subType = inferSubTypeFromPolicyLensHtml(cells[2], category);
+        const isCashInstrument = category === 'cash_investments';
+        out.push({
+          insurer,
+          productName,
+          policyName: productName,
+          policyNumber: '',
+          category,
+          subType,
+          currency: 'SGD',
+          sumAssured: isCashInstrument ? null : sumAssured,
+          premiumAmount: isCashInstrument ? null : premium.premiumAmount,
+          premFrequency: isCashInstrument ? 'unknown' : premium.premFrequency,
+          premiumStructure: isCashInstrument ? null : premium.premiumStructure,
+          paymentMethod: cells[5] || 'Cash',
+          fdPrincipal: isCashInstrument ? sumAssured : null,
+          fdYieldPct: isCashInstrument ? parsePolicyLensAmountText(cells[4]) : null,
+          policyOwner: ownerName || null,
+          lifeInsured: ownerName || null,
+          documentOwner: ownerName || null,
+          documentRole: ownerName ? 'owner' : 'unknown',
+          documentType: 'portfolio_statement',
+          sourceImage: cleanUploadFileName(file),
+          sourcePage: 'Policy Portfolio table',
+          extractionNotes: 'Imported locally from a PolicyLens HTML portfolio export row.',
+          notes: 'Imported from a PolicyLens portfolio dashboard. Review against the original policy document if deeper rider or cash-value details are needed.',
+        });
+      }
+    }
+  }
+  return out.filter(p => p.insurer && p.productName);
 }
 
 // v2.3.0-rc2d.1: Ask Claude Haiku to map spreadsheet columns to policy fields.
@@ -8808,13 +8933,13 @@ async function tryDocumentAIFirstPass(file, blocks, opts = {}) {
     let status;
     let statusText;
     try {
-      const relayed = await swFetchJSONRelay(endpoint, requestOptions, 120000);
+      const relayed = await swFetchJSONRelay(endpoint, requestOptions, 180000);
       data = relayed?.json || {};
       ok = !!relayed?.ok;
       status = relayed?.status || 0;
       statusText = relayed?.statusText || '';
     } catch (relayErr) {
-      const resp = await fetchWithTimeout(endpoint, requestOptions, 120000);
+      const resp = await fetchWithTimeout(endpoint, requestOptions, 180000);
       data = await resp.json().catch(() => ({}));
       ok = resp.ok;
       status = resp.status;
@@ -22391,6 +22516,25 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 120000) {
   }
 }
 
+function aiExtractionTimeoutMs(input, opts = {}) {
+  const blocks = Array.isArray(input) ? input : null;
+  const rawText = typeof input === 'string' ? input : '';
+  const textChars = blocks
+    ? blocks.reduce((sum, b) => sum + (b.type === 'text' ? String(b.text || '').length : 0), 0)
+    : rawText.length;
+  const mediaCount = blocks ? blocks.filter(b => b.type === 'image' || b.type === 'document').length : 0;
+  const pdfCount = blocks ? blocks.filter(b => b.type === 'document' && String(b.source?.media_type || '').toLowerCase() === 'application/pdf').length : 0;
+  const base = opts.baseMs || 180000;
+  const max = opts.maxMs || 300000;
+  const textBudget = Math.ceil(textChars / 25000) * 30000;
+  const mediaBudget = mediaCount * 45000 + pdfCount * 45000;
+  return Math.min(max, Math.max(120000, base + textBudget + mediaBudget));
+}
+
+function hasLargeTextExtractionBlock(contentBlocks, minChars = 10000) {
+  return Array.isArray(contentBlocks) && contentBlocks.some(b => b && b.type === 'text' && String(b.text || '').length > minChars);
+}
+
 // ═══════════════════════════════════════════════════════════════
 // v15 STAGE 5: ERROR CLASSIFICATION
 // ═══════════════════════════════════════════════════════════════
@@ -22507,6 +22651,7 @@ async function geminiRead(geminiKey, contentBlocks) {
     else if(block.type==='document') parts.push({inlineData:{mimeType:block.source.media_type||'application/pdf',data:block.source.data}});
   }
   console.log('[Gemini Read] Sending:', parts.filter(p=>p.inlineData).length, 'files');
+  const timeoutMs = aiExtractionTimeoutMs(contentBlocks);
   let resp;
   try {
     resp = await fetchWithTimeout('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+geminiKey,{
@@ -22516,7 +22661,7 @@ async function geminiRead(geminiKey, contentBlocks) {
         systemInstruction:{parts:[{text:'You are a document reader. Extract ALL text, numbers, tables, and data from these documents. Preserve table structures. Include EVERY detail — policy numbers, dates, amounts, rider names, conditions, charges. This may be a multi-page portfolio report with 10+ policies; you MUST dump every single policy with its full row of data. Do NOT summarize, do NOT skip rows, do NOT truncate. Output as plain text, organized by section.'}]},
         generationConfig:{maxOutputTokens:60000}
       })
-    });
+    }, timeoutMs);
   } catch(fetchErr) {
     if(fetchErr.message && fetchErr.message.includes('timed out')) throw fetchErr;
     throw new Error('Gemini: NetworkError when attempting to fetch resource.');
@@ -22535,6 +22680,7 @@ async function geminiRead(geminiKey, contentBlocks) {
 // Step 2: Claude structures the extracted text → perfect JSON
 async function claudeExtract(anthropicKey, systemPrompt, rawText, maxTokens) {
   console.log('[Claude Extract] Sending:', rawText.length, 'chars to Claude');
+  const timeoutMs = aiExtractionTimeoutMs(rawText);
   let resp;
   try {
     resp = await fetchWithTimeout('https://api.anthropic.com/v1/messages',{
@@ -22544,7 +22690,7 @@ async function claudeExtract(anthropicKey, systemPrompt, rawText, maxTokens) {
         system:systemPrompt+'\n\nRespond with ONLY a valid JSON array of policy objects. Start with [ and end with ]. No markdown, no backticks.',
         messages:[{role:'user',content:rawText}]
       })
-    });
+    }, timeoutMs);
   } catch(fetchErr) {
     if(fetchErr.message && fetchErr.message.includes('timed out')) throw fetchErr;
     throw new Error('Claude: NetworkError when attempting to fetch resource.');
@@ -23434,6 +23580,7 @@ async function geminiStructuredExtract(geminiKey, systemPrompt, contentBlocks, m
   const mediaCount = parts.filter(p=>p.inlineData).length;
   const usesStrictSchema = !!(responseSchema && !isFullPolicyExtractionSchema(responseSchema));
   console.log('[Gemini Structured] Sending:', mediaCount, 'files +', parts.length-mediaCount, 'text blocks. Schema mode:', usesStrictSchema ? 'strict' : 'json-only', 'fields:', Object.keys(responseSchema?.items?.properties||{}).length);
+  const timeoutMs = aiExtractionTimeoutMs(contentBlocks);
 
   // Assemble the full request body once — we'll use it for either path.
   const bodyObj = {
@@ -23588,7 +23735,7 @@ async function geminiStructuredExtract(geminiKey, systemPrompt, contentBlocks, m
         resp = await fetchWithTimeout(url, {
           method:'POST',headers:{'Content-Type':'application/json'},
           body:JSON.stringify(bodyObj),
-        });
+        }, timeoutMs);
       } catch(fetchErr) {
         // Network-ish errors are retryable (connection drop, DNS hiccup)
         const isTimeout = fetchErr.message && fetchErr.message.includes('timed out');
@@ -23942,6 +24089,7 @@ async function claudeStructuredExtract(anthropicKey, systemPrompt, contentBlocks
   }
   if(claudeContent.length === 0) throw new Error('No content for Claude vision extract');
   console.log('[Claude Vision] Sending:', mediaCount, 'media blocks +', claudeContent.length-mediaCount, 'text blocks');
+  const timeoutMs = aiExtractionTimeoutMs(contentBlocks);
 
   // System prompt — augment to demand JSON-only output since Claude
   // doesn't enforce response schemas at the API level.
@@ -23994,7 +24142,7 @@ async function claudeStructuredExtract(anthropicKey, systemPrompt, contentBlocks
           system: systemBlocks,
           messages: [{role:'user', content: claudeContent}],
         }),
-      });
+      }, timeoutMs);
       if(!resp.ok) {
         const errData = await resp.json().catch(()=>({}));
         const errMsg = errData?.error?.message || resp.statusText || 'unknown';
@@ -24305,6 +24453,7 @@ async function geminiExtract(geminiKey, systemPrompt, contentBlocks, maxTokens) 
     else if(block.type==='document') parts.push({inlineData:{mimeType:block.source.media_type||'application/pdf',data:block.source.data}});
   }
   if(parts.length === 0) throw new Error('No content to extract from');
+  const timeoutMs = aiExtractionTimeoutMs(contentBlocks);
   let resp;
   try {
     resp = await fetchWithTimeout('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+geminiKey,{
@@ -24314,7 +24463,7 @@ async function geminiExtract(geminiKey, systemPrompt, contentBlocks, maxTokens) 
         systemInstruction:{parts:[{text:systemPrompt+'\n\nYou MUST respond with ONLY valid JSON. Start with { or [. End with } or ]. No markdown, no backticks, no explanation.'}]},
         generationConfig:{maxOutputTokens:maxTokens||8000,responseMimeType:'application/json'}
       })
-    });
+    }, timeoutMs);
   } catch(fetchErr) {
     if(fetchErr.message && fetchErr.message.includes('timed out')) throw fetchErr;
     throw new Error('Gemini: NetworkError when attempting to fetch resource.');
@@ -24647,7 +24796,7 @@ async function callAI(systemPrompt, contentBlocks, maxTokens, responseSchema) {
       if(gk) {
         // Fall back to Gemini for any network/fetch error, overload, or rate limit
         const msg = (claudeErr.message||'').toLowerCase();
-        if(msg.includes('fetch') || msg.includes('network') || msg.includes('failed') || msg.includes('overload') || msg.includes('529') || msg.includes('rate') || claudeErr instanceof TypeError) {
+        if(msg.includes('fetch') || msg.includes('network') || msg.includes('failed') || msg.includes('overload') || msg.includes('529') || msg.includes('rate') || msg.includes('timeout') || msg.includes('timed out') || claudeErr instanceof TypeError) {
           console.log('[AI] Falling back to Gemini for text extraction');
           await hopBackoff('Claude', 'Gemini');
           return await geminiExtract(gk, systemPrompt, [{type:'text',text:textParts}], maxTokens);
@@ -24667,6 +24816,7 @@ async function callAI(systemPrompt, contentBlocks, maxTokens, responseSchema) {
         if(b.type === 'document') return {type:'document', source:b.source};
         return null;
       }).filter(Boolean);
+      const timeoutMs = aiExtractionTimeoutMs(contentBlocks);
       const resp = await fetchWithTimeout('https://api.anthropic.com/v1/messages', {
         method:'POST',
         headers:{'Content-Type':'application/json','x-api-key':ck,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
@@ -24675,7 +24825,7 @@ async function callAI(systemPrompt, contentBlocks, maxTokens, responseSchema) {
           system:systemPrompt,
           messages:[{role:'user', content:claudeContent}]
         })
-      });
+      }, timeoutMs);
       if(!resp.ok) { const e = await resp.json().catch(()=>({})); throw new Error('Claude: '+(e.error?.message||resp.status)); }
       const data = await resp.json();
       return data.content?.map(c=>c.text||'').join('') || '';
@@ -33059,7 +33209,9 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
     } catch(err) {
       // If the AI call itself fails and we still have room to split, try splitting
       // — sometimes oversize content throws before truncation detection.
-      if(depth < MAX_RECOVERY_DEPTH && (/too large|context|length|overflow|max/i).test(err.message||'')) {
+      const canRetryBySplit = (/too large|context|length|overflow|max/i).test(err.message||'')
+        || ((/timed out|timeout|interrupted|network/i).test(err.message||'') && hasLargeTextExtractionBlock(contentBlocks));
+      if(depth < MAX_RECOVERY_DEPTH && canRetryBySplit) {
         console.warn('[Extract]', label, 'AI threw size-ish error:', err.message, '→ attempting split retry');
       } else {
         throw err;
@@ -33115,6 +33267,44 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
     const lastBlock = contentOnly[contentOnly.length-1];
     if(lastBlock && lastBlock.type === 'text' && /extract all|return only|critical rules/i.test(lastBlock.text||'')) {
       instructionTail = contentOnly.pop();
+    }
+
+    // Strategy 0: text-native PDFs/HTML often arrive as one huge source
+    // block plus small prior/instruction blocks. Split the huge source block
+    // itself and keep the small context on both halves; otherwise the generic
+    // block split can waste a retry on a priors-only branch.
+    const largestTextIndex = contentOnly.reduce((best, b, idx) => {
+      if (!b || b.type !== 'text') return best;
+      const len = String(b.text || '').length;
+      if (len <= 10000) return best;
+      if (best < 0 || len > String(contentOnly[best].text || '').length) return idx;
+      return best;
+    }, -1);
+    if(largestTextIndex >= 0) {
+      const sourceBlock = contentOnly[largestTextIndex];
+      const fullText = String(sourceBlock.text || '');
+      const midpoint = Math.floor(fullText.length / 2);
+      const searchRadius = Math.floor(fullText.length * 0.1);
+      const searchStart = Math.max(0, midpoint - searchRadius);
+      const searchEnd = Math.min(fullText.length, midpoint + searchRadius);
+      const slice = fullText.slice(searchStart, searchEnd);
+      let splitAt = midpoint;
+      const boundaryPatterns = [/\n\n(?=--- Page \d+)/i, /\n\n(?=\[HTML TABLE \d+\])/i, /\n(?=[A-Z][^\n]{3,80}\s+\|)/, /\n\n\n/, /\n\n/];
+      for(const pat of boundaryPatterns) {
+        const m = slice.match(pat);
+        if(m) { splitAt = searchStart + m.index + m[0].length; break; }
+      }
+      const sharedContext = contentOnly.filter((_, idx) => idx !== largestTextIndex);
+      const firstBlocks = [...sharedContext, {...sourceBlock, text:'[PART 1 OF 2]\n\n' + fullText.slice(0, splitAt)}];
+      const secondBlocks = [...sharedContext, {...sourceBlock, text:'[PART 2 OF 2]\n\n' + fullText.slice(splitAt)}];
+      if(sequenceHead) { firstBlocks.unshift(sequenceHead); secondBlocks.unshift(sequenceHead); }
+      if(instructionTail) { firstBlocks.push(instructionTail); secondBlocks.push(instructionTail); }
+      console.log('[Extract]', label, 'split large text block at char', splitAt, 'of', fullText.length, '→', firstBlocks.length, '+', secondBlocks.length, 'blocks');
+      const [a, b] = await Promise.all([
+        runExtractionWithRecovery(firstBlocks, depth+1, label+'/TXT1'),
+        runExtractionWithRecovery(secondBlocks, depth+1, label+'/TXT2')
+      ]);
+      return [...a, ...b];
     }
 
     // Strategy 1: multiple content blocks → split blocks in half
@@ -33673,6 +33863,21 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
         }
       } catch (localXlsxErr) {
         console.warn('[Extract] Local XLSX parser failed - falling back to AI:', localXlsxErr?.message || localXlsxErr);
+      }
+    }
+    if (arr == null && precomputedRawText == null && batchFiles.length > 0 && batchFiles.every(isHtmlLikeFile)) {
+      try {
+        const localHtmlPolicies = await extractPolicyLensHtmlFilesLocally(batchFiles);
+        if (localHtmlPolicies.length > 0) {
+          arr = localHtmlPolicies;
+          expectedCount = localHtmlPolicies.length;
+          console.log('[Extract] Local PolicyLens HTML parser returned', arr.length, 'policies - skipping AI call');
+          try { toast('Imported '+arr.length+' item'+(arr.length===1?'':'s')+' from PolicyLens HTML locally', 'success', 3500); } catch(_) {}
+        } else {
+          console.log('[Extract] Local HTML parser found no PolicyLens portfolio rows - falling back to AI');
+        }
+      } catch (localHtmlErr) {
+        console.warn('[Extract] Local HTML parser failed - falling back to AI:', localHtmlErr?.message || localHtmlErr);
       }
     }
     if (precomputedRawText != null) {
