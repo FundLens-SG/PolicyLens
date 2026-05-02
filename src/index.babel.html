@@ -664,9 +664,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.28.2';
+const APP_VERSION = 'v2.3.0-rc2e.29';
 const APP_VERSION_DATE = '2026-05-02';
-const APP_VERSION_NAME = 'Auto-switch to freshly extracted client';
+const APP_VERSION_NAME = 'Image chunk sizing for fewer split duplicates';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 
 const APP_TAB_IDS = new Set(['profile','dashboard','policies','clients','repository','report','settings']);
@@ -679,6 +679,19 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.3.0-rc2e.29',
+    date: '2026-05-02',
+    name: 'Image chunk sizing for fewer split duplicates',
+    sections: [
+      {
+        heading: 'Extraction',
+        items: [
+          'Photo extraction now sends a full batch of up to 10 images to Claude vision in a single call instead of splitting into chunks of 4. Multi-page policies that previously straddled the chunk boundary (and got extracted twice with slightly different product names) now stay correlated in one call, reducing duplicate items in Bulk Verify.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.3.0-rc2e.28.2',
     date: '2026-05-02',
@@ -5029,7 +5042,7 @@ async function pdfToImages(pdfDoc, maxPages=12) {
 // CLEAN even if the FC never actually reviewed anything. Bumping the version
 // forces a re-extraction next time those same files are uploaded, and the
 // one-time cleanup in App init purges the stale entries from IndexedDB.
-const EXTRACT_PIPELINE_VERSION = 'v15.16-2026-05-02-pdf-buffer-retirelens';
+const EXTRACT_PIPELINE_VERSION = 'v15.17-2026-05-02-image-chunk-10';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -25162,7 +25175,12 @@ async function routeExtraction(gk, ck, systemPrompt, contentBlocks, maxTokens, r
     if (!ck) return null;
     const textBlocks = contentBlocks.filter(b => b.type === 'text');
     const imageBlocks = contentBlocks.filter(b => b.type !== 'text');
-    const CHUNK_SIZE = 4;
+    // rc2e.29: matches BATCH_SIZE for photos (10) so multi-page policies inside a
+    // single batch stay correlated in one Claude call. Was 4, which split a typical
+    // 10-photo batch into 3 calls and caused multi-page policies straddling chunk
+    // boundaries to be extracted twice with slightly-different product names that
+    // sometimes escaped the dedup fingerprint match. Anthropic vision cap is 20.
+    const CHUNK_SIZE = 10;
     const chunks = [];
     for (let i = 0; i < imageBlocks.length; i += CHUNK_SIZE) {
       chunks.push(imageBlocks.slice(i, i + CHUNK_SIZE));
