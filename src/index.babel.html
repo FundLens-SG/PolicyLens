@@ -664,9 +664,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.28.1';
+const APP_VERSION = 'v2.3.0-rc2e.28.2';
 const APP_VERSION_DATE = '2026-05-02';
-const APP_VERSION_NAME = 'PDF empty-buffer fix and RetireLens HTML parser';
+const APP_VERSION_NAME = 'Auto-switch to freshly extracted client';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 
 const APP_TAB_IDS = new Set(['profile','dashboard','policies','clients','repository','report','settings']);
@@ -679,6 +679,21 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.3.0-rc2e.28.2',
+    date: '2026-05-02',
+    name: 'Auto-switch to freshly extracted client',
+    sections: [
+      {
+        heading: 'Workflow',
+        items: [
+          'After family-routed extraction saves to multiple existing or new clients, the app now switches the active client to whichever one received the most policies (tie-breaker prefers the currently active client) and lands the FC on the Policies tab — no more manually navigating Clients tab → select client.',
+          'After a single-client extraction creates a new client mid-import, the app now switches to that new client and shows its Policies tab as soon as the routing chain finishes.',
+          'After routing extracted policies into an existing client via the New Client modal\'s "use existing client" path, the app now switches to that selected client and shows its Policies tab.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.3.0-rc2e.28.1',
     date: '2026-05-02',
@@ -37179,6 +37194,11 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
           let existingSaved = 0;
           const currentRouteClientId = forCurrent.length > 0 ? await resolveActiveImportClientId() : activeClientId;
           if (forCurrent.length > 0 && familyGroupName) await applyFamilyGroupToClient(currentRouteClientId, familyGroupName);
+          // rc2e.28.2: track which clients received how many policies in this routing pass
+          // so we can switch the active client to whichever one received the most.
+          const importClientCounts = new Map();
+          const addImportClient = (cid, n) => { if (!cid || n <= 0) return; importClientCounts.set(cid, (importClientCounts.get(cid) || 0) + n); };
+          if (forCurrent.length > 0 && currentRouteClientId) addImportClient(currentRouteClientId, forCurrent.length);
           for (const bucket of forExisting.values()) {
             if (familyGroupName) await applyFamilyGroupToClient(bucket.clientId, familyGroupName);
             for (const p of bucket.policies) {
@@ -37186,6 +37206,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
               existingSaved++;
             }
             await applyProfileHintsForClient?.(bucket.clientId, bucket.clientName, bucket.policies, 'owner-route-profile-hints').catch(() => {});
+            addImportClient(bucket.clientId, bucket.policies.length);
           }
           if (existingSaved>0) try{toast('Added '+existingSaved+' polic'+(existingSaved===1?'y':'ies')+' to existing client'+(forExisting.size===1?'':'s'),'success',5000);}catch(_){}
           let newSaved = 0;
@@ -37202,6 +37223,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
                 newSaved++;
               }
               await applyProfileHintsForClient?.(target.clientId, target.clientName || bucket.displayName, bucket.policies, 'owner-route-profile-hints').catch(() => {});
+              addImportClient(target.clientId, bucket.policies.length);
             }
             if (newSaved>0) try{toast('Added '+newSaved+' polic'+(newSaved===1?'y':'ies')+' to '+(newCreated+newReused)+' routed family client'+((newCreated+newReused)===1?'':'s'),'success',5000);}catch(_){}
           }
@@ -37214,6 +37236,22 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
               prev.forEach(revokeStagedPreview);
               return [];
             });
+          }
+          // rc2e.28.2: After multi-client save, switch the active client to whichever
+          // one received the most policies (tie-breaker prefers the currently active
+          // client). Skips the switch when there's nothing to land on.
+          if (importClientCounts.size > 0) {
+            let primary = activeClientId;
+            let top = importClientCounts.get(activeClientId) || 0;
+            for (const [cid, n] of importClientCounts.entries()) {
+              if (n > top) { primary = cid; top = n; }
+            }
+            if (primary && primary !== activeClientId) {
+              try { await switchClient(primary); setTab('policies'); }
+              catch(e) { console.warn('[Owner routing] Switch to primary client failed:', e); }
+            } else if (forCurrent.length > 0 || existingSaved > 0 || newSaved > 0) {
+              setTab('policies');
+            }
           }
         }}
       />}
@@ -37239,6 +37277,12 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
               prev.forEach(revokeStagedPreview);
               return [];
             });
+            // rc2e.28.2: After the routing chain is fully drained, switch to the just-created
+            // client so the FC lands on its profile/policies without manual navigation.
+            if (clientId) {
+              try { await switchClient(clientId); setTab('policies'); }
+              catch(e) { console.warn('[Import] Post-create switch failed:', e); }
+            }
           }
         }}
         onExistingSelected={async (clientId, ds) => {
@@ -37260,6 +37304,12 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
               prev.forEach(revokeStagedPreview);
               return [];
             });
+            // rc2e.28.2: After the routing chain is fully drained, switch to the chosen
+            // existing client so the FC lands on its profile/policies without manual navigation.
+            if (clientId) {
+              try { await switchClient(clientId); setTab('policies'); }
+              catch(e) { console.warn('[Import] Post-route switch failed:', e); }
+            }
           }
         }}
         stayOnCurrent={!!newClientData.routePolicies}
