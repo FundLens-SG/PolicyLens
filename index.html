@@ -674,9 +674,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.25';
+const APP_VERSION = 'v2.3.0-rc2e.26';
 const APP_VERSION_DATE = '2026-05-02';
-const APP_VERSION_NAME = 'Field-routing post-extract fixes';
+const APP_VERSION_NAME = 'Calmer extraction inference';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 const APP_TAB_IDS = new Set(['profile', 'dashboard', 'policies', 'clients', 'repository', 'report', 'settings']);
 function getInitialPolicyLensTab() {
@@ -687,6 +687,17 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.3.0-rc2e.26',
+  date: '2026-05-02',
+  name: 'Calmer extraction inference',
+  sections: [{
+    heading: 'Extraction prompt',
+    items: ['Removed the "guess product name from training data" license — when no marketed product name appears in the document text, extraction now returns an empty productName for FC verification instead of inventing one (e.g. always-RetireReady-Plus when no Manulife product name was actually printed).', 'Removed the Manulife-specific recognition block that auto-substituted product names like "RetireReady Plus", "InvestReady", "ManuProtect Term" from generic feature signals.', 'Softened the AIA Gen3 / participating-whole-life-income hint so it triages classification only and no longer computes annuityPayout from a fixed multiplier.']
+  }, {
+    heading: 'HTML import',
+    items: ['Local PolicyLens HTML parser no longer treats the loose word "wealth" as an investment signal (Wealth Multiplier is retirement, Wealth Elite is ILP — too ambiguous). Added "income" / "payout" mapping to retirement to match the project domain rule.', 'Rows whose category fell back to the default investment / Unit Trust now carry a low-confidence flag so BulkVerifyModal surfaces them for FC review instead of saving silently.']
+  }]
+}, {
   version: 'v2.3.0-rc2e.25',
   date: '2026-05-02',
   name: 'Field-routing post-extract fixes',
@@ -4221,10 +4232,10 @@ async function pdfToImages(pdfDoc, maxPages = 12) {
 // CLEAN even if the FC never actually reviewed anything. Bumping the version
 // forces a re-extraction next time those same files are uploaded, and the
 // one-time cleanup in App init purges the stale entries from IndexedDB.
-const EXTRACT_PIPELINE_VERSION = 'v15.12-2026-05-02-field-routing-fix';
+const EXTRACT_PIPELINE_VERSION = 'v15.13-2026-05-02-calmer-inference';
 
 // ── v15: PROMPT VERSIONING ──
-const EXTRACT_PROMPT_VERSION = 'v14.8-2026-04-30-ai-triage-fingerprint';
+const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
 const OCR_PROMPT_VERSION = 'v17-2026-04-26-document-ai-default-proxy';
 
 // ── v2.0.9: MODULE-SCOPE EXTRACT_PROMPT ──
@@ -8119,9 +8130,11 @@ function policyLensHtmlCategory(sectionText) {
   const s = String(sectionText || '').toLowerCase();
   if (s.includes('protection')) return 'protection';
   if (s.includes('health') || s.includes('hospital')) return 'health';
-  if (s.includes('retirement') || s.includes('annuity')) return 'retirement';
+  // rc2e.26: 'income' / 'payout' (>5yr) maps to retirement per project domain rule.
+  if (s.includes('retirement') || s.includes('annuity') || s.includes('income') || s.includes('payout')) return 'retirement';
   if (s.includes('savings') || s.includes('endowment')) return 'savings';
-  if (s.includes('investment') || s.includes('wealth')) return 'investment';
+  // rc2e.26: 'wealth' is too ambiguous (Wealth Multiplier=retirement, Wealth Elite=ILP, etc.) — dropped.
+  if (s.includes('investment')) return 'investment';
   if (s.includes('cash') || s.includes('fixed deposit') || s.includes('t-bill') || s.includes('ssb')) return 'cash_investments';
   return '';
 }
@@ -8216,11 +8229,27 @@ async function extractPolicyLensHtmlFilesLocally(files) {
         const insurer = cells[0] || '';
         const productName = cells[1] || '';
         if (!insurer || !productName || /^insurer|provider$/i.test(insurer) || /^policy|product$/i.test(productName)) continue;
-        const category = policyLensHtmlCategory(currentSection) || policyLensHtmlCategory(productName) || 'investment';
+        // rc2e.26: Track whether category/subType came from real evidence or a default,
+        // so BulkVerifyModal can flag low-confidence rows for FC review instead of
+        // silently saving them as Unit Trusts.
+        const categoryFromEvidence = policyLensHtmlCategory(currentSection) || policyLensHtmlCategory(productName);
+        const category = categoryFromEvidence || 'investment';
         const premium = parsePolicyLensPremiumText(cells[4]);
         const sumAssured = parsePolicyLensAmountText(cells[3]);
+        const subTypeFromCell = String(cells[2] || '').trim();
         const subType = inferSubTypeFromPolicyLensHtml(cells[2], category);
         const isCashInstrument = category === 'cash_investments';
+        const _confidence = [];
+        if (!categoryFromEvidence) _confidence.push({
+          field: 'category',
+          level: 'low',
+          reason: 'No category section found in HTML; defaulted to investment for FC review'
+        });
+        if (!subTypeFromCell && (category === 'investment' || category === 'cash_investments')) _confidence.push({
+          field: 'subType',
+          level: 'low',
+          reason: 'No sub-type cell value; defaulted from category for FC review'
+        });
         out.push({
           insurer,
           productName,
@@ -8244,7 +8273,10 @@ async function extractPolicyLensHtmlFilesLocally(files) {
           sourceImage: cleanUploadFileName(file),
           sourcePage: 'Policy Portfolio table',
           extractionNotes: 'Imported locally from a PolicyLens HTML portfolio export row.',
-          notes: 'Imported from a PolicyLens portfolio dashboard. Review against the original policy document if deeper rider or cash-value details are needed.'
+          notes: 'Imported from a PolicyLens portfolio dashboard. Review against the original policy document if deeper rider or cash-value details are needed.',
+          ...(_confidence.length ? {
+            _confidence
+          } : {})
         });
       }
     }
@@ -44245,7 +44277,7 @@ Classify each source page/document into documentType:
 Keep documentType on every returned object. If a page is profile_doc only and has no policy/instrument fields, return zero policies from that page but use its people/context to improve nearby owner/life assured routing.
 
 PRODUCT NAME RULE (CRITICAL):
-productName must be the SPECIFIC marketed product name as written in the document — "Elite Investment Plan", "Pro Achiever", "Achiever Accumulator", "Platinum Wealth Elite", "LifeReady Plus", "PRUShield Premier", "GREAT TotalCare". NEVER return a generic sub-type or category description as the productName. The following are NOT valid productNames and must never be returned: "Investment Linked Policy", "Investment-Linked Policy", "Life Insurance Policy", "Whole Life Plan", "Term Life Plan", "Insurance Plan", "ILP", "Annuity Plan". Those are subTypes, not product names. If you genuinely cannot find a specific marketed product name in the document, use your Singapore insurance product knowledge to infer the most likely product name from the insurer + subType + visible features — do NOT return empty string unless you truly have zero signal. For example: Manulife + Retirement Income (Par WL) → "RetireReady Plus"; Manulife + Retirement + Limited Pay 5 → "RetireReady Plus – Limited Pay 5"; Great Eastern + Whole Life + CI → "GREAT Flexi Life Cover". Always prefer a specific known product name over an empty string. If you have no signal at all, set productName to "" — but this should be rare. The sub-type goes in the separate "subType" field, not in productName.
+productName must be the SPECIFIC marketed product name as written in the document — "Elite Investment Plan", "Pro Achiever", "Achiever Accumulator", "Platinum Wealth Elite", "LifeReady Plus", "PRUShield Premier", "GREAT TotalCare". NEVER return a generic sub-type or category description as the productName. The following are NOT valid productNames and must never be returned: "Investment Linked Policy", "Investment-Linked Policy", "Life Insurance Policy", "Whole Life Plan", "Term Life Plan", "Insurance Plan", "ILP", "Annuity Plan". Those are subTypes, not product names. If no specific marketed product name appears in the document text, return productName='' (empty string). Do NOT infer from training data — an empty productName is preferable to a guessed one. The FC will fill it in during review. The sub-type goes in the separate "subType" field, not in productName.
 
 PRODUCT NAME POLLUTION — NEVER include the following in productName or policyName: document metadata such as "as of [date]", "currency in SGD", "SGFinDex", "SGFinDex Report", reference/report codes, document dates, page numbers, or any text that looks like a footer, header, or timestamp. These are document artifacts, not policy names. If the only text visible on a page is metadata like "as of 30 Mar 2026, currency in SGD,..." — this is a document header, extract zero policies from it unless other policy fields are visible on that same page.
 
@@ -44497,16 +44529,6 @@ OTHER PLANS:
 - "Income" / "Payout" plans → check if monthly income (Annuity) or lump sum (Endowment)
 - "VitalCare" / "VitalHealth" without "Max" prefix → could be standalone, check context
 
-MANULIFE PRODUCT RECOGNITION (use these exact names when features match):
-- Manulife + participating whole life + retirement income + guaranteed payout → "RetireReady Plus" (subType: Retirement Income (Par WL), category: retirement)
-- Manulife + "Limited Pay 5" + retirement → "RetireReady Plus – Limited Pay 5"
-- Manulife + "Limited Pay 10" + retirement → "RetireReady Plus – Limited Pay 10"
-- Manulife + endowment + "Smart Saver" → "Smart Saver 15 (I) – Limited Pay 5-Years" or match visible name
-- Manulife + whole life + CI → "ManuProtect Whole Life" or "LifeReady Plus"
-- Manulife + term + protection → "ManuProtect Term"
-- Manulife + ILP → "InvestReady" series (match premium term from visible text)
-- If you see "Par WL" with Manulife in the context of retirement/income payouts → this is always RetireReady Plus or a variant
-
 CRITICAL — GUARANTEED-COUPON WHOLE LIFE PLANS ARE RETIREMENT/INCOME, NOT ILP:
 When you see a plan that has ALL of the following characteristics:
 - Limited premium payment term (typically 5, 10, 15, 20 years)
@@ -44520,7 +44542,7 @@ When you see a plan that has ALL of the following characteristics:
 → Examples: AIA Gen3, AIA Gen2, AIA Pro Secure (income variant), Prudential PRUWealth Income, NTUC Income Gro Retire Flex Pro / Gro Retire Ease / Gro Annuity Pro, Singlife MySavings / MyLifeIncome, Manulife RetireReady Plus, China Life Lifetime Income / Life Prestige Gold, Great Eastern GREAT Wealth Multiplier / GREAT Retire Income.
 → For these, set annuityPayout (annual income), annuityStartAge (usually = age + premTerm, e.g. 10-year pay starting at 30 → payouts begin at 40), annuityEndAge (typically lifetime = 100 or whole life). DO NOT set ilpGrowth, ilpDivYield, ilpMgmtFee, or fundAllocations.
 
-AIA GEN3 SPECIFIC: "Give the gift of a lasting legacy", "generation after generation", "3 generations", "guaranteed coupon benefit of 2.25% yearly" are all strong hints for AIA Gen3. This is a participating whole life income plan. Classify as retirement → Retirement Income (Par WL). Use guaranteedCoupon=2.25, annuityPayout = sumAssured × 0.0305 (total illustrated), annuityStartAge = age at entry + 10. NOT an ILP under any circumstances.
+AIA GEN3 / PAR WL INCOME HINT: "gift of a lasting legacy", "generation after generation", "3 generations" are strong classification signals for participating whole life income plans. If those phrases appear, classify as retirement → Retirement Income (Par WL); never as ILP. Use the literal product name as printed on the document — do not substitute. Read annuityPayout from the illustration table; do not compute it from a multiplier. If no product name is visible on the document, return productName='' for FC verification.
 
 KNOWN PRODUCT PREMIUM TERMS — auto-fill premTerm if not stated in document:
 - Manulife InvestReady (III) 13 Yrs Flexi 10 → premTerm: 10 (the "Flexi 10" indicates 10-year premium term)
