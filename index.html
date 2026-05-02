@@ -674,9 +674,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.33';
+const APP_VERSION = 'v2.3.0-rc2e.34';
 const APP_VERSION_DATE = '2026-05-03';
-const APP_VERSION_NAME = 'Brand-style file-type icons';
+const APP_VERSION_NAME = 'Document-style file icons';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 const APP_TAB_IDS = new Set(['profile', 'dashboard', 'policies', 'clients', 'repository', 'report', 'settings']);
 function getInitialPolicyLensTab() {
@@ -687,6 +687,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.3.0-rc2e.34',
+  date: '2026-05-03',
+  name: 'Document-style file icons',
+  sections: [{
+    heading: 'Visual',
+    items: ['Staged-file tiles now render as proper document icons: white paper background, faint content lines, folded top-right corner, and a brand-coloured strip at the bottom with a single-letter label (PDF / X for Excel / W for Word / </> for HTML). Reads at a glance as "a file" instead of as a coloured block that can look like a warning state.']
+  }]
+}, {
   version: 'v2.3.0-rc2e.33',
   date: '2026-05-03',
   name: 'Brand-style file-type icons',
@@ -5697,41 +5705,52 @@ function stagedFileShortName(file) {
   return name.slice(0, Math.max(8, 18 - ext.length - 1)) + '...' + ext;
 }
 
-// rc2e.33: Brand-evocative document badge for staged-file tiles. Folded-corner
-// silhouette + brand colour per type. Designed to be recognisable at a glance
-// without lifting any trademarked logos (mirrors the InsurerBadge approach).
+// rc2e.33/34: Document-style file-type badge for staged-file tiles. White paper
+// background + faint content lines + folded top-right corner + brand-coloured
+// strip at the bottom with a single-letter or short label (PDF/X/W/</> /TXT).
+// Mirrors the universal Office/IDE file-icon convention so it reads as "a file"
+// at a glance instead of as a warning. Trademark-safe: brand-evocative colours
+// only, no logos lifted (same posture as InsurerBadge).
 const _FILE_TYPE_PALETTE = {
   PDF: {
-    bg: '#E94C3C',
-    fold: '#A82A1E'
+    strip: '#E94C3C',
+    fold: '#A82A1E',
+    label: 'PDF'
   },
   XLS: {
-    bg: '#1D6F42',
-    fold: '#0F4E2C'
+    strip: '#1D6F42',
+    fold: '#0F4E2C',
+    label: 'X'
   },
   DOC: {
-    bg: '#2A5699',
-    fold: '#1B3A6E'
+    strip: '#2A5699',
+    fold: '#1B3A6E',
+    label: 'W'
   },
   HTML: {
-    bg: '#E96228',
-    fold: '#A8431A'
+    strip: '#E96228',
+    fold: '#A8431A',
+    label: '</>'
   },
   TXT: {
-    bg: '#6B7280',
-    fold: '#4B5563'
+    strip: '#6B7280',
+    fold: '#4B5563',
+    label: 'TXT'
   },
   RTF: {
-    bg: '#6B7280',
-    fold: '#4B5563'
+    strip: '#6B7280',
+    fold: '#4B5563',
+    label: 'RTF'
   },
   IMG: {
-    bg: '#3B82F6',
-    fold: '#2563EB'
+    strip: '#3B82F6',
+    fold: '#2563EB',
+    label: 'IMG'
   },
   FILE: {
-    bg: '#374151',
-    fold: '#1F2937'
+    strip: '#374151',
+    fold: '#1F2937',
+    label: 'FILE'
   }
 };
 function FileTypeBadge({
@@ -5740,43 +5759,74 @@ function FileTypeBadge({
 }) {
   const dim = size || 56;
   const kind = stagedFileKind(file);
-  const palette = _FILE_TYPE_PALETTE[kind.label] || _FILE_TYPE_PALETTE.FILE;
-  const foldSize = Math.round(dim * 0.28);
+  const cfg = _FILE_TYPE_PALETTE[kind.label] || _FILE_TYPE_PALETTE.FILE;
+  const stripHeight = Math.round(dim * 0.42);
+  const foldSize = Math.max(8, Math.round(dim * 0.22));
+  // Faint content lines suggesting document text (above the brand strip).
+  const lineColor = '#D1D5DB';
   return /*#__PURE__*/React.createElement("div", {
     style: {
       width: dim,
       height: dim,
       position: 'relative',
-      background: palette.bg,
+      background: '#F9FAFB',
       borderRadius: 4,
-      display: 'flex',
-      alignItems: 'flex-end',
-      justifyContent: 'center',
-      paddingBottom: Math.max(4, Math.round(dim * 0.12)),
-      boxShadow: '0 1px 3px rgba(0,0,0,.25)',
+      boxShadow: '0 1px 3px rgba(0,0,0,.3)',
+      overflow: 'hidden',
       flexShrink: 0
     },
     title: kind.label + ' file'
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'absolute',
+      top: '18%',
+      left: '14%',
+      right: '18%',
+      height: Math.max(1, Math.round(dim * 0.04)),
+      background: lineColor,
+      borderRadius: 1
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'absolute',
+      top: '30%',
+      left: '14%',
+      right: '40%',
+      height: Math.max(1, Math.round(dim * 0.04)),
+      background: lineColor,
+      borderRadius: 1
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'absolute',
       top: 0,
       right: 0,
       width: foldSize,
       height: foldSize,
-      background: 'linear-gradient(225deg, ' + palette.fold + ' 50%, transparent 50%)',
-      borderTopRightRadius: 4
+      background: 'linear-gradient(225deg, ' + lineColor + ' 50%, transparent 50%)'
     }
-  }), /*#__PURE__*/React.createElement("span", {
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: stripHeight,
+      background: cfg.strip,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       color: '#fff',
-      fontSize: Math.max(9, Math.round(dim * 0.22)),
       fontWeight: 900,
-      letterSpacing: 0.5,
+      fontSize: Math.max(8, Math.round(dim * (cfg.label.length > 2 ? 0.18 : 0.30))),
+      letterSpacing: cfg.label.length > 2 ? 0.4 : 0.6,
       textShadow: '0 1px 1px rgba(0,0,0,.25)',
       lineHeight: 1
     }
-  }, kind.label));
+  }, cfg.label)));
 }
 function inferUploadIntent(files) {
   const list = Array.from(files || []);
