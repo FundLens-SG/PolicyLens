@@ -664,9 +664,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.27.1';
+const APP_VERSION = 'v2.3.0-rc2e.28';
 const APP_VERSION_DATE = '2026-05-02';
-const APP_VERSION_NAME = 'CHANGELOG backfill and gitignore tidy';
+const APP_VERSION_NAME = 'Generic HTML policy table extraction';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 
 const APP_TAB_IDS = new Set(['profile','dashboard','policies','clients','repository','report','settings']);
@@ -679,6 +679,26 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.3.0-rc2e.28',
+    date: '2026-05-02',
+    name: 'Generic HTML policy table extraction',
+    sections: [
+      {
+        heading: 'HTML extraction',
+        items: [
+          'Added a generic HTML policy table parser that fires when the PolicyLens-branded parser doesn\'t match — recognises any table with insurer + product + premium columns (e.g. RetireWell exports, IFA portal dumps) and imports rows locally without an AI call, bypassing the rate-limit cascade entirely.',
+          'Generic HTML rows arrive flagged for FC verification (medium confidence on category and sub-type) so the Bulk Verify modal surfaces them for review before save.'
+        ]
+      },
+      {
+        heading: 'Diagnostics',
+        items: [
+          'Gemini text-only extract now logs the full HTTP error body for non-OK responses so future 400/500-class failures are diagnosable from the browser console without screenshots.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.3.0-rc2e.27.1',
     date: '2026-05-02',
@@ -4966,7 +4986,7 @@ async function pdfToImages(pdfDoc, maxPages=12) {
 // CLEAN even if the FC never actually reviewed anything. Bumping the version
 // forces a re-extraction next time those same files are uploaded, and the
 // one-time cleanup in App init purges the stale entries from IndexedDB.
-const EXTRACT_PIPELINE_VERSION = 'v15.14-2026-05-02-html-reliability';
+const EXTRACT_PIPELINE_VERSION = 'v15.15-2026-05-02-generic-html-table';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -8607,6 +8627,110 @@ async function extractPolicyLensHtmlFilesLocally(files) {
           extractionNotes: 'Imported locally from a PolicyLens HTML portfolio export row.',
           notes: 'Imported from a PolicyLens portfolio dashboard. Review against the original policy document if deeper rider or cash-value details are needed.',
           ...(_confidence.length ? { _confidence } : {}),
+        });
+      }
+    }
+  }
+  return out.filter(p => p.insurer && p.productName);
+}
+
+// rc2e.28: Generic HTML policy table extractor — fires when the PolicyLens-
+// branded parser above doesn't match but the file still contains a
+// recognisable policy table (e.g. RetireWell exports, IFA portal dumps,
+// generic insurance summaries). Strict triple-class header gate (insurer +
+// product + premium ALL required) keeps false positives away from
+// non-policy tables (calendars, fee schedules, comparison charts).
+async function extractGenericPolicyTableHtmlLocally(files) {
+  const out = [];
+  const HEADER_PATTERNS = {
+    insurer: /\b(insurer|provider|company|insurance|insured\s+by|underwriter)\b/i,
+    product: /\b(product|plan|policy(?!\s*(?:number|no\b|#))|coverage)\b/i,
+    premium: /\b(premium|contribution|cost|amount\s*paid|payable|annual\s*pay|monthly\s*pay)\b/i,
+    policyNumber: /\b(policy\s*(?:number|no\.?|#)|contract\s*(?:number|no\.?|#))\b/i,
+    sumAssured: /\b(sum\s*assured|sum\s*insured|coverage\s*amount|benefit\s*amount|sa)\b/i,
+    subType: /\b(sub-?type|category|type|class)\b/i,
+    payment: /\b(payment\s*method|payment\s*mode|pay(?:ment)?\s*(?:by|via))\b/i,
+    owner: /\b(policy\s*(?:owner|holder)|policyholder|life\s*assured|life\s*insured|insured\s*person)\b/i,
+  };
+  for (const file of Array.from(files || [])) {
+    if (!isHtmlLikeFile(file)) continue;
+    if (typeof DOMParser === 'undefined') continue;
+    let doc = null;
+    try {
+      const raw = await file.text();
+      doc = new DOMParser().parseFromString(raw, 'text/html');
+    } catch (_) { continue; }
+    if (!doc) continue;
+    doc.querySelectorAll('script,style,noscript,svg,canvas').forEach(el => el.remove());
+    const titleText = (doc.querySelector('h1')?.textContent || doc.querySelector('title')?.textContent || cleanUploadFileName(file)).replace(/\s+/g, ' ').trim();
+    const ownerMatch = titleText.match(/^(.+?)(?:'s|\s+Policy Summary|\s+Portfolio Dashboard|\s+Retirement Plan|\s+—|\s+-)/i);
+    const ownerName = (ownerMatch?.[1] || '').trim();
+    const tables = Array.from(doc.querySelectorAll('table'));
+    for (const table of tables) {
+      const rows = Array.from(table.querySelectorAll('tr'));
+      if (rows.length < 2) continue;
+      // Header row: first row with any <th>, else row 0.
+      let headerRowIdx = rows.findIndex(tr => tr.querySelector('th'));
+      if (headerRowIdx < 0) headerRowIdx = 0;
+      const headerCells = Array.from(rows[headerRowIdx].querySelectorAll('th,td'))
+        .map(td => (td.textContent || '').replace(/\s+/g, ' ').trim());
+      if (headerCells.length < 4) continue;
+      // Map header cell positions to known field types.
+      const colIdx = { insurer:-1, product:-1, premium:-1, policyNumber:-1, sumAssured:-1, subType:-1, payment:-1, owner:-1 };
+      headerCells.forEach((h, i) => {
+        for (const [field, re] of Object.entries(HEADER_PATTERNS)) {
+          if (colIdx[field] < 0 && re.test(h)) colIdx[field] = i;
+        }
+      });
+      // Triple-class gate: must have insurer + product + premium columns.
+      if (colIdx.insurer < 0 || colIdx.product < 0 || colIdx.premium < 0) continue;
+      // Extract data rows.
+      for (let ri = headerRowIdx + 1; ri < rows.length; ri++) {
+        const cells = Array.from(rows[ri].querySelectorAll('td,th'))
+          .map(td => (td.textContent || '').replace(/\s+/g, ' ').trim());
+        if (!cells.some(Boolean)) continue;
+        // Skip section/spacer rows that have far fewer cells than the header.
+        if (cells.length < Math.ceil(headerCells.length / 2)) continue;
+        const insurer = cells[colIdx.insurer] || '';
+        const productName = cells[colIdx.product] || '';
+        if (!insurer || !productName) continue;
+        // Filter rows where the cells just echo the header words.
+        if (/^(insurer|provider|company)$/i.test(insurer) || /^(policy|product|plan|coverage)$/i.test(productName)) continue;
+        const premium = parsePolicyLensPremiumText(cells[colIdx.premium] || '');
+        const subTypeFromCell = colIdx.subType >= 0 ? String(cells[colIdx.subType] || '').trim() : '';
+        const category = policyLensHtmlCategory(subTypeFromCell) || policyLensHtmlCategory(productName) || 'investment';
+        const subType = inferSubTypeFromPolicyLensHtml(subTypeFromCell, category);
+        const sumAssured = colIdx.sumAssured >= 0 ? parsePolicyLensAmountText(cells[colIdx.sumAssured] || '') : null;
+        const paymentRaw = colIdx.payment >= 0 ? (cells[colIdx.payment] || '') : '';
+        const policyNumber = colIdx.policyNumber >= 0 ? String(cells[colIdx.policyNumber] || '').trim() : '';
+        const rowOwner = colIdx.owner >= 0 ? String(cells[colIdx.owner] || '').trim() : '';
+        const personName = rowOwner || ownerName || '';
+        out.push({
+          insurer,
+          productName,
+          policyName: productName,
+          policyNumber: policyNumber || '',
+          category,
+          subType,
+          currency: 'SGD',
+          sumAssured,
+          premiumAmount: premium.premiumAmount,
+          premFrequency: premium.premFrequency,
+          premiumStructure: premium.premiumStructure,
+          paymentMethod: normalizeHtmlPaymentMethod(paymentRaw) || 'Cash',
+          policyOwner: personName || null,
+          lifeInsured: personName || null,
+          documentOwner: personName || null,
+          documentRole: personName ? 'owner' : 'unknown',
+          documentType: 'portfolio_statement',
+          sourceImage: cleanUploadFileName(file),
+          sourcePage: 'Generic HTML policy table',
+          extractionNotes: 'Imported locally from a generic HTML policy table — verify category and sub-type.',
+          notes: 'Imported from a generic HTML policy table (e.g. RetireWell, IFA portal export). Review against the original policy document for rider, cash-value, and beneficiary details.',
+          _confidence: [
+            { field: 'category', level: 'medium', reason: 'Inferred from generic HTML table — verify category' },
+            { field: 'subType', level: 'medium', reason: 'Inferred from generic HTML table — verify sub-type' },
+          ],
         });
       }
     }
@@ -24620,6 +24744,9 @@ async function geminiExtract(geminiKey, systemPrompt, contentBlocks, maxTokens) 
   }
   if(!resp.ok) {
     const errData = await resp.json().catch(()=>({}));
+    // rc2e.28: Capture full Gemini error body so 400/500-class failures can be
+    // diagnosed from the console without requiring user screenshots.
+    console.warn('[Gemini Extract] HTTP ' + resp.status + ' error body:', JSON.stringify(errData).slice(0, 800));
     throw new Error('Gemini API error ('+resp.status+'): '+(errData.error?.message||resp.statusText));
   }
   const data = await resp.json();
@@ -34056,10 +34183,30 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
           console.log('[Extract] Local PolicyLens HTML parser returned', arr.length, 'policies - skipping AI call');
           try { toast('Imported '+arr.length+' item'+(arr.length===1?'':'s')+' from PolicyLens HTML locally', 'success', 3500); } catch(_) {}
         } else {
-          console.log('[Extract] Local HTML parser found no PolicyLens portfolio rows - falling back to AI');
+          console.log('[Extract] Local PolicyLens HTML parser found no rows - trying generic HTML policy table parser');
         }
       } catch (localHtmlErr) {
-        console.warn('[Extract] Local HTML parser failed - falling back to AI:', localHtmlErr?.message || localHtmlErr);
+        console.warn('[Extract] Local PolicyLens HTML parser failed - trying generic HTML parser:', localHtmlErr?.message || localHtmlErr);
+      }
+    }
+    // rc2e.28: Generic HTML policy table fallback — fires when the PolicyLens-
+    // branded parser found nothing but the file may still be a recognisable
+    // policy table (e.g. RetireWell exports, IFA portal dumps). Triple-class
+    // header gate (insurer + product + premium) inside the function keeps it
+    // from misclassifying random non-policy tables.
+    if (arr == null && precomputedRawText == null && batchFiles.length > 0 && batchFiles.every(isHtmlLikeFile)) {
+      try {
+        const genericHtmlPolicies = await extractGenericPolicyTableHtmlLocally(batchFiles);
+        if (genericHtmlPolicies.length > 0) {
+          arr = genericHtmlPolicies;
+          expectedCount = genericHtmlPolicies.length;
+          console.log('[Extract] Generic HTML policy table parser returned', arr.length, 'policies - skipping AI call');
+          try { toast('Imported '+arr.length+' item'+(arr.length===1?'':'s')+' from HTML policy table locally', 'success', 3500); } catch(_) {}
+        } else {
+          console.log('[Extract] Generic HTML parser found no policy rows - falling back to AI');
+        }
+      } catch (genericHtmlErr) {
+        console.warn('[Extract] Generic HTML parser failed - falling back to AI:', genericHtmlErr?.message || genericHtmlErr);
       }
     }
     if (precomputedRawText != null) {
