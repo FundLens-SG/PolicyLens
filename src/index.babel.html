@@ -664,9 +664,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.29';
-const APP_VERSION_DATE = '2026-05-02';
-const APP_VERSION_NAME = 'Image chunk sizing for fewer split duplicates';
+const APP_VERSION = 'v2.3.0-rc2e.30';
+const APP_VERSION_DATE = '2026-05-03';
+const APP_VERSION_NAME = 'Owner/LA correctness pass';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 
 const APP_TAB_IDS = new Set(['profile','dashboard','policies','clients','repository','report','settings']);
@@ -679,6 +679,26 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.3.0-rc2e.30',
+    date: '2026-05-03',
+    name: 'Owner/LA correctness pass',
+    sections: [
+      {
+        heading: 'Owner / Life Assured',
+        items: [
+          'RetireLens HTML imports no longer set the policy owner to "RetireLens" or the placeholder "Client". The parser now prefers the explicit state.name field, falls back to title parsing only when state.name is a placeholder, and rejects brand/app/placeholder words on both sources — leaving owner/LA empty when no real person name is available so Bulk Verify can prompt for routing.',
+          'When a single-owner spreadsheet/HTML import re-routes the policy owner to the inferred client name, the life assured is now also re-routed if the source document had owner == life assured. Previously the owner moved to the new name while the life assured stayed stranded at the original (often brand/placeholder) value.'
+        ]
+      },
+      {
+        heading: 'Client rename',
+        items: [
+          'Renaming a client (via My Profile or the client picker) now propagates the new name to every policy whose policyOwner or lifeInsured matched the old name. A toast confirms how many policies were updated. Without this, the old name lingered on policies and had to be edited one by one.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.3.0-rc2e.29',
     date: '2026-05-02',
@@ -5042,7 +5062,7 @@ async function pdfToImages(pdfDoc, maxPages=12) {
 // CLEAN even if the FC never actually reviewed anything. Bumping the version
 // forces a re-extraction next time those same files are uploaded, and the
 // one-time cleanup in App init purges the stale entries from IndexedDB.
-const EXTRACT_PIPELINE_VERSION = 'v15.17-2026-05-02-image-chunk-10';
+const EXTRACT_PIPELINE_VERSION = 'v15.18-2026-05-03-owner-la-correctness';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -8868,6 +8888,16 @@ function _retireLensCategoryFromCat(cat) {
   if (c === 'retirement' || c === 'annuity') return 'retirement';
   return '';
 }
+// rc2e.30: Reject brand names, app placeholders, and generic words that the
+// RetireLens / generic HTML parsers might accidentally pick up as the owner.
+// Returns true when the input should be treated as "no real person name here".
+function _isPlaceholderPersonName(raw) {
+  const s = String(raw || '').toLowerCase().replace(/[©®™]/g, '').replace(/\s+/g, ' ').trim();
+  if (!s) return true;
+  if (s.length < 2) return true;
+  if (/^(retirelens|retirewell|policylens|fundlens|newslens|expenselens|crmlens|cklens|advisor|fc|client|untitled|sample|demo|placeholder|test|temp|none|n\/a|na|nil|null|unknown)$/i.test(s)) return true;
+  return false;
+}
 function _retireLensSubTypeFromSubtype(subtype, category) {
   const s = String(subtype || '').toLowerCase();
   if (!s) return '';
@@ -8913,11 +8943,22 @@ async function extractRetireLensHtmlFilesLocally(files) {
     const arrayBody = raw.slice(arrayOpen + 1, arrayClose);
     const policyBlocks = _retireLensSplitPoliciesArray(arrayBody);
     if (policyBlocks.length === 0) continue;
-    const ownerNameFromTitle = (function() {
+    // rc2e.30: Prefer state.name (the explicit client name field inside the JS
+    // state object) over title parsing. Title is "RetireLens© Financial Planning
+    // Preview" by default — without a client name in it — and the previous regex
+    // captured "RetireLens©" as the owner. Filter both sources through the
+    // placeholder rejector so brand names and "Client" defaults don't leak in.
+    const ownerNameFromState = (function() {
+      const sm = raw.match(/\bstate\s*=\s*\{[\s\S]{0,4000}?\bname\s*:\s*['"]([^'"\n]+)['"]/);
+      const candidate = (sm?.[1] || '').replace(/\s+/g, ' ').trim();
+      return _isPlaceholderPersonName(candidate) ? '' : candidate;
+    })();
+    const ownerNameFromTitle = ownerNameFromState ? '' : (function() {
       const m = raw.match(/<title>([^<]+)<\/title>/i);
       const t = (m?.[1] || '').replace(/\s+/g, ' ').trim();
       const om = t.match(/^(.+?)(?:'s|\s+RetireLens|\s+Financial Planning|\s+—|\s+-)/i);
-      return (om?.[1] || '').trim();
+      const candidate = (om?.[1] || '').trim();
+      return _isPlaceholderPersonName(candidate) ? '' : candidate;
     })();
     for (const block of policyBlocks) {
       const f = (n) => _retireLensFieldFromBlock(block, n);
@@ -8988,10 +9029,13 @@ async function extractRetireLensHtmlFilesLocally(files) {
         premFrequency: premAnnual ? 'annual' : 'unknown',
         premiumStructure: premAnnual ? 'Regular Premium' : null,
         paymentMethod: premMedisave ? 'MediSave' : 'Cash',
-        policyOwner: ownerNameFromTitle || null,
-        lifeInsured: ownerNameFromTitle || null,
-        documentOwner: ownerNameFromTitle || null,
-        documentRole: ownerNameFromTitle ? 'owner' : 'unknown',
+        // rc2e.30: Resolved owner is state.name (preferred) or filtered title.
+        // Both have already been run through _isPlaceholderPersonName, so brand
+        // names like "RetireLens" and the "Client" placeholder no longer leak in.
+        policyOwner: (ownerNameFromState || ownerNameFromTitle) || null,
+        lifeInsured: (ownerNameFromState || ownerNameFromTitle) || null,
+        documentOwner: (ownerNameFromState || ownerNameFromTitle) || null,
+        documentRole: (ownerNameFromState || ownerNameFromTitle) ? 'owner' : 'unknown',
         documentType: 'policy_schedule',
         sourceImage: cleanUploadFileName(file),
         sourcePage: 'RetireLens state.policies entry',
@@ -19010,6 +19054,46 @@ function App() {
     return updated;
   };
 
+  // rc2e.30: When the FC renames a client (via My Profile or the client picker),
+  // any policy whose policyOwner or lifeInsured matched the OLD name should be
+  // renamed to the NEW name. Without this, owner/LA fields stay stranded at
+  // brand placeholders or stale values from extraction. Mirrors the shape of
+  // recalculatePolicyAgesForClient above (per-policy dbPut + version bump +
+  // selective drive write + active-tab repaint).
+  const recalculatePolicyPersonNamesForClient = async (targetClientId, oldName, newName, reason = 'profile-name-sync') => {
+    if (!targetClientId || !oldName || !newName) return 0;
+    const oldKey = normalizePersonNameKey(oldName);
+    const newClean = String(newName || '').trim();
+    if (!oldKey || !newClean || oldKey === normalizePersonNameKey(newClean)) return 0;
+    const allPols = await dbGetAll('policies').catch(() => []);
+    let updated = 0;
+    for (const pol of allPols || []) {
+      const polClientId = pol.clientId || activeClientIdRef.current || activeClientId;
+      if (polClientId !== targetClientId) continue;
+      const ownerMatches = pol.policyOwner && normalizePersonNameKey(pol.policyOwner) === oldKey;
+      const lifeMatches = pol.lifeInsured && normalizePersonNameKey(pol.lifeInsured) === oldKey;
+      if (!ownerMatches && !lifeMatches) continue;
+      const next = { ...pol, clientId: targetClientId };
+      if (ownerMatches) next.policyOwner = newClean;
+      if (lifeMatches) next.lifeInsured = newClean;
+      const versions = bumpFieldVersions(next, pol, pol._fieldVersions || {});
+      const enriched = stampPolicySyncMeta({ ...next, _fieldVersions: versions }, reason);
+      await dbPut('policies', enriched);
+      updated++;
+    }
+    if (updated > 0) {
+      if (targetClientId === activeClientIdRef.current) {
+        const fresh = await dbGetAll('policies').catch(() => []);
+        setPolicies((fresh || []).filter(p => (p.clientId || targetClientId) === targetClientId));
+      }
+      await scheduleDriveWriteForClient(targetClientId, reason, 1000);
+      try { window.dispatchEvent(new Event('policylens-clients-changed')); } catch(_) {}
+      try { toast('Renamed owner/LA on ' + updated + ' polic' + (updated === 1 ? 'y' : 'ies'), 'info', 4500); } catch(_) {}
+      console.log('[Sync] Renamed policyOwner/lifeInsured on ' + updated + ' policies for client ' + targetClientId + ' (' + oldName + ' → ' + newClean + ')');
+    }
+    return updated;
+  };
+
   const savePolicy = async (incomingP) => {
     // Dedup pass — if an existing policy shares (policyNumber|insurer),
     // merge into it rather than creating a duplicate row.
@@ -19374,6 +19458,10 @@ function App() {
     await dbPut('settings',{key:'apiKey',value:trimmed});
   };
   const saveClientName = async (n) => {
+    // rc2e.30: capture the previous name BEFORE we overwrite it, so the
+    // rename-propagation helper below can rewrite policyOwner/lifeInsured on
+    // every policy that referenced the old name.
+    const previousName = clientName || (await dbGet('settings', 'clientName').catch(() => null))?.value || '';
     setClientName(n);
     await dbPut('settings',{key:'clientName',value:n});
     const cid = activeClientIdRef.current || activeClientId;
@@ -19391,11 +19479,18 @@ function App() {
           if (ds.folderId) handleClientRename(cid, n);
         }
       } catch(_) {}
+      // rc2e.30: propagate the rename to every policy whose owner/LA referenced
+      // the old name. Helper exits cheaply when nothing matches.
+      await recalculatePolicyPersonNamesForClient(cid, previousName, n, 'client-name-save').catch(() => {});
       await scheduleDriveWriteForClient(cid, 'client-name-save', 1000);
     }
   };
   const saveProfile = async (p) => {
     const profileClientId = activeClientIdRef.current || activeClientId;
+    // rc2e.30: capture the previous client name BEFORE we overwrite it, so the
+    // rename-propagation helper at the end of this function can rewrite
+    // policyOwner/lifeInsured on every policy that referenced the old name.
+    const previousProfileName = clientProfile?.name || clientName || '';
     // v2.2.0-rc2.1.4: Strip tier from clientProfile — drive_state.tier is the single source of truth
     const { tier: _tierIgnored, ...profileWithoutTier } = p;
     // ── CLOUD SYNC: bump field versions, push fire-and-forget ──
@@ -19469,6 +19564,11 @@ function App() {
       }
     }
     await recalculatePolicyAgesForClient(profileClientId, enriched, 'profile-age-sync');
+    // rc2e.30: propagate the rename to every policy whose owner/LA referenced
+    // the old name. Helper exits cheaply when nothing matches.
+    if (profileClientId && enriched.name && previousProfileName && enriched.name !== previousProfileName) {
+      await recalculatePolicyPersonNamesForClient(profileClientId, previousProfileName, enriched.name, 'profile-name-sync').catch(() => {});
+    }
   };
 
   // saveHouseDefaults: persists firm-level planning defaults to IndexedDB and
@@ -37415,8 +37515,19 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
           delete clean._ownerRoute; delete clean._ownerRoutedFrom;
           clean.clientId = importClientId;
           if (autoImportClient?.clientName) {
+            // rc2e.30: capture original owner==life relationship BEFORE we
+            // rewrite policyOwner, so we can keep them in sync if they were
+            // the same person on the source document.
+            const ownerWasLife = !!(p.policyOwner && p.lifeInsured
+              && normalizePersonNameKey(p.policyOwner) === normalizePersonNameKey(p.lifeInsured));
             clean.documentOwner = clean.documentOwner || autoImportClient.clientName;
             if (!clean.policyOwner || isWeakPolicyOwnerValue(clean.policyOwner)) clean.policyOwner = autoImportClient.clientName;
+            // rc2e.30: preserve owner==life relationship when overriding owner
+            // to the import client name. Without this, lifeInsured gets stranded
+            // at the original (often weak/brand) value while owner moves on.
+            if (ownerWasLife && clean.policyOwner === autoImportClient.clientName) {
+              clean.lifeInsured = autoImportClient.clientName;
+            }
           }
 
           const currentClientPolicies = (policies || []).filter(ep => (ep.clientId || importClientId) === importClientId);
