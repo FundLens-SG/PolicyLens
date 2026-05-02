@@ -674,7 +674,7 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.34';
+const APP_VERSION = 'v2.3.0-rc2e.35';
 const APP_VERSION_DATE = '2026-05-03';
 const APP_VERSION_NAME = 'Document-style file icons';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
@@ -4347,7 +4347,7 @@ async function pdfToImages(pdfDoc, maxPages = 12) {
 // CLEAN even if the FC never actually reviewed anything. Bumping the version
 // forces a re-extraction next time those same files are uploaded, and the
 // one-time cleanup in App init purges the stale entries from IndexedDB.
-const EXTRACT_PIPELINE_VERSION = 'v15.18-2026-05-03-owner-la-correctness';
+const EXTRACT_PIPELINE_VERSION = 'v15.19-2026-05-03-xlsx-multi-section';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -7899,6 +7899,170 @@ function findXlsxPolicyHeaderRow(matrix) {
   }
   return bestScore >= 6 ? bestIndex : -1;
 }
+// rc2e.35: Multi-section spreadsheet support. The Tan Kah Lan XLSX has
+// six sub-tables on one sheet (Fixed Deposits, Short Term Endowments,
+// Long Term Endowments, Income, Govt Schemes, Investment), each with
+// its own header row and a single-cell section banner above it. The
+// single-header detector only catches the highest-scoring header and
+// silently treats every later section as overflow data with the wrong
+// column map and category. We now find ALL header rows, attach the
+// nearest section label, and bound each header's data range to the
+// next section banner.
+function _looksLikeXlsxSectionLabel(line) {
+  const s = String(line || '').trim();
+  if (!s || s.length < 3 || s.length > 40) return false;
+  if (!/[a-z]/i.test(s)) return false;
+  if (/[$%]|\d{4}|\d[,.]\d|s\d{7}|\bnric\b|\bdob\b|\baddress\b|\bcontact\b/i.test(s)) return false;
+  if (/^(no|s\/no|serial)\.?$/i.test(s)) return false;
+  if (/\bpolicy\s+(no|number|name)\b|\binsurer\b|\bsum\s*(assured|insured)\b/i.test(s)) return false;
+  // rc2e.35: don't use isLikelyXlsxProfileNameLine — multi-word section
+  // labels like "Short Term Endowments" trip the >=2-words name heuristic.
+  // Names typically have parenthetical aliases (e.g. "Tan Kah Lan (Belinda)")
+  // and contain personal honorifics; section labels do not.
+  if (/\([^)]+\)/.test(s)) return false;
+  if (/\b(mr|mrs|ms|miss|dr|madam|mdm|mister)\b\.?/i.test(s)) return false;
+  return true;
+}
+function _findSectionLabelAbove(matrix, headerIndex) {
+  const stop = Math.max(0, headerIndex - 4);
+  for (let r = headerIndex - 1; r >= stop; r--) {
+    const cells = (matrix[r] || []).map(xlsxCellText).filter(Boolean);
+    if (cells.length !== 1) continue;
+    if (_looksLikeXlsxSectionLabel(cells[0])) return {
+      label: cells[0],
+      row: r
+    };
+  }
+  return null;
+}
+function findAllXlsxPolicyHeaderRows(matrix) {
+  const limit = Math.min(matrix.length, 200);
+  const headers = [];
+  for (let i = 0; i < limit; i++) {
+    const cells = matrix[i] || [];
+    const nonEmpty = cells.filter(v => xlsxCellText(v)).length;
+    if (nonEmpty < 2) continue;
+    if (scoreXlsxPolicyHeaderRow(cells) < 6) continue;
+    const section = _findSectionLabelAbove(matrix, i);
+    headers.push({
+      headerIndex: i,
+      sectionLabel: section?.label || '',
+      sectionRow: section ? section.row : i
+    });
+  }
+  // Bound each header's data range at the next section banner (or next
+  // header row if there's no banner). End-of-sheet for the last one.
+  for (let k = 0; k < headers.length; k++) {
+    const next = headers[k + 1];
+    headers[k].endIndex = next ? next.sectionRow - 1 : matrix.length - 1;
+  }
+  return headers;
+}
+function inferXlsxCategoryFromSection(sectionLabel) {
+  const s = String(sectionLabel || '').toLowerCase().trim();
+  if (!s) return '';
+  if (/fixed\s*deposit|\bt[-\s]*bill\b|\bbond\b|\bssb\b|money\s*market|\bcash\b/.test(s)) return 'cash_investments';
+  if (/short[\s-]*term\s*(endow|sav)/.test(s)) return 'savings';
+  if (/long[\s-]*term\s*endow|\bendow|saving|education/.test(s)) return 'savings';
+  if (/govt\s*scheme|government\s*scheme|cpf\s*life|cpf\s*retirement/.test(s)) return 'retirement';
+  if (/retire|annuity/.test(s)) return 'retirement';
+  if (/\bincome\b/.test(s)) return 'retirement';
+  if (/investment|unit\s*trust|\bilp\b|\bfund\b|wealth|portfolio/.test(s)) return 'investment';
+  if (/shield|hospital|medical|\bhealth\b|careshield|eldershield|medisave/.test(s)) return 'health';
+  if (/maternity|pregnancy/.test(s)) return 'maternity';
+  if (/^insurance$|protection|life\s*cover|\bterm\s+life\b/.test(s)) return 'protection';
+  return '';
+}
+const XLSX_KNOWN_PRODUCT_RULES = [
+// Retirement (lifetime / income endowments + annuities)
+{
+  re: /\bpremierlife\b|premier\s*life\s*generation/i,
+  category: 'retirement',
+  subType: 'Lifetime Endowment'
+}, {
+  re: /\baia\s*gen\s*3\b|\baia\s+gen3\b/i,
+  category: 'retirement',
+  subType: 'Lifetime Endowment'
+}, {
+  re: /\bincomegen\b|income\s+gen\b/i,
+  category: 'retirement',
+  subType: 'Lifetime Endowment'
+}, {
+  re: /lifetime\s+income\s+plan|china\s+life\s+lifetime/i,
+  category: 'retirement',
+  subType: 'Lifetime Endowment'
+}, {
+  re: /gro\s*cash\s*sure|grocashsure/i,
+  category: 'retirement',
+  subType: 'Lifetime Endowment'
+}, {
+  re: /retireready|retiresavvy|prusave\s*retirement/i,
+  category: 'retirement',
+  subType: 'Annuity'
+}, {
+  re: /cpf\s*life|cpf\s*retirement\s*sum/i,
+  category: 'retirement',
+  subType: 'Annuity'
+},
+// Savings (short-term endowments + regular endowments)
+{
+  re: /\bgreat\s*sp\b|great\s*sp\s*series/i,
+  category: 'savings',
+  subType: 'Short-term Endowment'
+}, {
+  re: /\bgoal\s*20\d\d\b|manulife\s*goal\b/i,
+  category: 'savings',
+  subType: 'Short-term Endowment'
+}, {
+  re: /gro\s*capital\s*ease|capital\s*ease/i,
+  category: 'savings',
+  subType: 'Short-term Endowment'
+}, {
+  re: /steadypayout|steady\s*payout/i,
+  category: 'savings',
+  subType: 'Endowment'
+}, {
+  re: /revosave|revo\s*save/i,
+  category: 'savings',
+  subType: 'Endowment'
+}, {
+  re: /\bgrowth\s*policy\b|ntuc\s*growth\b/i,
+  category: 'savings',
+  subType: 'Endowment'
+},
+// Investment (ILPs + unit trusts)
+{
+  re: /investready|invest\s*ready/i,
+  category: 'investment',
+  subType: 'ILP (Investment)'
+}, {
+  re: /\bmanulink\b/i,
+  category: 'investment',
+  subType: 'ILP (Investment)'
+}, {
+  re: /\bfssa\b|first\s*state|dividend\s*advantage|allianz\s*income|gmadi/i,
+  category: 'investment',
+  subType: 'Unit Trust'
+}, {
+  re: /pruwealth|pru\s*wealth/i,
+  category: 'investment',
+  subType: 'ILP (Investment)'
+},
+// Protection (whole life / term)
+{
+  re: /vivolife|vivo\s*life/i,
+  category: 'protection',
+  subType: 'Whole Life'
+}, {
+  re: /\bterm\s+(life|cover|protect)/i,
+  category: 'protection',
+  subType: 'Term Life'
+}];
+function inferXlsxProductRule(productName) {
+  const t = String(productName || '');
+  if (!t.trim()) return null;
+  return XLSX_KNOWN_PRODUCT_RULES.find(r => r.re.test(t)) || null;
+}
 function makeUniqueXlsxHeaders(cells) {
   let last = -1;
   for (let i = 0; i < cells.length; i++) {
@@ -7915,10 +8079,11 @@ function makeUniqueXlsxHeaders(cells) {
   }
   return headers;
 }
-function buildXlsxRowsFromHeader(matrix, headerIndex, headers, sheetName) {
+function buildXlsxRowsFromHeader(matrix, headerIndex, headers, sheetName, sectionLabel = '', endIndex = -1) {
   const rows = [];
   let blankRun = 0;
-  for (let r = headerIndex + 1; r < matrix.length; r++) {
+  const stopAt = endIndex >= 0 ? Math.min(matrix.length - 1, endIndex) : matrix.length - 1;
+  for (let r = headerIndex + 1; r <= stopAt; r++) {
     const cells = matrix[r] || [];
     const hasData = headers.some((_, c) => xlsxCellText(cells[c]));
     if (!hasData) {
@@ -7932,6 +8097,7 @@ function buildXlsxRowsFromHeader(matrix, headerIndex, headers, sheetName) {
       __sourceSheet: sheetName,
       __sourceRow: r + 1
     };
+    if (sectionLabel) row.__sectionContext = sectionLabel;
     headers.forEach((h, c) => {
       row[h] = xlsxCellText(cells[c]);
     });
@@ -8063,37 +8229,52 @@ function normalizeXlsxPremiumFrequency(value) {
 }
 function inferXlsxPolicyCategory(policy) {
   const t = [policy.productName, policy.subType, policy.category].filter(Boolean).join(' ').toLowerCase();
+  // rc2e.35: specific patterns must run BEFORE the broad term/whole/life
+  // catch-all, otherwise PremierLife/Vivolife/Manulife/etc. all get
+  // stamped 'protection' regardless of their actual product type.
   if (/careshield|eldershield|shield|hospital|medisave/.test(t)) return 'health';
-  if (/critical|ci\b|cancer|accident|\bpa\b|disability|income protection|\bdii\b|term|whole|life/.test(t)) return 'protection';
-  if (/retire|annuity|payout/.test(t)) return 'retirement';
-  if (/endow|education|saving/.test(t)) return 'savings';
-  if (/ilp|investment[-\s]*linked|wealth|portfolio|fund/.test(t)) return 'investment';
   if (/maternity|pregnancy/.test(t)) return 'maternity';
-  return 'protection';
+  if (/retire|annuity|\bpayout\b|lifetime\s*income|incomegen|gro\s*cash\s*sure|premierlife|aia\s*gen\s*3/.test(t)) return 'retirement';
+  if (/endow|education|saving|steadypayout|revosave|growth\s*policy|gro\s*capital\s*ease|great\s*sp|manulife\s*goal/.test(t)) return 'savings';
+  if (/\bilp\b|investment[-\s]*linked|wealth|portfolio|\bfund\b|unit\s*trust|investready|manulink|fssa|dividend\s*advantage/.test(t)) return 'investment';
+  if (/fixed\s*deposit|t[-\s]*bill|\bbond\b|\bssb\b|money\s*market/.test(t)) return 'cash_investments';
+  if (/critical|\bci\b|cancer|accident|\bpa\b|disability|income\s*protection|\bdii\b|\bterm\b|\bwhole\s*life\b|vivolife/.test(t)) return 'protection';
+  return '';
 }
 function inferXlsxPolicySubType(policy) {
+  // rc2e.35: prefer Singapore product-name lookup over loose regexes —
+  // PremierLife/Gen3/IncomeGen are Lifetime Endowments (not Whole Life),
+  // InvestReady is ILP (not endowment), etc.
+  const productRule = inferXlsxProductRule(policy.productName || policy.policyName || '');
+  if (productRule?.subType) return productRule.subType;
   const t = [policy.productName, policy.subType, policy.category].filter(Boolean).join(' ').toLowerCase();
-  if (/term/.test(t)) return 'Term Life';
-  if (/whole|vivo|life/.test(t) && parseFloat(policy.cashValue || 0) > 0) return 'Whole Life';
+  if (/\bterm\b/.test(t)) return 'Term Life';
+  if (/short[\s-]*term\s*endow/.test(t)) return 'Short-term Endowment';
+  if (/lifetime\s*endow/.test(t)) return 'Lifetime Endowment';
+  if (/\bwhole\b|vivolife/.test(t) && parseFloat(policy.cashValue || 0) > 0) return 'Whole Life';
   if (/shield|hospital/.test(t)) return 'Integrated Shield Plan';
-  if (/critical|ci\b|cancer/.test(t)) return 'Critical Illness';
+  if (/critical|\bci\b|cancer/.test(t)) return 'Critical Illness';
   if (/accident|\bpa\b/.test(t)) return 'Personal Accident';
-  if (/retire|annuity/.test(t)) return 'Retirement';
+  if (/annuity|cpf\s*life/.test(t)) return 'Annuity';
+  if (/retire|lifetime\s*income/.test(t)) return 'Lifetime Endowment';
   if (/endow|saving/.test(t)) return 'Endowment';
-  if (/ilp|investment[-\s]*linked|wealth/.test(t)) return 'ILP (Investment)';
+  if (/unit\s*trust/.test(t)) return 'Unit Trust';
+  if (/\bilp\b|investment[-\s]*linked|wealth|investready|manulink/.test(t)) return 'ILP (Investment)';
   return '';
 }
 function normalizeXlsxStorageCategory(value) {
   const key = String(value || '').trim().toLowerCase();
   if (!key) return '';
   if (CATEGORIES[key]) return key;
-  if (/cash|fixed deposit|t[-\s]*bill|bond|ssb|deposit|money market/.test(key)) return 'cash_investments';
-  if (/retire|annuity|cpf life|income plan|payout/.test(key)) return 'retirement';
-  if (/shield|hospital|medisave|medical|health|careshield|eldershield/.test(key)) return 'health';
+  // rc2e.35: ordered most-specific-first so generic 'life' tokens don't
+  // pre-empt cash/retire/savings/investment matches on product names.
+  if (/cash|fixed\s*deposit|t[-\s]*bill|\bbond\b|\bssb\b|\bdeposit\b|money\s*market/.test(key)) return 'cash_investments';
+  if (/shield|hospital|medisave|medical|\bhealth\b|careshield|eldershield/.test(key)) return 'health';
   if (/maternity|pregnancy/.test(key)) return 'maternity';
-  if (/ilp|investment|unit trust|wealth|portfolio|fund/.test(key)) return 'investment';
-  if (/endow|saving|education/.test(key)) return 'savings';
-  if (/life|critical|ci\b|accident|\bpa\b|disability|term|whole|protection/.test(key)) return 'protection';
+  if (/retire|annuity|cpf\s*life|income\s*plan|\bpayout\b|lifetime\s*income|incomegen|gro\s*cash\s*sure|premierlife|aia\s*gen\s*3/.test(key)) return 'retirement';
+  if (/endow|saving|education|steadypayout|revosave|growth\s*policy|gro\s*capital\s*ease|great\s*sp|manulife\s*goal/.test(key)) return 'savings';
+  if (/\bilp\b|\binvestment\b|unit\s*trust|wealth|portfolio|\bfund\b|investready|manulink|fssa|dividend\s*advantage/.test(key)) return 'investment';
+  if (/critical|\bci\b|accident|\bpa\b|disability|\bterm\b|\bwhole\s*life\b|vivolife|\bprotection\b/.test(key)) return 'protection';
   return '';
 }
 function isMissingXlsxInsurer(value) {
@@ -8196,8 +8377,9 @@ function addXlsxFieldEvidence(policy, field, sourceText, confidence = 'high', re
 }
 function attachXlsxSourceEvidence(policy, fileName) {
   const sheetLabel = policy.sourceSheet ? 'sheet "' + policy.sourceSheet + '"' : 'spreadsheet';
+  const sectionLabel = policy.sectionContext ? ', section "' + policy.sectionContext + '"' : '';
   const rowLabel = policy.sourceRow ? ', row ' + policy.sourceRow : '';
-  const sourceText = [fileName, sheetLabel + rowLabel].filter(Boolean).join(' / ');
+  const sourceText = [fileName, sheetLabel + sectionLabel + rowLabel].filter(Boolean).join(' / ');
   policy.sourceFile = policy.sourceFile || fileName;
   policy._sourceFile = policy._sourceFile || fileName;
   policy.documentTitle = policy.documentTitle || fileName;
@@ -8291,6 +8473,9 @@ function enrichSpreadsheetPolicyCandidate(policy, context = {}) {
 }
 
 // v2.3.0-rc2d.1: Parse XLSX/CSV to structured rows + compute header signature for column-map cache.
+// rc2e.35: Iterate ALL header rows in each sheet so multi-section
+// spreadsheets (like Tan Kah Lan's Wealth tab) get a separate column
+// map and section context for each sub-table.
 async function parseXlsxToStructured(file) {
   const results = [];
   let workbook;
@@ -8314,29 +8499,44 @@ async function parseXlsxToStructured(file) {
       raw: false,
       blankrows: false
     });
-    const headerRowIndex = findXlsxPolicyHeaderRow(matrix);
-    if (headerRowIndex < 0) continue;
-    const headers = makeUniqueXlsxHeaders(matrix[headerRowIndex] || []);
-    if (headers.length === 0) continue;
-    const rows = buildXlsxRowsFromHeader(matrix, headerRowIndex, headers, sheetName);
-    if (rows.length === 0) continue;
-    const normalized = headers.map(h => normalizeXlsxHeaderName(h)).sort().join('|');
-    const signature = await _sha256Hex(normalized);
-    const rawSample = xlsxRowsToCsvSample(headers, rows);
-    const localMap = inferXlsxColumnMap(headers);
-    const documentProfile = extractXlsxDocumentProfile(matrix, headerRowIndex, sheetName, file?.name || '');
-    results.push({
-      sheetName,
-      headers,
-      rows,
-      signature,
-      rawSample,
-      headerRow: headerRowIndex + 1,
-      localColumnMap: localMap.columnMap,
-      localCategoryColumn: localMap.categoryColumn,
-      localMapConfidence: localMap.confidence,
-      documentProfile
-    });
+    let sections = findAllXlsxPolicyHeaderRows(matrix);
+    if (sections.length === 0) {
+      // Backstop: keep the original single-best-header behavior so any
+      // edge case the multi-pass scan missed still parses.
+      const headerRowIndex = findXlsxPolicyHeaderRow(matrix);
+      if (headerRowIndex < 0) continue;
+      sections = [{
+        headerIndex: headerRowIndex,
+        sectionLabel: '',
+        sectionRow: headerRowIndex,
+        endIndex: matrix.length - 1
+      }];
+    }
+    const documentProfile = extractXlsxDocumentProfile(matrix, sections[0].headerIndex, sheetName, file?.name || '');
+    for (const section of sections) {
+      const headers = makeUniqueXlsxHeaders(matrix[section.headerIndex] || []);
+      if (headers.length === 0) continue;
+      const rows = buildXlsxRowsFromHeader(matrix, section.headerIndex, headers, sheetName, section.sectionLabel || '', section.endIndex);
+      if (rows.length === 0) continue;
+      const labelSuffix = section.sectionLabel ? ' — ' + section.sectionLabel : '';
+      const normalized = headers.map(h => normalizeXlsxHeaderName(h)).concat(section.sectionLabel ? ['__section__:' + section.sectionLabel.toLowerCase()] : []).sort().join('|');
+      const signature = await _sha256Hex(normalized);
+      const rawSample = xlsxRowsToCsvSample(headers, rows);
+      const localMap = inferXlsxColumnMap(headers);
+      results.push({
+        sheetName: sheetName + labelSuffix,
+        sectionLabel: section.sectionLabel || '',
+        headers,
+        rows,
+        signature,
+        rawSample,
+        headerRow: section.headerIndex + 1,
+        localColumnMap: localMap.columnMap,
+        localCategoryColumn: localMap.categoryColumn,
+        localMapConfidence: localMap.confidence,
+        documentProfile
+      });
+    }
   }
   return results;
 }
@@ -9051,24 +9251,66 @@ function applyColumnMap(rows, columnMap, categoryColumn) {
       policy.category = normalizeXlsxStorageCategory(/critical|ci\b/.test(t) ? 'Critical Illness' : /shield|isp|hospital/.test(t) ? 'ISP' : /retire|annuity/.test(t) ? 'Retirement' : /endow|saving/.test(t) ? 'Endowment' : /disability|dii/.test(t) ? 'Disability Income' : /accident|pa\b/.test(t) ? 'Personal Accident' : /careshield|eldershield/.test(t) ? 'CareShield' : /ilp|investment.*link/.test(t) ? 'ILP' : /unit trust/.test(t) ? 'Unit Trust' : /maternity/.test(t) ? 'Maternity' : 'Life');
     }
     if (!policy.policyNumber && !policy.productName && !policy.insurer) continue;
-    if (!policy.category) {
-      policy.category = inferXlsxPolicyCategory(policy);
+    // rc2e.35: section context (multi-section sheet) and product-rule
+    // lookup are stronger signals than the loose regex inference, but
+    // both lose to an explicit category column from the spreadsheet.
+    if (row.__sectionContext) policy.sectionContext = row.__sectionContext;
+    const productRule = inferXlsxProductRule(policy.productName || policy.policyName || '');
+    if (!policy.category && productRule?.category) {
+      policy.category = productRule.category;
       confidence.push({
         field: 'category',
-        level: 'medium',
-        reason: 'Category inferred from spreadsheet policy fields'
+        level: 'high',
+        reason: 'Category derived from Singapore product lookup (' + productRule.re.source + ')'
       });
+    }
+    if (!policy.category && row.__sectionContext) {
+      const sectionCat = inferXlsxCategoryFromSection(row.__sectionContext);
+      if (sectionCat) {
+        policy.category = sectionCat;
+        confidence.push({
+          field: 'category',
+          level: 'high',
+          reason: 'Category derived from spreadsheet section "' + row.__sectionContext + '"'
+        });
+      }
+    }
+    if (!policy.category) {
+      const inferred = inferXlsxPolicyCategory(policy);
+      if (inferred) {
+        policy.category = inferred;
+        confidence.push({
+          field: 'category',
+          level: 'medium',
+          reason: 'Category inferred from spreadsheet policy fields'
+        });
+      } else {
+        confidence.push({
+          field: 'category',
+          level: 'low',
+          reason: 'Spreadsheet did not provide enough signal to infer category — please review.'
+        });
+      }
     }
     policy.category = normalizeXlsxStorageCategory(policy.category) || policy.category;
     if (!policy.subType) {
-      const inferredSubType = inferXlsxPolicySubType(policy);
-      if (inferredSubType) {
-        policy.subType = inferredSubType;
+      if (productRule?.subType) {
+        policy.subType = productRule.subType;
         confidence.push({
           field: 'subType',
-          level: 'medium',
-          reason: 'Sub-type inferred from spreadsheet policy name and values'
+          level: 'high',
+          reason: 'Sub-type derived from Singapore product lookup'
         });
+      } else {
+        const inferredSubType = inferXlsxPolicySubType(policy);
+        if (inferredSubType) {
+          policy.subType = inferredSubType;
+          confidence.push({
+            field: 'subType',
+            level: 'medium',
+            reason: 'Sub-type inferred from spreadsheet policy name and values'
+          });
+        }
       }
     }
     if (!policy.premFrequency && (policy.premiumAmount != null || policy.annualPremium != null)) {
