@@ -674,9 +674,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.30';
+const APP_VERSION = 'v2.3.0-rc2e.31';
 const APP_VERSION_DATE = '2026-05-03';
-const APP_VERSION_NAME = 'Owner/LA correctness pass';
+const APP_VERSION_NAME = 'Edit-form clarity';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 const APP_TAB_IDS = new Set(['profile', 'dashboard', 'policies', 'clients', 'repository', 'report', 'settings']);
 function getInitialPolicyLensTab() {
@@ -687,6 +687,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.3.0-rc2e.31',
+  date: '2026-05-03',
+  name: 'Edit-form clarity',
+  sections: [{
+    heading: 'Policy edit form',
+    items: ['Fixed a corruption bug where picking "Other (type below)" for Owner or Life Assured and typing a name was saving the literal string "__other" instead of the typed name. The form now resolves the typed name on save.', 'When the current Owner or Life Assured value isn\'t a profile/dependant name (e.g. an external import like "RetireLens"), an "✎ Rename" chip next to the field flips the dropdown to a free-text input so renaming is a one-click action instead of a hidden three-step dance via the "Other (type below)" path.', 'Removed the "Inline AI assist" card from the top of the policy edit form. The AI\'s extracted values were already populated into the form fields, so the Accept buttons were busy-work — they only hid each suggestion without changing data. Confidence review still happens in the Bulk Verify modal during import.']
+  }]
+}, {
   version: 'v2.3.0-rc2e.30',
   date: '2026-05-03',
   name: 'Owner/LA correctness pass',
@@ -51144,6 +51152,12 @@ function PolicyFormModal({
   const [repoMatches, setRepoMatches] = useState(null);
   const [pendingRepoItem, setPendingRepoItem] = useState(null);
   const [formScanning, setFormScanning] = useState(false);
+  // rc2e.31: per-field "rename mode" toggles. When the current owner/LA value
+  // isn't in the client's profile (e.g. an external import like "RetireLens"),
+  // an "✎ Rename" chip flips the dropdown to a plain text input scoped to that
+  // field for the rest of the edit. Local-only state — not persisted.
+  const [renameModeOwner, setRenameModeOwner] = useState(false);
+  const [renameModeLife, setRenameModeLife] = useState(false);
   const formCamRef = useRef(null);
   const formUploadRef = useRef(null);
 
@@ -51645,44 +51659,13 @@ function PolicyFormModal({
     if (onDraftChange) onDraftChange(nf);
     return nf;
   });
-  const [acceptedAiAssist, setAcceptedAiAssist] = useState({});
-  const aiFormSuggestions = useMemo(() => {
-    const hasAiEvidence = !!(form._pipelineVersion || form._extractConfidence || form._extractConfidenceReasons || form._derived || form._documentTriage || form._policyFingerprint || form.sourcePage || form.sourceImage);
-    if (!hasAiEvidence) return [];
-    const source = form.sourcePage || form._sourcePage || form.sourceImage || form._sourceImage || form._policyFingerprint?.sourceEvidence?.[0] || '';
-    const sourceSuffix = source ? ' based on ' + String(source).slice(0, 90) : '';
-    const displayValue = (field, value) => {
-      if (field === 'premFrequency') {
-        const labels = {
-          annual: 'Annual',
-          monthly: 'Monthly',
-          single: 'Single premium',
-          unknown: 'Unknown'
-        };
-        return labels[String(value || '').toLowerCase()] || String(value || '');
-      }
-      return String(value || '');
-    };
-    const reasonFor = field => {
-      const raw = form._extractConfidenceReasons?.[field] || form._derived?.[field]?.caption || form._derived?.[field]?.reason || '';
-      if (!raw) return '';
-      if (typeof raw === 'string') return raw;
-      return raw.reason || raw.caption || raw.note || '';
-    };
-    const fields = ['premFrequency', 'premiumStructure', 'paymentMethod', 'policyOwner', 'lifeInsured', 'category', 'subType'];
-    return fields.map(field => {
-      const value = form[field];
-      if (acceptedAiAssist[field] || value == null || value === '' || value === 'unknown') return null;
-      const reason = reasonFor(field);
-      const label = FIELD_LABELS[field] || field;
-      return {
-        field,
-        label,
-        value,
-        text: 'AI thinks ' + label.toLowerCase() + ' is ' + displayValue(field, value) + (reason ? ' - ' + reason : sourceSuffix) + '.'
-      };
-    }).filter(Boolean).slice(0, 3);
-  }, [form, acceptedAiAssist]);
+
+  // rc2e.31: Removed the "Inline AI assist" card and its acceptedAiAssist state.
+  // The AI's extracted values were already populated into the form fields below,
+  // so the Accept buttons were busy-work — they only hid each suggestion without
+  // changing any data. Confidence info still lives on policy._extractConfidence
+  // and continues to surface in the BulkVerify modal during import (the canonical
+  // place for confidence review). Edit form is now quieter.
 
   // ── DIRTY TRACKING + SAFE CLOSE ──
   // Capture initial form snapshot on mount. requestClose() compares against current
@@ -51854,8 +51837,15 @@ function PolicyFormModal({
   }, [form.productName, form.insurer]);
   const handleSubmit = () => {
     if (onDraftClear) onDraftClear();
+    // rc2e.31: resolve "Other (type below)" sentinel to the typed name BEFORE
+    // save. Without this, picking Other and typing saved the literal string
+    // "__other" as the owner/LA — corrupted data.
+    const resolvedOwner = form.policyOwner === '__other' ? String(form.policyOwnerOther || '').trim() : form.policyOwner;
+    const resolvedLife = form.lifeInsured === '__other' ? String(form.lifeInsuredOther || '').trim() : form.lifeInsured;
     onSave({
       ...form,
+      policyOwner: resolvedOwner,
+      lifeInsured: resolvedLife,
       sumAssured: parseFloat(form.sumAssured) || 0,
       annualPremium: parseFloat(form.annualPremium) || 0,
       monthlyBenefit: parseFloat(form.monthlyBenefit) || 0
@@ -52082,53 +52072,7 @@ function PolicyFormModal({
     active: true,
     onFiles: files => scanIntoForm(files),
     label: "\uD83D\uDCCE Drop or paste policy docs here to auto-fill this form"
-  }), aiFormSuggestions.length > 0 && /*#__PURE__*/React.createElement("div", {
-    className: "card",
-    style: {
-      marginBottom: 12,
-      padding: 12,
-      borderLeft: '3px solid var(--teal)',
-      background: 'rgba(91,168,160,.045)'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 10,
-      fontWeight: 900,
-      color: 'var(--teal)',
-      textTransform: 'uppercase',
-      letterSpacing: '.45px',
-      marginBottom: 7
-    }
-  }, "Inline AI assist"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'grid',
-      gap: 6
-    }
-  }, aiFormSuggestions.map(s => /*#__PURE__*/React.createElement("div", {
-    key: s.field,
-    style: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      gap: 10,
-      flexWrap: 'wrap',
-      fontSize: 11,
-      color: 'var(--text2)'
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      lineHeight: 1.35
-    }
-  }, s.text), /*#__PURE__*/React.createElement("button", {
-    className: "btn-secondary btn-sm",
-    onClick: () => {
-      set(s.field, s.value);
-      setAcceptedAiAssist(prev => ({
-        ...prev,
-        [s.field]: true
-      }));
-    }
-  }, "Accept"))))), showFuzzy && !isEdit && /*#__PURE__*/React.createElement("div", {
+  }), showFuzzy && !isEdit && /*#__PURE__*/React.createElement("div", {
     className: "fuzzy-alert"
   }, /*#__PURE__*/React.createElement("h4", null, "\uD83D\uDD0D Possible Repository Matches"), /*#__PURE__*/React.createElement("p", {
     style: {
@@ -52289,45 +52233,99 @@ function PolicyFormModal({
     value: form.policyNumber,
     onChange: e => set('policyNumber', e.target.value),
     placeholder: "e.g. 12345678"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "field"
-  }, /*#__PURE__*/React.createElement("label", null, "Policy Owner"), /*#__PURE__*/React.createElement("select", {
-    value: form.policyOwner || '',
-    onChange: e => set('policyOwner', e.target.value)
-  }, /*#__PURE__*/React.createElement("option", {
-    value: ""
-  }, "\u2014 Select from profile \u2014"), identityNames.map(n => /*#__PURE__*/React.createElement("option", {
-    key: n,
-    value: n
-  }, n)), /*#__PURE__*/React.createElement("option", {
-    value: "__other"
-  }, "Other (type below)")), form.policyOwner === '__other' && /*#__PURE__*/React.createElement("input", {
-    value: form.policyOwnerOther || '',
-    onChange: e => set('policyOwnerOther', e.target.value),
-    placeholder: "Owner name",
-    style: {
-      marginTop: 4
-    }
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "field"
-  }, /*#__PURE__*/React.createElement("label", null, "Life Assured"), /*#__PURE__*/React.createElement("select", {
-    value: form.lifeInsured || '',
-    onChange: e => set('lifeInsured', e.target.value)
-  }, /*#__PURE__*/React.createElement("option", {
-    value: ""
-  }, "\u2014 Select from profile \u2014"), identityNames.map(n => /*#__PURE__*/React.createElement("option", {
-    key: n,
-    value: n
-  }, n)), /*#__PURE__*/React.createElement("option", {
-    value: "__other"
-  }, "Other (type below)")), form.lifeInsured === '__other' && /*#__PURE__*/React.createElement("input", {
-    value: form.lifeInsuredOther || '',
-    onChange: e => set('lifeInsuredOther', e.target.value),
-    placeholder: "Name",
-    style: {
-      marginTop: 4
-    }
-  })), /*#__PURE__*/React.createElement("div", {
+  })), (() => {
+    const ownerInProfile = profileNames.some(n => normalizePersonNameKey(n) === normalizePersonNameKey(form.policyOwner));
+    const showRenameOwner = !!form.policyOwner && !ownerInProfile && form.policyOwner !== '__other';
+    return /*#__PURE__*/React.createElement("div", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("label", {
+      style: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }
+    }, /*#__PURE__*/React.createElement("span", null, "Policy Owner"), (showRenameOwner || renameModeOwner) && /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: () => setRenameModeOwner(v => !v),
+      style: {
+        fontSize: 9,
+        color: 'var(--gold)',
+        background: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        padding: 0,
+        fontWeight: 600
+      }
+    }, renameModeOwner ? '↩ Use dropdown' : '✎ Rename')), renameModeOwner ? /*#__PURE__*/React.createElement("input", {
+      value: form.policyOwner || '',
+      onChange: e => set('policyOwner', e.target.value),
+      placeholder: "Owner name",
+      autoFocus: true
+    }) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("select", {
+      value: form.policyOwner || '',
+      onChange: e => set('policyOwner', e.target.value)
+    }, /*#__PURE__*/React.createElement("option", {
+      value: ""
+    }, "\u2014 Select from profile \u2014"), identityNames.map(n => /*#__PURE__*/React.createElement("option", {
+      key: n,
+      value: n
+    }, n)), /*#__PURE__*/React.createElement("option", {
+      value: "__other"
+    }, "Other (type below)")), form.policyOwner === '__other' && /*#__PURE__*/React.createElement("input", {
+      value: form.policyOwnerOther || '',
+      onChange: e => set('policyOwnerOther', e.target.value),
+      placeholder: "Owner name",
+      style: {
+        marginTop: 4
+      }
+    })));
+  })(), (() => {
+    const lifeInProfile = profileNames.some(n => normalizePersonNameKey(n) === normalizePersonNameKey(form.lifeInsured));
+    const showRenameLife = !!form.lifeInsured && !lifeInProfile && form.lifeInsured !== '__other';
+    return /*#__PURE__*/React.createElement("div", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("label", {
+      style: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }
+    }, /*#__PURE__*/React.createElement("span", null, "Life Assured"), (showRenameLife || renameModeLife) && /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: () => setRenameModeLife(v => !v),
+      style: {
+        fontSize: 9,
+        color: 'var(--gold)',
+        background: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        padding: 0,
+        fontWeight: 600
+      }
+    }, renameModeLife ? '↩ Use dropdown' : '✎ Rename')), renameModeLife ? /*#__PURE__*/React.createElement("input", {
+      value: form.lifeInsured || '',
+      onChange: e => set('lifeInsured', e.target.value),
+      placeholder: "Name",
+      autoFocus: true
+    }) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("select", {
+      value: form.lifeInsured || '',
+      onChange: e => set('lifeInsured', e.target.value)
+    }, /*#__PURE__*/React.createElement("option", {
+      value: ""
+    }, "\u2014 Select from profile \u2014"), identityNames.map(n => /*#__PURE__*/React.createElement("option", {
+      key: n,
+      value: n
+    }, n)), /*#__PURE__*/React.createElement("option", {
+      value: "__other"
+    }, "Other (type below)")), form.lifeInsured === '__other' && /*#__PURE__*/React.createElement("input", {
+      value: form.lifeInsuredOther || '',
+      onChange: e => set('lifeInsuredOther', e.target.value),
+      placeholder: "Name",
+      style: {
+        marginTop: 4
+      }
+    })));
+  })(), /*#__PURE__*/React.createElement("div", {
     className: "field"
   }, /*#__PURE__*/React.createElement("label", null, "Currency"), /*#__PURE__*/React.createElement("select", {
     value: form.currency,
