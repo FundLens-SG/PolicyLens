@@ -674,7 +674,7 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.35';
+const APP_VERSION = 'v2.3.0-rc2e.36';
 const APP_VERSION_DATE = '2026-05-03';
 const APP_VERSION_NAME = 'Document-style file icons';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
@@ -4347,7 +4347,7 @@ async function pdfToImages(pdfDoc, maxPages = 12) {
 // CLEAN even if the FC never actually reviewed anything. Bumping the version
 // forces a re-extraction next time those same files are uploaded, and the
 // one-time cleanup in App init purges the stale entries from IndexedDB.
-const EXTRACT_PIPELINE_VERSION = 'v15.19-2026-05-03-xlsx-multi-section';
+const EXTRACT_PIPELINE_VERSION = 'v15.20-2026-05-03-xlsx-fd-and-distributors';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -7899,6 +7899,48 @@ function findXlsxPolicyHeaderRow(matrix) {
   }
   return bestScore >= 6 ? bestIndex : -1;
 }
+// rc2e.36: Fixed Deposit / T-bill / SSB header detector. The Tan Kah
+// Lan portfolio has an FD sub-table (No. | Bank Name | Amount |
+// Effective Date | Maturity Date | Yield % / pa | Status | Remarks)
+// that scores 0 against the policy header detector — no policy/insurer/
+// premium/sum-assured columns. We score these as cash_investments
+// instead so they don't fall off the local extractor.
+function scoreXlsxFdHeaderRow(cells) {
+  let score = 0;
+  let cashClues = 0;
+  for (const raw of cells || []) {
+    const h = normalizeXlsxHeaderName(raw);
+    if (!h) continue;
+    if (/\bbank\s*name\b|\binstitution\b|\bissuer\b/.test(h)) {
+      score += 4;
+      cashClues += 2;
+    }
+    if (/\b(deposit|principal|fd|t[-\s]*bill|bond)\s*amount\b|\bdeposit\s*sum\b/.test(h)) {
+      score += 4;
+      cashClues += 2;
+    }
+    if (/^amount$|\bdeposit\b|\bprincipal\b/.test(h)) {
+      score += 2;
+      cashClues++;
+    }
+    if (/\byield\b|\binterest\s*rate\b|\b%\s*p\.?\s*a\.?\b|\brate\s*\(%/.test(h)) {
+      score += 3;
+      cashClues++;
+    }
+    if (/\b(maturity|expiry)\s*date\b/.test(h)) {
+      score += 2;
+      cashClues++;
+    }
+    if (/\b(effective|start|placement|inception)\s*date\b/.test(h)) score += 1;
+    if (/\bstatus\b/.test(h)) score += 1;
+    if (/\btenure\b|\bterm\s*\(months?\)|\bduration\b/.test(h)) {
+      score += 2;
+      cashClues++;
+    }
+    if (/\bauto[-\s]*renew/.test(h)) score += 1;
+  }
+  return cashClues >= 2 ? score : 0;
+}
 // rc2e.35: Multi-section spreadsheet support. The Tan Kah Lan XLSX has
 // six sub-tables on one sheet (Fixed Deposits, Short Term Endowments,
 // Long Term Endowments, Income, Govt Schemes, Investment), each with
@@ -7942,10 +7984,36 @@ function findAllXlsxPolicyHeaderRows(matrix) {
     const cells = matrix[i] || [];
     const nonEmpty = cells.filter(v => xlsxCellText(v)).length;
     if (nonEmpty < 2) continue;
-    if (scoreXlsxPolicyHeaderRow(cells) < 6) continue;
+    const policyScore = scoreXlsxPolicyHeaderRow(cells);
+    const fdScore = scoreXlsxFdHeaderRow(cells);
+    // rc2e.36: pick the better-scoring kind per row. Cash/FD threshold
+    // ≥ 6 mirrors the policy threshold; the cashClues guard inside
+    // scoreXlsxFdHeaderRow already prevents random "amount/date/status"
+    // tables from false-firing.
+    let kind = '';
+    let best = 0;
+    if (policyScore >= 6 && policyScore >= fdScore) {
+      kind = 'policy';
+      best = policyScore;
+    } else if (fdScore >= 6) {
+      kind = 'fd';
+      best = fdScore;
+    }
+    if (!kind) continue;
     const section = _findSectionLabelAbove(matrix, i);
+    // For an FD-detected header, require a cash-leaning section banner
+    // OR an explicit bank-name column to avoid mis-firing on tables
+    // that happen to share some keywords. The bank-name keyword is
+    // already a major contributor inside scoreXlsxFdHeaderRow, so the
+    // most common case (Tan Kah Lan-style "Bank Name" column) passes.
+    if (kind === 'fd') {
+      const sectionCash = section && /fixed\s*deposit|\bdeposit\b|t[-\s]*bill|\bbond\b|\bssb\b|cash|money\s*market/i.test(section.label);
+      const hasBankCol = (cells || []).some(c => /\bbank\b|\binstitution\b|\bissuer\b/i.test(normalizeXlsxHeaderName(c)));
+      if (!sectionCash && !hasBankCol) continue;
+    }
     headers.push({
       headerIndex: i,
+      kind,
       sectionLabel: section?.label || '',
       sectionRow: section ? section.row : i
     });
@@ -8218,6 +8286,37 @@ function inferXlsxColumnMap(headers) {
     confidence
   };
 }
+// rc2e.36: Column inferrer for Fixed Deposit / T-bill / SSB tables.
+// Targets the Tan Kah Lan FD layout (No. | Bank Name | Amount |
+// Effective Date | Maturity Date | Yield % / pa | Status | Remarks).
+function inferXlsxFdColumnMap(headers) {
+  const entries = headers.map(header => ({
+    header,
+    norm: normalizeXlsxHeaderName(header)
+  }));
+  const find = (patterns, rejectPatterns = []) => {
+    const hit = entries.find(({
+      norm
+    }) => patterns.some(rx => rx.test(norm)) && !rejectPatterns.some(rx => rx.test(norm)));
+    return hit ? hit.header : null;
+  };
+  const columnMap = {
+    bankName: find([/\bbank\s*name\b/, /\binstitution\b/, /\bissuer\b/, /\bbank\b/]),
+    principal: find([/\b(deposit|principal|fd|t[-\s]*bill|bond)\s*amount\b/, /^amount$/, /\bdeposit\b/, /\bprincipal\b/]),
+    yieldPct: find([/\byield\b/, /\binterest\s*rate\b/, /\b%\s*p\.?\s*a\.?\b/, /\brate\b/]),
+    startDate: find([/\b(effective|start|placement|inception)\s*date\b/]),
+    maturityDate: find([/\b(maturity|expiry)\s*date\b/]),
+    status: find([/\bstatus\b/]),
+    remarks: find([/\bremarks\b/, /\bnotes\b/, /\bcomments?\b/]),
+    tenureMonths: find([/\btenure\b|\bterm\s*\(months?\)|\bduration\b/]),
+    autoRenew: find([/\bauto[-\s]*renew/])
+  };
+  const confidence = (columnMap.bankName ? 3 : 0) + (columnMap.principal ? 3 : 0) + (columnMap.maturityDate ? 2 : 0) + (columnMap.yieldPct ? 2 : 0) + (columnMap.startDate ? 1 : 0) + (columnMap.status ? 1 : 0);
+  return {
+    columnMap,
+    confidence
+  };
+}
 function normalizeXlsxPremiumFrequency(value) {
   const s = String(value || '').toLowerCase();
   if (/single|one[\s-]*time|lump/.test(s)) return 'single';
@@ -8321,6 +8420,64 @@ function inferInsurerFromProductName(productName) {
   }, {
     re: /zurich/i,
     name: 'Zurich'
+  },
+  // rc2e.36: brokerages / banks / robo-advisors that distribute unit
+  // trusts, ILPs, and bonds. Listed AFTER insurance brands so a joint
+  // product like "OCBC Great Family Achiever" still resolves to GE.
+  {
+    re: /philip\s*securities|philips\s*securities|\bpoems\b/i,
+    name: 'Philip Securities'
+  }, {
+    re: /\bocbc\b/i,
+    name: 'OCBC'
+  }, {
+    re: /\bdbs\b/i,
+    name: 'DBS'
+  }, {
+    re: /\buob\b/i,
+    name: 'UOB'
+  }, {
+    re: /\bmaybank\b/i,
+    name: 'Maybank'
+  }, {
+    re: /\bcitibank\b|\bcitigroup\b|\bcitigold\b/i,
+    name: 'Citibank'
+  }, {
+    re: /standard\s*chartered|\bsc\s*bank\b|\bscb\b/i,
+    name: 'Standard Chartered'
+  }, {
+    re: /\bicbc\b/i,
+    name: 'ICBC'
+  }, {
+    re: /\bboc\b|bank\s*of\s*china/i,
+    name: 'Bank of China'
+  }, {
+    re: /fsmone|fund\s*supermart|\bfsm\b/i,
+    name: 'FSMOne'
+  }, {
+    re: /\btiger\s*brokers?\b/i,
+    name: 'Tiger Brokers'
+  }, {
+    re: /\bmoomoo\b/i,
+    name: 'moomoo'
+  }, {
+    re: /\bendowus\b/i,
+    name: 'Endowus'
+  }, {
+    re: /\bstashaway\b/i,
+    name: 'StashAway'
+  }, {
+    re: /\bsyfe\b/i,
+    name: 'Syfe'
+  }, {
+    re: /\bifast\b/i,
+    name: 'iFAST'
+  }, {
+    re: /\bsaxo\b/i,
+    name: 'Saxo'
+  }, {
+    re: /\binteractive\s*brokers\b|\bibkr\b/i,
+    name: 'Interactive Brokers'
   }];
   const hay = t + ' ' + c;
   const hit = rules.find(rule => rule.re.test(hay));
@@ -8519,21 +8676,40 @@ async function parseXlsxToStructured(file) {
       const rows = buildXlsxRowsFromHeader(matrix, section.headerIndex, headers, sheetName, section.sectionLabel || '', section.endIndex);
       if (rows.length === 0) continue;
       const labelSuffix = section.sectionLabel ? ' — ' + section.sectionLabel : '';
-      const normalized = headers.map(h => normalizeXlsxHeaderName(h)).concat(section.sectionLabel ? ['__section__:' + section.sectionLabel.toLowerCase()] : []).sort().join('|');
+      const kindTag = section.kind === 'fd' ? '__kind__:fd' : '__kind__:policy';
+      const normalized = headers.map(h => normalizeXlsxHeaderName(h)).concat(section.sectionLabel ? ['__section__:' + section.sectionLabel.toLowerCase()] : [], [kindTag]).sort().join('|');
       const signature = await _sha256Hex(normalized);
       const rawSample = xlsxRowsToCsvSample(headers, rows);
-      const localMap = inferXlsxColumnMap(headers);
+      // rc2e.36: choose column-map shape per section kind. FD sections
+      // get a parallel map (bankName/principal/yield/maturity/...) and
+      // a confidence score scaled to the same ≥5 threshold.
+      let localColumnMap = null;
+      let localCategoryColumn = null;
+      let localMapConfidence = 0;
+      let fdColumnMap = null;
+      if (section.kind === 'fd') {
+        const fd = inferXlsxFdColumnMap(headers);
+        fdColumnMap = fd.columnMap;
+        localMapConfidence = fd.confidence;
+      } else {
+        const localMap = inferXlsxColumnMap(headers);
+        localColumnMap = localMap.columnMap;
+        localCategoryColumn = localMap.categoryColumn;
+        localMapConfidence = localMap.confidence;
+      }
       results.push({
         sheetName: sheetName + labelSuffix,
         sectionLabel: section.sectionLabel || '',
+        kind: section.kind || 'policy',
         headers,
         rows,
         signature,
         rawSample,
         headerRow: section.headerIndex + 1,
-        localColumnMap: localMap.columnMap,
-        localCategoryColumn: localMap.categoryColumn,
-        localMapConfidence: localMap.confidence,
+        localColumnMap,
+        localCategoryColumn,
+        localMapConfidence,
+        fdColumnMap,
         documentProfile
       });
     }
@@ -9348,6 +9524,118 @@ function applyColumnMap(rows, columnMap, categoryColumn) {
   }
   return policies;
 }
+// rc2e.36: Cash-investment row applier. Mirrors the AI prompt's
+// FIXED DEPOSITS rules (line ~33390) so AI and local outputs share
+// shape: insurer=bank, fdPrincipal/fdYieldPct/fdStartDate/
+// fdMaturityDate/fdTenureMonths, status normalized to
+// 'matured'/'inforce'. Bank name forward-fills on continuation rows
+// where only the amount differs.
+function _toIsoDateLoose(value) {
+  const s = String(value || '').trim();
+  if (!s) return '';
+  // Already YYYY-MM-DD?
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+  const d = new Date(s);
+  if (!Number.isNaN(d.getTime())) {
+    const y = d.getFullYear(),
+      m = String(d.getMonth() + 1).padStart(2, '0'),
+      day = String(d.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + day;
+  }
+  return s;
+}
+function _normalizeFdStatus(rawStatus, maturityDateIso) {
+  const s = String(rawStatus || '').trim().toLowerCase();
+  if (/fully\s*paid|matured|closed|redeemed|withdrawn|terminated/.test(s)) return 'matured';
+  if (/active|inforce|in\s*force|pending|placed/.test(s)) return 'inforce';
+  if (maturityDateIso && /^\d{4}-\d{2}-\d{2}/.test(maturityDateIso)) {
+    if (new Date(maturityDateIso).getTime() < Date.now()) return 'matured';
+    return 'inforce';
+  }
+  return s || '';
+}
+function applyFdColumnMap(rows, fdColumnMap, sectionLabel = '') {
+  const policies = [];
+  let lastBank = '';
+  for (const row of rows) {
+    const cm = fdColumnMap || {};
+    const principal = (() => {
+      if (!cm.principal) return 0;
+      const num = parseFloat(String(row[cm.principal] || '').replace(/[^\d.-]/g, ''));
+      return isNaN(num) ? 0 : num;
+    })();
+    let bankName = String(row[cm.bankName] || '').trim();
+    if (bankName) lastBank = bankName;else bankName = lastBank;
+    if (!principal && !bankName) continue;
+    if (!principal) continue;
+    const startDateIso = _toIsoDateLoose(row[cm.startDate]);
+    const maturityIso = _toIsoDateLoose(row[cm.maturityDate]);
+    const yieldRaw = String(row[cm.yieldPct] || '').trim();
+    const yieldPct = (() => {
+      const num = parseFloat(yieldRaw.replace(/[^\d.-]/g, ''));
+      return isNaN(num) ? null : num;
+    })();
+    const tenureMonths = (() => {
+      const explicit = parseFloat(String(row[cm.tenureMonths] || '').replace(/[^\d.-]/g, ''));
+      if (!isNaN(explicit) && explicit > 0) return Math.round(explicit);
+      if (startDateIso && maturityIso && /^\d{4}-\d{2}-\d{2}/.test(startDateIso) && /^\d{4}-\d{2}-\d{2}/.test(maturityIso)) {
+        const a = new Date(startDateIso).getTime();
+        const b = new Date(maturityIso).getTime();
+        if (b > a) return Math.round((b - a) / (1000 * 60 * 60 * 24 * 30.44));
+      }
+      return null;
+    })();
+    const status = _normalizeFdStatus(row[cm.status], maturityIso);
+    const productName = (() => {
+      if (bankName && tenureMonths) return bankName + ' ' + tenureMonths + '-month FD';
+      if (bankName) return bankName + ' Fixed Deposit';
+      return 'Fixed Deposit';
+    })();
+    const policy = {
+      _rawSpreadsheetRow: {
+        ...row
+      },
+      category: 'cash_investments',
+      subType: 'Fixed Deposit',
+      insurer: bankName || '',
+      productName,
+      fdPrincipal: principal,
+      cashValue: principal,
+      sumAssured: principal,
+      currency: 'SGD',
+      documentType: 'policy_schedule',
+      _documentTriage: {
+        type: 'policy_schedule',
+        label: DOCUMENT_TRIAGE_META.policy_schedule.label,
+        confidence: 'high',
+        reasons: ['Parsed from spreadsheet Fixed Deposits section.']
+      }
+    };
+    if (startDateIso) {
+      policy.fdStartDate = startDateIso;
+      policy.inceptionDate = startDateIso;
+    }
+    if (maturityIso) {
+      policy.fdMaturityDate = maturityIso;
+      policy.maturityDate = maturityIso;
+    }
+    if (yieldPct != null) policy.fdYieldPct = yieldPct;
+    if (tenureMonths) policy.fdTenureMonths = tenureMonths;
+    if (status) policy.status = status;
+    if (cm.remarks && row[cm.remarks]) policy.extractionNotes = String(row[cm.remarks]).trim();
+    if (cm.autoRenew && row[cm.autoRenew]) {
+      policy.fdAutoRenew = /^(y|yes|true|1|auto)/i.test(String(row[cm.autoRenew]).trim());
+    }
+    if (row.__sourceSheet) policy.sourceSheet = row.__sourceSheet;
+    if (row.__sourceRow) policy.sourceRow = row.__sourceRow;
+    if (row.__sectionContext || sectionLabel) policy.sectionContext = row.__sectionContext || sectionLabel;
+    if (!policy.extractionNotes) {
+      policy.extractionNotes = 'Parsed from Fixed Deposits section' + (policy.sourceSheet ? ' (sheet "' + policy.sourceSheet + '")' : '');
+    }
+    policies.push(policy);
+  }
+  return policies;
+}
 function isSpreadsheetLikeFile(file) {
   const type = (file?.type || '').toLowerCase();
   const name = (file?.name || '').toLowerCase();
@@ -9368,25 +9656,38 @@ async function extractSpreadsheetFilesLocally(files, opts = {}) {
       continue;
     }
     for (const sheet of sheets) {
-      let colMap = null;
-      let catCol = null;
-      if (sheet.localMapConfidence >= 5) {
-        console.log('[XlsxExtract] Local column map for', sheet.sheetName, 'row', sheet.headerRow, 'confidence', sheet.localMapConfidence);
-        colMap = sheet.localColumnMap;
-        catCol = sheet.localCategoryColumn;
-      } else {
-        const cached = opts.allowCache === false ? null : await getCachedColumnMap(sheet.signature);
-        if (cached) {
-          console.log('[XlsxExtract] Cache hit for signature', sheet.signature.slice(0, 8));
-          colMap = cached.columnMap;
-          catCol = cached.categoryColumn;
-        } else {
-          console.log('[XlsxExtract] No confident local map for', sheet.sheetName, 'row', sheet.headerRow, 'confidence', sheet.localMapConfidence);
+      // rc2e.36: FD sections route through applyFdColumnMap; never
+      // hit the AI cache (column shape is fundamentally different).
+      let policiesRaw = [];
+      if (sheet.kind === 'fd') {
+        if (!sheet.fdColumnMap || sheet.localMapConfidence < 5) {
+          console.log('[XlsxExtract] FD section "' + sheet.sectionLabel + '" had insufficient FD column confidence (' + sheet.localMapConfidence + '); skipping.');
           continue;
         }
+        console.log('[XlsxExtract] FD column map for', sheet.sheetName, 'row', sheet.headerRow, 'confidence', sheet.localMapConfidence);
+        policiesRaw = applyFdColumnMap(sheet.rows, sheet.fdColumnMap, sheet.sectionLabel || '');
+      } else {
+        let colMap = null;
+        let catCol = null;
+        if (sheet.localMapConfidence >= 5) {
+          console.log('[XlsxExtract] Local column map for', sheet.sheetName, 'row', sheet.headerRow, 'confidence', sheet.localMapConfidence);
+          colMap = sheet.localColumnMap;
+          catCol = sheet.localCategoryColumn;
+        } else {
+          const cached = opts.allowCache === false ? null : await getCachedColumnMap(sheet.signature);
+          if (cached) {
+            console.log('[XlsxExtract] Cache hit for signature', sheet.signature.slice(0, 8));
+            colMap = cached.columnMap;
+            catCol = cached.categoryColumn;
+          } else {
+            console.log('[XlsxExtract] No confident local map for', sheet.sheetName, 'row', sheet.headerRow, 'confidence', sheet.localMapConfidence);
+            continue;
+          }
+        }
+        policiesRaw = applyColumnMap(sheet.rows, colMap, catCol);
       }
       const sheetProfile = sheet.documentProfile || null;
-      const policies = applyColumnMap(sheet.rows, colMap, catCol).map(p => {
+      const policies = policiesRaw.map(p => {
         const sourceDocument = {
           ...(p.sourceDocument || {}),
           sourceFile: p.sourceFile || fileName,
