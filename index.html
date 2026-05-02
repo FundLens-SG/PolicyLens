@@ -674,9 +674,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.26';
+const APP_VERSION = 'v2.3.0-rc2e.27';
 const APP_VERSION_DATE = '2026-05-02';
-const APP_VERSION_NAME = 'Calmer extraction inference';
+const APP_VERSION_NAME = 'HTML extraction reliability';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 const APP_TAB_IDS = new Set(['profile', 'dashboard', 'policies', 'clients', 'repository', 'report', 'settings']);
 function getInitialPolicyLensTab() {
@@ -687,6 +687,17 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.3.0-rc2e.27',
+  date: '2026-05-02',
+  name: 'HTML extraction reliability',
+  sections: [{
+    heading: 'HTML extraction',
+    items: ['Stopped duplicating page content into the AI prompt: when an HTML upload has tables or headings, the body textContent is no longer also concatenated (this duplication was bloating prompts to 200K+ chars and causing Gemini to return empty for non-PolicyLens HTML files like RetireWell exports).', 'Capped HTML-to-text output at 100K chars with a clear truncation marker so a single overly large HTML page no longer chokes the AI call.']
+  }, {
+    heading: 'AI provider resilience',
+    items: ['When Claude returns 429 / overload on a text-only extraction, the app now waits and retries Claude once before falling to Gemini — matches Anthropic\'s typical 30-60s rate-limit window and stops bouncing immediately to a less-suitable provider.', 'When both Claude and Gemini fail on the text-only path due to rate-limiting, the failure banner now reads "AI providers are temporarily rate-limited. The document looks fine — please wait 30-60 seconds and click Retry." instead of the misleading "document may be unreadable" message.']
+  }]
+}, {
   version: 'v2.3.0-rc2e.26',
   date: '2026-05-02',
   name: 'Calmer extraction inference',
@@ -4232,7 +4243,7 @@ async function pdfToImages(pdfDoc, maxPages = 12) {
 // CLEAN even if the FC never actually reviewed anything. Bumping the version
 // forces a re-extraction next time those same files are uploaded, and the
 // one-time cleanup in App init purges the stale entries from IndexedDB.
-const EXTRACT_PIPELINE_VERSION = 'v15.13-2026-05-02-calmer-inference';
+const EXTRACT_PIPELINE_VERSION = 'v15.14-2026-05-02-html-reliability';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -8105,6 +8116,10 @@ async function _sha256Hex(str) {
 function extractReadableTextFromHtml(rawHtml) {
   const raw = String(rawHtml || '');
   if (!raw.trim()) return '';
+  // rc2e.27: cap output so a 200K-char dashboard HTML doesn't choke Gemini.
+  // Anything past this is statistically noise (footer/scripts/duplicated copy).
+  const HTML_TEXT_CAP = 100000;
+  const capWithMarker = s => s.length > HTML_TEXT_CAP ? s.slice(0, HTML_TEXT_CAP).trim() + '\n\n[…content truncated to ' + HTML_TEXT_CAP + ' chars]' : s;
   try {
     if (typeof DOMParser !== 'undefined') {
       const doc = new DOMParser().parseFromString(raw, 'text/html');
@@ -8115,11 +8130,18 @@ function extractReadableTextFromHtml(rawHtml) {
         return rows.length ? '[HTML TABLE ' + (ti + 1) + ']\n' + rows.join('\n') : '';
       }).filter(Boolean);
       const headings = Array.from(doc.querySelectorAll('h1,h2,h3,h4,.section')).map(el => (el.textContent || '').replace(/\s+/g, ' ').trim()).filter(Boolean);
-      const body = doc.body?.textContent || doc.documentElement?.textContent || '';
-      return [title, headings.join('\n'), tableBlocks.join('\n\n'), body].filter(Boolean).join('\n\n').replace(/\s+\n/g, '\n').replace(/\n{3,}/g, '\n\n').replace(/[ \t]{2,}/g, ' ').trim();
+      // rc2e.27: only fall back to body.textContent when no structured content
+      // was found. Otherwise body duplicates everything in tables/headings and
+      // bloats the prompt with noise that confuses Gemini into empty responses.
+      const hasStructure = tableBlocks.length > 0 || headings.length > 0;
+      const body = hasStructure ? '' : doc.body?.textContent || doc.documentElement?.textContent || '';
+      const out = [title, headings.join('\n'), tableBlocks.join('\n\n'), body].filter(Boolean).join('\n\n').replace(/\s+\n/g, '\n').replace(/\n{3,}/g, '\n\n').replace(/[ \t]{2,}/g, ' ').trim();
+      return capWithMarker(out);
     }
   } catch (_) {}
-  return raw.replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ').replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>').replace(/\s+/g, ' ').trim();
+  // rc2e.27: regex fallback (used when DOMParser is unavailable) shares the same cap.
+  const fallback = raw.replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ').replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>').replace(/\s+/g, ' ').trim();
+  return capWithMarker(fallback);
 }
 function isHtmlLikeFile(file) {
   const type = String(file?.type || '').toLowerCase();
@@ -29139,21 +29161,63 @@ async function callAI(systemPrompt, contentBlocks, maxTokens, responseSchema) {
   // ── Text-only → Claude directly (cheapest), fallback to Gemini ──
   if (ck && !hasMedia) {
     console.log('[AI] Text-only → Claude direct');
+    // rc2e.27: track whether the failure was a transient rate-limit so we can
+    // distinguish "AI is busy, retry" from "document is unreadable" downstream.
+    let claudeWasRateLimited = false;
+    let geminiWasRateLimited = false;
+    const isRateLimitClass = errMsg => {
+      const m = String(errMsg || '').toLowerCase();
+      return m.includes('429') || m.includes('rate') || m.includes('overload') || m.includes('529') || m.includes('too many');
+    };
     try {
       return await claudeExtract(ck, systemPrompt, textParts, maxTokens);
     } catch (claudeErr) {
       console.warn('[AI] Claude failed:', claudeErr.message);
+      claudeWasRateLimited = isRateLimitClass(claudeErr.message);
+      // rc2e.27: When Claude returns 429/overload, wait and retry Claude ONCE
+      // before falling to Gemini. Anthropic 429s typically clear within 30-60s,
+      // and Claude is better than Gemini on this content class — falling
+      // immediately wastes the recovery opportunity.
+      if (claudeWasRateLimited) {
+        console.log('[AI] Claude rate-limited — waiting and retrying Claude once before Gemini fallback');
+        await hopBackoff('Claude', 'Claude');
+        try {
+          return await claudeExtract(ck, systemPrompt, textParts, maxTokens);
+        } catch (retryErr) {
+          console.warn('[AI] Claude retry also failed:', retryErr.message);
+          claudeWasRateLimited = isRateLimitClass(retryErr.message);
+          claudeErr = retryErr;
+        }
+      }
       if (gk) {
         // Fall back to Gemini for any network/fetch error, overload, or rate limit
         const msg = (claudeErr.message || '').toLowerCase();
         if (msg.includes('fetch') || msg.includes('network') || msg.includes('failed') || msg.includes('overload') || msg.includes('529') || msg.includes('rate') || msg.includes('timeout') || msg.includes('timed out') || claudeErr instanceof TypeError) {
           console.log('[AI] Falling back to Gemini for text extraction');
           await hopBackoff('Claude', 'Gemini');
-          return await geminiExtract(gk, systemPrompt, [{
-            type: 'text',
-            text: textParts
-          }], maxTokens);
+          try {
+            return await geminiExtract(gk, systemPrompt, [{
+              type: 'text',
+              text: textParts
+            }], maxTokens);
+          } catch (gemErr) {
+            geminiWasRateLimited = isRateLimitClass(gemErr.message);
+            // rc2e.27: When Claude was rate-limited AND Gemini also failed
+            // (commonly empty-response or rate-limit), throw a clearer message
+            // so the failure banner stops blaming the document.
+            if (claudeWasRateLimited || geminiWasRateLimited) {
+              const e = new Error('AI providers are temporarily rate-limited. The document looks fine — please wait 30-60 seconds and click Retry.');
+              e.rateLimited = true;
+              throw e;
+            }
+            throw gemErr;
+          }
         }
+      }
+      if (claudeWasRateLimited) {
+        const e = new Error('AI providers are temporarily rate-limited. The document looks fine — please wait 30-60 seconds and click Retry.');
+        e.rateLimited = true;
+        throw e;
       }
       throw claudeErr;
     }
@@ -47815,6 +47879,12 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       const abortWasUserCancel = _extractCancelRequested || e && e.name === 'AbortError' && (errMsg.includes('cancel') || errMsg.includes('abort'));
       if (abortWasUserCancel) {
         msg = '🛑 Extraction cancelled — no policies imported.';
+        // rc2e.27: callAI text-only path tags rate-limit cascades with e.rateLimited so
+        // the failure banner can reassure the FC that the document is fine — distinct
+        // from the generic Gemini "document may be unreadable" message that triggered
+        // the wrong-document-blame UX before this fix.
+      } else if (e?.rateLimited) {
+        msg = '⏳ ' + rawErrMsg;
         // ── v13: RATE-LIMIT ERROR CLASSIFICATION ──
         // Detect HTTP 429/503/529 from Gemini and Claude separately from
         // true network errors (TypeError: Failed to fetch / CORS failures).
