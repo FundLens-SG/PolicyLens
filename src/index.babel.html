@@ -664,9 +664,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.31';
+const APP_VERSION = 'v2.3.0-rc2e.32';
 const APP_VERSION_DATE = '2026-05-03';
-const APP_VERSION_NAME = 'Edit-form clarity';
+const APP_VERSION_NAME = 'Flash freshly imported policies';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 
 const APP_TAB_IDS = new Set(['profile','dashboard','policies','clients','repository','report','settings']);
@@ -679,6 +679,19 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.3.0-rc2e.32',
+    date: '2026-05-03',
+    name: 'Flash freshly imported policies',
+    sections: [
+      {
+        heading: 'Workflow',
+        items: [
+          'After an import save lands the FC on the freshly imported client\'s Policies tab (auto-switch from rc2e.28.2), the just-imported policy rows now flash with a soft gold tint and left accent for ~3 seconds, then fade — so the FC can see exactly which rows are new without scrolling. Fires from all four import save paths (Bulk Verify accept, family routing, new client modal create, new client modal use existing).'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.3.0-rc2e.31',
     date: '2026-05-03',
@@ -32329,6 +32342,40 @@ function Policies() {
   const [editing, setEditing] = useState(null);
   const [filter, setFilter] = useState('all');
   const [selected, setSelected] = useState(new Set());
+  // rc2e.32: which policy IDs to flash on import landing. Populated by the
+  // policylens-policies-flashed window event dispatched from the four import
+  // save paths (BulkVerify onAccept, NameDetectionReviewModal onConfirm,
+  // NewClientModal onCreated, NewClientModal onExistingSelected). Auto-clears
+  // after ~3s so the flash fades, leaving a calm Policies tab.
+  const [flashedPolicyIds, setFlashedPolicyIds] = useState(() => new Set());
+  useEffect(() => {
+    let clearTimer = null;
+    const onFlash = (e) => {
+      const ids = e?.detail?.ids;
+      if (!Array.isArray(ids) || ids.length === 0) return;
+      setFlashedPolicyIds(new Set(ids));
+      if (clearTimer) clearTimeout(clearTimer);
+      clearTimer = setTimeout(() => setFlashedPolicyIds(new Set()), 3000);
+    };
+    window.addEventListener('policylens-policies-flashed', onFlash);
+    return () => {
+      window.removeEventListener('policylens-policies-flashed', onFlash);
+      if (clearTimer) clearTimeout(clearTimer);
+    };
+  }, []);
+  // rc2e.32: Row style helper merges the existing selected/default background
+  // with a stronger gold tint + left accent when this policy is "freshly
+  // imported". After 3s the flashedPolicyIds Set clears and the CSS transition
+  // fades the row back to its selected/transparent state.
+  const flashRowStyle = (pid) => {
+    const isFlashed = flashedPolicyIds.has(pid);
+    const isSelected = selected.has(pid);
+    return {
+      background: isFlashed ? 'rgba(212,169,106,.22)' : (isSelected ? 'rgba(212,169,106,.06)' : 'transparent'),
+      transition: 'background-color 0.6s ease-out',
+      ...(isFlashed ? { boxShadow: 'inset 3px 0 0 0 var(--gold)' } : {}),
+    };
+  };
   const toggleSelect = (id) => setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const selectAll = () => { if(selected.size === filtered.length) setSelected(new Set()); else setSelected(new Set(filtered.map(p=>p.id))); };
   const deleteSelected = async () => {
@@ -37098,7 +37145,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
                         {group.items.map(p => {
                           const bens = benIcons(p);
                           return (
-                            <tr key={p.id} style={{background:selected.has(p.id)?'rgba(212,169,106,.06)':'transparent'}}>
+                            <tr key={p.id} style={flashRowStyle(p.id)}>
                               <td><input type='checkbox' checked={selected.has(p.id)} onChange={()=>toggleSelect(p.id)} style={{accentColor:'var(--gold)'}} /></td>
                               <td>
                                 <div style={{fontWeight:500}}>{p.policyName||p.productName||'Unnamed'}</div>
@@ -37140,7 +37187,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
                   </tr></thead>
                   <tbody>
                     {fiItems.sort((a,b)=>(a.insurer||'').localeCompare(b.insurer||'')).map(p => (
-                      <tr key={p.id} style={{background:selected.has(p.id)?'rgba(212,169,106,.06)':'transparent'}}>
+                      <tr key={p.id} style={flashRowStyle(p.id)}>
                         <td><input type='checkbox' checked={selected.has(p.id)} onChange={()=>toggleSelect(p.id)} style={{accentColor:'var(--gold)'}} /></td>
                         <td>
                           <div style={{fontWeight:500}}>{p.productName||p.policyName||p.subType||'Unnamed'}</div>
@@ -37173,7 +37220,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
                   </tr></thead>
                   <tbody>
                     {otherItems.sort((a,b)=>(a.subType||'').localeCompare(b.subType||'')).map(p => (
-                      <tr key={p.id}>
+                      <tr key={p.id} style={flashRowStyle(p.id)}>
                         <td><input type='checkbox' checked={selected.has(p.id)} onChange={()=>toggleSelect(p.id)} style={{accentColor:'var(--gold)'}} /></td>
                         <td><div style={{fontWeight:500}}>{p.productName||p.policyName||'Unnamed'}</div>{p.userRemarks && <div style={{fontSize:9,color:'var(--gold)',fontStyle:'italic'}}>"{p.userRemarks.length>35?p.userRemarks.substring(0,35)+'…':p.userRemarks}"</div>}</td>
                         <td style={{fontSize:11,color:'var(--text2)'}}>{p.subType||'—'}</td>
@@ -37332,10 +37379,15 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
           const importClientCounts = new Map();
           const addImportClient = (cid, n) => { if (!cid || n <= 0) return; importClientCounts.set(cid, (importClientCounts.get(cid) || 0) + n); };
           if (forCurrent.length > 0 && currentRouteClientId) addImportClient(currentRouteClientId, forCurrent.length);
+          // rc2e.32: collect saved policy IDs per client so we can flash the right
+          // cards after auto-switch lands the FC on the primary client's tab.
+          const savedIdsByClient = new Map();
+          const addSavedId = (cid, id) => { if (!cid || !id) return; const arr = savedIdsByClient.get(cid) || []; arr.push(id); savedIdsByClient.set(cid, arr); };
           for (const bucket of forExisting.values()) {
             if (familyGroupName) await applyFamilyGroupToClient(bucket.clientId, familyGroupName);
             for (const p of bucket.policies) {
-              await savePolicyForClient(bucket.clientId, {...p, id:genId(), clientId:bucket.clientId}, {reason:'owner-route-existing'});
+              const saved = await savePolicyForClient(bucket.clientId, {...p, id:genId(), clientId:bucket.clientId}, {reason:'owner-route-existing'});
+              addSavedId(bucket.clientId, saved?.id);
               existingSaved++;
             }
             await applyProfileHintsForClient?.(bucket.clientId, bucket.clientName, bucket.policies, 'owner-route-profile-hints').catch(() => {});
@@ -37352,7 +37404,8 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
               if (!target?.clientId) continue;
               if (target.created) newCreated++; else newReused++;
               for (const p of bucket.policies) {
-                await savePolicyForClient(target.clientId, {...p, id:genId(), clientId:target.clientId}, {reason:'owner-route-new-client'});
+                const saved = await savePolicyForClient(target.clientId, {...p, id:genId(), clientId:target.clientId}, {reason:'owner-route-new-client'});
+                addSavedId(target.clientId, saved?.id);
                 newSaved++;
               }
               await applyProfileHintsForClient?.(target.clientId, target.clientName || bucket.displayName, bucket.policies, 'owner-route-profile-hints').catch(() => {});
@@ -37385,6 +37438,18 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
             } else if (forCurrent.length > 0 || existingSaved > 0 || newSaved > 0) {
               setTab('policies');
             }
+            // rc2e.32: flash the freshly imported policy cards on the Policies tab
+            // for the primary client only — the FC just landed there, those are the
+            // rows they should focus on. Defer 120ms so React commits the setTab
+            // and Policies mounts/attaches its listener before the event fires.
+            const primaryIds = primary ? (savedIdsByClient.get(primary) || []) : [];
+            if (primaryIds.length > 0) {
+              setTimeout(() => {
+                try {
+                  window.dispatchEvent(new CustomEvent('policylens-policies-flashed', { detail: { ids: primaryIds, at: Date.now() } }));
+                } catch(_) {}
+              }, 120);
+            }
           }
         }}
       />}
@@ -37394,8 +37459,13 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
         routePolicies={newClientData.routePolicies || []}
         onCreated={async (clientId) => {
           const pols = newClientData.routePolicies || [];
+          // rc2e.32: capture saved IDs so the auto-switch landing tab can flash them.
+          const savedIds = [];
           if (pols && pols.length) {
-            for (const p of pols) await savePolicyForClient(clientId, {...p, id:genId(), clientId}, {reason:'owner-route-new-client'});
+            for (const p of pols) {
+              const saved = await savePolicyForClient(clientId, {...p, id:genId(), clientId}, {reason:'owner-route-new-client'});
+              if (saved?.id) savedIds.push(saved.id);
+            }
             await applyProfileHintsForClient?.(clientId, newClientData.initialName || '', pols, 'owner-route-profile-hints').catch(() => {});
             try{toast('\u2713 '+pols.length+' polic'+(pols.length>1?'ies':'y')+' added to new client','success',4000);}catch(_){}
           }
@@ -37415,14 +37485,28 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
             if (clientId) {
               try { await switchClient(clientId); setTab('policies'); }
               catch(e) { console.warn('[Import] Post-create switch failed:', e); }
+              // rc2e.32: flash the freshly imported policy cards on the landing tab.
+              // Defer 120ms so React commits setTab and Policies mounts/attaches its listener.
+              if (savedIds.length > 0) {
+                setTimeout(() => {
+                  try {
+                    window.dispatchEvent(new CustomEvent('policylens-policies-flashed', { detail: { ids: savedIds, at: Date.now() } }));
+                  } catch(_) {}
+                }, 120);
+              }
             }
           }
         }}
         onExistingSelected={async (clientId, ds) => {
           const pols = newClientData.routePolicies || [];
           if (newClientData.initialFamilyGroup) await applyFamilyGroupToClient(clientId, newClientData.initialFamilyGroup);
+          // rc2e.32: capture saved IDs so the auto-switch landing tab can flash them.
+          const savedIds = [];
           if (pols && pols.length) {
-            for (const p of pols) await savePolicyForClient(clientId, {...p, id:genId(), clientId}, {reason:'owner-route-existing'});
+            for (const p of pols) {
+              const saved = await savePolicyForClient(clientId, {...p, id:genId(), clientId}, {reason:'owner-route-existing'});
+              if (saved?.id) savedIds.push(saved.id);
+            }
             await applyProfileHintsForClient?.(clientId, ds?.clientName || newClientData.initialName || '', pols, 'owner-route-profile-hints').catch(() => {});
             try{toast('\u2713 '+pols.length+' polic'+(pols.length>1?'ies':'y')+' added to '+(ds?.clientName||'existing client'),'success',4000);}catch(_){}
           }
@@ -37442,6 +37526,15 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
             if (clientId) {
               try { await switchClient(clientId); setTab('policies'); }
               catch(e) { console.warn('[Import] Post-route switch failed:', e); }
+              // rc2e.32: flash the freshly imported policy cards on the landing tab.
+              // Defer 120ms so React commits setTab and Policies mounts/attaches its listener.
+              if (savedIds.length > 0) {
+                setTimeout(() => {
+                  try {
+                    window.dispatchEvent(new CustomEvent('policylens-policies-flashed', { detail: { ids: savedIds, at: Date.now() } }));
+                  } catch(_) {}
+                }, 120);
+              }
             }
           }
         }}
@@ -37617,6 +37710,16 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
           await switchClient(importClientId);
           setTab('policies');
           window.dispatchEvent(new Event('policylens-clients-changed'));
+          // rc2e.32: flash the freshly imported policy cards on the Policies tab
+          // so the FC sees exactly which rows are new without scrolling.
+          // Defer 120ms so React commits setTab and Policies mounts/attaches its listener.
+          if (acceptedPolicyIds.length > 0) {
+            setTimeout(() => {
+              try {
+                window.dispatchEvent(new CustomEvent('policylens-policies-flashed', { detail: { ids: acceptedPolicyIds, at: Date.now() } }));
+              } catch(_) {}
+            }, 120);
+          }
         } catch(e) {
           console.warn('[Import] Post-save reload failed:', e);
         }
