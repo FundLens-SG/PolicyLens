@@ -674,9 +674,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.28';
+const APP_VERSION = 'v2.3.0-rc2e.28.1';
 const APP_VERSION_DATE = '2026-05-02';
-const APP_VERSION_NAME = 'Generic HTML policy table extraction';
+const APP_VERSION_NAME = 'PDF empty-buffer fix and RetireLens HTML parser';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 const APP_TAB_IDS = new Set(['profile', 'dashboard', 'policies', 'clients', 'repository', 'report', 'settings']);
 function getInitialPolicyLensTab() {
@@ -687,6 +687,17 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.3.0-rc2e.28.1',
+  date: '2026-05-02',
+  name: 'PDF empty-buffer fix and RetireLens HTML parser',
+  sections: [{
+    heading: 'Critical fixes',
+    items: ['Fixed scanned PDFs failing with "PDF cannot be empty" / "document has no pages" — pdf.js was detaching the underlying ArrayBuffer when the unlock attempt ran, leaving the cached buffer empty for the downstream base64 read. tryUnlockPDF now clones the buffer per attempt so the cached bytes stay intact for the document-block path.', 'Added a defensive guard in readFileAsBase64 that bypasses the extraction-buffer cache when the cached ArrayBuffer is detached/zero-length, falling back to a fresh read from the original file.']
+  }, {
+    heading: 'HTML extraction',
+    items: ['Added a RetireLens HTML parser. RetireLens (sister Lens-Suite app) exports its full client state as HTML where the policies live inside a <script> block as JS object literals — not in tables and not in visible page text. The parser regex-extracts the state.policies array and maps RetireLens fields (name/company/cat/subtype/premAnnual/premMedisave/deathSA/cvNow/medDeductible etc.) into PolicyLens schema, bypassing the AI cascade entirely.', 'RetireLens-imported rows arrive flagged for FC verification (medium confidence on category and sub-type) so Bulk Verify surfaces them for review before save.']
+  }]
+}, {
   version: 'v2.3.0-rc2e.28',
   date: '2026-05-02',
   name: 'Generic HTML policy table extraction',
@@ -4179,7 +4190,14 @@ async function getPresetPasswords() {
   return [...new Set([...custom, ...auto])].filter(Boolean);
 }
 async function tryUnlockPDF(arrayBuffer) {
-  const data = new Uint8Array(arrayBuffer);
+  // rc2e.28.1: pdf.js detaches the underlying ArrayBuffer when handed a typed-array
+  // view — a documented but easy-to-miss behaviour. When the input came from
+  // _extractionFileBuffers, detaching the cached buffer leaves the downstream
+  // readFileAsBase64 path with zero bytes, producing the "PDF cannot be empty" /
+  // "document has no pages" 400s observed for scanned PDFs that fall past the
+  // text-layer fast path. Clone before each pdf.js call so the original cached
+  // buffer stays intact for downstream consumers.
+  const data = new Uint8Array(arrayBuffer.slice(0));
   // Try without password first
   try {
     const doc = await pdfjsLib.getDocument({
@@ -4202,7 +4220,7 @@ async function tryUnlockPDF(arrayBuffer) {
   for (const pw of allPW) {
     try {
       const doc = await pdfjsLib.getDocument({
-        data: new Uint8Array(arrayBuffer),
+        data: new Uint8Array(arrayBuffer.slice(0)),
         password: pw
       }).promise;
       console.log('[PDF] Unlocked with password:', pw.slice(0, 3) + '***');
@@ -4221,7 +4239,7 @@ async function tryUnlockPDF(arrayBuffer) {
   if (!manual) throw new Error('PDF is locked and no password provided');
   try {
     const doc = await pdfjsLib.getDocument({
-      data: new Uint8Array(arrayBuffer),
+      data: new Uint8Array(arrayBuffer.slice(0)),
       password: manual
     }).promise;
     return {
@@ -4270,7 +4288,7 @@ async function pdfToImages(pdfDoc, maxPages = 12) {
 // CLEAN even if the FC never actually reviewed anything. Bumping the version
 // forces a re-extraction next time those same files are uploaded, and the
 // one-time cleanup in App init purges the stale entries from IndexedDB.
-const EXTRACT_PIPELINE_VERSION = 'v15.15-2026-05-02-generic-html-table';
+const EXTRACT_PIPELINE_VERSION = 'v15.16-2026-05-02-pdf-buffer-retirelens';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -7374,7 +7392,11 @@ const readFileAsBase64 = async file => {
   // case where the cache is populated.
   const cached = _extractionFileBuffers.get(file);
   let source = file;
-  if (cached) {
+  // rc2e.28.1: Skip cached buffer when its byteLength is 0. This happens after
+  // pdf.js consumes/detaches a typed-array view (see tryUnlockPDF clone fix);
+  // wrapping the empty buffer in a new File would otherwise produce zero-byte
+  // base64 output and trigger "PDF cannot be empty" in Gemini/Claude.
+  if (cached && cached.byteLength > 0) {
     try {
       source = new File([cached], file.name || 'file', {
         type: file.type || 'application/octet-stream',
@@ -7397,8 +7419,8 @@ const readFileAsBase64 = async file => {
     if (!isTransient) throw firstErr;
     console.warn('[readFileAsBase64] Transient failure for ' + (file?.name || '?') + ' — retrying in 500ms:', firstErr.message);
     await new Promise(r => setTimeout(r, 500));
-    // On retry, prefer the cached path if we have one
-    if (cached) {
+    // On retry, prefer the cached path if we have one and it isn't detached
+    if (cached && cached.byteLength > 0) {
       try {
         const fresh = new File([cached], file.name || 'file', {
           type: file.type || 'application/octet-stream',
@@ -8446,6 +8468,304 @@ async function extractGenericPolicyTableHtmlLocally(files) {
           }]
         });
       }
+    }
+  }
+  return out.filter(p => p.insurer && p.productName);
+}
+
+// rc2e.28.1: RetireLens HTML extractor. CK's sister Lens-Suite app
+// (RetireLens) exports its full client state as an HTML file that contains
+// the policy data inside a <script> block as JS object literals — not in
+// <table> elements and not in visible page text. The PolicyLens-specific
+// and generic-table parsers above both correctly skip these (no PolicyLens
+// brand markers, no policy table). The AI fallback also fails because the
+// readable-HTML pipeline strips <script> tags before sending to Gemini/
+// Claude, so the model never sees the policies.
+//
+// This parser detects RetireLens by title or by the unmistakable
+// "state = { ... policies: [ ... ] ... }" shape, regex-extracts the
+// policies array (no eval/Function — both XSS-unsafe), and field-by-field
+// parses each policy block into PolicyLens schema.
+function _retireLensFieldFromBlock(block, fieldName) {
+  // Match `fieldName: <value>` where value is a number, boolean, or quoted string.
+  const re = new RegExp('\\b' + fieldName + '\\s*:\\s*(' + '"[^"]*"|' +
+  // double-quoted string
+  "'[^']*'|" +
+  // single-quoted string
+  '-?\\d+(?:\\.\\d+)?|' +
+  // number
+  'true|false|null' + ')', 'i');
+  const m = block.match(re);
+  if (!m) return null;
+  let v = m[1].trim();
+  if (v === 'true') return true;
+  if (v === 'false') return false;
+  if (v === 'null') return null;
+  if (v.startsWith('"') || v.startsWith("'")) return v.slice(1, -1);
+  const n = Number(v);
+  return Number.isFinite(n) ? n : v;
+}
+function _retireLensSplitPoliciesArray(arrayBody) {
+  // Walk the array body and split on the top-level `},` boundaries between
+  // each policy literal. We can't just split on `},` because nested
+  // structures (ilpFunds:[...], remarks:'...,...') contain commas and braces.
+  const blocks = [];
+  let depthBrace = 0,
+    depthBracket = 0,
+    inString = null;
+  let start = -1;
+  for (let i = 0; i < arrayBody.length; i++) {
+    const ch = arrayBody[i];
+    const prev = i > 0 ? arrayBody[i - 1] : '';
+    if (inString) {
+      if (ch === inString && prev !== '\\') inString = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      inString = ch;
+      continue;
+    }
+    if (ch === '{') {
+      if (depthBrace === 0 && depthBracket === 0) start = i;
+      depthBrace++;
+      continue;
+    }
+    if (ch === '}') {
+      depthBrace--;
+      if (depthBrace === 0 && depthBracket === 0 && start >= 0) {
+        blocks.push(arrayBody.slice(start, i + 1));
+        start = -1;
+      }
+      continue;
+    }
+    if (ch === '[') {
+      depthBracket++;
+      continue;
+    }
+    if (ch === ']') {
+      depthBracket--;
+      continue;
+    }
+  }
+  return blocks;
+}
+function _retireLensCategoryFromCat(cat) {
+  const c = String(cat || '').toLowerCase();
+  if (!c) return '';
+  if (c === 'life' || c === 'protection' || c === 'term') return 'protection';
+  if (c === 'medical' || c === 'health' || c === 'isp' || c === 'di' || c === 'pa' || c === 'careshield') return 'health';
+  if (c === 'investment' || c === 'ilp' || c === 'ut') return 'investment';
+  if (c === 'savings' || c === 'endow' || c === 'endowment') return 'savings';
+  if (c === 'retirement' || c === 'annuity') return 'retirement';
+  return '';
+}
+function _retireLensSubTypeFromSubtype(subtype, category) {
+  const s = String(subtype || '').toLowerCase();
+  if (!s) return '';
+  if (s === 'wl' || s === 'whole') return 'Whole Life';
+  if (s === 'term') return 'Term Life';
+  if (s === 'ip' || s === 'isp' || s === 'shield') return 'Integrated Shield Plan';
+  if (s === 'eci') return 'Critical Illness';
+  if (s === 'di') return 'Disability Income';
+  if (s === 'pa') return 'Personal Accident';
+  if (s === 'careshield') return 'CareShield Life Supplement';
+  if (s === 'ilp' || s === 'protection' || s === 'investment') return category === 'protection' ? 'ILP (Protection)' : 'ILP (Investment)';
+  if (s === 'endow' || s === 'endowment') return 'Endowment';
+  if (s === 'annuity' || s === 'retirement') return 'Annuity';
+  if (s === 'maternity') return 'Maternity Coverage';
+  return '';
+}
+async function extractRetireLensHtmlFilesLocally(files) {
+  const out = [];
+  for (const file of Array.from(files || [])) {
+    if (!isHtmlLikeFile(file)) continue;
+    const raw = await file.text();
+    const looksLikeRetireLens = /RetireLens/i.test(raw) || /\bstate\s*=\s*\{/.test(raw) && /\bpolicies\s*:\s*\[/.test(raw);
+    if (!looksLikeRetireLens) continue;
+    // Locate the policies: [ ... ] block by finding the matching ] from the
+    // first `policies: [` occurrence. Walk braces/brackets the same way as
+    // _retireLensSplitPoliciesArray.
+    const startMarker = raw.search(/\bpolicies\s*:\s*\[/);
+    if (startMarker < 0) continue;
+    const arrayOpen = raw.indexOf('[', startMarker);
+    if (arrayOpen < 0) continue;
+    let depth = 0,
+      inStr = null,
+      arrayClose = -1;
+    for (let i = arrayOpen; i < raw.length; i++) {
+      const ch = raw[i];
+      const prev = i > 0 ? raw[i - 1] : '';
+      if (inStr) {
+        if (ch === inStr && prev !== '\\') inStr = null;
+        continue;
+      }
+      if (ch === '"' || ch === "'") {
+        inStr = ch;
+        continue;
+      }
+      if (ch === '[') depth++;else if (ch === ']') {
+        depth--;
+        if (depth === 0) {
+          arrayClose = i;
+          break;
+        }
+      }
+    }
+    if (arrayClose < 0) continue;
+    const arrayBody = raw.slice(arrayOpen + 1, arrayClose);
+    const policyBlocks = _retireLensSplitPoliciesArray(arrayBody);
+    if (policyBlocks.length === 0) continue;
+    const ownerNameFromTitle = function () {
+      const m = raw.match(/<title>([^<]+)<\/title>/i);
+      const t = (m?.[1] || '').replace(/\s+/g, ' ').trim();
+      const om = t.match(/^(.+?)(?:'s|\s+RetireLens|\s+Financial Planning|\s+—|\s+-)/i);
+      return (om?.[1] || '').trim();
+    }();
+    for (const block of policyBlocks) {
+      const f = n => _retireLensFieldFromBlock(block, n);
+      const productName = String(f('name') || '').trim();
+      const insurer = String(f('company') || '').trim();
+      if (!productName || !insurer) continue;
+      const cat = String(f('cat') || '').trim();
+      const subtype = String(f('subtype') || '').trim();
+      const category = _retireLensCategoryFromCat(cat) || 'protection';
+      const subType = _retireLensSubTypeFromSubtype(subtype, category);
+      const premAnnual = Number(f('premAnnual') || 0);
+      const premMedisave = !!f('premMedisave');
+      const sumPieces = ['deathSA', 'tpdSA', 'ciSA', 'eciSA', 'addSA', 'ilpProtSA'].map(k => Number(f(k) || 0));
+      const sumAssured = Math.max(0, ...sumPieces) || null;
+      const cvNow = Number(f('cvNow') || 0) || null;
+      const cvGrowthPct = Number(f('cvGrowthPct') || 0) || null;
+      const surrenderAge = Number(f('surrenderAge') || 0) || null;
+      const annuityMonthly = Number(f('annuityMonthly') || 0) || null;
+      const annuityPayout = Number(f('annuityPayout') || 0) || null;
+      const annuityStartAge = Number(f('annuityStartAge') || 0) || null;
+      const annuityEndAge = Number(f('annuityEndAge') || 0) || null;
+      const annuityGuaranteed = Number(f('annuityGuaranteed') || 0) || null;
+      const maturityAge = Number(f('maturityAge') || 0) || null;
+      const maturityAmt = Number(f('maturityAmt') || 0) || null;
+      const premStartAge = Number(f('premStartAge') || 0) || null;
+      const premEndAge = Number(f('premEndAge') || 0) || null;
+      const premTerm = Number(f('premTerm') || 0) || null;
+      const commenceYr = Number(f('commenceYr') || 0) || null;
+      const inceptionDate = commenceYr ? commenceYr + '-01-01' : null;
+      const medDeductible = Number(f('medDeductible') || 0) || null;
+      const medCoinsurance = Number(f('medCoinsurance') || 0) || null;
+      const medAnnualLimit = Number(f('medAnnualLimit') || 0) || null;
+      const hospitalWard = String(f('hospitalWard') || '').trim();
+      const ispClass = /^a$/i.test(hospitalWard) ? 'A' : /^b1$/i.test(hospitalWard) ? 'B1' : /^b2/i.test(hospitalWard) ? 'B2+' : hospitalWard ? 'Private' : null;
+      const hasRider = !!f('hasRider');
+      const riderPrem = Number(f('riderPrem') || 0) || null;
+      const financed = !!f('financed');
+      const finLoan = Number(f('finLoan') || 0) || null;
+      const finRate = Number(f('finRate') || 0) || null;
+      const finTenure = Number(f('finTenure') || 0) || null;
+      const ilpFundValue = Number(f('ilpFundValue') || 0) || null;
+      const ilpMgmtFee = Number(f('ilpMgmtFee') || 0) || null;
+      const multiplier = Number(f('multiplier') || 0) || null;
+      const multiplierEndAge = Number(f('multiplierEndAge') || 0) || null;
+      const remarks = String(f('remarks') || '').trim();
+      // Build rider breakdown for the per-coverage SA pieces.
+      const riders = [];
+      const sa = n => Number(f(n) || 0) || 0;
+      if (sa('tpdSA')) riders.push({
+        type: 'tpd',
+        riderName: 'TPD',
+        sa: sa('tpdSA'),
+        premium: 0,
+        bundled: true
+      });
+      if (sa('ciSA')) riders.push({
+        type: 'ci',
+        riderName: 'CI',
+        sa: sa('ciSA'),
+        premium: 0,
+        bundled: true
+      });
+      if (sa('eciSA')) riders.push({
+        type: 'eci',
+        riderName: 'Early CI',
+        sa: sa('eciSA'),
+        premium: 0,
+        bundled: true
+      });
+      if (sa('addSA')) riders.push({
+        type: 'accidental',
+        riderName: 'Accidental Death',
+        sa: sa('addSA'),
+        premium: 0,
+        bundled: true
+      });
+      const diMonthly = Number(f('diMonthly') || 0);
+      if (diMonthly) riders.push({
+        type: 'di',
+        riderName: 'Disability Income (monthly)',
+        sa: diMonthly,
+        premium: 0,
+        bundled: true
+      });
+      out.push({
+        insurer,
+        productName,
+        policyName: productName,
+        policyNumber: '',
+        category,
+        subType: subType || (category === 'health' ? 'Integrated Shield Plan' : ''),
+        currency: 'SGD',
+        sumAssured,
+        premiumAmount: premAnnual || null,
+        premFrequency: premAnnual ? 'annual' : 'unknown',
+        premiumStructure: premAnnual ? 'Regular Premium' : null,
+        paymentMethod: premMedisave ? 'MediSave' : 'Cash',
+        policyOwner: ownerNameFromTitle || null,
+        lifeInsured: ownerNameFromTitle || null,
+        documentOwner: ownerNameFromTitle || null,
+        documentRole: ownerNameFromTitle ? 'owner' : 'unknown',
+        documentType: 'policy_schedule',
+        sourceImage: cleanUploadFileName(file),
+        sourcePage: 'RetireLens state.policies entry',
+        inceptionDate,
+        premStartAge,
+        premEndAge,
+        premTerm,
+        cashValue: cvNow,
+        cvGrowthRate: cvGrowthPct,
+        surrenderPeriod: surrenderAge,
+        maturityDate: maturityAge ? null : null,
+        retMaturitySum: maturityAmt,
+        annuityMonthly,
+        annuityPayout,
+        annuityStartAge,
+        annuityEndAge,
+        annuityGuaranteedPayout: annuityGuaranteed,
+        ispClass,
+        ispDeductible: medDeductible,
+        ispCoinsurance: medCoinsurance,
+        ispCoInsCap: medAnnualLimit,
+        hasRider,
+        riderPremium: riderPrem,
+        financed,
+        finLoan,
+        finRate,
+        finTenure,
+        ilpGrowth: ilpFundValue ? null : null,
+        ilpMgmtFee,
+        saMultiplier: multiplier,
+        multiplierEndAge,
+        riders,
+        notes: remarks || 'Imported from a RetireLens state.policies entry. Verify rider, cash-value, and beneficiary details against the original policy document.',
+        userRemarks: remarks || '',
+        extractionNotes: 'Imported locally from a RetireLens HTML state.policies export.',
+        _confidence: [{
+          field: 'category',
+          level: 'medium',
+          reason: 'Inferred from RetireLens cat code — verify against policy document'
+        }, {
+          field: 'subType',
+          level: 'medium',
+          reason: 'Inferred from RetireLens subtype code — verify against policy document'
+        }]
+      });
     }
   }
   return out.filter(p => p.insurer && p.productName);
@@ -46182,10 +46502,33 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
             toast('Imported ' + arr.length + ' item' + (arr.length === 1 ? '' : 's') + ' from HTML policy table locally', 'success', 3500);
           } catch (_) {}
         } else {
-          console.log('[Extract] Generic HTML parser found no policy rows - falling back to AI');
+          console.log('[Extract] Generic HTML parser found no policy rows - trying RetireLens HTML parser');
         }
       } catch (genericHtmlErr) {
-        console.warn('[Extract] Generic HTML parser failed - falling back to AI:', genericHtmlErr?.message || genericHtmlErr);
+        console.warn('[Extract] Generic HTML parser failed - trying RetireLens HTML parser:', genericHtmlErr?.message || genericHtmlErr);
+      }
+    }
+    // rc2e.28.1: RetireLens HTML fallback — RetireLens (CK's sister Lens-Suite app)
+    // exports its full client state as HTML with the policies inside a <script>
+    // block as JS object literals. The two HTML parsers above can't see them
+    // (no PolicyLens markers, no policy <table>) and the AI fallback strips
+    // <script> before send. This parser regex-extracts the JS state.policies
+    // array and maps RetireLens schema → PolicyLens schema.
+    if (arr == null && precomputedRawText == null && batchFiles.length > 0 && batchFiles.every(isHtmlLikeFile)) {
+      try {
+        const retireLensPolicies = await extractRetireLensHtmlFilesLocally(batchFiles);
+        if (retireLensPolicies.length > 0) {
+          arr = retireLensPolicies;
+          expectedCount = retireLensPolicies.length;
+          console.log('[Extract] RetireLens HTML parser returned', arr.length, 'policies - skipping AI call');
+          try {
+            toast('Imported ' + arr.length + ' item' + (arr.length === 1 ? '' : 's') + ' from RetireLens HTML locally', 'success', 3500);
+          } catch (_) {}
+        } else {
+          console.log('[Extract] RetireLens HTML parser found no state.policies entries - falling back to AI');
+        }
+      } catch (retireLensErr) {
+        console.warn('[Extract] RetireLens HTML parser failed - falling back to AI:', retireLensErr?.message || retireLensErr);
       }
     }
     if (precomputedRawText != null) {
