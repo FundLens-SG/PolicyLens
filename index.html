@@ -674,9 +674,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.24';
+const APP_VERSION = 'v2.3.0-rc2e.25';
 const APP_VERSION_DATE = '2026-05-02';
-const APP_VERSION_NAME = 'Hard fix PDF and HTML extraction';
+const APP_VERSION_NAME = 'Field-routing post-extract fixes';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 const APP_TAB_IDS = new Set(['profile', 'dashboard', 'policies', 'clients', 'repository', 'report', 'settings']);
 function getInitialPolicyLensTab() {
@@ -687,6 +687,17 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.3.0-rc2e.25',
+  date: '2026-05-02',
+  name: 'Field-routing post-extract fixes',
+  sections: [{
+    heading: 'Extraction',
+    items: ['Multi-file HTML imports now keep rows from PolicyLens portfolio exports even when a non-PolicyLens HTML file is in the same batch (previous behaviour discarded prior rows on first non-conforming file).', 'PolicyLens HTML portfolio rows now map their payment column to the schema enum (Cash, MediSave, MediSave+Cash, SRS, CPF OA, CPF SA) instead of saving free-form cell text that downstream UI treated as unknown.', 'Background-queue OCR fast path now runs the same derive + validate passes as the slow extracting stage, so policies returned via Tier 1 / Tier 2 carry computed premium-end age and other derived fields consistently.']
+  }, {
+    heading: 'Bulk verify',
+    items: ['Single-person profile pages no longer collapse policy owner and life assured to the same name during structured-people backfill, removing spurious dependant-routing prompts in the review modal.']
+  }]
+}, {
   version: 'v2.3.0-rc2e.23',
   date: '2026-05-02',
   name: 'Extraction cancel and delete sync',
@@ -4210,7 +4221,7 @@ async function pdfToImages(pdfDoc, maxPages = 12) {
 // CLEAN even if the FC never actually reviewed anything. Bumping the version
 // forces a re-extraction next time those same files are uploaded, and the
 // one-time cleanup in App init purges the stale entries from IndexedDB.
-const EXTRACT_PIPELINE_VERSION = 'v15.11-2026-05-02-pdf-html-hardfix';
+const EXTRACT_PIPELINE_VERSION = 'v15.12-2026-05-02-field-routing-fix';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.8-2026-04-30-ai-triage-fingerprint';
@@ -6266,7 +6277,21 @@ function applyStructuredPeopleToPolicy(policy) {
   const people = collectStructuredPeopleFromPolicy(next);
   if (!people.length) return next;
   const owner = next.policyOwner ? findStructuredPerson(next, next.policyOwner) : people.find(p => /owner|policyholder|proposer|applicant/i.test(String(p.role || '')));
-  const life = next.lifeInsured ? findStructuredPerson(next, next.lifeInsured) : people.find(p => /life|insured|assured|dependant|dependent/i.test(String(p.role || '')));
+  // rc2e.25: When lifeInsured is unset, prefer a person whose role isn't owner-ish
+  // and whose name doesn't equal the owner — otherwise a single-person profile
+  // page collapses owner and life into the same name and triggers spurious
+  // dependant routing in BulkVerifyModal.
+  const lifeRoleRe = /life|insured|assured|dependant|dependent/i;
+  const ownerNameKey = owner?.name ? normalizePersonNameKey(owner.name) : '';
+  let life = next.lifeInsured ? findStructuredPerson(next, next.lifeInsured) : null;
+  if (!life) {
+    const lifeCandidates = people.filter(p => lifeRoleRe.test(String(p.role || '')));
+    life = lifeCandidates.find(p => {
+      if (!p?.name) return false;
+      if (!ownerNameKey) return true;
+      return normalizePersonNameKey(p.name) !== ownerNameKey;
+    }) || null;
+  }
   if (!next.policyOwner && owner?.name) next.policyOwner = owner.name;
   if (!next.lifeInsured && life?.name) next.lifeInsured = life.name;
   if (!next.policyOwnerDob && owner?.dob) next.policyOwnerDob = owner.dob;
@@ -8144,17 +8169,31 @@ function inferSubTypeFromPolicyLensHtml(subType, category) {
   if (category === 'investment') return 'Unit Trust';
   return '';
 }
+
+// rc2e.25: Map raw HTML cell text to the policy schema paymentMethod enum.
+// Returns '' for unrecognised input so callers can apply their own default.
+function normalizeHtmlPaymentMethod(raw) {
+  const s = String(raw || '').toLowerCase().replace(/\s+/g, ' ').trim();
+  if (!s) return '';
+  if (/medisave\s*\+\s*cash|medisave\s+and\s+cash/.test(s)) return 'MediSave+Cash';
+  if (/medisave/.test(s)) return 'MediSave';
+  if (/\bsrs\b|supplementary\s+retirement/.test(s)) return 'SRS';
+  if (/cpf\s*[-–]?\s*oa|ordinary\s+account|cpfis-?oa/.test(s)) return 'CPF OA';
+  if (/cpf\s*[-–]?\s*sa|special\s+account|cpfis-?sa/.test(s)) return 'CPF SA';
+  if (/^cash$|\bcash\b|gIRO|giro|credit\s+card|bank/.test(s)) return 'Cash';
+  return '';
+}
 async function extractPolicyLensHtmlFilesLocally(files) {
   const out = [];
   for (const file of Array.from(files || [])) {
-    if (!isHtmlLikeFile(file)) return [];
+    if (!isHtmlLikeFile(file)) continue;
     const raw = await file.text();
-    if (!/PolicyLens/i.test(raw) || !/Policy Portfolio/i.test(raw)) return [];
+    if (!/PolicyLens/i.test(raw) || !/Policy Portfolio/i.test(raw)) continue;
     let doc = null;
     if (typeof DOMParser !== 'undefined') {
       doc = new DOMParser().parseFromString(raw, 'text/html');
     }
-    if (!doc) return [];
+    if (!doc) continue;
     doc.querySelectorAll('script,style,noscript,svg,canvas').forEach(el => el.remove());
     const titleText = (doc.querySelector('h1')?.textContent || doc.querySelector('title')?.textContent || cleanUploadFileName(file)).replace(/\s+/g, ' ').trim();
     const ownerMatch = titleText.match(/^(.+?)(?:'s|\s+Policy Summary|\s+Portfolio Dashboard|\s+\u2014|\s+-)/i);
@@ -8194,7 +8233,7 @@ async function extractPolicyLensHtmlFilesLocally(files) {
           premiumAmount: isCashInstrument ? null : premium.premiumAmount,
           premFrequency: isCashInstrument ? 'unknown' : premium.premFrequency,
           premiumStructure: isCashInstrument ? null : premium.premiumStructure,
-          paymentMethod: cells[5] || 'Cash',
+          paymentMethod: normalizeHtmlPaymentMethod(cells[5]) || 'Cash',
           fdPrincipal: isCashInstrument ? sumAssured : null,
           fdYieldPct: isCashInstrument ? parsePolicyLensAmountText(cells[4]) : null,
           policyOwner: ownerName || null,
@@ -9325,6 +9364,15 @@ async function processJob(job) {
           for (const p of parsed) {
             try {
               validateExtractedPolicy(p);
+            } catch (_) {}
+          }
+          // rc2e.25: Mirror the 'extracting' stage's derive+validate passes so OCR
+          // fast-path output is structurally identical to the slow path. Without
+          // this, fast-path policies miss premEndAge etc.
+          for (const p of parsed) {
+            try {
+              runDerivePass(p, null);
+              runValidatePass(p, null);
             } catch (_) {}
           }
           job.result = parsed;
