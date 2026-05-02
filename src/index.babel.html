@@ -664,9 +664,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.32';
+const APP_VERSION = 'v2.3.0-rc2e.33';
 const APP_VERSION_DATE = '2026-05-03';
-const APP_VERSION_NAME = 'Flash freshly imported policies';
+const APP_VERSION_NAME = 'Brand-style file-type icons';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 
 const APP_TAB_IDS = new Set(['profile','dashboard','policies','clients','repository','report','settings']);
@@ -679,6 +679,19 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.3.0-rc2e.33',
+    date: '2026-05-03',
+    name: 'Brand-style file-type icons',
+    sections: [
+      {
+        heading: 'Visual',
+        items: [
+          'Staged-file tiles for non-image uploads (PDF, XLSX/CSV, DOCX, HTML, TXT, RTF) now show a brand-evocative document badge with folded-corner silhouette and a colour matched to each format (Adobe red, Excel green, Word blue, etc.) instead of plain text. Recognisable at a glance during extraction.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.3.0-rc2e.32',
     date: '2026-05-03',
@@ -6307,6 +6320,59 @@ function stagedFileShortName(file) {
   const dot = name.lastIndexOf('.');
   const ext = dot > 0 ? name.slice(dot) : '';
   return name.slice(0, Math.max(8, 18 - ext.length - 1)) + '...' + ext;
+}
+
+// rc2e.33: Brand-evocative document badge for staged-file tiles. Folded-corner
+// silhouette + brand colour per type. Designed to be recognisable at a glance
+// without lifting any trademarked logos (mirrors the InsurerBadge approach).
+const _FILE_TYPE_PALETTE = {
+  PDF:  { bg:'#E94C3C', fold:'#A82A1E' },
+  XLS:  { bg:'#1D6F42', fold:'#0F4E2C' },
+  DOC:  { bg:'#2A5699', fold:'#1B3A6E' },
+  HTML: { bg:'#E96228', fold:'#A8431A' },
+  TXT:  { bg:'#6B7280', fold:'#4B5563' },
+  RTF:  { bg:'#6B7280', fold:'#4B5563' },
+  IMG:  { bg:'#3B82F6', fold:'#2563EB' },
+  FILE: { bg:'#374151', fold:'#1F2937' },
+};
+function FileTypeBadge({ file, size }) {
+  const dim = size || 56;
+  const kind = stagedFileKind(file);
+  const palette = _FILE_TYPE_PALETTE[kind.label] || _FILE_TYPE_PALETTE.FILE;
+  const foldSize = Math.round(dim * 0.28);
+  return (
+    <div style={{
+      width: dim,
+      height: dim,
+      position: 'relative',
+      background: palette.bg,
+      borderRadius: 4,
+      display: 'flex',
+      alignItems: 'flex-end',
+      justifyContent: 'center',
+      paddingBottom: Math.max(4, Math.round(dim * 0.12)),
+      boxShadow: '0 1px 3px rgba(0,0,0,.25)',
+      flexShrink: 0,
+    }} title={kind.label + ' file'}>
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        width: foldSize,
+        height: foldSize,
+        background: 'linear-gradient(225deg, ' + palette.fold + ' 50%, transparent 50%)',
+        borderTopRightRadius: 4,
+      }} />
+      <span style={{
+        color: '#fff',
+        fontSize: Math.max(9, Math.round(dim * 0.22)),
+        fontWeight: 900,
+        letterSpacing: 0.5,
+        textShadow: '0 1px 1px rgba(0,0,0,.25)',
+        lineHeight: 1,
+      }}>{kind.label}</span>
+    </div>
+  );
 }
 
 function inferUploadIntent(files) {
@@ -28900,8 +28966,9 @@ function Dashboard() {
                 {s.preview ? (
                   <img src={s.preview} style={{width:60,height:60,objectFit:'cover',borderRadius:8,border:'1px solid var(--border2)'}} />
                 ) : (
-                  <div title={s.file?.name || kind.label} style={{width:60,height:60,borderRadius:8,border:'1px solid var(--border2)',background:'var(--bg3)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:2,padding:4}}>
-                    <div style={{fontSize:13,fontWeight:800,color:kind.tone}}>{kind.label}</div>
+                  <div title={s.file?.name || kind.label} style={{width:60,height:60,borderRadius:8,border:'1px solid var(--border2)',background:'var(--bg3)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:3,padding:4}}>
+                    {/* rc2e.33: brand-evocative document badge replaces the plain text label */}
+                    <FileTypeBadge file={s.file} size={34} />
                     <div style={{fontSize:8,color:'var(--text3)',maxWidth:52,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{stagedFileShortName(s.file)}</div>
                   </div>
                 )}
@@ -36966,8 +37033,9 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
                   {s.preview ? (
                     <img src={s.preview} style={{width:72,height:72,objectFit:'cover',borderRadius:8,border:'2px solid '+badgeColor}} />
                   ) : (
-                    <div title={s.file?.name || fileKind.label} style={{width:72,height:72,borderRadius:8,border:'2px solid '+badgeColor,background:'var(--bg3)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:3,padding:5}}>
-                      <div style={{fontSize:15,fontWeight:800,color:fileKind.tone,lineHeight:1}}>{fileKind.label}</div>
+                    <div title={s.file?.name || fileKind.label} style={{width:72,height:72,borderRadius:8,border:'2px solid '+badgeColor,background:'var(--bg3)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:4,padding:5}}>
+                      {/* rc2e.33: brand-evocative document badge replaces the plain text label */}
+                      <FileTypeBadge file={s.file} size={42} />
                       <div style={{fontSize:8,color:'var(--text3)',maxWidth:60,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',textAlign:'center'}}>{stagedFileShortName(s.file)}</div>
                     </div>
                   )}
