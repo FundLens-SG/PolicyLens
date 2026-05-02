@@ -674,9 +674,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.27';
+const APP_VERSION = 'v2.3.0-rc2e.27.1';
 const APP_VERSION_DATE = '2026-05-02';
-const APP_VERSION_NAME = 'HTML extraction reliability';
+const APP_VERSION_NAME = 'CHANGELOG backfill and gitignore tidy';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 const APP_TAB_IDS = new Set(['profile', 'dashboard', 'policies', 'clients', 'repository', 'report', 'settings']);
 function getInitialPolicyLensTab() {
@@ -687,6 +687,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.3.0-rc2e.27.1',
+  date: '2026-05-02',
+  name: 'CHANGELOG backfill and gitignore tidy',
+  sections: [{
+    heading: 'Housekeeping',
+    items: ['Backfilled the v2.3.0-rc2e.24 changelog entry that was missing from the original "Hard fix PDF and HTML extraction" release.', 'Added local working directories and the Supabase Edge Function source to .gitignore so they stop appearing in git status.']
+  }]
+}, {
   version: 'v2.3.0-rc2e.27',
   date: '2026-05-02',
   name: 'HTML extraction reliability',
@@ -718,6 +726,14 @@ const CHANGELOG = [{
   }, {
     heading: 'Bulk verify',
     items: ['Single-person profile pages no longer collapse policy owner and life assured to the same name during structured-people backfill, removing spurious dependant-routing prompts in the review modal.']
+  }]
+}, {
+  version: 'v2.3.0-rc2e.24',
+  date: '2026-05-02',
+  name: 'Hard fix PDF and HTML extraction',
+  sections: [{
+    heading: 'Extraction',
+    items: ['Long AI extractions now use adaptive per-call timeouts (3-5 minutes for large content) instead of a fixed 2-minute cap, so multi-page PDFs and large HTML portfolios stop timing out before the AI can respond.', 'PolicyLens HTML portfolio dashboard exports are now parsed locally — recognised rows skip the AI call entirely and import directly from the table.', 'HTML preprocessing now preserves table rows and heading structure when sending to AI, instead of flattening to plain body text.', 'Self-healing extraction now also splits and retries large text blocks when the AI times out or hits a network error mid-call (previously only retried on size errors).']
   }]
 }, {
   version: 'v2.3.0-rc2e.23',

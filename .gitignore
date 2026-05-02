@@ -11,4 +11,11 @@ documentai-service-account*.json*
 # Local Codex/Claude working artifacts.
 AGENTS.md
 rc*_diff.txt
+rc*_scope.txt
 tools/.cache/
+
+# Local working dirs and dev artifacts (per Codex handoff — do not commit).
+PolicyLens/
+backups/
+test/
+drive-auth-dev.ts
