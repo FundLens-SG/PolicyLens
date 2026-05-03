@@ -6,7 +6,7 @@ compatibility_date = "2026-04-26"
 DOCUMENT_AI_PROJECT_ID = "policylens-493014"
 DOCUMENT_AI_LOCATION = "asia-southeast1"
 DOCUMENT_AI_PROCESSOR_ID = "5cd43d57e6998638"
-POLICYLENS_ALLOWED_ORIGIN = "https://fundlens-sg.github.io"
+POLICYLENS_ALLOWED_ORIGIN = "https://ckgtools.com"
 
 # Optional auth hardening. If set, the Worker requires a valid PolicyLens
 # Supabase session token before it spends Document AI credits.

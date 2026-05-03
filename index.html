@@ -198,34 +198,7 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
 #auth-loading-text>span:nth-child(7){animation-delay:9s}
 #auth-loading-text>span:nth-child(8){animation-delay:10.5s}
 #auth-loading-text>span:nth-child(9){animation-delay:12s}
-/* ══════ AUTH GATE ══════ */
-#auth-gate{position:fixed;inset:0;z-index:10000;background:var(--bg);display:none;align-items:center;justify-content:center;padding:20px}
-#auth-gate .auth-card{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;max-width:400px;width:100%;padding:32px;box-shadow:0 24px 64px rgba(0,0,0,.4)}
-#auth-gate h2{font-size:22px;font-weight:700;margin-bottom:4px;color:var(--gold)}
-#auth-gate .auth-sub{font-size:13px;color:var(--text3);margin-bottom:20px}
-#auth-gate .af{margin-bottom:14px}
-#auth-gate .af label{display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:4px}
-#auth-gate .af input{width:100%;padding:10px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:14px;font-family:inherit;outline:none}
-#auth-gate .af input:focus{border-color:var(--gold)}
-#auth-gate .abtn{width:100%;padding:12px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s}
-.abtn-p{background:var(--gold);color:#0b0f1a}.abtn-p:hover{background:var(--gold2)}
-.abtn-s{background:transparent;color:var(--text2);border:1px solid var(--border2)!important;margin-top:8px}.abtn-s:hover{background:var(--bg3)}
-.auth-msg{font-size:12px;padding:10px;border-radius:8px;margin-bottom:12px}
-.auth-msg-error{background:var(--red-dim);color:var(--red2);border:1px solid rgba(239,83,80,.2)}
-.auth-msg-info{background:var(--green-dim);color:var(--green2);border:1px solid rgba(52,211,153,.2)}
-.auth-link{font-size:12px;color:var(--gold);cursor:pointer;text-align:center;margin-top:12px}
-.auth-pending{text-align:center;padding:20px 0}
-.auth-pending-icon{font-size:40px;margin-bottom:12px}
-.auth-pending-title{font-size:16px;font-weight:600;margin-bottom:6px;color:var(--gold)}
-.auth-pending-sub{font-size:13px;color:var(--text3);line-height:1.5}
-#admin-fab{position:fixed;bottom:20px;right:20px;z-index:9998;background:var(--gold);color:#0b0f1a;border:none;border-radius:50%;width:48px;height:48px;font-size:20px;cursor:pointer;box-shadow:0 4px 16px rgba(212,169,106,.3);display:none}
-#admin-panel{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;padding:20px}
-#admin-panel .acard{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;max-width:640px;width:100%;max-height:80vh;overflow-y:auto;padding:24px}
-#admin-panel .atitle{font-size:16px;font-weight:600;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;color:var(--gold)}
-#admin-panel table{width:100%;border-collapse:collapse}
-#admin-panel th{text-align:left;padding:8px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);border-bottom:1px solid var(--border)}
-#admin-panel td{padding:8px;font-size:13px;border-bottom:1px solid var(--border)}
-.logout-pill{display:none!important}
+/* Auth-gate + admin CSS removed — sign-in lives at the ckgtools.com hub. */
 
 
 /* ── Mobile nav: hide scrollbar, compact spacing ── */
@@ -255,237 +228,65 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
   </div>
 </div>
 
-<!-- ══════ AUTH GATE ══════ -->
-<div id="auth-gate">
-  <div class="auth-card">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-      <svg width="56" height="56" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="50" cy="50" r="38" fill="none" stroke="#d4a96a" stroke-width="2.5"/>
-        <circle cx="50" cy="50" r="2" fill="#d4a96a"/>
-        <line x1="50" y1="32" x2="50" y2="42" stroke="#d4a96a" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="50" y1="58" x2="50" y2="68" stroke="#d4a96a" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="32" y1="50" x2="42" y2="50" stroke="#d4a96a" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="58" y1="50" x2="68" y2="50" stroke="#d4a96a" stroke-width="1.5" stroke-linecap="round"/>
-        <path d="M50 30 L51.5 32 L50 34 L48.5 32Z" fill="#d4a96a" opacity="0.8"/>
-        <path d="M50 66 L51.5 68 L50 70 L48.5 68Z" fill="#d4a96a" opacity="0.8"/>
-        <path d="M30 50 L32 51.5 L34 50 L32 48.5Z" fill="#d4a96a" opacity="0.8"/>
-        <path d="M66 50 L68 51.5 L70 50 L68 48.5Z" fill="#d4a96a" opacity="0.8"/>
-      </svg>
-      <div><h2>PolicyLens</h2><div class="auth-sub">Sign in to access your portfolio</div></div>
-    </div>
-    <div id="auth-message" style="display:none"></div>
-    <div id="auth-login">
-      <div class="af"><label>Email</label><input type="email" id="auth-email" placeholder="you@example.com"></div>
-      <div class="af"><label>Password</label><input type="password" id="auth-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')authLogin()"></div>
-      <button class="abtn abtn-p" onclick="authLogin()">Sign In</button>
-      <button class="abtn abtn-s" onclick="authShow('signup')">Create Account</button>
-      <div class="auth-link" onclick="authShow('reset')">Forgot password?</div>
-      <div style="text-align:center;margin-top:24px;font-size:11px;opacity:0.6">
-        <span id="auth-version-label">PolicyLens</span>
-        <span style="margin:0 8px">&middot;</span>
-        <button onclick="document.getElementById('auth-changelog').style.display=document.getElementById('auth-changelog').style.display==='none'?'block':'none'" style="background:none;border:none;color:#c9a96e;cursor:pointer;font-size:11px;padding:0">Changelog</button>
-      </div>
-      <div id="auth-changelog" style="display:none;margin-top:12px;max-height:240px;overflow:auto;text-align:left;font-size:11px;color:#c8c8c8;background:rgba(26,35,50,.5);border-radius:8px;padding:12px;border:1px solid rgba(201,169,110,.15)">
-        <div style="font-weight:700;color:#c9a96e;margin-bottom:6px">v2.0.0 — Reasoning & Field-Tool Release</div>
-        <div style="color:#888;font-size:10px;margin-bottom:8px">2026-04-10</div>
-        <div style="margin-bottom:4px;font-weight:600;color:#c9a96e;font-size:10px">Extraction quality</div>
-        <div style="padding-left:8px;line-height:1.6">- AI explains low-confidence values<br>- Stricter rules prevent silent "Untitled policy" CLEAN cards<br>- Smarter deduplication</div>
-        <div style="margin-top:6px;margin-bottom:4px;font-weight:600;color:#c9a96e;font-size:10px">Reasoning layer</div>
-        <div style="padding-left:8px;line-height:1.6">- Auto-derives missing premiums, terms, death benefits<br>- Arithmetic constraint validator<br>- Targeted re-extraction on flagged fields</div>
-        <div style="margin-top:6px;margin-bottom:4px;font-weight:600;color:#c9a96e;font-size:10px">Field tool</div>
-        <div style="padding-left:8px;line-height:1.6">- Knowns vs Assumptions tab<br>- Snap-and-go camera mode<br>- Active learning from corrections</div>
-      </div>
-    </div>
-    <div id="auth-signup" style="display:none">
-      <div class="af"><label>Full Name</label><input type="text" id="auth-sname" placeholder="Your name"></div>
-      <div class="af"><label>Email</label><input type="email" id="auth-semail" placeholder="you@example.com"></div>
-      <div class="af"><label>Password</label><input type="password" id="auth-spass" placeholder="Min 6 characters"></div>
-      <button class="abtn abtn-p" onclick="authSignup()">Create Account</button>
-      <button class="abtn abtn-s" onclick="authShow('login')">Back to Sign In</button>
-    </div>
-    <div id="auth-reset" style="display:none">
-      <div class="af"><label>Email</label><input type="email" id="auth-remail" placeholder="you@example.com"></div>
-      <button class="abtn abtn-p" onclick="authReset()">Send Reset Link</button>
-      <button class="abtn abtn-s" onclick="authShow('login')">Back to Sign In</button>
-    </div>
-    <div id="auth-pending" style="display:none">
-      <div class="auth-pending">
-        <div class="auth-pending-icon">⏳</div>
-        <div class="auth-pending-title">Account Pending Approval</div>
-        <div class="auth-pending-sub">Your account has been created and is awaiting admin approval.<br>You'll receive access once approved.</div>
-      </div>
-      <button class="abtn abtn-s" onclick="authLogout()">Sign Out</button>
-    </div>
-  </div>
-</div>
-<button class="logout-pill" id="logout-pill" onclick="authLogout()">Sign Out</button>
-<button id="admin-fab" onclick="openAdmin()">👥</button>
-<div id="admin-panel" onclick="if(event.target===this)closeAdmin()">
-  <div class="acard">
-    <div class="atitle"><span>User Management</span><button onclick="closeAdmin()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3)">×</button></div>
-    <div id="admin-list">Loading…</div>
-  </div>
-</div>
+<!-- Auth UI removed — sign-in lives at the ckgtools.com hub.
+     authCheck() redirects to '/' if no hub session is present at boot.
+     Sign-out is in Settings (calls window.authLogout). -->
+
 
 <script>
 // ══════════════════════════════════════════════════
-//  SUPABASE AUTH — UPDATE THESE 3 VALUES
+//  SUPABASE — ckgtools-admin (shared with hub at ckgtools.com)
 // ══════════════════════════════════════════════════
-var SB_URL = 'https://mgbxxwoasrwlraffcvab.supabase.co';
-var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nYnh4d29hc3J3bHJhZmZjdmFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3ODIzMjMsImV4cCI6MjA5MDM1ODMyM30.kJoq_dded4cmW56ymY3NmvmhNxYKFKrwOxbSJvBIfc4';
-var ADMIN_EMAILS = ['chungakwanc@gmail.com'];
+// Hub at ckgtools.com handles Google OAuth + role gating. PolicyLens reads
+// the existing hub session via the default Supabase storage key. PolicyLens
+// data lives in the `policylens` schema on this same project.
+var SB_URL = 'https://cbqbvctnrfbxjscgirpn.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNicWJ2Y3RucmZieGpzY2dpcnBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3ODcxMDAsImV4cCI6MjA5MzM2MzEwMH0.OFqwlvZslsibwTN2qgfmIREAI9Bel-BKGnM7D2HV2sM';
 
 // ── SINGLE global Supabase client — created once, used by auth + React ──
 var _SB = null;
 try { if(window.supabase) _SB = window.supabase.createClient(SB_URL, SB_KEY, {
-  auth: { storageKey: 'policylens-auth', autoRefreshToken: true, persistSession: true, detectSessionInUrl: false, flowType: 'implicit' }
+  auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: false, flowType: 'pkce' }
 }); } catch(e){ console.warn('[Auth] Supabase init error:',e); }
 
 var _sb=null,_user=null,_prof=null,_isAdmin=false;
 function sb(){return _SB;}
-function authMsg(t,type){var e=document.getElementById('auth-message');e.className='auth-msg auth-msg-'+(type||'error');e.textContent=t;e.style.display='block';}
-function authClear(){document.getElementById('auth-message').style.display='none';}
-function authShow(v){authClear();['login','signup','reset','pending'].forEach(function(s){document.getElementById('auth-'+s).style.display=s===v?'':'none';});}
-
-async function authLogin(){
-  authClear();
-  var e=document.getElementById('auth-email').value.trim(),p=document.getElementById('auth-pass').value;
-  if(!e||!p)return authMsg('Please enter email and password');
-  authMsg('Signing in…','info');
-  try {
-    var r = await _SB.auth.signInWithPassword({email:e,password:p});
-    if(r.error) return authMsg(r.error.message);
-    finishLogin(e);
-  } catch(err) {
-    if(ADMIN_EMAILS.indexOf(e)>=0){_isAdmin=true;_prof={email:e,approved:true,role:'admin'};authGrant();return;}
-    authMsg('Login error: '+err.message);
-  }
-}
-
-function finishLogin(email){
-  if(ADMIN_EMAILS.indexOf(email)>=0){
-    _isAdmin=true;
-    _prof={email:email,full_name:'Admin',approved:true,role:'admin'};
-    _SB.auth.getSession().then(function(s){
-      _user=s?.data?.session?.user||{email:email};
-      if(_user.id)_SB.from('profiles').upsert({id:_user.id,email:email,full_name:_user?.user_metadata?.full_name||'',approved:true,role:'admin'}).catch(function(){});
-    }).catch(function(){});
-    authGrant();
-    return;
-  }
-  authCheck();
-}
-
-async function authSignup(){
-  authClear();
-  var n=document.getElementById('auth-sname').value.trim(),e=document.getElementById('auth-semail').value.trim(),p=document.getElementById('auth-spass').value;
-  if(!n||!e||!p)return authMsg('Please fill in all fields');
-  if(p.length<6)return authMsg('Password must be at least 6 characters');
-  try {
-    authMsg('Creating account…','info');
-    var r=await sb().auth.signUp({email:e,password:p,options:{data:{full_name:n}}});
-    if(r.error)return authMsg(r.error.message);
-    // Create profile
-    if(r.data&&r.data.user){
-      var isAdm=ADMIN_EMAILS.indexOf(e)>=0;
-      var pIns=await sb().from('profiles').upsert({id:r.data.user.id,email:e,full_name:n,approved:isAdm,role:isAdm?'admin':'user'});
-      if(pIns.error) console.warn('[Auth] Profile upsert error (non-blocking):', pIns.error.message);
-      if(isAdm){
-        // Admin — sign in directly
-        _user=r.data.user;_isAdmin=true;_prof={email:e,full_name:n,approved:true,role:'admin'};
-        authGrant();return;
-      }
-    }
-    authMsg('Account created! Awaiting admin approval.','info');
-    setTimeout(function(){authShow('pending');},1500);
-  } catch(err) {
-    authMsg('Signup error: '+err.message);
-  }
-}
-
-async function authReset(){
-  authClear();
-  var e=document.getElementById('auth-remail').value.trim();
-  if(!e)return authMsg('Please enter your email');
-  var r=await sb().auth.resetPasswordForEmail(e);
-  if(r.error)return authMsg(r.error.message);
-  authMsg('Reset link sent! Check your inbox.','info');
-}
-
+// Auth at PolicyLens is read-only: the hub at ckgtools.com handles Google
+// OAuth, role gating, and approval. PolicyLens just reads the session that
+// the hub created on the same domain. If no session is present, bounce
+// the user back to the hub's sign-in surface.
 async function authLogout(){
-  await sb().auth.signOut();
+  try { await sb().auth.signOut(); } catch(_){}
   _user=null;_prof=null;_isAdmin=false;
-  document.getElementById('auth-gate').style.display='flex';
-  document.getElementById('logout-pill').style.display='none';
-  document.getElementById('admin-fab').style.display='none';
-  authShow('login');
+  window.location.href = '/';
 }
 
 async function authCheck(){
   try {
-  var s=sb();
-  if(!s){authGrant();return;}
-  var sess=await s.auth.getSession();
-  if(!sess.data||!sess.data.session){document.getElementById('auth-loading').style.display='none';document.getElementById('auth-gate').style.display='flex';return;}
-  _user=sess.data.session.user;
-  console.log('[Auth] User:', _user.email, 'UID:', _user.id);
-
-  // ADMIN FAST PATH — skip all DB queries for admin emails
-  var emailIsAdmin = ADMIN_EMAILS.indexOf(_user.email)>=0;
-  if(emailIsAdmin){
-    console.log('[Auth] Admin email — granting access immediately');
-    _isAdmin=true;
-    _prof={email:_user.email,full_name:_user.user_metadata?.full_name||'Admin',approved:true,role:'admin'};
-    // Try to ensure profile exists (fire and forget — don't block on it)
-    s.from('profiles').upsert({id:_user.id,email:_user.email,full_name:_user.user_metadata?.full_name||'',approved:true,role:'admin'}).then(()=>console.log('[Auth] Admin profile ensured'));
-    authGrant();
-    return;
-  }
-
-  // NON-ADMIN PATH — query profiles table
-  var p=await s.from('profiles').select('*').eq('id',_user.id).maybeSingle();
-  console.log('[Auth] Profile:', p.error?p.error.message:'ok', p.data?'found':'missing');
-
-  if(p.data) {
-    // Profile exists — check approval
-    _prof=p.data;
-    _isAdmin=_prof.role==='admin';
-    if(!_prof.approved){authShow('pending');return;}
-    authGrant();
-    return;
-  }
-
-  // Profile missing or SELECT errored — try to create it
-  var m=_user.user_metadata||{};
-  var profileData={id:_user.id,email:_user.email,full_name:m.full_name||'',approved:false,role:'user'};
-  console.log('[Auth] Creating profile for', _user.email);
-
-  // Try insert first, then upsert as fallback
-  var ins=await s.from('profiles').insert(profileData);
-  if(ins.error) {
-    console.warn('[Auth] Insert error:', ins.error.message, '— trying upsert');
-    var ups=await s.from('profiles').upsert(profileData);
-    if(ups.error) {
-      console.error('[Auth] Upsert also failed:', ups.error.message);
-      authMsg('Account setup failed: '+ups.error.message+'. Please contact your admin.');
+    var s = sb();
+    if(!s){ document.getElementById('auth-loading').style.display='none'; return; }
+    var sess = await s.auth.getSession();
+    if(!sess.data || !sess.data.session){
+      // No hub session — bounce to ckgtools root for sign-in
+      window.location.href = '/';
       return;
     }
-  }
-  document.getElementById('auth-loading').style.display='none';document.getElementById('auth-gate').style.display='flex';authShow('pending');return;
+    _user = sess.data.session.user;
+    console.log('[Auth] User:', _user.email, 'UID:', _user.id);
+    _prof = { email:_user.email, full_name:_user.user_metadata?.full_name||'', approved:true, role:'user' };
+    _isAdmin = false;
+    // Cache the Drive provider token for driveClient (set by hub OAuth on sign-in).
+    window._driveProviderToken = sess.data.session.provider_token || null;
+    authGrant();
   } catch(err) {
     console.error('[Auth] Error:', err);
-    document.getElementById('auth-loading').style.display='none';
-    if(_user && ADMIN_EMAILS.indexOf(_user.email)>=0){_isAdmin=true;authGrant();return;}
-    document.getElementById('auth-gate').style.display='flex';
-    authMsg('Auth error: '+err.message);
+    window.location.href = '/';
   }
 }
 
 function authGrant(){
-  document.getElementById('auth-loading').style.display='none';
-  document.getElementById('auth-gate').style.display='none';
-  document.getElementById('logout-pill').style.display='block';
-  // v2.3.0-rc2c.5q: admin-fab moved to Settings tab (User Management card)
+  var loadingEl = document.getElementById('auth-loading');
+  if (loadingEl) loadingEl.style.display = 'none';
   // Sync API keys from Supabase to IndexedDB on login
   syncKeysFromSupabase();
   // Check onboarding
@@ -505,7 +306,7 @@ async function syncKeysFromSupabase(){
   try {
     const s=getSB();if(!s||!_user) return;
     const syncApiKeys = await shouldSyncApiKeysToCloud();
-    const {data,error}=await s.from('user_settings').select('gemini_api_key,anthropic_api_key,advisor_name,advisor_company').eq('user_id',_user.id).maybeSingle();
+    const {data,error}=await s.schema('policylens').from('user_settings').select('gemini_api_key,anthropic_api_key,advisor_name,advisor_company').eq('user_id',_user.id).maybeSingle();
     if(error||!data) return;
     const uid=_user.id;
     if(syncApiKeys && data.gemini_api_key){
@@ -532,7 +333,7 @@ async function saveKeyToSupabase(keyType, value){
     const colMap = {gemini:'gemini_api_key', anthropic:'anthropic_api_key', advisorName:'advisor_name', advisorCompany:'advisor_company'};
     const col = colMap[keyType];
     if(!col) return;
-    const {error}=await s.from('user_settings').upsert({user_id:_user.id,[col]:value},{onConflict:'user_id'});
+    const {error}=await s.schema('policylens').from('user_settings').upsert({user_id:_user.id,[col]:value},{onConflict:'user_id'});
     if(error) console.warn('[Auth] Key save error:',error.message);
     else console.log('[Auth] '+keyType+' saved to Supabase');
   } catch(e){console.warn('[Auth] Key save error:',e);}
@@ -542,7 +343,7 @@ async function saveKeyToSupabase(keyType, value){
 async function checkOnboarding(){
   try {
     const s=getSB();if(!s||!_user) return;
-    const {data}=await s.from('user_settings').select('onboarding_completed').eq('user_id',_user.id).maybeSingle();
+    const {data}=await s.schema('policylens').from('user_settings').select('onboarding_completed').eq('user_id',_user.id).maybeSingle();
     if(data && !data.onboarding_completed){
       window._showOnboarding = true;
       // Trigger React re-render by dispatching a custom event
@@ -554,106 +355,28 @@ async function checkOnboarding(){
 async function completeOnboarding(){
   try {
     const s=getSB();if(!s||!_user) return;
-    await s.from('user_settings').upsert({user_id:_user.id,onboarding_completed:true},{onConflict:'user_id'});
+    await s.schema('policylens').from('user_settings').upsert({user_id:_user.id,onboarding_completed:true},{onConflict:'user_id'});
     window._showOnboarding = false;
   } catch(e){console.warn('[Auth] Onboarding complete error:',e);}
 }
 
-// ── Admin ──
-function requireAdminAction(label){
-  if(!_isAdmin){
-    authMsg((label||'Admin action')+' is restricted to approved admins.','error');
-    return false;
-  }
-  return true;
-}
-function escapeHTML(v){
-  return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});
-}
-async function openAdmin(){if(!requireAdminAction('User management'))return;document.getElementById('admin-panel').style.display='flex';await loadUsers();}
-function closeAdmin(){document.getElementById('admin-panel').style.display='none';}
-async function loadUsers(){
-  if(!requireAdminAction('User management'))return;
-  var r=await sb().from('profiles').select('*').order('created_at',{ascending:false});
-  if(r.error){document.getElementById('admin-list').innerHTML='<p style="color:var(--red2)">Error: '+escapeHTML(r.error.message)+'</p>';return;}
-  var u=r.data||[],h='<table><thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Role</th><th>Joined</th><th>Action</th></tr></thead><tbody>';
-  u.forEach(function(x){
-    var ok=x.approved,col=ok?'var(--green2)':'var(--orange)',bg=ok?'rgba(16,185,129,.1)':'rgba(245,158,11,.1)';
-    var d=x.created_at?new Date(x.created_at).toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'}):'—';
-    var uid=encodeURIComponent(String(x.id||''));
-    var uemail=x.email||'';
-    var uname=x.full_name||'';
-    var btn;
-    if(ok){
-      btn='<button onclick="adminAct(decodeURIComponent(&quot;'+uid+'&quot;),false)" style="background:rgba(239,68,68,.15);color:var(--red2);border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">Revoke</button>';
-    } else {
-      btn='<button onclick="adminAct(decodeURIComponent(&quot;'+uid+'&quot;),true)" style="background:rgba(16,185,129,.15);color:var(--green2);border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">Approve</button>';
-    }
-    h+='<tr><td style="font-weight:500">'+escapeHTML(x.full_name||'—')+'</td><td style="font-size:12px">'+escapeHTML(x.email||'—')+'</td>'
-      +'<td><span class="badge" style="background:'+bg+';color:'+col+'">'+(ok?'Approved':'Pending')+'</span></td>'
-      +'<td style="font-size:11px">'+escapeHTML(x.role||'user')+'</td><td style="font-size:11px;color:var(--text3)">'+escapeHTML(d)+'</td><td>'+btn+'</td></tr>';
-  });
-  h+='</tbody></table><div style="font-size:11px;color:var(--text3);margin-top:12px">'+u.length+' users · '+u.filter(function(x){return x.approved}).length+' approved</div>';
-  document.getElementById('admin-list').innerHTML=h;
-}
-async function adminAct(id,approve,email,name){
-  if(!requireAdminAction('User approval'))return;
-  if(!email || !name){
-    try{
-      const info=await sb().from('profiles').select('email,full_name').eq('id',id).maybeSingle();
-      email=email||info.data?.email;
-      name=name||info.data?.full_name;
-    }catch(_){}
-  }
-  await sb().from('profiles').update({approved:approve}).eq('id',id);
-  await loadUsers();
-  if(approve && email) {
-    // Try automated email via Edge Function
-    try {
-      const s = getSB();
-      if(s) {
-        const {data,error} = await s.functions.invoke('send-approval-email', {
-          body: { to: email, name: name || 'there' }
-        });
-        if(!error) { console.log('[Admin] Approval email sent to', email); return; }
-        console.warn('[Admin] Edge function error:', error.message);
-      }
-    } catch(e) { console.warn('[Admin] Auto-email failed:', e.message); }
-    // Fallback: open mailto
-    var subject = encodeURIComponent('PolicyLens Access Approved');
-    var body = encodeURIComponent(
-      'Hi ' + (name||'there') + ',\n\n' +
-      'Great news — your PolicyLens account has been approved!\n\n' +
-      'You can now sign in at:\nhttps://fundlens-sg.github.io/policylens-test/\n\n' +
-      'Use the email and password you created during sign-up.\n\n' +
-      'Quick start:\n' +
-      '1. Sign in with your credentials\n' +
-      '2. Go to Settings and add your Gemini API key (free) and optionally Anthropic key ($5 top-up for better accuracy)\n' +
-      '3. Use Camera, Photos, or Files to scan your first policy\n\n' +
-      'Welcome aboard!\n' +
-      '— PolicyLens Admin'
-    );
-    window.open('mailto:' + email + '?subject=' + subject + '&body=' + body, '_blank');
-  }
-}
+// Admin UI removed — user management lives at the ckgtools.com admin
+// dashboard (Phase 5). PolicyLens no longer reads or writes `profiles`.
 
 // ── Init ──
 document.addEventListener('DOMContentLoaded',function(){
-  if(SB_KEY==='DISABLED'){console.warn('PolicyLens: Supabase auth disabled');authGrant();return;}
-  try { console.log('[Auth] Session in storage:', !!localStorage.getItem('policylens-auth')); } catch(_) {}
   // v2.1.0i: Safety timeout — if authCheck hangs (network issue, Supabase down),
-  // don't show the loading overlay forever. Fall back to showing the login screen.
+  // don't show the loading overlay forever. Bounce to the hub instead.
   setTimeout(function(){
     var el=document.getElementById('auth-loading');
     if(el && el.style.display!=='none'){
-      console.warn('[Auth] Hydration timeout after 8s — falling back to login screen');
-      el.style.display='none';
-      document.getElementById('auth-gate').style.display='flex';
+      console.warn('[Auth] Hydration timeout after 8s — bouncing to hub');
+      window.location.href = '/';
     }
   }, 8000);
   authCheck();
   var s=sb();if(s)s.auth.onAuthStateChange(function(ev){
-    if(ev==='SIGNED_OUT'){document.getElementById('auth-gate').style.display='flex';document.getElementById('logout-pill').style.display='none';document.getElementById('admin-fab').style.display='none';}
+    if(ev==='SIGNED_OUT'){ window.location.href='/'; }
   });
 });
 </script>
@@ -13370,16 +13093,9 @@ const _tierMoveChains = new Map();
 // execute sequentially; different clients run in parallel.
 const _folderRenameChains = new Map();
 const DRIVE_REFRESH_WARN_MS = 6 * 24 * 60 * 60 * 1000; // 6 days — banner threshold
-// v2.1.0c: Hardcoded redirect URI for the manual implicit-grant flow.
-// Must match EXACTLY the value registered in Google Cloud Console under
-// the OAuth 2.0 client's "Authorized redirect URIs" — Google performs an
-// exact string comparison. Trailing slash is significant. Do NOT add URL
-// normalization here; the value must remain literally string-equal to the
-// console registration.
-const DRIVE_REDIRECT_URI = 'https://fundlens-sg.github.io/policylens-test/';
-const DRIVE_BACKEND_URL = 'https://mgbxxwoasrwlraffcvab.supabase.co/functions/v1/drive-auth-dev';
-const DRIVE_INTENT_KEY = 'policylens_drive_pending_intent';
-const DRIVE_INTENT_TTL_MS = 5 * 60 * 1000; // 5 minutes — stale intent guard
+// Drive OAuth is handled by the ckgtools.com hub. PolicyLens reads the
+// resulting Google access token from session.provider_token. No PKCE
+// flow, no Edge Function token exchange, no redirect URI from this app.
 // Generic admin contact string used in the 403 access_denied path.
 // Intentionally generic — no personal contact info per v2.1.0 decision.
 const DRIVE_ACCESS_DENIED_MSG = "Your Gmail isn't on the access list yet. Contact your PolicyLens administrator to be added.";
@@ -16033,234 +15749,109 @@ async function _waitForGIS(timeoutMs = 5000) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// v2.1.0c: MANUAL IMPLICIT-GRANT REDIRECT FLOW
+// Hub-managed Drive OAuth + Edge-Function refresh (Phase 7)
 // ───────────────────────────────────────────────────────────────
-// signInInteractive bypasses GIS entirely and constructs an OAuth 2.0
-// implicit-grant authorization URL by hand. The full tab navigates to
-// accounts.google.com, the user consents, Google redirects back to
-// DRIVE_REDIRECT_URI with #access_token=... in the URL fragment, and
-// the fragment parser at App() mount time consumes the token.
+// The ckgtools.com hub requests `drive.file` + `access_type=offline` during
+// Google sign-in, so each session carries:
+//   - session.provider_token         — short-lived Google access token (~1h)
+//   - session.provider_refresh_token — long-lived refresh token (per Google)
 //
-// Why bypass GIS?
-//   GIS's initTokenClient is popup-only — no ux_mode parameter. Popups
-//   trigger Cross-Origin-Opener-Policy violations on GitHub Pages
-//   because GH Pages serves COOP: same-origin and the GIS popup-polling
-//   internals access window.closed across origins. v2.1.0a's
-//   error_callback wiring caught the resulting hangs but the COOP
-//   warnings still spammed the console 4× per Connect attempt.
-//
-//   GIS's initCodeClient supports ux_mode: 'redirect' but returns an
-//   authorization code, not a token, and the code exchange call to
-//   https://oauth2.googleapis.com/token requires a client_secret OR
-//   PKCE. Embedding a client_secret in a static SPA is a security
-//   anti-pattern; PKCE adds ~100 lines of crypto + storage handling.
-//   Manual implicit grant skips both problems.
-//
-// Future migration path (if Google ever sunsets implicit grant):
-//   Switch _buildOAuthURL to response_type=code, generate a PKCE
-//   code_verifier + code_challenge per request, persist the verifier
-//   across the redirect, exchange the returned code at oauth2.googleapis.com/token
-//   via PKCE (no client_secret required for SPAs). Adds ~100 lines.
-//   No other code path changes — the fragment parser becomes a query
-//   parser, the token storage and ensureFolder calls stay identical.
-//   See https://datatracker.ietf.org/doc/html/rfc7636 for PKCE spec.
+// To keep Drive working continuously without a re-OAuth bounce, PolicyLens
+// pushes the refresh_token to the `drive-auth-dev` Edge Function on first
+// load (mode=store) and asks it for a fresh access_token whenever needed
+// (mode=refresh). Refresh tokens never leave Supabase.
 // ═══════════════════════════════════════════════════════════════
 
-function _buildOAuthURL(state, codeChallenge) {
-  const p = {
-    client_id: DRIVE_CLIENT_ID,
-    redirect_uri: DRIVE_REDIRECT_URI,
-    response_type: 'code',
-    scope: DRIVE_SCOPE,
-    state: state,
-    include_granted_scopes: 'true',
-    prompt: 'consent'
-  };
-  if (codeChallenge) {
-    p.access_type = 'offline';
-    p.code_challenge = codeChallenge;
-    p.code_challenge_method = 'S256';
-  }
-  return 'https://accounts.google.com/o/oauth2/v2/auth?' + new URLSearchParams(p).toString();
-}
+// _driveTokenExpiresAt — wall-clock ms when _driveAccessToken expires.
+// Set whenever the token is minted/refreshed; consulted by helpers that
+// want to know whether to refresh proactively.
+let _driveTokenExpiresAt = 0;
 
-// Generate a 16-byte hex nonce for OAuth state CSRF protection.
-function _generateOAuthState() {
-  const buf = new Uint8Array(16);
-  crypto.getRandomValues(buf);
-  return Array.from(buf).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-// v2.2.0-rc1.2: PKCE helpers for authorization code flow (backend-mediated).
-function _generateCodeVerifier() {
-  const buf = new Uint8Array(48);
-  crypto.getRandomValues(buf);
-  return btoa(String.fromCharCode(...buf)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-}
-async function _codeChallenge(verifier) {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
-  return btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-}
-
-// ──────────────────────────────────────────────
-// _consumeOAuthRedirect — runs once per app mount.
-// Returns one of:
-//   null                       — no OAuth fragment, no orphan intent (or orphan was silently cleaned)
-//   { kind: 'success', ... }   — token in URL, state matched, ready to consume
-//   { kind: 'error', ... }     — Google returned #error=... in fragment
-//   { kind: 'expired', ... }   — fragment present but stored intent is older than DRIVE_INTENT_TTL_MS
-//   { kind: 'state-mismatch' } — fragment present but state nonce doesn't match
-//   { kind: 'unknown' }        — fragment is malformed (no access_token, no error)
-//
-// Side effects:
-//   - Always cleans the URL fragment via history.replaceState before returning
-//     (so the access token never leaks via referrer headers, screenshots, or
-//     accidental re-processing on reload).
-//   - Always clears sessionStorage[DRIVE_INTENT_KEY] when returning a non-null
-//     result (the intent is single-use).
-//   - When called with NO fragment but a stale/orphan intent in sessionStorage,
-//     silently clears the intent and returns null. This handles the abort case
-//     (user closes Google tab without consenting) without showing any toast.
-// ──────────────────────────────────────────────
-// v2.2.0-rc1.2: Async rewrite. Handles both auth code flow (flag ON,
-// exchanges via backend Edge Function) and implicit flow (flag OFF,
-// parses #access_token from hash). Legacy implicit path preserved for
-// flag-OFF and any in-flight redirects during rollout.
-async function _consumeOAuthRedirect() {
-  const search = window.location.search || '';
-  const hash = window.location.hash || '';
-  const hasAuthCode = search.includes('code=');
-  const hasOAuthFragment = hash.includes('access_token=') || hash.includes('error=');
-  let intent = null;
+// _seedDriveTokensIfNeeded — on first load after a fresh hub sign-in,
+// session.provider_refresh_token is populated. Push it to the Edge
+// Function so future refreshes have something to exchange. Idempotent.
+async function _seedDriveTokensIfNeeded() {
   try {
-    const raw = sessionStorage.getItem(DRIVE_INTENT_KEY);
-    if (raw) intent = JSON.parse(raw);
-  } catch (_) {}
-  if (!hasAuthCode && !hasOAuthFragment) {
-    if (intent) {
-      try {
-        sessionStorage.removeItem(DRIVE_INTENT_KEY);
-      } catch (_) {}
-      console.log('[Drive] Aborted/stale OAuth intent detected — cleaned up silently');
+    const s = window._SB || (typeof getSB === 'function' ? getSB() : null);
+    if (!s) return false;
+    const {
+      data
+    } = await s.auth.getSession();
+    const refreshTok = data?.session?.provider_refresh_token;
+    if (!refreshTok) return false;
+    const {
+      error
+    } = await s.functions.invoke('drive-auth-dev', {
+      body: {
+        mode: 'store',
+        refresh_token: refreshTok,
+        scope: 'https://www.googleapis.com/auth/drive.file'
+      }
+    });
+    if (error) {
+      console.warn('[Drive] store refresh_token failed:', error.message || error);
+      return false;
     }
+    console.log('[Drive] refresh_token stored server-side (idempotent)');
+    return true;
+  } catch (e) {
+    console.warn('[Drive] _seedDriveTokensIfNeeded threw:', e?.message || e);
+    return false;
+  }
+}
+
+// _refreshDriveTokenViaEdgeFn — call drive-auth-dev mode=refresh to mint a
+// fresh access_token from the server-side refresh_token. Returns the token
+// string on success, null on failure.
+async function _refreshDriveTokenViaEdgeFn() {
+  try {
+    const s = window._SB || (typeof getSB === 'function' ? getSB() : null);
+    if (!s) return null;
+    const {
+      data,
+      error
+    } = await s.functions.invoke('drive-auth-dev', {
+      body: {
+        mode: 'refresh'
+      }
+    });
+    if (error || !data?.access_token) {
+      console.warn('[Drive] refresh via Edge Function failed:', error?.message || data?.error || 'no access_token');
+      return null;
+    }
+    _driveTokenExpiresAt = Date.now() + (data.expires_in || 3599) * 1000;
+    return data.access_token;
+  } catch (e) {
+    console.warn('[Drive] _refreshDriveTokenViaEdgeFn threw:', e?.message || e);
     return null;
   }
+}
 
-  // Clean URL — strip query string only if auth code flow (preserves rc1 behavior for implicit flow)
-  const targetUrl = hasAuthCode ? window.location.pathname : window.location.pathname + window.location.search;
+// _readDriveTokenFromHubSession — boot-path helper. Reads provider_token
+// directly from the session (fast path, no network), falling back to the
+// Edge Function refresh if absent or about to expire. Returns the access
+// token string or null.
+async function _readDriveTokenFromHubSession() {
   try {
-    history.replaceState({}, '', targetUrl);
-  } catch (_) {}
-  try {
-    sessionStorage.removeItem(DRIVE_INTENT_KEY);
-  } catch (_) {}
-  if (!intent || intent.expiresAt && Date.now() > intent.expiresAt) {
-    return {
-      kind: 'expired'
-    };
-  }
-
-  // ── AUTH CODE FLOW (backend-mediated, flag ON) ──
-  if (hasAuthCode) {
-    const params = new URLSearchParams(search.slice(1));
-    if (params.get('state') !== intent.state) return {
-      kind: 'state-mismatch',
-      returnTab: intent.returnTab
-    };
-    const err = params.get('error');
-    if (err) return {
-      kind: 'error',
-      error: err,
-      errorDescription: params.get('error_description') || '',
-      returnTab: intent.returnTab
-    };
-    const code = params.get('code');
-    if (!code) return {
-      kind: 'unknown'
-    };
-    // Read PKCE verifier from sessionStorage (stored by signInInteractive), delete immediately
-    let verifier = null;
-    try {
-      verifier = sessionStorage.getItem('policylens_drive_pkce_verifier');
-      sessionStorage.removeItem('policylens_drive_pkce_verifier');
-    } catch (_) {}
-    if (!verifier) return {
-      kind: 'error',
-      error: 'pkce_missing',
-      errorDescription: 'PKCE verifier not found.',
-      returnTab: intent.returnTab
-    };
-    // Exchange via Edge Function — refresh_token stored server-side, never returned to client
-    const s = getSB();
-    if (!s) return {
-      kind: 'error',
-      error: 'no_supabase',
-      errorDescription: 'Supabase client not initialized.',
-      returnTab: intent.returnTab
-    };
-    try {
-      const {
-        data,
-        error: fnErr
-      } = await s.functions.invoke('drive-auth-dev', {
-        body: {
-          mode: 'exchange',
-          code,
-          code_verifier: verifier
-        }
-      });
-      if (fnErr || !data?.access_token) {
-        const detail = fnErr?.message || data?.error || 'Token exchange failed';
-        return {
-          kind: 'error',
-          error: 'exchange_failed',
-          errorDescription: detail,
-          returnTab: intent.returnTab
-        };
-      }
-      return {
-        kind: 'success',
-        accessToken: data.access_token,
-        expiresIn: data.expires_in || 3599,
-        returnTab: intent.returnTab
-      };
-    } catch (e) {
-      return {
-        kind: 'error',
-        error: 'network',
-        errorDescription: 'Exchange network error: ' + (e.message || e),
-        returnTab: intent.returnTab
-      };
+    const s = window._SB || (typeof getSB === 'function' ? getSB() : null);
+    if (!s) return null;
+    const {
+      data
+    } = await s.auth.getSession();
+    const sessionTok = data?.session?.provider_token || null;
+    // If we already have a session token, use it. The boot useEffect will
+    // separately seed drive_tokens for future refreshes. Validity is checked
+    // by pingDriveAPI; on 401 we'll fall through to Edge Function refresh.
+    if (sessionTok) {
+      _driveTokenExpiresAt = Date.now() + 50 * 60 * 1000; // assume ~1h, refresh at 50m
+      return sessionTok;
     }
+    // No session token — try Edge Function refresh (in case the session
+    // was hydrated after access_token expiry).
+    return await _refreshDriveTokenViaEdgeFn();
+  } catch (_) {
+    return null;
   }
-
-  // ── IMPLICIT FLOW (flag OFF or legacy in-flight redirect) ──
-  const fParams = new URLSearchParams(hash.slice(1));
-  if (fParams.get('state') !== intent.state) return {
-    kind: 'state-mismatch',
-    returnTab: intent.returnTab
-  };
-  const fErr = fParams.get('error');
-  if (fErr) return {
-    kind: 'error',
-    error: fErr,
-    errorDescription: fParams.get('error_description') || '',
-    returnTab: intent.returnTab
-  };
-  const accessToken = fParams.get('access_token');
-  if (accessToken) {
-    return {
-      kind: 'success',
-      accessToken,
-      tokenType: fParams.get('token_type'),
-      expiresIn: parseInt(fParams.get('expires_in') || '3599'),
-      scope: fParams.get('scope'),
-      returnTab: intent.returnTab
-    };
-  }
-  return {
-    kind: 'unknown'
-  };
 }
 
 // ── Initialize the OAuth token client (idempotent) ──
@@ -16444,110 +16035,55 @@ async function resolveDriveAutosaveClientId(file) {
 // driveClient — public API
 // ──────────────────────────────────────────────
 const driveClient = {
-  // ── signInInteractive: redirect-mode OAuth (v2.1.0c) ──
-  // Generates a CSRF state nonce, persists the in-flight intent to
-  // sessionStorage with a 5-minute expiry, then navigates the entire
-  // tab to Google's authorization endpoint. The page unmounts. After
-  // consent, Google redirects back to DRIVE_REDIRECT_URI with
-  // #access_token=... in the URL fragment, and _consumeOAuthRedirect
-  // (called from App() mount) consumes it.
-  //
-  // The previous popup-mode signInInteractive (v2.1.0a/b) used GIS
-  // initTokenClient and required intricate callback/error_callback
-  // wiring + safeResolve/safeReject settled-once guards. None of that
-  // is needed in redirect mode because there's no JavaScript context
-  // running between the redirect-out and the redirect-back. The page
-  // is gone. The function returns a never-resolving Promise so any
-  // accidental await stays parked until the tab navigates away.
+  // ── signInInteractive: bounce to ckgtools hub for re-auth ──
+  // The hub handles Google OAuth (with `drive.file` scope). After sign-in
+  // the user lands back at /tools/policylens/ with a fresh provider_token
+  // on their session. Returns a never-resolving Promise because the page
+  // is about to be replaced.
   async signInInteractive(opts) {
-    const returnTab = opts && opts.returnTab || 'settings';
-    const state = _generateOAuthState();
-    const verifier = _generateCodeVerifier();
-    const challenge = await _codeChallenge(verifier);
-    try {
-      sessionStorage.setItem('policylens_drive_pkce_verifier', verifier);
-    } catch (e) {
-      console.warn('[Drive] Could not persist PKCE verifier:', e);
-    }
-    const intent = {
-      state,
-      returnTab,
-      timestamp: Date.now(),
-      expiresAt: Date.now() + DRIVE_INTENT_TTL_MS
-    };
-    try {
-      sessionStorage.setItem(DRIVE_INTENT_KEY, JSON.stringify(intent));
-    } catch (e) {
-      console.warn('[Drive] Could not persist OAuth intent — recovery on return may fail:', e);
-    }
-    console.log('[Drive] Redirecting to Google for consent (state:', state.slice(0, 8) + '…)');
-    window.location.href = _buildOAuthURL(state, challenge);
-    // Return a never-resolving Promise. The await in handleConnect will
-    // never return because the page is about to be replaced. The new
-    // mount after redirect-back starts fresh with busy=false (useState
-    // default), so no cleanup is needed.
+    console.log('[Drive] Redirecting to ckgtools hub for sign-in');
+    window.location.href = '/';
     return new Promise(() => {});
   },
-  // ── signOut: revoke token + clear all Drive localStorage ──
+  // ── signOut: clear local Drive state. The hub owns sign-out. ──
   async signOut() {
-    // v2.2.0-rc1.2: Notify backend to revoke + delete server-side refresh token
-    try {
-      const s = getSB();
-      if (s) await s.functions.invoke('drive-auth-dev', {
-        body: {
-          mode: 'signout'
-        }
-      });
-    } catch (_) {}
-    if (_driveAccessToken && window.google?.accounts?.oauth2?.revoke) {
-      try {
-        window.google.accounts.oauth2.revoke(_driveAccessToken, () => {});
-      } catch (_) {}
-    }
     _driveAccessToken = null;
     driveLSDel('policylens_drive_token');
     driveLSDel(DRIVE_LS.oauthGrantedAt);
     driveLSDel(DRIVE_LS.userEmail);
-    // Note: folderId is NOT cleared — if the FC reconnects with the same
-    // Google account, the folder is still theirs and we want to find it
-    // by ID rather than create a duplicate. ensureFolder() validates and
-    // recovers if the stored ID is stale.
     _tierFolderCache = {};
     _clientFolderCache = {};
     setDriveStatus('disconnected');
-    console.log('[Drive] Signed out');
+    console.log('[Drive] Local Drive state cleared');
   },
-  // v2.2.0-rc1.2: Silent access token refresh via backend Edge Function.
-  // Backend reads refresh_token from drive_tokens table (server-side),
-  // exchanges for new access_token. Refresh token never touches the client.
+  // ── refreshAccessToken: server-side refresh via drive-auth-dev Edge Fn ──
+  // Calls the Edge Function with mode=refresh, which exchanges the stored
+  // refresh_token with Google and returns a fresh access_token. Used for
+  // periodic refresh AND on Drive 401 retries. Returns true on success.
   async refreshAccessToken() {
-    const s = getSB();
-    if (!s) return false;
-    try {
-      const {
-        data,
-        error: fnErr
-      } = await s.functions.invoke('drive-auth-dev', {
-        body: {
-          mode: 'refresh'
+    const token = await _refreshDriveTokenViaEdgeFn();
+    if (!token) {
+      // Fallback: maybe the session still has a usable provider_token (e.g.
+      // immediately after sign-in, before drive_tokens has been seeded).
+      const fallback = await (async () => {
+        try {
+          const s = window._SB || (typeof getSB === 'function' ? getSB() : null);
+          if (!s) return null;
+          const {
+            data
+          } = await s.auth.getSession();
+          return data?.session?.provider_token || null;
+        } catch (_) {
+          return null;
         }
-      });
-      if (fnErr || !data?.access_token) return false;
-      _driveAccessToken = data.access_token;
-      // sbGetUserId() is synchronous (returns window._user?.id || null)
-      const uid = sbGetUserId();
-      if (uid) {
-        localStorage.setItem('policylens_drive_token', JSON.stringify({
-          token: data.access_token,
-          expiresAt: Date.now() + (data.expires_in || 3599) * 1000,
-          userId: uid
-        }));
-      }
+      })();
+      if (!fallback) return false;
+      _driveAccessToken = fallback;
+      _driveTokenExpiresAt = Date.now() + 50 * 60 * 1000;
       return true;
-    } catch (_) {
-      setClientSyncPhase(clientId, 'idle');
-      return false;
     }
+    _driveAccessToken = token;
+    return true;
   },
   // ── getStatus: derived from in-memory token + day-6 timestamp check ──
   getStatus() {
@@ -16882,7 +16418,7 @@ async function sbRepoLoad() {
     const {
       data,
       error
-    } = await s.from('repository').select('*').order('created_at', {
+    } = await s.schema('policylens').from('repository').select('*').order('created_at', {
       ascending: true
     });
     if (error) {
@@ -16903,13 +16439,18 @@ async function sbRepoSave(item) {
   try {
     const s = getSB();
     if (!s) return false;
+    const uid = window._user?.id;
+    if (!uid) return false; // RLS will reject without user_id
     const email = window._user?.email || '';
     const {
       error
-    } = await s.from('repository').upsert({
+    } = await s.schema('policylens').from('repository').upsert({
+      user_id: uid,
       id: item.id,
       data: item,
       created_by: email
+    }, {
+      onConflict: 'user_id,id'
     });
     if (error) console.warn('[Repo] Save error:', error.message);
     return !error;
@@ -16924,7 +16465,7 @@ async function sbRepoDelete(id) {
     if (!s) return false;
     const {
       error
-    } = await s.from('repository').delete().eq('id', id);
+    } = await s.schema('policylens').from('repository').delete().eq('id', id);
     if (error) console.warn('[Repo] Delete error:', error.message);
     return !error;
   } catch (e) {
@@ -17141,7 +16682,7 @@ async function sbProfilePush(profile, versions) {
     delete clean._fieldVersions;
     const {
       error
-    } = await s.from('user_client_profile').upsert({
+    } = await s.schema('policylens').from('user_client_profile').upsert({
       user_id: uid,
       data: clean,
       field_versions: versions || {},
@@ -17167,7 +16708,7 @@ async function sbProfilePull() {
     const {
       data,
       error
-    } = await s.from('user_client_profile').select('*').eq('user_id', uid).maybeSingle();
+    } = await s.schema('policylens').from('user_client_profile').select('*').eq('user_id', uid).maybeSingle();
     if (error) {
       console.warn('[Sync] Profile pull error:', error.message);
       return null;
@@ -17196,7 +16737,7 @@ async function sbPolicyPush(policy, versions) {
     delete clean._fieldVersions;
     const {
       error
-    } = await s.from('user_policies').upsert({
+    } = await s.schema('policylens').from('user_policies').upsert({
       id: policy.id,
       user_id: uid,
       data: clean,
@@ -17225,7 +16766,7 @@ async function sbPolicyDelete(id) {
     // Soft delete — set deleted_at so other devices know to remove locally
     const {
       error
-    } = await s.from('user_policies').update({
+    } = await s.schema('policylens').from('user_policies').update({
       deleted_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     }).eq('user_id', uid).eq('id', id);
@@ -17248,7 +16789,7 @@ async function sbPoliciesPull() {
     const {
       data,
       error
-    } = await s.from('user_policies').select('*').eq('user_id', uid);
+    } = await s.schema('policylens').from('user_policies').select('*').eq('user_id', uid);
     if (error) {
       console.warn('[Sync] Policies pull error:', error.message);
       return null;
@@ -17279,7 +16820,7 @@ async function sbAppSettingsPush(settingsObj, versions) {
   try {
     const {
       error
-    } = await s.from('user_app_settings').upsert({
+    } = await s.schema('policylens').from('user_app_settings').upsert({
       user_id: uid,
       data: settingsObj || {},
       field_versions: versions || {},
@@ -17303,7 +16844,7 @@ async function sbAppSettingsPull() {
     const {
       data,
       error
-    } = await s.from('user_app_settings').select('*').eq('user_id', uid).maybeSingle();
+    } = await s.schema('policylens').from('user_app_settings').select('*').eq('user_id', uid).maybeSingle();
     if (error) {
       console.warn('[Sync] App settings pull error:', error.message);
       return null;
@@ -18376,18 +17917,8 @@ function App() {
   useEffect(() => {
     activeClientIdRef.current = activeClientId;
   }, [activeClientId]);
-  // v2.2.0-rc1.4: Capture OAuth-return URL state ONCE on mount.
-  // _consumeOAuthRedirect strips ?code= via history.replaceState during
-  // loading; without this, subsequent re-renders see empty URL.
-  const [_isOAuthReturn] = useState(() => {
-    try {
-      const h = window.location.hash || '';
-      const s = window.location.search || '';
-      return h.includes('access_token=') || h.includes('error=') || s.includes('code=');
-    } catch (_) {
-      return false;
-    }
-  });
+  // Phase 7: PolicyLens never returns from an OAuth redirect — the hub does.
+  const [_isOAuthReturn] = useState(false);
 
   // v2.3.0-rc2c.2a.3: Auto-clear stale extraction jobs on every session launch.
   useEffect(() => {
@@ -19092,185 +18623,111 @@ function App() {
     })();
   }, [loading]);
 
-  // ── v2.1.0c: OAUTH REDIRECT-RETURN HANDLER ──
-  // Runs once on mount. If the URL contains an OAuth fragment from a
-  // redirect return, consume it: validate state nonce, store the access
-  // token in driveClient's in-memory slot, ping Drive for the user's
-  // email, ensure the PolicyLens folder exists, set status to connected,
-  // navigate back to the tab the user was on when they clicked Connect,
-  // and toast success or the friendly error message.
-  //
-  // Aborted-flow case (user clicked Connect, closed Google tab without
-  // consenting, then came back): _consumeOAuthRedirect detects the
-  // orphan sessionStorage intent on its own and silently cleans it up
-  // — this branch returns null and we do nothing.
+  // ── Phase 7: Drive token bootstrap from hub session ──
+  // Runs once on mount. Two-step:
+  //   1. If the session has provider_refresh_token (fresh hub sign-in),
+  //      seed the drive-auth-dev Edge Function so future refreshes work.
+  //   2. Read provider_token from session for the immediate access token.
+  //      If absent or stale, fall back to Edge Function refresh.
+  // Then validate by pinging Drive and ensure the PolicyLens folder.
   useEffect(() => {
     (async () => {
-      // v2.1.0k: Restore Drive token from localStorage on mount.
-      // Skip if an OAuth return is present (code flow or legacy implicit).
-      const _hash = window.location.hash || '';
-      const _search = window.location.search || '';
-      const _hasOAuthReturn = _hash.includes('access_token=') || _hash.includes('error=') || _search.includes('code=');
-      if (!_hasOAuthReturn && hasPriorDriveConnectionIntent() && driveLSGet(DRIVE_LS.localOnlyMode) !== '1') {
-        setDriveStatus('checking');
-        try {
-          const raw = localStorage.getItem('policylens_drive_token');
-          if (raw) {
-            const stored = JSON.parse(raw);
-            // Await Supabase session so we can verify userId
-            let uid = sbGetUserId();
-            if (!uid && window._SB) {
-              try {
-                const s = await window._SB.auth.getSession();
-                uid = s?.data?.session?.user?.id || null;
-              } catch (_) {}
-            }
-            if (stored.token && stored.expiresAt > Date.now() && stored.userId && stored.userId === uid) {
-              // Update loading overlay text
-              try {
-                const el = document.getElementById('auth-loading-text');
-                if (el) {
-                  el.textContent = 'Connecting Google Drive…';
-                  el.classList.add('pulse');
-                }
-              } catch (_) {}
-              _driveAccessToken = stored.token;
-              setDriveStatus('connected');
-              console.log('[Drive] ✓ Token restored from storage (expires', new Date(stored.expiresAt).toLocaleTimeString() + ')');
-              // Background-validate — if token is actually dead, flip to reconnect
-              driveClient.pingDriveAPI().catch(() => {
-                console.warn('[Drive] Stored token failed validation — clearing');
-                _driveAccessToken = null;
-                driveLSDel('policylens_drive_token');
-                setDriveStatus('reconnect-needed');
-              });
-            } else {
-              // Token expired, userId mismatch, or malformed — clear it
-              driveLSDel('policylens_drive_token');
-              if (stored.userId && uid && stored.userId !== uid) {
-                setDriveStatus('reconnect-needed');
-                console.log('[Drive] Stored token userId mismatch — cleared (stored:', stored.userId?.slice(0, 8), 'current:', uid?.slice(0, 8) + ')');
-              } else {
-                console.log('[Drive] Stored token expired — attempting silent refresh');
-                const refreshed = await driveClient.refreshAccessToken();
-                if (refreshed) {
-                  console.log('[Drive] ✓ Silent refresh succeeded on mount');
-                  setDriveStatus('connected');
-                } else {
-                  console.log('[Drive] Silent refresh failed — reconnect needed');
-                  setDriveStatus('reconnect-needed');
-                }
-              }
-            }
-          } else if (hasPriorDriveConnectionIntent()) {
-            console.log('[Drive] No stored token - attempting silent refresh');
-            const refreshed = await driveClient.refreshAccessToken();
-            if (refreshed) {
-              console.log('[Drive] Silent refresh succeeded on mount');
-              setDriveStatus('connected');
-            } else {
-              console.log('[Drive] Silent refresh failed - reconnect needed');
-              setDriveStatus('reconnect-needed');
-            }
-          }
-        } catch (e) {
-          console.warn('[Drive] Token restore failed:', e);
-          if (getDriveStatus() === 'checking') setDriveStatus('reconnect-needed');
-        }
+      if (driveLSGet(DRIVE_LS.localOnlyMode) === '1') {
+        console.log('[Drive] Boot: local-only mode, skipping');
+        return;
       }
-      const result = await _consumeOAuthRedirect();
-      if (!result) return;
-      if (result.kind === 'success') {
-        // v2.1.0h: Wait for Supabase session hydration before deciding
-        // whether to defer. On OAuth return, this useEffect fires before
-        // authCheck sets window._user. getSession() awaits Supabase's
-        // initializePromise, so it's deterministic — no race, no timeout.
-        let hasSession = !!sbGetUserId();
-        if (!hasSession && window._SB) {
-          try {
-            const s = await window._SB.auth.getSession();
-            hasSession = !!s?.data?.session;
-          } catch (_) {}
+      setDriveStatus('checking');
+      try {
+        // Seed the Edge Function with refresh_token if we just signed in.
+        // Idempotent — safe to call every boot.
+        await _seedDriveTokensIfNeeded();
+
+        // Pull a working access token (session.provider_token first, then
+        // Edge Function refresh as fallback).
+        const sess = await window._SB?.auth?.getSession();
+        const sessionTok = sess?.data?.session?.provider_token;
+        const hasSession = !!sess?.data?.session;
+        const hasRefreshTok = !!sess?.data?.session?.provider_refresh_token;
+        console.log('[Drive] Boot: hasSession=', hasSession, '| hasProviderToken=', !!sessionTok, '| hasRefreshToken=', hasRefreshTok);
+        let token = sessionTok || null;
+        if (!token) {
+          // No session-side access token — try the Edge Function. If
+          // drive_tokens has a stored refresh_token from a prior sign-in,
+          // this returns a fresh access_token without user action.
+          console.log('[Drive] Boot: no session access_token, attempting Edge Function refresh');
+          token = await _refreshDriveTokenViaEdgeFn();
         }
-        // v2.1.0d: Guard against OAuth completing without a Supabase session.
-        // If no user is signed in, queue the token in tab-local memory and
-        // defer processing until 'policylens-keys-synced' fires on sign-in.
-        // The token is NEVER written to localStorage/sessionStorage/IDB
-        // until the user is authenticated — in-memory only, dies with the tab.
-        if (!hasSession) {
-          const expiresAt = Date.now() + (result.expiresIn || 3599) * 1000;
-          window.__pendingDriveOAuth = {
-            accessToken: result.accessToken,
-            expiresAt,
-            returnTab: result.returnTab,
-            queuedAt: Date.now()
-          };
-          console.log('[Drive] OAuth succeeded but no Supabase user — token queued in memory (expires', new Date(expiresAt).toLocaleTimeString() + ')');
-          try {
-            toast('Sign in to PolicyLens to finish connecting Google Drive', 'info', 5000);
-          } catch (_) {}
-          if (result.returnTab) setTab(result.returnTab);
-          return; // ← skip all Drive state writes until user signs in
+        if (!token) {
+          console.warn('[Drive] Boot: no token from session or Edge Function — sign in at the hub to authorize Drive');
+          setDriveStatus('reconnect-needed');
+          return;
         }
-        _driveAccessToken = result.accessToken;
+        _driveAccessToken = token;
+        if (!_driveTokenExpiresAt) _driveTokenExpiresAt = Date.now() + 50 * 60 * 1000;
         driveLSSet(DRIVE_LS.oauthGrantedAt, String(Date.now()));
         driveLSSet(DRIVE_LS.hasEverConnected, '1');
-        // v2.1.0k: Persist token to localStorage for cross-refresh survival
-        try {
-          const uid = sbGetUserId() || (await (async () => {
-            try {
-              const s = await window._SB?.auth?.getSession();
-              return s?.data?.session?.user?.id;
-            } catch (_) {
-              return null;
-            }
-          })());
-          if (uid) {
-            localStorage.setItem('policylens_drive_token', JSON.stringify({
-              token: result.accessToken,
-              expiresAt: Date.now() + (result.expiresIn || 3599) * 1000,
-              userId: uid
-            }));
-          }
-        } catch (_) {}
         driveClient.pingDriveAPI().then(me => {
+          console.log('[Drive] Boot: pingDriveAPI OK, email=', me?.user?.emailAddress);
           if (me?.user?.emailAddress) driveLSSet(DRIVE_LS.userEmail, me.user.emailAddress);
           return driveClient.ensureFolder();
         }).then(() => {
+          console.log('[Drive] Boot: connected');
           setDriveStatus('connected');
-          if (result.returnTab) setTab(result.returnTab);
-          try {
-            toast('✓ Connected to Google Drive', 'success', 3000);
-          } catch (_) {}
-        }).catch(e => {
+        }).catch(async e => {
           const mapped = mapDriveError(e);
-          setDriveStatus('disconnected');
-          if (result.returnTab) setTab(result.returnTab);
+          console.warn('[Drive] Boot: ping/ensureFolder failed:', mapped.kind, '|', mapped.message);
+          // 401 from Drive means the access_token Google issued earlier has
+          // already expired. Try one Edge Function refresh before giving up.
+          if (mapped.kind === 'reconnect-needed') {
+            console.log('[Drive] Boot: attempting Edge Function refresh after 401');
+            const fresh = await _refreshDriveTokenViaEdgeFn();
+            if (fresh) {
+              _driveAccessToken = fresh;
+              try {
+                await driveClient.pingDriveAPI();
+                await driveClient.ensureFolder();
+                console.log('[Drive] Boot: connected after refresh');
+                setDriveStatus('connected');
+                return;
+              } catch (e2) {
+                console.warn('[Drive] Boot: still failing after refresh:', e2?.message || e2);
+              }
+            }
+          }
+          setDriveStatus(mapped.kind === 'reconnect-needed' ? 'reconnect-needed' : 'disconnected');
           try {
             toast(mapped.message, 'error', 5000);
           } catch (_) {}
         });
-      } else if (result.kind === 'error') {
-        const mapped = mapDriveError({
-          error: result.error,
-          error_description: result.errorDescription
-        });
-        if (result.returnTab) setTab(result.returnTab);
-        try {
-          toast(mapped.message, 'error', 5000);
-        } catch (_) {}
-      } else if (result.kind === 'state-mismatch') {
-        if (result.returnTab) setTab(result.returnTab);
-        try {
-          toast('Sign-in response invalid (security check failed). Please try again.', 'error', 5000);
-        } catch (_) {}
-      } else if (result.kind === 'expired') {
-        try {
-          toast("Sign-in didn't complete. Click Connect to try again.", 'warning', 4000);
-        } catch (_) {}
+      } catch (e) {
+        console.warn('[Drive] Bootstrap failed:', e);
+        setDriveStatus('reconnect-needed');
       }
-      // 'unknown' kind: silently ignore — malformed fragment, nothing to do
     })();
+  }, []);
+
+  // ── Phase 7: Periodic Drive token refresh ──
+  // Google access tokens last ~1 hour. Refresh every 50 minutes via the
+  // Edge Function so long-lived sessions don't hit 401s mid-action.
+  useEffect(() => {
+    const REFRESH_INTERVAL_MS = 50 * 60 * 1000; // 50 minutes
+    const tick = async () => {
+      if (driveLSGet(DRIVE_LS.localOnlyMode) === '1') return;
+      if (getDriveStatus() === 'reconnect-needed') return; // give up; user must re-OAuth
+      try {
+        const fresh = await _refreshDriveTokenViaEdgeFn();
+        if (fresh) {
+          _driveAccessToken = fresh;
+          console.log('[Drive] Periodic refresh: ok');
+        } else {
+          console.warn('[Drive] Periodic refresh: failed (no token returned)');
+        }
+      } catch (e) {
+        console.warn('[Drive] Periodic refresh threw:', e?.message || e);
+      }
+    };
+    const interval = setInterval(tick, REFRESH_INTERVAL_MS);
+    return () => clearInterval(interval);
   }, []);
   // ── PRESENT MODE ──
   // When true, the whole app swaps to a presentation-grade UI: big numbers,
@@ -19826,45 +19283,8 @@ function App() {
       if (runCloudSyncRef.current) {
         runCloudSyncRef.current().catch(err => console.warn('[Sync] runCloudSync failed:', err));
       }
-      // v2.1.0d: Resume pending Drive OAuth if token was queued before sign-in.
-      // window.__pendingDriveOAuth is in-memory only — never persisted.
-      const pending = window.__pendingDriveOAuth;
-      if (pending) {
-        delete window.__pendingDriveOAuth;
-        // Guard: event might fire on auth failure — re-check we actually have a user
-        if (!sbGetUserId()) {
-          console.log('[Drive] keys-synced fired but still no user — discarding pending OAuth');
-          return;
-        }
-        const STALENESS_TTL_MS = 5 * 60 * 1000; // 5 minutes
-        const TOKEN_SAFETY_MARGIN_MS = 60 * 1000; // 60 seconds
-        const isStale = Date.now() - pending.queuedAt > STALENESS_TTL_MS;
-        const isExpired = pending.expiresAt <= Date.now() + TOKEN_SAFETY_MARGIN_MS;
-        if (isStale || isExpired) {
-          console.log('[Drive] Pending OAuth discarded —', isStale ? 'stale (>5min)' : 'Google token expired/expiring');
-          return;
-        }
-        console.log('[Drive] Resuming queued OAuth after sign-in');
-        _driveAccessToken = pending.accessToken;
-        driveLSSet(DRIVE_LS.oauthGrantedAt, String(Date.now()));
-        driveLSSet(DRIVE_LS.hasEverConnected, '1');
-        driveClient.pingDriveAPI().then(me => {
-          if (me?.user?.emailAddress) driveLSSet(DRIVE_LS.userEmail, me.user.emailAddress);
-          return driveClient.ensureFolder();
-        }).then(() => {
-          setDriveStatus('connected');
-          try {
-            toast('✓ Connected to Google Drive', 'success', 3000);
-          } catch (_) {}
-        }).catch(e => {
-          _driveAccessToken = null;
-          setDriveStatus('disconnected');
-          const mapped = mapDriveError(e);
-          try {
-            toast(mapped.message || 'Google Drive connection failed — please try again', 'error', 5000);
-          } catch (_) {}
-        });
-      }
+      // Phase 7: __pendingDriveOAuth queue removed — PolicyLens never returns
+      // from an OAuth redirect on its own anymore (the hub handles it).
     };
     window.addEventListener('policylens-keys-synced', handler);
     return () => window.removeEventListener('policylens-keys-synced', handler);
@@ -27006,7 +26426,27 @@ function Header() {
       flex: '1 1 auto',
       overflow: 'hidden'
     }
-  }, /*#__PURE__*/React.createElement(LogoMark, {
+  }, /*#__PURE__*/React.createElement("button", {
+    title: "Back to CKGTools",
+    onClick: () => {
+      window.location.href = '/';
+    },
+    style: {
+      background: 'var(--bg3)',
+      color: 'var(--text2)',
+      border: '1px solid var(--border2)',
+      width: 28,
+      height: 28,
+      borderRadius: '50%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      cursor: 'pointer',
+      fontSize: 14,
+      flexShrink: 0,
+      padding: 0
+    }
+  }, "\u2190"), /*#__PURE__*/React.createElement(LogoMark, {
     size: 20
   }), /*#__PURE__*/React.createElement("span", {
     style: {
@@ -64447,43 +63887,18 @@ function DriveConnectionCard() {
   const folderId = driveClient.getCachedFolderId();
   const grantedAt = parseInt(driveLSGet(DRIVE_LS.oauthGrantedAt) || '0');
   const grantedRel = grantedAt ? fmtRelativeTime(new Date(grantedAt).toISOString()) : null;
+
+  // Phase 7: Connect/Reconnect bounce to the ckgtools.com hub. The hub
+  // owns Google sign-in (and the drive.file scope). After the user
+  // signs in there, they land back at /tools/policylens/ with a fresh
+  // provider_token on their session.
   const handleConnect = async () => {
-    // v2.1.0c: signInInteractive now navigates the entire tab away to
-    // accounts.google.com via window.location.href and returns a never-
-    // resolving Promise. The await below never returns. The success path
-    // is handled by App()'s _consumeOAuthRedirect useEffect on the next
-    // page mount after Google redirects back. The error path (consent
-    // denied, network failure during the redirect itself, etc.) is also
-    // handled there via the URL fragment.
-    //
-    // The duplicate "Connected as <email>" label that the pill at the
-    // top of this card already shows has been removed — there's no
-    // handleConnect success branch to set it from anymore.
     setBusy(true);
     setStatusMsg({
       kind: 'info',
-      text: 'Redirecting to Google sign-in…'
+      text: 'Redirecting to ckgtools sign-in…'
     });
-    try {
-      await driveClient.signInInteractive({
-        returnTab: 'settings'
-      });
-      // Unreachable in v2.1.0c — the line above navigates the tab away.
-    } catch (err) {
-      // Only reached if signInInteractive throws synchronously before the
-      // window.location.href assignment (e.g. crypto.getRandomValues fails,
-      // sessionStorage write fails AND the redirect itself fails). Rare.
-      const mapped = err.kind ? {
-        kind: err.kind,
-        message: err.message
-      } : mapDriveError(err);
-      setStatusMsg({
-        kind: 'error',
-        text: mapped.message
-      });
-      console.warn('[Drive] Connect failed before redirect:', mapped);
-      setBusy(false);
-    }
+    window.location.href = '/';
   };
   const handleDisconnect = async () => {
     if (!confirm('Disconnect Google Drive?\n\nLocal data is unaffected. You can reconnect at any time.')) return;
@@ -64534,21 +63949,9 @@ function DriveConnectionCard() {
         setBusy(true);
         setStatusMsg({
           kind: 'info',
-          text: 'Redirecting to Google sign-in\u2026'
+          text: 'Redirecting to ckgtools sign-in\u2026'
         });
-        try {
-          await driveClient.signInInteractive({
-            returnTab: 'settings'
-          });
-        } catch (err) {
-          setStatusMsg({
-            kind: 'error',
-            text: (err.kind ? err : {
-              ...mapDriveError(err)
-            }).message
-          });
-          setBusy(false);
-        }
+        window.location.href = '/';
       } else {
         setStatusMsg({
           kind: 'success',
@@ -64562,21 +63965,9 @@ function DriveConnectionCard() {
     setBusy(true);
     setStatusMsg({
       kind: 'info',
-      text: 'Redirecting to Google sign-in\u2026'
+      text: 'Redirecting to ckgtools sign-in\u2026'
     });
-    try {
-      await driveClient.signInInteractive({
-        returnTab: 'settings'
-      });
-    } catch (err) {
-      setStatusMsg({
-        kind: 'error',
-        text: (err.kind ? err : {
-          ...mapDriveError(err)
-        }).message
-      });
-      setBusy(false);
-    }
+    window.location.href = '/';
   };
   const handleManualSync = () => {
     try {
@@ -66027,83 +65418,7 @@ function Settings() {
       if (window.saveKeyToSupabase) saveKeyToSupabase('advisorCompany', e.target.value);
     },
     placeholder: "e.g. ABC Advisory"
-  })))), /*#__PURE__*/React.createElement(DriveConnectionCard, null), /*#__PURE__*/React.createElement(LocalBackupCard, null), isAdmin && /*#__PURE__*/React.createElement("div", {
-    className: "card",
-    style: {
-      padding: 16,
-      marginBottom: 16
-    }
-  }, /*#__PURE__*/React.createElement("h3", {
-    style: {
-      fontSize: 14,
-      fontWeight: 600,
-      marginBottom: 4
-    }
-  }, "User Management"), /*#__PURE__*/React.createElement("p", {
-    style: {
-      fontSize: 11,
-      color: 'var(--text3)',
-      marginBottom: 10
-    }
-  }, "Approve or revoke team member access. Admin-only."), /*#__PURE__*/React.createElement("button", {
-    onClick: () => {
-      try {
-        (window.openAdmin || openAdmin)();
-      } catch (e) {
-        console.warn('[Admin] openAdmin failed:', e.message);
-      }
-    },
-    style: {
-      background: 'var(--gold-dim)',
-      color: 'var(--gold)',
-      border: '1px solid rgba(212,169,106,.25)',
-      padding: '6px 14px',
-      borderRadius: 8,
-      fontSize: 12,
-      fontWeight: 600,
-      cursor: 'pointer'
-    }
-  }, "\uD83D\uDC65 Open User Management")), window._isAdmin && /*#__PURE__*/React.createElement("div", {
-    className: "card",
-    style: {
-      marginBottom: 16,
-      borderColor: 'rgba(239,83,80,.2)'
-    }
-  }, /*#__PURE__*/React.createElement("h3", {
-    style: {
-      fontSize: 14,
-      fontWeight: 600,
-      marginBottom: 4
-    }
-  }, "Admin Tools"), /*#__PURE__*/React.createElement("p", {
-    style: {
-      fontSize: 11,
-      color: 'var(--text3)',
-      marginBottom: 8
-    }
-  }, "Portfolio save/load/reset is on the Dashboard. Repository reset is admin-only."), /*#__PURE__*/React.createElement("button", {
-    className: "btn-danger btn-sm",
-    onClick: async () => {
-      if (!window._isAdmin) {
-        toast('Admin only', 'error');
-        return;
-      }
-      if (!confirm('This removes ALL repository entries and re-seeds with verified products. Proceed?')) return;
-      const s = getSB();
-      if (s) {
-        const {
-          data
-        } = await s.from('repository').select('id');
-        if (data) for (const r of data) await s.from('repository').delete().eq('id', r.id);
-        for (const seed of SEED_REPOSITORY) await sbRepoSave(seed);
-      }
-      try {
-        const tx = (await openDB()).transaction('repository', 'readwrite');
-        tx.objectStore('repository').clear();
-      } catch (e) {}
-      window.location.reload();
-    }
-  }, "\uD83D\uDDD1\uFE0F Reset Repository")), /*#__PURE__*/React.createElement(ClientTiersPanel, {
+  })))), /*#__PURE__*/React.createElement(DriveConnectionCard, null), /*#__PURE__*/React.createElement(LocalBackupCard, null), /*#__PURE__*/React.createElement(ClientTiersPanel, {
     tierDefinitions: tierDefinitions,
     saveTierDefinitions: saveTierDefinitions
   }), /*#__PURE__*/React.createElement("div", {
