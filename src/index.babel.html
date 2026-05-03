@@ -452,7 +452,7 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.52';
+const APP_VERSION = 'v2.3.0-rc2e.53';
 const APP_VERSION_DATE = '2026-05-03';
 const APP_VERSION_NAME = 'Document-style file icons';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
@@ -26733,31 +26733,43 @@ function PolicyOwnerRoutingModal({ open, detected, currentClientName, allDriveSt
 // existing handleConnect flow that bounces to ckgtools-admin sign-in.
 const DRIVE_PROMPT_DISMISS_KEY = 'policylens_drive_prompt_dismissed_at';
 const DRIVE_PROMPT_DISMISS_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+// rc2e.53 Option C Phase 1: removed the "Skip for now" escape hatch.
+// Drive sync is now required for client data — the only way out is to
+// Connect Google Drive. The "Why is this required?" disclosure offers
+// the rationale instead of letting users dodge it. Backdrop click is
+// disabled (no soft-dismiss).
 function DriveSyncPromptModal({ open, onSkip, onConnect }) {
+  // onSkip kept in the signature for compatibility with the App mount
+  // — it's wired to nothing user-clickable anymore.
+  void onSkip;
+  const [showWhy, setShowWhy] = useState(false);
   if (!open) return null;
   const modalBg = {position:'fixed',inset:0,zIndex:10001,background:'rgba(0,0,0,.7)',display:'flex',alignItems:'center',justifyContent:'center',padding:16};
-  const modalBox = {background:'#1a2332',borderRadius:16,border:'1px solid rgba(91,168,160,.3)',maxWidth:420,width:'100%',padding:24,boxShadow:'0 20px 60px rgba(0,0,0,.5)'};
+  const modalBox = {background:'#1a2332',borderRadius:16,border:'1px solid rgba(91,168,160,.3)',maxWidth:440,width:'100%',padding:24,boxShadow:'0 20px 60px rgba(0,0,0,.5)'};
   return (
-    <div onClick={e => { if (e.target === e.currentTarget) onSkip(); }} style={modalBg}>
+    <div style={modalBg}>
       <div style={modalBox}>
         <h2 style={{fontSize:16,fontWeight:700,color:'#e8e8e8',margin:'0 0 8px',display:'flex',alignItems:'center',gap:8}}>
           <span style={{fontSize:20}}>☁️</span>
-          Sync your client data to Google Drive?
+          Connect Google Drive to continue
         </h2>
-        <p style={{fontSize:12,color:'var(--text3)',marginBottom:18,lineHeight:1.5}}>
-          Keep your policies safe and accessible across devices. Your data stays in your own Google Drive folder under <strong style={{color:'var(--text2)'}}>PolicyLens/</strong> — only you can see it.
+        <p style={{fontSize:12,color:'var(--text3)',marginBottom:14,lineHeight:1.5}}>
+          PolicyLens stores your client data in your own Google Drive folder under <strong style={{color:'var(--text2)'}}>PolicyLens/</strong>. Only you can see it — even CKG can't.
         </p>
+        {showWhy && (
+          <div style={{fontSize:11,color:'var(--text2)',marginBottom:14,padding:'10px 12px',background:'rgba(91,168,160,.06)',border:'1px solid rgba(91,168,160,.2)',borderRadius:8,lineHeight:1.5}}>
+            <div style={{fontWeight:700,color:'var(--teal)',marginBottom:4}}>Why is Drive required?</div>
+            Singapore PDPA: client info (NRIC, financials) is sensitive. Storing it in your own Drive — not on our servers — keeps you in full control. You can revoke our access at any time from Google Account → Security → Third-party apps.
+          </div>
+        )}
         <div style={{display:'flex',gap:8,justifyContent:'flex-end',alignItems:'center'}}>
-          <button onClick={onSkip} style={{background:'transparent',color:'var(--text3)',border:'1px solid var(--border2)',borderRadius:6,padding:'8px 14px',fontSize:11,cursor:'pointer'}}>
-            Skip for now
+          <button onClick={() => setShowWhy(v => !v)} style={{background:'transparent',color:'var(--text3)',border:'none',padding:'8px 4px',fontSize:11,cursor:'pointer',textDecoration:'underline'}}>
+            {showWhy ? 'Hide details' : 'Why is this required?'}
           </button>
           <button onClick={onConnect} style={{background:'var(--teal)',color:'#0b0f1a',border:'none',borderRadius:6,padding:'8px 16px',fontSize:11,fontWeight:700,cursor:'pointer'}}>
             Connect Google Drive →
           </button>
         </div>
-        <p style={{fontSize:10,color:'var(--text3)',marginTop:14,textAlign:'center',fontStyle:'italic'}}>
-          You can connect later from Settings → Drive Sync. We'll remind you in 7 days.
-        </p>
       </div>
     </div>
   );
@@ -44487,7 +44499,7 @@ function DriveConnectionCard() {
     finally { setDiscoverBusy(false); }
   };
   const statusPill = (() => {
-    if (!toggleOn) return {bg:'rgba(148,163,184,.08)',color:'var(--text3)',border:'rgba(148,163,184,.2)',text:'Local-only'};
+    // rc2e.53: dropped Local-only branch \u2014 toggle removed, no escape hatch
     if (status==='connected') return {bg:'rgba(91,168,160,.1)',color:'var(--teal)',border:'rgba(91,168,160,.3)',text:'\u25CF Connected'+(pingedEmail||cachedEmail?' as '+(pingedEmail||cachedEmail):'')};
     if (status==='reconnect-needed') return {bg:'rgba(212,169,106,.12)',color:'var(--gold)',border:'rgba(212,169,106,.35)',text:'\u26A0 Reconnect needed'};
     return {bg:'var(--bg3)',color:'var(--text3)',border:'var(--border)',text:'\u25CB Not connected'};
@@ -44495,27 +44507,30 @@ function DriveConnectionCard() {
   const msgColor = !statusMsg ? null : statusMsg.kind==='success'?'var(--teal)':statusMsg.kind==='error'?'var(--red)':statusMsg.kind==='warn'?'var(--gold)':'var(--text2)';
   return (
     <div className="card" style={{marginBottom:16}}>
-      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:4,gap:12}}>
-        <h3 style={{fontSize:14,fontWeight:600,margin:0}}>🗂 Google Drive Sync</h3>
-        <button onClick={handleToggle} disabled={busy} aria-label="Toggle Drive sync"
-          style={{position:'relative',width:44,height:24,borderRadius:12,background:toggleOn?'var(--gold)':'var(--bg3)',border:'1px solid '+(toggleOn?'var(--gold)':'var(--border)'),cursor:busy?'wait':'pointer',opacity:busy?.6:1,transition:'background .2s, border-color .2s',padding:0,flexShrink:0}}>
-          <span style={{position:'absolute',top:2,left:toggleOn?22:2,width:18,height:18,borderRadius:'50%',background:toggleOn?'#0b0f1a':'var(--text3)',transition:'left .2s, background .2s'}}/>
-        </button>
-      </div>
-      <p style={{fontSize:11,color:'var(--text3)',marginBottom:10,lineHeight:1.5}}>When ON, client data syncs across all your devices via Google Drive. When OFF, data stays on this device only.</p>
-      {toggleOn && <div style={{fontSize:10,color:'var(--text3)',background:'var(--bg3)',padding:'8px 10px',borderRadius:6,marginBottom:10,lineHeight:1.5,border:'1px solid var(--border)'}}><strong style={{color:'var(--text2)'}}>Heads up:</strong> Refresh tokens expire every 7 days while the app is in Google test mode. You'll see a "Reconnect" prompt periodically — usually one click.</div>}
+      <h3 style={{fontSize:14,fontWeight:600,margin:'0 0 4px'}}>🗂 Google Drive Sync</h3>
+      <p style={{fontSize:11,color:'var(--text3)',marginBottom:10,lineHeight:1.5}}>
+        Your client data syncs to your Google Drive folder under <strong style={{color:'var(--text2)'}}>PolicyLens/</strong>. Only you can see it — even CKG can't.
+      </p>
+      {status==='connected' && <div style={{fontSize:10,color:'var(--text3)',background:'var(--bg3)',padding:'8px 10px',borderRadius:6,marginBottom:10,lineHeight:1.5,border:'1px solid var(--border)'}}><strong style={{color:'var(--text2)'}}>Heads up:</strong> Refresh tokens expire every 7 days while the app is in Google test mode. You'll see a "Reconnect" prompt periodically — usually one click.</div>}
       <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:10,flexWrap:'wrap'}}>
         <div style={{fontSize:11,padding:'4px 10px',borderRadius:6,background:statusPill.bg,color:statusPill.color,border:'1px solid '+statusPill.border}}>{statusPill.text}</div>
-        {toggleOn && folderId && <a href={'https://drive.google.com/drive/folders/'+folderId} target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:'var(--gold)',textDecoration:'none'}}>Open folder in Drive \u2192</a>}
-        {toggleOn && status==='connected' && grantedRel && <span style={{fontSize:10,color:'var(--text3)'}}>Signed in {grantedRel}</span>}
-        {toggleOn && status==='connected' && <span style={{fontSize:10,color:'var(--text3)'}}>This device: {getPolicyLensDeviceName()}</span>}
+        {status==='connected' && folderId && <a href={'https://drive.google.com/drive/folders/'+folderId} target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:'var(--gold)',textDecoration:'none'}}>Open folder in Drive \u2192</a>}
+        {status==='connected' && grantedRel && <span style={{fontSize:10,color:'var(--text3)'}}>Signed in {grantedRel}</span>}
+        {status==='connected' && <span style={{fontSize:10,color:'var(--text3)'}}>This device: {getPolicyLensDeviceName()}</span>}
       </div>
       {statusMsg && <div style={{fontSize:11,color:msgColor,marginBottom:10}}>{statusMsg.text}</div>}
-      {toggleOn && status==='reconnect-needed' && <div style={{marginBottom:10}}><button className="btn-primary btn-sm" onClick={handleReconnect} disabled={busy} style={{background:'var(--gold)',color:'var(--bg)'}}>{busy?'Reconnecting\u2026':'Reconnect'}</button></div>}
-      {toggleOn && status==='connected' && <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+      {/* rc2e.53: Disconnected state shows the only remaining escape hatch — Connect Drive primary CTA. */}
+      {status !== 'connected' && status !== 'reconnect-needed' && <div style={{marginBottom:10}}>
+        <button onClick={handleConnect} disabled={busy} style={{padding:'10px 18px',background:'var(--teal)',color:'#0b0f1a',border:'none',borderRadius:8,fontSize:12,fontWeight:700,cursor:busy?'wait':'pointer',opacity:busy?.6:1}}>
+          {busy ? 'Redirecting...' : 'Connect Google Drive'}
+        </button>
+      </div>}
+      {status==='reconnect-needed' && <div style={{marginBottom:10}}><button className="btn-primary btn-sm" onClick={handleReconnect} disabled={busy} style={{background:'var(--gold)',color:'var(--bg)'}}>{busy?'Reconnecting\u2026':'Reconnect'}</button></div>}
+      {status==='connected' && <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
         <button className="btn-secondary btn-sm" onClick={handleManualSync}>🔄 Sync now</button>
         <button className="btn-secondary btn-sm" onClick={handleForcePull}>Pull latest</button>
         <button className="btn-secondary btn-sm" onClick={handleForcePush}>Push this device</button>
+        <button className="btn-secondary btn-sm" onClick={handleDisconnect} disabled={busy} style={{marginLeft:'auto',color:'var(--text3)'}}>Disconnect</button>
         <button className="btn-secondary btn-sm" onClick={handleDiscover} disabled={discoverBusy}>{discoverBusy?'Scanning\u2026':'🔍 Find clients in Drive'}</button>
       </div>}
     </div>

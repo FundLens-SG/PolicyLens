@@ -462,7 +462,7 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.52';
+const APP_VERSION = 'v2.3.0-rc2e.53';
 const APP_VERSION_DATE = '2026-05-03';
 const APP_VERSION_NAME = 'Document-style file icons';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
@@ -31907,11 +31907,20 @@ function PolicyOwnerRoutingModal({
 // existing handleConnect flow that bounces to ckgtools-admin sign-in.
 const DRIVE_PROMPT_DISMISS_KEY = 'policylens_drive_prompt_dismissed_at';
 const DRIVE_PROMPT_DISMISS_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+// rc2e.53 Option C Phase 1: removed the "Skip for now" escape hatch.
+// Drive sync is now required for client data — the only way out is to
+// Connect Google Drive. The "Why is this required?" disclosure offers
+// the rationale instead of letting users dodge it. Backdrop click is
+// disabled (no soft-dismiss).
 function DriveSyncPromptModal({
   open,
   onSkip,
   onConnect
 }) {
+  // onSkip kept in the signature for compatibility with the App mount
+  // — it's wired to nothing user-clickable anymore.
+  void onSkip;
+  const [showWhy, setShowWhy] = useState(false);
   if (!open) return null;
   const modalBg = {
     position: 'fixed',
@@ -31927,15 +31936,12 @@ function DriveSyncPromptModal({
     background: '#1a2332',
     borderRadius: 16,
     border: '1px solid rgba(91,168,160,.3)',
-    maxWidth: 420,
+    maxWidth: 440,
     width: '100%',
     padding: 24,
     boxShadow: '0 20px 60px rgba(0,0,0,.5)'
   };
   return /*#__PURE__*/React.createElement("div", {
-    onClick: e => {
-      if (e.target === e.currentTarget) onSkip();
-    },
     style: modalBg
   }, /*#__PURE__*/React.createElement("div", {
     style: modalBox
@@ -31953,18 +31959,35 @@ function DriveSyncPromptModal({
     style: {
       fontSize: 20
     }
-  }, "\u2601\uFE0F"), "Sync your client data to Google Drive?"), /*#__PURE__*/React.createElement("p", {
+  }, "\u2601\uFE0F"), "Connect Google Drive to continue"), /*#__PURE__*/React.createElement("p", {
     style: {
       fontSize: 12,
       color: 'var(--text3)',
-      marginBottom: 18,
+      marginBottom: 14,
       lineHeight: 1.5
     }
-  }, "Keep your policies safe and accessible across devices. Your data stays in your own Google Drive folder under ", /*#__PURE__*/React.createElement("strong", {
+  }, "PolicyLens stores your client data in your own Google Drive folder under ", /*#__PURE__*/React.createElement("strong", {
     style: {
       color: 'var(--text2)'
     }
-  }, "PolicyLens/"), " \u2014 only you can see it."), /*#__PURE__*/React.createElement("div", {
+  }, "PolicyLens/"), ". Only you can see it \u2014 even CKG can't."), showWhy && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--text2)',
+      marginBottom: 14,
+      padding: '10px 12px',
+      background: 'rgba(91,168,160,.06)',
+      border: '1px solid rgba(91,168,160,.2)',
+      borderRadius: 8,
+      lineHeight: 1.5
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      color: 'var(--teal)',
+      marginBottom: 4
+    }
+  }, "Why is Drive required?"), "Singapore PDPA: client info (NRIC, financials) is sensitive. Storing it in your own Drive \u2014 not on our servers \u2014 keeps you in full control. You can revoke our access at any time from Google Account \u2192 Security \u2192 Third-party apps."), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
@@ -31972,17 +31995,17 @@ function DriveSyncPromptModal({
       alignItems: 'center'
     }
   }, /*#__PURE__*/React.createElement("button", {
-    onClick: onSkip,
+    onClick: () => setShowWhy(v => !v),
     style: {
       background: 'transparent',
       color: 'var(--text3)',
-      border: '1px solid var(--border2)',
-      borderRadius: 6,
-      padding: '8px 14px',
+      border: 'none',
+      padding: '8px 4px',
       fontSize: 11,
-      cursor: 'pointer'
+      cursor: 'pointer',
+      textDecoration: 'underline'
     }
-  }, "Skip for now"), /*#__PURE__*/React.createElement("button", {
+  }, showWhy ? 'Hide details' : 'Why is this required?'), /*#__PURE__*/React.createElement("button", {
     onClick: onConnect,
     style: {
       background: 'var(--teal)',
@@ -31994,15 +32017,7 @@ function DriveSyncPromptModal({
       fontWeight: 700,
       cursor: 'pointer'
     }
-  }, "Connect Google Drive \u2192")), /*#__PURE__*/React.createElement("p", {
-    style: {
-      fontSize: 10,
-      color: 'var(--text3)',
-      marginTop: 14,
-      textAlign: 'center',
-      fontStyle: 'italic'
-    }
-  }, "You can connect later from Settings \u2192 Drive Sync. We'll remind you in 7 days.")));
+  }, "Connect Google Drive \u2192"))));
 }
 function FoundInDriveReviewModal({
   open,
@@ -64335,12 +64350,7 @@ function DriveConnectionCard() {
     }
   };
   const statusPill = (() => {
-    if (!toggleOn) return {
-      bg: 'rgba(148,163,184,.08)',
-      color: 'var(--text3)',
-      border: 'rgba(148,163,184,.2)',
-      text: 'Local-only'
-    };
+    // rc2e.53: dropped Local-only branch \u2014 toggle removed, no escape hatch
     if (status === 'connected') return {
       bg: 'rgba(91,168,160,.1)',
       color: 'var(--teal)',
@@ -64366,56 +64376,24 @@ function DriveConnectionCard() {
     style: {
       marginBottom: 16
     }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      marginBottom: 4,
-      gap: 12
-    }
   }, /*#__PURE__*/React.createElement("h3", {
     style: {
       fontSize: 14,
       fontWeight: 600,
-      margin: 0
+      margin: '0 0 4px'
     }
-  }, "\uD83D\uDDC2 Google Drive Sync"), /*#__PURE__*/React.createElement("button", {
-    onClick: handleToggle,
-    disabled: busy,
-    "aria-label": "Toggle Drive sync",
-    style: {
-      position: 'relative',
-      width: 44,
-      height: 24,
-      borderRadius: 12,
-      background: toggleOn ? 'var(--gold)' : 'var(--bg3)',
-      border: '1px solid ' + (toggleOn ? 'var(--gold)' : 'var(--border)'),
-      cursor: busy ? 'wait' : 'pointer',
-      opacity: busy ? .6 : 1,
-      transition: 'background .2s, border-color .2s',
-      padding: 0,
-      flexShrink: 0
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      position: 'absolute',
-      top: 2,
-      left: toggleOn ? 22 : 2,
-      width: 18,
-      height: 18,
-      borderRadius: '50%',
-      background: toggleOn ? '#0b0f1a' : 'var(--text3)',
-      transition: 'left .2s, background .2s'
-    }
-  }))), /*#__PURE__*/React.createElement("p", {
+  }, "\uD83D\uDDC2 Google Drive Sync"), /*#__PURE__*/React.createElement("p", {
     style: {
       fontSize: 11,
       color: 'var(--text3)',
       marginBottom: 10,
       lineHeight: 1.5
     }
-  }, "When ON, client data syncs across all your devices via Google Drive. When OFF, data stays on this device only."), toggleOn && /*#__PURE__*/React.createElement("div", {
+  }, "Your client data syncs to your Google Drive folder under ", /*#__PURE__*/React.createElement("strong", {
+    style: {
+      color: 'var(--text2)'
+    }
+  }, "PolicyLens/"), ". Only you can see it \u2014 even CKG can't."), status === 'connected' && /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 10,
       color: 'var(--text3)',
@@ -64447,7 +64425,7 @@ function DriveConnectionCard() {
       color: statusPill.color,
       border: '1px solid ' + statusPill.border
     }
-  }, statusPill.text), toggleOn && folderId && /*#__PURE__*/React.createElement("a", {
+  }, statusPill.text), status === 'connected' && folderId && /*#__PURE__*/React.createElement("a", {
     href: 'https://drive.google.com/drive/folders/' + folderId,
     target: "_blank",
     rel: "noopener noreferrer",
@@ -64456,12 +64434,12 @@ function DriveConnectionCard() {
       color: 'var(--gold)',
       textDecoration: 'none'
     }
-  }, "Open folder in Drive \\u2192"), toggleOn && status === 'connected' && grantedRel && /*#__PURE__*/React.createElement("span", {
+  }, "Open folder in Drive \\u2192"), status === 'connected' && grantedRel && /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 10,
       color: 'var(--text3)'
     }
-  }, "Signed in ", grantedRel), toggleOn && status === 'connected' && /*#__PURE__*/React.createElement("span", {
+  }, "Signed in ", grantedRel), status === 'connected' && /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 10,
       color: 'var(--text3)'
@@ -64472,7 +64450,25 @@ function DriveConnectionCard() {
       color: msgColor,
       marginBottom: 10
     }
-  }, statusMsg.text), toggleOn && status === 'reconnect-needed' && /*#__PURE__*/React.createElement("div", {
+  }, statusMsg.text), status !== 'connected' && status !== 'reconnect-needed' && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginBottom: 10
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: handleConnect,
+    disabled: busy,
+    style: {
+      padding: '10px 18px',
+      background: 'var(--teal)',
+      color: '#0b0f1a',
+      border: 'none',
+      borderRadius: 8,
+      fontSize: 12,
+      fontWeight: 700,
+      cursor: busy ? 'wait' : 'pointer',
+      opacity: busy ? .6 : 1
+    }
+  }, busy ? 'Redirecting...' : 'Connect Google Drive')), status === 'reconnect-needed' && /*#__PURE__*/React.createElement("div", {
     style: {
       marginBottom: 10
     }
@@ -64484,11 +64480,12 @@ function DriveConnectionCard() {
       background: 'var(--gold)',
       color: 'var(--bg)'
     }
-  }, busy ? 'Reconnecting\u2026' : 'Reconnect')), toggleOn && status === 'connected' && /*#__PURE__*/React.createElement("div", {
+  }, busy ? 'Reconnecting\u2026' : 'Reconnect')), status === 'connected' && /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
-      flexWrap: 'wrap'
+      flexWrap: 'wrap',
+      alignItems: 'center'
     }
   }, /*#__PURE__*/React.createElement("button", {
     className: "btn-secondary btn-sm",
@@ -64500,6 +64497,14 @@ function DriveConnectionCard() {
     className: "btn-secondary btn-sm",
     onClick: handleForcePush
   }, "Push this device"), /*#__PURE__*/React.createElement("button", {
+    className: "btn-secondary btn-sm",
+    onClick: handleDisconnect,
+    disabled: busy,
+    style: {
+      marginLeft: 'auto',
+      color: 'var(--text3)'
+    }
+  }, "Disconnect"), /*#__PURE__*/React.createElement("button", {
     className: "btn-secondary btn-sm",
     onClick: handleDiscover,
     disabled: discoverBusy
