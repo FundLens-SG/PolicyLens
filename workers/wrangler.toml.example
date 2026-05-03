@@ -6,12 +6,19 @@ compatibility_date = "2026-04-26"
 DOCUMENT_AI_PROJECT_ID = "policylens-493014"
 DOCUMENT_AI_LOCATION = "asia-southeast1"
 DOCUMENT_AI_PROCESSOR_ID = "5cd43d57e6998638"
-POLICYLENS_ALLOWED_ORIGIN = "https://ckgtools.com"
 
-# Optional auth hardening. If set, the Worker requires a valid PolicyLens
-# Supabase session token before it spends Document AI credits.
-# SUPABASE_URL = "https://mgbxxwoasrwlraffcvab.supabase.co"
-# SUPABASE_ANON_KEY = "<PolicyLens Supabase anon key>"
+# Comma-separated list of allowed CORS origins. The Worker matches the request
+# Origin header against this list and reflects the matching value back; if the
+# request origin is not in the list, the first entry is used as a default
+# (which the browser will reject, blocking unauthorized callers).
+POLICYLENS_ALLOWED_ORIGIN = "https://ckgtools.com,http://localhost:5173"
+
+# Phase 7A: PolicyLens identity moved to the ckgtools-admin Supabase project
+# (cbqbvctnrfbxjscgirpn). The Worker's optional bearer-token check must point
+# at the SAME project that issued the user's session token, otherwise
+# /auth/v1/user returns 401 and the Worker rejects the request.
+# SUPABASE_URL = "https://cbqbvctnrfbxjscgirpn.supabase.co"
+# SUPABASE_ANON_KEY = "<ckgtools-admin Supabase anon key>"
 
 # Add this separately as a secret:
 # wrangler secret put DOCUMENT_AI_SERVICE_ACCOUNT_JSON

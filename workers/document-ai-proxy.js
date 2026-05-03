@@ -11,10 +11,10 @@
 //   DOCUMENT_AI_PROCESSOR_ID=5cd43d57e6998638
 //   DOCUMENT_AI_SERVICE_ACCOUNT_JSON=<full service account JSON as a secret>
 //
-// Optional hardening:
-//   POLICYLENS_ALLOWED_ORIGIN=https://fundlens-sg.github.io
-//   SUPABASE_URL=https://mgbxxwoasrwlraffcvab.supabase.co
-//   SUPABASE_ANON_KEY=<PolicyLens Supabase anon key>
+// Optional hardening (Phase 7A migrated identity to ckgtools-admin):
+//   POLICYLENS_ALLOWED_ORIGIN=https://ckgtools.com,http://localhost:5173
+//   SUPABASE_URL=https://cbqbvctnrfbxjscgirpn.supabase.co
+//   SUPABASE_ANON_KEY=<ckgtools-admin Supabase anon key>
 
 let cachedAccessToken = null;
 let cachedAccessTokenExp = 0;
