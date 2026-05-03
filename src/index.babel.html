@@ -664,7 +664,7 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.44';
+const APP_VERSION = 'v2.3.0-rc2e.45';
 const APP_VERSION_DATE = '2026-05-03';
 const APP_VERSION_NAME = 'Document-style file icons';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
@@ -37933,6 +37933,15 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
             { code: 'WP',  color: '#a3b8a3', label: 'Waiver of Premium' },
             { code: 'CV',  color: '#d4a96a', label: 'Cash Value' }
           ];
+          // rc2e.45: Lifecycle status pills shown on each chip.
+          // 'inforce' is intentionally absent — it's the default for
+          // most policies and stamping it on every chip is just noise.
+          const STATUS_BADGES = [
+            { code: 'paid-up',     label: 'Paid-up',     color: '#5ba8a0' },
+            { code: 'matured',     label: 'Matured',     color: '#d4a96a' },
+            { code: 'lapsed',      label: 'Lapsed',      color: '#dc2626' },
+            { code: 'surrendered', label: 'Surrendered', color: '#dc2626' }
+          ];
           // Benefit icons renderer
           const benIcons = (p) => {
             const bens = [];
@@ -37964,13 +37973,20 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
           const actions = (p) => <div style={{display:'flex',gap:4}}><button className="btn-secondary btn-sm" onClick={()=>{setEditing(p);setTimeout(()=>setShowForm(true),50)}}>Edit</button><button className="btn-danger btn-sm" onClick={()=>{if(confirm('Delete?'))deletePolicy(p.id)}}>×</button></div>;
 
           return (<>
-            {/* rc2e.44: Badge legend — explains the chip codes shown on each policy row. */}
+            {/* rc2e.44/45: Badge legend — coverage codes + lifecycle status. */}
             <div style={{display:'flex',flexWrap:'wrap',alignItems:'center',gap:10,padding:'8px 12px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:8,marginBottom:12,fontSize:10}}>
               <span style={{color:'var(--text3)',fontWeight:600,marginRight:4}}>Badges:</span>
               {POLICY_BADGES.map(b => (
                 <span key={b.code} style={{display:'inline-flex',alignItems:'center',gap:5}}>
                   <span style={{display:'inline-block',padding:'1px 6px',background:b.color+'22',color:b.color,borderRadius:4,fontWeight:700,fontSize:9,lineHeight:1.4}}>{b.code}</span>
                   <span style={{color:'var(--text2)'}}>{b.label}</span>
+                </span>
+              ))}
+              <span style={{color:'var(--text3)',marginLeft:6,marginRight:2}}>·</span>
+              <span style={{color:'var(--text3)',fontWeight:600,marginRight:4}}>Status:</span>
+              {STATUS_BADGES.map(s => (
+                <span key={s.code} style={{display:'inline-flex',alignItems:'center',gap:5}}>
+                  <span style={{display:'inline-block',padding:'1px 6px',background:s.color+'22',color:s.color,borderRadius:4,fontWeight:700,fontSize:9,lineHeight:1.4,border:`1px solid ${s.color}40`}}>{s.label}</span>
                 </span>
               ))}
             </div>
@@ -38012,6 +38028,13 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
                                 <div style={{display:'flex',gap:3,marginTop:2,alignItems:'center',flexWrap:'wrap'}}>
                                   {bens.length>0 && bens.map((b,i)=><span key={i} style={{fontSize:7,fontWeight:700,padding:'1px 3px',borderRadius:3,background:b.c+'22',color:b.c}}>{b.l}</span>)}
                                   {p.lifeInsured && p.lifeInsured.trim() && <span title={'Life Assured: '+p.lifeInsured} style={{fontSize:8,fontWeight:600,padding:'1px 5px',borderRadius:3,background:'rgba(212,169,106,.12)',color:'var(--gold)',border:'1px solid rgba(212,169,106,.25)',maxWidth:100,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>LA: {p.lifeInsured}</span>}
+                                  {/* rc2e.45: lifecycle status pill — only render when not the default 'inforce' */}
+                                  {p.status && p.status !== 'inforce' && (() => {
+                                    const sb = STATUS_BADGES.find(x => x.code === p.status);
+                                    const c = sb?.color || 'var(--text3)';
+                                    const lbl = sb?.label || (p.status.charAt(0).toUpperCase() + p.status.slice(1));
+                                    return <span title={'Status: '+lbl} style={{fontSize:8,fontWeight:600,padding:'1px 5px',borderRadius:3,background:c+'22',color:c,border:`1px solid ${c}40`}}>{lbl}</span>;
+                                  })()}
                                   {p.excludeFromRetirement && <span title="Excluded from retirement plan calculations" style={{fontSize:8,fontWeight:700,padding:'1px 5px',borderRadius:3,background:'rgba(244,63,94,.12)',color:'#dc2626',border:'1px solid rgba(244,63,94,.25)'}}>🚫 Not in retirement</span>}
                                 </div>
                               </td>
