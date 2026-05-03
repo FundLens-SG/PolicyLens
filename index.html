@@ -462,7 +462,7 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.50';
+const APP_VERSION = 'v2.3.0-rc2e.51';
 const APP_VERSION_DATE = '2026-05-03';
 const APP_VERSION_NAME = 'Document-style file icons';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
@@ -13254,14 +13254,19 @@ const driveLSDel = k => {
 // v2.2.0-rc1.11: Backend-mediated auth flow is now universal (flag removed).
 // Previously gated behind localStorage policylens_drive_backend_dev flag.
 
-// Default Local-only mode to ON for v2.1.0. v2.1.0-rc (Phase C) flips
-// the default to OFF after a week of stable Phase B operation. Until
-// then, every fresh browser starts with Drive disabled.
+// Default Local-only mode flipped from ON to OFF in rc2e.51 (the long-
+// promised "Phase C" flip from v2.1.0-rc). Fresh browsers now default to
+// "wants Drive sync" — but that doesn't trigger any silent uploads:
+// Drive still requires OAuth before _driveAccessToken is non-null.
+// Existing users with an explicit setting (`'1'` or `'0'` in localStorage)
+// are unchanged. Existing users with no explicit setting flip to
+// wants-sync; the rc2e.51 DriveSyncPromptModal nudges them to actually
+// connect when they have data.
 function isDriveLocalOnly() {
   const v = driveLSGet(DRIVE_LS.localOnlyMode);
   if (v === '0') return false;
   if (v === '1') return true;
-  return true; // default ON
+  return false; // rc2e.51: default OFF (wants Drive sync)
 }
 function setDriveLocalOnly(on) {
   driveLSSet(DRIVE_LS.localOnlyMode, on ? '1' : '0');
@@ -31896,6 +31901,109 @@ function PolicyOwnerRoutingModal({
 }
 
 // v2.3.0-rc2c.3c: Review modal for clients found in Drive but not on this device.
+// rc2e.51: Soft prompt to encourage Drive sync. Surfaces once per 7 days
+// when the user is signed in, has data, but hasn't connected Drive. Doesn't
+// trigger any silent uploads — Drive still requires explicit OAuth via the
+// existing handleConnect flow that bounces to ckgtools-admin sign-in.
+const DRIVE_PROMPT_DISMISS_KEY = 'policylens_drive_prompt_dismissed_at';
+const DRIVE_PROMPT_DISMISS_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+function DriveSyncPromptModal({
+  open,
+  onSkip,
+  onConnect
+}) {
+  if (!open) return null;
+  const modalBg = {
+    position: 'fixed',
+    inset: 0,
+    zIndex: 10001,
+    background: 'rgba(0,0,0,.7)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16
+  };
+  const modalBox = {
+    background: '#1a2332',
+    borderRadius: 16,
+    border: '1px solid rgba(91,168,160,.3)',
+    maxWidth: 420,
+    width: '100%',
+    padding: 24,
+    boxShadow: '0 20px 60px rgba(0,0,0,.5)'
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    onClick: e => {
+      if (e.target === e.currentTarget) onSkip();
+    },
+    style: modalBg
+  }, /*#__PURE__*/React.createElement("div", {
+    style: modalBox
+  }, /*#__PURE__*/React.createElement("h2", {
+    style: {
+      fontSize: 16,
+      fontWeight: 700,
+      color: '#e8e8e8',
+      margin: '0 0 8px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 20
+    }
+  }, "\u2601\uFE0F"), "Sync your client data to Google Drive?"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontSize: 12,
+      color: 'var(--text3)',
+      marginBottom: 18,
+      lineHeight: 1.5
+    }
+  }, "Keep your policies safe and accessible across devices. Your data stays in your own Google Drive folder under ", /*#__PURE__*/React.createElement("strong", {
+    style: {
+      color: 'var(--text2)'
+    }
+  }, "PolicyLens/"), " \u2014 only you can see it."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8,
+      justifyContent: 'flex-end',
+      alignItems: 'center'
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: onSkip,
+    style: {
+      background: 'transparent',
+      color: 'var(--text3)',
+      border: '1px solid var(--border2)',
+      borderRadius: 6,
+      padding: '8px 14px',
+      fontSize: 11,
+      cursor: 'pointer'
+    }
+  }, "Skip for now"), /*#__PURE__*/React.createElement("button", {
+    onClick: onConnect,
+    style: {
+      background: 'var(--teal)',
+      color: '#0b0f1a',
+      border: 'none',
+      borderRadius: 6,
+      padding: '8px 16px',
+      fontSize: 11,
+      fontWeight: 700,
+      cursor: 'pointer'
+    }
+  }, "Connect Google Drive \u2192")), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontSize: 10,
+      color: 'var(--text3)',
+      marginTop: 14,
+      textAlign: 'center',
+      fontStyle: 'italic'
+    }
+  }, "You can connect later from Settings \u2192 Drive Sync. We'll remind you in 7 days.")));
+}
 function FoundInDriveReviewModal({
   open,
   found,
@@ -44896,6 +45004,10 @@ function Policies() {
   const [draftBanner, setDraftBanner] = useState(false);
   const [bulkExtracted, setBulkExtracted] = useState(null); // for verification modal
   const [pendingNameDetection, setPendingNameDetection] = useState(null);
+  // rc2e.51: soft-prompt state for the Drive sync nudge. Surfaces once
+  // per 7 days when user is signed in + has data + Drive disconnected.
+  const [driveSyncPromptOpen, setDriveSyncPromptOpen] = useState(false);
+  const driveSyncPromptCheckedRef = useRef(false);
   const [newClientModalOpen, setNewClientModalOpen] = useState(false);
   const [newClientData, setNewClientData] = useState({
     allStates: [],
@@ -44903,6 +45015,26 @@ function Policies() {
   });
   const pendingNewClientRoutesRef = useRef([]);
   const pendingNewClientCleanupRef = useRef(false);
+
+  // rc2e.51: Decide whether to surface the Drive sync prompt on mount.
+  // Eligibility: signed in (not anonymous), has at least one policy
+  // (don't nag empty installs), Drive not connected, user hasn't
+  // explicitly chosen local-only mode, and not dismissed within 7 days.
+  // Runs once per mount via the ref guard.
+  useEffect(() => {
+    if (driveSyncPromptCheckedRef.current) return;
+    if (!policies || policies.length === 0) return; // no data yet
+    driveSyncPromptCheckedRef.current = true;
+    try {
+      if (!window._user?.id) return; // not signed in
+      if (driveClient.isLocalOnly()) return; // user explicitly opted out before — respect it
+      if (driveClient.getStatus() === 'connected') return; // already on Drive
+      const dismissedAt = parseInt(driveLSGet(DRIVE_PROMPT_DISMISS_KEY) || '0', 10);
+      if (dismissedAt && Date.now() - dismissedAt < DRIVE_PROMPT_DISMISS_MS) return;
+      // 1.5s delay so the page settles before the modal pops
+      setTimeout(() => setDriveSyncPromptOpen(true), 1500);
+    } catch (_) {}
+  }, [policies?.length]);
   const openNextOwnerRouteNewClient = async queue => {
     if (Array.isArray(queue)) pendingNewClientRoutesRef.current = [...queue];
     const next = pendingNewClientRoutesRef.current.shift();
@@ -51316,7 +51448,22 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       fontSize: 9,
       padding: '3px 8px'
     }
-  }, "\xD7"))))))), pendingNameDetection && /*#__PURE__*/React.createElement(PolicyOwnerRoutingModal, {
+  }, "\xD7"))))))), /*#__PURE__*/React.createElement(DriveSyncPromptModal, {
+    open: driveSyncPromptOpen,
+    onSkip: () => {
+      try {
+        driveLSSet(DRIVE_PROMPT_DISMISS_KEY, String(Date.now()));
+      } catch (_) {}
+      setDriveSyncPromptOpen(false);
+    },
+    onConnect: () => {
+      try {
+        driveClient.setLocalOnly(false);
+      } catch (_) {}
+      // Bounce to ckgtools-admin OAuth — same path as Settings handleConnect
+      window.location.href = '/';
+    }
+  }), pendingNameDetection && /*#__PURE__*/React.createElement(PolicyOwnerRoutingModal, {
     open: true,
     detected: pendingNameDetection.detected,
     currentClientName: clientProfile?.name || clientName,
