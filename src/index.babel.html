@@ -664,7 +664,7 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.42';
+const APP_VERSION = 'v2.3.0-rc2e.43';
 const APP_VERSION_DATE = '2026-05-03';
 const APP_VERSION_NAME = 'Document-style file icons';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
@@ -3577,10 +3577,21 @@ function normalizePersonNameKey(name) {
   return n;
 }
 
+// rc2e.43: Title-case fully-uppercase person names so the family-routing
+// modal and policy chips don't shout "KESTER" / "TAN KAH LAN" at the FC.
+// Mixed-case names (Sally Ong, John D. Smith, McDonald) are preserved
+// untouched — only fires when the input has zero lowercase letters.
+function _titleCaseAllCapsName(s) {
+  const v = String(s || '').trim();
+  if (!v) return v;
+  if (/[a-z]/.test(v)) return v;
+  return v.toLowerCase().replace(/(^|[\s\-'])([a-z])/g, (_, sep, c) => sep + c.toUpperCase());
+}
 function cleanPersonDisplayName(name) {
   const raw = String(name || '').replace(/\s+/g, ' ').trim();
   if (!raw) return '';
-  return raw.replace(/^(mr|mrs|ms|mdm|madam|dr|miss|master|mstr)\.?\s+/i, '').trim() || raw;
+  const noHonor = raw.replace(/^(mr|mrs|ms|mdm|madam|dr|miss|master|mstr)\.?\s+/i, '').trim() || raw;
+  return _titleCaseAllCapsName(noHonor);
 }
 
 function preferPersonDisplayName(existing, incoming) {
@@ -5116,7 +5127,7 @@ async function pdfToImages(pdfDoc, maxPages=12) {
 // CLEAN even if the FC never actually reviewed anything. Bumping the version
 // forces a re-extraction next time those same files are uploaded, and the
 // one-time cleanup in App init purges the stale entries from IndexedDB.
-const EXTRACT_PIPELINE_VERSION = 'v15.26-2026-05-03-lifeinsured-from-name';
+const EXTRACT_PIPELINE_VERSION = 'v15.27-2026-05-03-titlecase-allcaps-names';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
