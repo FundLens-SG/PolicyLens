@@ -462,7 +462,7 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.48';
+const APP_VERSION = 'v2.3.0-rc2e.49';
 const APP_VERSION_DATE = '2026-05-03';
 const APP_VERSION_NAME = 'Document-style file icons';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
@@ -65588,271 +65588,7 @@ function Settings() {
       color: 'var(--text3)',
       marginBottom: 12
     }
-  }, "AI inference (Gemini + Claude) is provided by CKG. No key entry needed \u2014 every signed-in user gets AI for free."), false && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("label", {
-    style: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: 8,
-      fontSize: 11,
-      color: 'var(--text2)',
-      marginBottom: 10,
-      textTransform: 'none',
-      letterSpacing: 0
-    }
-  }, /*#__PURE__*/React.createElement("input", {
-    type: "checkbox",
-    checked: syncApiKeysToCloud,
-    onChange: async e => {
-      const v = e.target.checked;
-      setSyncApiKeysToCloud(v);
-      await dbPut('settings', {
-        key: 'syncApiKeysToCloud',
-        value: v
-      });
-      toast(v ? 'API key cloud sync enabled' : 'API keys will stay local on this device', 'info');
-    },
-    style: {
-      accentColor: 'var(--gold)'
-    }
-  }), /*#__PURE__*/React.createElement("span", null, "Sync AI keys to Supabase for this account ", /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: 'var(--text3)'
-    }
-  }, "(off keeps keys local to this device)"))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: 10,
-      background: 'var(--bg3)',
-      borderRadius: 8,
-      marginBottom: 10,
-      border: '1px solid var(--border)'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "field",
-    style: {
-      marginBottom: 6
-    }
-  }, /*#__PURE__*/React.createElement("label", {
-    style: {
-      color: '#4285f4',
-      fontWeight: 600
-    }
-  }, "\uD83D\uDD35 Google Gemini Key ", /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontWeight: 400,
-      color: 'var(--text3)'
-    }
-  }, "(required \u2014 free)")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      gap: 6,
-      alignItems: 'center'
-    }
-  }, /*#__PURE__*/React.createElement("input", {
-    type: "text",
-    value: geminiKey,
-    onChange: e => setGeminiKey(e.target.value),
-    placeholder: "AIza\u2026",
-    style: {
-      flex: 1,
-      fontFamily: 'monospace',
-      fontSize: 11
-    },
-    autoComplete: "off",
-    spellCheck: "false"
-  }), geminiKey && /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 10,
-      color: 'var(--text3)',
-      flexShrink: 0
-    }
-  }, geminiKey.length, "ch"))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      gap: 6
-    }
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "btn-primary btn-sm",
-    onClick: async () => {
-      const k = geminiKey.trim();
-      if (!k || !k.startsWith('AIza')) {
-        toast('Gemini keys start with AIza…', 'warning');
-        return;
-      }
-      const uid = window._user?.id || '';
-      await dbPut('settings', {
-        key: 'geminiKey_' + uid,
-        value: k
-      });
-      await dbPut('settings', {
-        key: 'geminiKey',
-        value: k
-      });
-      if (syncApiKeysToCloud && window.saveKeyToSupabase) await saveKeyToSupabase('gemini', k);
-      toast(syncApiKeysToCloud ? 'Gemini key saved & synced' : 'Gemini key saved locally', 'success');
-    }
-  }, "Save"), /*#__PURE__*/React.createElement("button", {
-    className: "btn-secondary btn-sm",
-    onClick: async () => {
-      const k = ((await dbGet('settings', 'geminiKey').catch(() => null))?.value || '').trim();
-      if (!k) {
-        toast('No Gemini key stored', 'warning');
-        return;
-      }
-      try {
-        const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + k, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            contents: [{
-              parts: [{
-                text: 'Say hello'
-              }]
-            }],
-            generationConfig: {
-              maxOutputTokens: 30
-            }
-          })
-        });
-        const d = await r.json();
-        if (d.error) toast(d.error.message, 'error');else toast('Gemini connected — working!', 'success');
-      } catch (e) {
-        toast(e.message, 'error');
-      }
-    }
-  }, "Test")), /*#__PURE__*/React.createElement("p", {
-    style: {
-      fontSize: 10,
-      color: 'var(--text3)',
-      marginTop: 4
-    }
-  }, "Get free: ", /*#__PURE__*/React.createElement("a", {
-    href: "https://aistudio.google.com/apikey",
-    target: "_blank",
-    style: {
-      color: '#4285f4'
-    }
-  }, "aistudio.google.com"), " \u2192 Create API key. 1,500 free req/day.")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: 10,
-      background: 'var(--bg3)',
-      borderRadius: 8,
-      border: '1px solid var(--border)'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "field",
-    style: {
-      marginBottom: 6
-    }
-  }, /*#__PURE__*/React.createElement("label", {
-    style: {
-      color: '#d97706',
-      fontWeight: 600
-    }
-  }, "\uD83D\uDFE1 Anthropic Key ", /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontWeight: 400,
-      color: 'var(--text3)'
-    }
-  }, "(optional \u2014 better extraction)")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      gap: 6,
-      alignItems: 'center'
-    }
-  }, /*#__PURE__*/React.createElement("input", {
-    type: "text",
-    value: anthropicKey,
-    onChange: e => setAnthropicKey(e.target.value),
-    placeholder: "sk-ant-api03-\u2026",
-    style: {
-      flex: 1,
-      fontFamily: 'monospace',
-      fontSize: 11
-    },
-    autoComplete: "off",
-    spellCheck: "false"
-  }), anthropicKey && /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 10,
-      color: 'var(--text3)',
-      flexShrink: 0
-    }
-  }, anthropicKey.length, "ch"))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      gap: 6
-    }
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "btn-primary btn-sm",
-    onClick: async () => {
-      const k = anthropicKey.trim();
-      if (!k || !k.startsWith('sk-ant-')) {
-        toast('Anthropic keys start with sk-ant-…', 'warning');
-        return;
-      }
-      if (k.length < 50) {
-        toast('Key too short — full keys are ~130 chars', 'warning', 4500);
-        return;
-      }
-      const uid2 = window._user?.id || '';
-      await dbPut('settings', {
-        key: 'anthropicKey_' + uid2,
-        value: k
-      });
-      await dbPut('settings', {
-        key: 'anthropicKey',
-        value: k
-      });
-      if (syncApiKeysToCloud && window.saveKeyToSupabase) await saveKeyToSupabase('anthropic', k);
-      toast(syncApiKeysToCloud ? 'Anthropic key saved & synced (' + k.length + ' chars)' : 'Anthropic key saved locally (' + k.length + ' chars)', 'success');
-    }
-  }, "Save"), /*#__PURE__*/React.createElement("button", {
-    className: "btn-secondary btn-sm",
-    onClick: async () => {
-      const k = ((await dbGet('settings', 'anthropicKey').catch(() => null))?.value || '').trim();
-      if (!k) {
-        toast('No Anthropic key stored', 'warning');
-        return;
-      }
-      try {
-        const r = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': k,
-            'anthropic-version': '2023-06-01',
-            'anthropic-dangerous-direct-browser-access': 'true'
-          },
-          body: JSON.stringify({
-            model: 'claude-sonnet-4-6',
-            max_tokens: 30,
-            messages: [{
-              role: 'user',
-              content: 'Say hello'
-            }]
-          })
-        });
-        const d = await r.json();
-        if (d.error) toast(d.error.message, 'error');else toast('Claude connected — working!', 'success');
-      } catch (e) {
-        toast(e.message, 'error');
-      }
-    }
-  }, "Test")), /*#__PURE__*/React.createElement("p", {
-    style: {
-      fontSize: 10,
-      color: 'var(--text3)',
-      marginTop: 4
-    }
-  }, "Get key: ", /*#__PURE__*/React.createElement("a", {
-    href: "https://console.anthropic.com/settings/keys",
-    target: "_blank",
-    style: {
-      color: '#d97706'
-    }
-  }, "console.anthropic.com"), " \u2192 Create Key \u2192 copy FULL key (~130 chars). ~$0.003/scan."))), /*#__PURE__*/React.createElement("div", {
+  }, "AI inference (Gemini + Claude) is provided by CKG. No key entry needed \u2014 every signed-in user gets AI for free."), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 10,
       background: 'var(--bg3)',
@@ -65970,27 +65706,15 @@ function Settings() {
       borderRadius: 6,
       fontSize: 11
     }
-  }, /*#__PURE__*/React.createElement("strong", null, "Pipeline: "), documentAiEndpoint && geminiKey && anthropicKey && anthropicKey.length > 50 ? /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("strong", null, "Pipeline: "), /*#__PURE__*/React.createElement("span", {
     style: {
       color: 'var(--green2)'
     }
-  }, "Document AI -> Gemini -> Claude fallback") : documentAiEndpoint && geminiKey ? /*#__PURE__*/React.createElement("span", {
+  }, "Document AI \u2192 Gemini structured extraction \u2192 Claude fallback"), /*#__PURE__*/React.createElement("span", {
     style: {
-      color: 'var(--green2)'
+      color: 'var(--text3)'
     }
-  }, "Document AI -> Gemini, Claude fallback unavailable") : geminiKey && anthropicKey && anthropicKey.length > 50 ? /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: 'var(--green2)'
-    }
-  }, "\u2705 Dual AI \u2014 Gemini reads \u2192 Claude extracts (best quality)") : geminiKey ? /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: '#4285f4'
-    }
-  }, "\uD83D\uDD35 Gemini-only mode (good, free)") : /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: 'var(--red)'
-    }
-  }, "\u26A0\uFE0F No keys \u2014 AI scanning disabled"))), /*#__PURE__*/React.createElement("div", {
+  }, " \xB7 all routed through CKG, no key entry needed"))), /*#__PURE__*/React.createElement("div", {
     className: "card",
     style: {
       marginBottom: 16
