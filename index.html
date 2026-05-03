@@ -462,7 +462,7 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.55';
+const APP_VERSION = 'v2.3.0-rc2e.56';
 const APP_VERSION_DATE = '2026-05-03';
 const APP_VERSION_NAME = 'Document-style file icons';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
@@ -31684,7 +31684,22 @@ function PolicyOwnerRoutingModal({
       color: 'var(--text3)',
       paddingLeft: 4
     }
-  }, "+", routingRows.length - 8, " more routing rows"))), entries.map(([key, info]) => {
+  }, "+", routingRows.length - 8, " more routing rows"))), (() => {
+    const lifeAssuredOnlyCount = entries.filter(([_k, info]) => info.needsOwnerQuestion).length;
+    if (lifeAssuredOnlyCount < 2) return null;
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10,
+        lineHeight: 1.45,
+        color: 'var(--gold)',
+        background: 'rgba(212,169,106,.08)',
+        borderLeft: '3px solid var(--gold)',
+        borderRadius: 5,
+        padding: '8px 10px',
+        marginBottom: 10
+      }
+    }, /*#__PURE__*/React.createElement("strong", null, lifeAssuredOnlyCount, " names"), " appear only as Life Assured (no clear policy owner). They default to dependants of the current client below \u2014 change the dropdown if any of them is actually the owner.");
+  })(), entries.map(([key, info]) => {
     const suggestedIds = new Set((info.existingMatches || []).map(ds => ds.clientId));
     const orderedClients = [...(info.existingMatches || []), ...allClients.filter(ds => !suggestedIds.has(ds.clientId)).sort((a, b) => String(a.clientName || '').localeCompare(String(b.clientName || '')))];
     const items = itemsForInfo(info);
@@ -31733,7 +31748,7 @@ function PolicyOwnerRoutingModal({
         color: 'var(--text3)',
         flexShrink: 0
       }
-    }, info.policyIndices.length, " polic", info.policyIndices.length > 1 ? 'ies' : 'y')), info.needsOwnerQuestion && /*#__PURE__*/React.createElement("div", {
+    }, info.policyIndices.length, " polic", info.policyIndices.length > 1 ? 'ies' : 'y')), info.needsOwnerQuestion && entries.filter(([_k2, i2]) => i2.needsOwnerQuestion).length < 2 && /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 10,
         lineHeight: 1.4,
@@ -31806,7 +31821,40 @@ function PolicyOwnerRoutingModal({
         marginTop: 6,
         fontStyle: 'italic'
       }
-    }, routeDescriptionFor(route, info)), showPolicyLevelRoutes && /*#__PURE__*/React.createElement("div", {
+    }, routeDescriptionFor(route, info)), entries.length >= 2 && /*#__PURE__*/React.createElement("button", {
+      onClick: () => {
+        setRoutes(r => {
+          const next = {
+            ...r
+          };
+          entries.forEach(([otherKey]) => {
+            next[otherKey] = route;
+          });
+          return next;
+        });
+        setPolicyRoutes(prev => {
+          const next = {
+            ...prev
+          };
+          entries.forEach(([_otherKey, otherInfo]) => {
+            itemsForInfo(otherInfo).forEach(item => {
+              next[item.policyIndex] = route;
+            });
+          });
+          return next;
+        });
+      },
+      style: {
+        background: 'transparent',
+        color: 'var(--teal)',
+        border: 'none',
+        padding: '4px 0 0',
+        fontSize: 10,
+        cursor: 'pointer',
+        textDecoration: 'underline',
+        textAlign: 'left'
+      }
+    }, "\u21BB Apply this routing to all ", entries.length, " names"), showPolicyLevelRoutes && /*#__PURE__*/React.createElement("div", {
       style: {
         marginTop: 10,
         padding: '8px',
