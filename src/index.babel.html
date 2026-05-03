@@ -250,6 +250,71 @@ try { if(window.supabase) _SB = window.supabase.createClient(SB_URL, SB_KEY, {
   auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: false, flowType: 'pkce' }
 }); } catch(e){ console.warn('[Auth] Supabase init error:',e); }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 8 polish: AI inference (Gemini + Claude) routes through ckg-ai-proxy.
+// CKG-paid keys live server-side; per-user key entry is gone. Two pieces:
+//  1. fetch interceptor — rewrites direct Google/Anthropic API calls to the
+//     proxy with the Supabase Bearer token. Existing callsites untouched.
+//  2. dbGet shim — returns a 'proxy' stub for any geminiKey*/anthropicKey*
+//     lookup so the legacy `if (key) {...}` guards always pass.
+// ─────────────────────────────────────────────────────────────────────────────
+var AI_PROXY_URL = 'https://ckg-ai-proxy.chungakwanc.workers.dev';
+
+window._aiAuthHeader = async function(){
+  try {
+    var s = await _SB?.auth.getSession();
+    var t = s?.data?.session?.access_token;
+    if (t) return { Authorization: 'Bearer ' + t };
+  } catch(_e){}
+  return {};
+};
+
+(function installAiFetchInterceptor(){
+  if (!window.fetch || window._aiFetchPatched) return;
+  var _origFetch = window.fetch.bind(window);
+  window.fetch = function(input, init){
+    var url = typeof input === 'string' ? input : (input && input.url) || '';
+    // Gemini: any /v1beta/models/<model>:generateContent → proxy /gemini.
+    var gMatch = url.match(/generativelanguage\.googleapis\.com\/v1beta\/models\/([^:?]+):generateContent/);
+    if (gMatch) {
+      var model = gMatch[1];
+      var opts = init || {};
+      var bodyObj = {};
+      try { bodyObj = opts.body ? (typeof opts.body === 'string' ? JSON.parse(opts.body) : opts.body) : {}; }
+      catch (_e) { bodyObj = {}; }
+      bodyObj.model = model;
+      return (async () => {
+        var auth = await window._aiAuthHeader();
+        return _origFetch(AI_PROXY_URL + '/gemini', {
+          ...opts,
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...auth },
+          body: JSON.stringify(bodyObj),
+        });
+      })();
+    }
+    // Anthropic: api.anthropic.com/v1/messages → proxy /claude. Body shape
+    // is identical (model/system/messages/max_tokens). Strip x-api-key.
+    if (url.indexOf('api.anthropic.com/v1/messages') !== -1) {
+      var opts2 = init || {};
+      var bodyObj2 = {};
+      try { bodyObj2 = opts2.body ? (typeof opts2.body === 'string' ? JSON.parse(opts2.body) : opts2.body) : {}; }
+      catch (_e) { bodyObj2 = {}; }
+      return (async () => {
+        var auth2 = await window._aiAuthHeader();
+        return _origFetch(AI_PROXY_URL + '/claude', {
+          ...opts2,
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...auth2 },
+          body: JSON.stringify(bodyObj2),
+        });
+      })();
+    }
+    return _origFetch(input, init);
+  };
+  window._aiFetchPatched = true;
+})();
+
 var _sb=null,_user=null,_prof=null,_isAdmin=false;
 function sb(){return _SB;}
 // Auth at PolicyLens is read-only: the hub at ckgtools.com handles Google
@@ -13679,7 +13744,18 @@ const dbOp=(store,mode,fn)=>openDB().then(db=>new Promise((res,rej)=>{
 const dbGetAll=store=>dbOp(store,'readonly',s=>s.getAll());
 const dbPut=(store,val)=>dbOp(store,'readwrite',s=>s.put(val));
 const dbDel=(store,id)=>dbOp(store,'readwrite',s=>s.delete(id));
-const dbGet=(store,key)=>dbOp(store,'readonly',s=>s.get(key));
+const dbGet=(store,key)=>{
+  // Phase 8 polish: AI keys are now provided by the ckg-ai-proxy worker.
+  // Stub any geminiKey* / anthropicKey* lookup so the legacy
+  // `if (key) {...}` guards in AI callsites always pass.
+  if (store === 'settings' && key && (
+    key === 'geminiKey' || String(key).startsWith('geminiKey_') ||
+    key === 'anthropicKey' || String(key).startsWith('anthropicKey_')
+  )) {
+    return Promise.resolve({ key: key, value: 'proxy' });
+  }
+  return dbOp(store,'readonly',s=>s.get(key));
+};
 
 // PERFORMANCE: Batch load — one DB open, one transaction for policies + settings
 const dbBatchLoad = async (settingKeys) => {
@@ -44922,7 +44998,9 @@ function Settings() {
       {/* ═══ AI KEYS ═══ */}
       <div className="card" style={{marginBottom:16}}>
         <h3 style={{fontSize:14,fontWeight:600,marginBottom:4}}>AI Document Extraction</h3>
-        <p style={{fontSize:11,color:'var(--text3)',marginBottom:12}}>Dual AI: Gemini reads documents (free) → Claude extracts structured data (smart). Gemini-only if no Anthropic key.</p>
+        <p style={{fontSize:11,color:'var(--text3)',marginBottom:12}}>AI inference (Gemini + Claude) is provided by CKG. No key entry needed — every signed-in user gets AI for free.</p>
+        {/* Phase 8 polish: per-user AI key entry retired (sync toggle, Gemini key, Anthropic key). The fetch interceptor + dbGet shim near the top of the file route everything through ckg-ai-proxy with the user's hub session. Kept as dead code for easy revert. */}
+        {false && (<>
         <label style={{display:'flex',alignItems:'center',gap:8,fontSize:11,color:'var(--text2)',marginBottom:10,textTransform:'none',letterSpacing:0}}>
           <input type="checkbox" checked={syncApiKeysToCloud} onChange={async e=>{const v=e.target.checked;setSyncApiKeysToCloud(v);await dbPut('settings',{key:'syncApiKeysToCloud',value:v});toast(v?'API key cloud sync enabled':'API keys will stay local on this device','info');}} style={{accentColor:'var(--gold)'}} />
           <span>Sync AI keys to Supabase for this account <span style={{color:'var(--text3)'}}>(off keeps keys local to this device)</span></span>
@@ -44976,6 +45054,7 @@ function Settings() {
           </div>
           <p style={{fontSize:10,color:'var(--text3)',marginTop:4}}>Get key: <a href="https://console.anthropic.com/settings/keys" target="_blank" style={{color:'#d97706'}}>console.anthropic.com</a> → Create Key → copy FULL key (~130 chars). ~$0.003/scan.</p>
         </div>
+        </>)}
 
         {/* Google Document AI Proxy */}
         <div style={{padding:10,background:'var(--bg3)',borderRadius:8,border:'1px solid var(--border)',marginTop:10}}>
