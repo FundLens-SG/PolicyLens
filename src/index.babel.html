@@ -452,7 +452,7 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.47';
+const APP_VERSION = 'v2.3.0-rc2e.48';
 const APP_VERSION_DATE = '2026-05-03';
 const APP_VERSION_NAME = 'Document-style file icons';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
@@ -31937,6 +31937,8 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
               {needsReviewCount > 0
                 ? <>AI extracted <strong style={{color:'var(--text2)'}}>{totalCount}</strong> polic{totalCount===1?'y':'ies'}. <strong style={{color:'var(--gold)'}}>{needsReviewCount}</strong> need your eye — the rest are auto-trusted.</>
                 : <>AI extracted <strong style={{color:'var(--text2)'}}>{totalCount}</strong> polic{totalCount===1?'y':'ies'}. <strong style={{color:'var(--green2)'}}>All fields high confidence</strong> — review and import.</>}
+              {/* rc2e.48: owner-count signal moved here from removed stats row, only shown when >1 */}
+              {ownerKeysInView.length > 1 && <> · <strong style={{color:'var(--text2)'}}>{ownerKeysInView.length}</strong> owners detected</>}
             </p>
           </div>
           <div style={{display:'flex',alignItems:'center',gap:8,flexShrink:0}}>
@@ -31980,7 +31982,18 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
           </div>
         )}
 
-        {items.length > 0 && (
+        {/* rc2e.48: Heavy diagnostics (triage table, stats numbers, advisor
+            queue, extraction ledger) collapsed behind a single disclosure so
+            the policy cards reach the top of the viewport on open. The only
+            actionable item — Show Trusted toggle — is broken out into its
+            own row below. The three former top-level conditionals
+            (triage table, stats grid, queue+ledger) all live inside this
+            single <details> element now. */}
+        {items.length > 0 && (<details style={{margin:'0 0 10px',background:'rgba(91,168,160,.025)',border:'1px solid rgba(91,168,160,.12)',borderRadius:10}}>
+          <summary style={{cursor:'pointer',padding:'8px 12px',fontSize:11,fontWeight:700,color:'var(--text2)',userSelect:'none'}}>
+            Show extraction details (triage table · review queue · stage ledger)
+          </summary>
+          <div style={{padding:'4px 10px 10px'}}>
           <div style={{background:'rgba(91,168,160,.045)',border:'1px solid rgba(91,168,160,.16)',borderRadius:10,padding:10,margin:'0 0 10px'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:10,flexWrap:'wrap',marginBottom:8}}>
               <div>
@@ -32086,9 +32099,7 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
               </table>
             </div>
           </div>
-        )}
-
-        {(
+          {/* rc2e.48: read-only stats (Decisions / Trusted / Owners) inside disclosure */}
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(120px,1fr))',gap:8,margin:'0 0 10px'}}>
             <div style={{background:'rgba(212,169,106,.07)',border:'1px solid rgba(212,169,106,.18)',borderRadius:9,padding:9}}>
               <div style={{fontSize:9,color:'var(--text3)',fontWeight:800,textTransform:'uppercase',letterSpacing:'.5px'}}>Decisions</div>
@@ -32102,49 +32113,54 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
               <div style={{fontSize:9,color:'var(--text3)',fontWeight:800,textTransform:'uppercase',letterSpacing:'.5px'}}>Owners</div>
               <div style={{fontSize:18,color:'var(--text2)',fontWeight:800,marginTop:3}}>{ownerKeysInView.length || 1}</div>
             </div>
-            <label style={{display:'flex',alignItems:'center',gap:7,background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:9,padding:9,cursor:'pointer'}}>
-              <input type="checkbox" checked={showTrusted} onChange={e=>setShowTrusted(e.target.checked)} style={{accentColor:'var(--gold)'}} />
-              <span style={{fontSize:10,color:'var(--text2)',fontWeight:700}}>Show trusted{trustedHiddenCount > 0 ? ' (' + trustedHiddenCount + ')' : ''}</span>
-            </label>
           </div>
-        )}
-
-        {(advisorReviewQueue.length > 0 || (extractionLedger || []).length > 0) && (
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:8,margin:'0 0 10px'}}>
-            <div style={{background:'rgba(212,169,106,.045)',border:'1px solid rgba(212,169,106,.14)',borderRadius:9,padding:9,minWidth:0}}>
-              <div style={{fontSize:9,fontWeight:800,color:'var(--gold)',textTransform:'uppercase',letterSpacing:'.35px',marginBottom:6}}>Advisor review queue</div>
-              {advisorReviewQueue.length === 0 ? (
-                <div style={{fontSize:10,color:'var(--teal)'}}>No conflicts or low-confidence fields left.</div>
-              ) : (
-                <div style={{display:'grid',gap:5}}>
-                  {advisorReviewQueue.map((it,i) => {
-                    const gate = passesConfidenceGate(it);
-                    const reason = getVerifiableFields(it)[0]?.reason || (gate.reasons || [])[0] || (it._reviewReasons || [])[0] || (it._ownerRouteQuestion ? 'Owner/life assured routing needs confirmation' : 'Needs review');
-                    return (
-                      <div key={(it.id || it.policyNumber || it.productName || i) + ':queue'} style={{display:'grid',gridTemplateColumns:'minmax(0,1fr) auto',gap:8,alignItems:'center',fontSize:10,color:'var(--text2)',padding:'5px 6px',borderRadius:6,background:'rgba(0,0,0,.12)'}}>
-                        <span style={{minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{it.productName || it.policyName || it.insurer || 'Policy'} - {reason}</span>
-                        <span style={{color:'var(--gold)',fontWeight:800,whiteSpace:'nowrap'}}>{it._extractConfidence ? 'check' : 'route'}</span>
+          {/* rc2e.48: advisor review queue + extraction ledger inside disclosure */}
+          {(advisorReviewQueue.length > 0 || (extractionLedger || []).length > 0) && (
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:8,margin:'0 0 10px'}}>
+              <div style={{background:'rgba(212,169,106,.045)',border:'1px solid rgba(212,169,106,.14)',borderRadius:9,padding:9,minWidth:0}}>
+                <div style={{fontSize:9,fontWeight:800,color:'var(--gold)',textTransform:'uppercase',letterSpacing:'.35px',marginBottom:6}}>Advisor review queue</div>
+                {advisorReviewQueue.length === 0 ? (
+                  <div style={{fontSize:10,color:'var(--teal)'}}>No conflicts or low-confidence fields left.</div>
+                ) : (
+                  <div style={{display:'grid',gap:5}}>
+                    {advisorReviewQueue.map((it,i) => {
+                      const gate = passesConfidenceGate(it);
+                      const reason = getVerifiableFields(it)[0]?.reason || (gate.reasons || [])[0] || (it._reviewReasons || [])[0] || (it._ownerRouteQuestion ? 'Owner/life assured routing needs confirmation' : 'Needs review');
+                      return (
+                        <div key={(it.id || it.policyNumber || it.productName || i) + ':queue'} style={{display:'grid',gridTemplateColumns:'minmax(0,1fr) auto',gap:8,alignItems:'center',fontSize:10,color:'var(--text2)',padding:'5px 6px',borderRadius:6,background:'rgba(0,0,0,.12)'}}>
+                          <span style={{minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{it.productName || it.policyName || it.insurer || 'Policy'} - {reason}</span>
+                          <span style={{color:'var(--gold)',fontWeight:800,whiteSpace:'nowrap'}}>{it._extractConfidence ? 'check' : 'route'}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+              <div style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:9,padding:9,minWidth:0}}>
+                <div style={{fontSize:9,fontWeight:800,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'.35px',marginBottom:6}}>Extraction ledger</div>
+                {(extractionLedger || []).length === 0 ? (
+                  <div style={{fontSize:10,color:'var(--text3)'}}>No stage events yet.</div>
+                ) : (
+                  <div style={{display:'grid',gap:4}}>
+                    {(extractionLedger || []).slice(0,5).map((row,i) => (
+                      <div key={(row.at||0)+':bulk:'+i} style={{fontSize:10,color:row.level==='error'?'var(--red)':row.level==='success'?'var(--teal)':'var(--text3)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
+                        <strong>{row.label || row.stage || 'Event'}</strong>{row.detail ? ': ' + row.detail : ''}
                       </div>
-                    );
-                  })}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-            <div style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:9,padding:9,minWidth:0}}>
-              <div style={{fontSize:9,fontWeight:800,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'.35px',marginBottom:6}}>Extraction ledger</div>
-              {(extractionLedger || []).length === 0 ? (
-                <div style={{fontSize:10,color:'var(--text3)'}}>No stage events yet.</div>
-              ) : (
-                <div style={{display:'grid',gap:4}}>
-                  {(extractionLedger || []).slice(0,5).map((row,i) => (
-                    <div key={(row.at||0)+':bulk:'+i} style={{fontSize:10,color:row.level==='error'?'var(--red)':row.level==='success'?'var(--teal)':'var(--text3)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
-                      <strong>{row.label || row.stage || 'Event'}</strong>{row.detail ? ': ' + row.detail : ''}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+          )}
           </div>
+        </details>)}
+        {/* rc2e.48: standalone Show Trusted toggle (the only actionable item
+            from the original stats row, kept visible outside the disclosure). */}
+        {items.length > 0 && (filtered.length > visibleVerifyItems.length || showTrusted) && (
+          <label style={{display:'flex',alignItems:'center',justifyContent:'flex-end',gap:7,padding:'4px 2px',margin:'0 0 6px',cursor:'pointer'}}>
+            <input type="checkbox" checked={showTrusted} onChange={e=>setShowTrusted(e.target.checked)} style={{accentColor:'var(--gold)'}} />
+            <span style={{fontSize:10,color:'var(--text3)',fontWeight:600}}>Show trusted{trustedHiddenCount > 0 ? ' (' + trustedHiddenCount + ')' : ''}</span>
+          </label>
         )}
 
         <div style={{maxHeight:'65vh',overflowY:'auto',overflowX:'hidden'}}>

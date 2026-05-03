@@ -462,7 +462,7 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.47';
+const APP_VERSION = 'v2.3.0-rc2e.48';
 const APP_VERSION_DATE = '2026-05-03';
 const APP_VERSION_NAME = 'Document-style file icons';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
@@ -42717,7 +42717,11 @@ function BulkVerifyModal({
     style: {
       color: 'var(--green2)'
     }
-  }, "All fields high confidence"), " \u2014 review and import."))), /*#__PURE__*/React.createElement("div", {
+  }, "All fields high confidence"), " \u2014 review and import."), ownerKeysInView.length > 1 && /*#__PURE__*/React.createElement(React.Fragment, null, " \xB7 ", /*#__PURE__*/React.createElement("strong", {
+    style: {
+      color: 'var(--text2)'
+    }
+  }, ownerKeysInView.length), " owners detected"))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -42816,7 +42820,27 @@ function BulkVerifyModal({
         whiteSpace: 'nowrap'
       }
     }, "Batch ", b, " (", accepted, "/", batchItems.length, ")");
-  })), items.length > 0 && /*#__PURE__*/React.createElement("div", {
+  })), items.length > 0 && /*#__PURE__*/React.createElement("details", {
+    style: {
+      margin: '0 0 10px',
+      background: 'rgba(91,168,160,.025)',
+      border: '1px solid rgba(91,168,160,.12)',
+      borderRadius: 10
+    }
+  }, /*#__PURE__*/React.createElement("summary", {
+    style: {
+      cursor: 'pointer',
+      padding: '8px 12px',
+      fontSize: 11,
+      fontWeight: 700,
+      color: 'var(--text2)',
+      userSelect: 'none'
+    }
+  }, "Show extraction details (triage table \xB7 review queue \xB7 stage ledger)"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: '4px 10px 10px'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: 'rgba(91,168,160,.045)',
       border: '1px solid rgba(91,168,160,.16)',
@@ -43172,31 +43196,7 @@ function BulkVerifyModal({
       fontWeight: 800,
       marginTop: 3
     }
-  }, ownerKeysInView.length || 1)), /*#__PURE__*/React.createElement("label", {
-    style: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: 7,
-      background: 'var(--bg2)',
-      border: '1px solid var(--border)',
-      borderRadius: 9,
-      padding: 9,
-      cursor: 'pointer'
-    }
-  }, /*#__PURE__*/React.createElement("input", {
-    type: "checkbox",
-    checked: showTrusted,
-    onChange: e => setShowTrusted(e.target.checked),
-    style: {
-      accentColor: 'var(--gold)'
-    }
-  }), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 10,
-      color: 'var(--text2)',
-      fontWeight: 700
-    }
-  }, "Show trusted", trustedHiddenCount > 0 ? ' (' + trustedHiddenCount + ')' : ''))), (advisorReviewQueue.length > 0 || (extractionLedger || []).length > 0) && /*#__PURE__*/React.createElement("div", {
+  }, ownerKeysInView.length || 1))), (advisorReviewQueue.length > 0 || (extractionLedger || []).length > 0) && /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))',
@@ -43296,7 +43296,30 @@ function BulkVerifyModal({
       overflow: 'hidden',
       textOverflow: 'ellipsis'
     }
-  }, /*#__PURE__*/React.createElement("strong", null, row.label || row.stage || 'Event'), row.detail ? ': ' + row.detail : ''))))), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("strong", null, row.label || row.stage || 'Event'), row.detail ? ': ' + row.detail : ''))))))), items.length > 0 && (filtered.length > visibleVerifyItems.length || showTrusted) && /*#__PURE__*/React.createElement("label", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      gap: 7,
+      padding: '4px 2px',
+      margin: '0 0 6px',
+      cursor: 'pointer'
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "checkbox",
+    checked: showTrusted,
+    onChange: e => setShowTrusted(e.target.checked),
+    style: {
+      accentColor: 'var(--gold)'
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 10,
+      color: 'var(--text3)',
+      fontWeight: 600
+    }
+  }, "Show trusted", trustedHiddenCount > 0 ? ' (' + trustedHiddenCount + ')' : '')), /*#__PURE__*/React.createElement("div", {
     style: {
       maxHeight: '65vh',
       overflowY: 'auto',
