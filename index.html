@@ -462,7 +462,7 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.46';
+const APP_VERSION = 'v2.3.0-rc2e.47';
 const APP_VERSION_DATE = '2026-05-03';
 const APP_VERSION_NAME = 'Document-style file icons';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
@@ -2312,6 +2312,38 @@ function cleanPersonDisplayName(name) {
   const noHonor = raw.replace(/^(mr|mrs|ms|mdm|madam|dr|miss|master|mstr)\.?\s+/i, '').trim() || raw;
   return _titleCaseAllCapsName(noHonor);
 }
+// rc2e.47: Normalize person-name fields on a policy object IN PLACE.
+// rc2e.43 only patched the cleanPersonDisplayName helper, but several
+// display sites in BulkVerifyModal / PolicyOwnerRoutingModal / chip
+// badges read the raw policyOwner / lifeInsured strings directly. The
+// fix is to normalize at extraction time so every display path
+// inherits clean values without per-site patches. Idempotent: re-runs
+// on already-normalized values are safe (mixed-case names skip).
+function _normalizePersonNameFields(policy) {
+  if (!policy || typeof policy !== 'object') return policy;
+  const FIELDS = ['policyOwner', 'lifeInsured', 'documentOwner'];
+  for (const f of FIELDS) {
+    const v = policy[f];
+    if (typeof v === 'string' && v.trim()) {
+      policy[f] = _titleCaseAllCapsName(v.trim());
+    }
+  }
+  // Also walk the people[] array if present — those rows feed the
+  // family-routing modal and shouldn't shout either.
+  if (Array.isArray(policy.people)) {
+    policy.people = policy.people.map(person => {
+      if (!person || typeof person !== 'object') return person;
+      if (typeof person.name === 'string' && person.name.trim()) {
+        return {
+          ...person,
+          name: _titleCaseAllCapsName(person.name.trim())
+        };
+      }
+      return person;
+    });
+  }
+  return policy;
+}
 function preferPersonDisplayName(existing, incoming) {
   const a = cleanPersonDisplayName(existing);
   const b = cleanPersonDisplayName(incoming);
@@ -2751,9 +2783,12 @@ function ensureDocumentTriageObject(policy = {}, existingPolicies = []) {
   return classifyPolicyDocumentTriage(policy, existingPolicies);
 }
 function enhanceExtractedPolicyIntelligence(policy = {}, existingPolicies = []) {
-  const next = ensurePolicyFieldEvidence({
+  // rc2e.47: title-case ALL-CAPS person-name fields BEFORE downstream
+  // fingerprinting / evidence so every consumer sees clean values.
+  const seed = _normalizePersonNameFields({
     ...(policy || {})
-  }, {
+  });
+  const next = ensurePolicyFieldEvidence(seed, {
     source: 'ai-review-intelligence'
   });
   next.documentType = normalizeDocumentTriageType(next.documentType) || next.documentType || null;
@@ -2818,7 +2853,13 @@ function ensurePolicyFieldEvidence(policy, meta = {}) {
   return next;
 }
 function normalizePolicyForStorage(policy, meta = {}) {
-  let next = applyStructuredPeopleToPolicy(policy);
+  // rc2e.47: title-case person-name fields once at the top so any
+  // path that funnels through this normalizer (Drive load, manual
+  // save, post-edit) gets clean values without per-callsite patches.
+  let next = _normalizePersonNameFields({
+    ...(policy || {})
+  });
+  next = applyStructuredPeopleToPolicy(next);
   next = normalizePolicyFinancials(next);
   next = syncAnnuityPayoutPair(next);
   next._ownerClassification = next._ownerClassification || classifyPolicyOwnership(next, meta.currentClientName || '');
@@ -4147,7 +4188,7 @@ async function pdfToImages(pdfDoc, maxPages = 12) {
 // CLEAN even if the FC never actually reviewed anything. Bumping the version
 // forces a re-extraction next time those same files are uploaded, and the
 // one-time cleanup in App init purges the stale entries from IndexedDB.
-const EXTRACT_PIPELINE_VERSION = 'v15.27-2026-05-03-titlecase-allcaps-names';
+const EXTRACT_PIPELINE_VERSION = 'v15.28-2026-05-03-normalize-person-name-fields';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -8399,9 +8440,14 @@ function applyHighConfidenceRepoMatchToPolicy(policy, match, reason = 'repo-matc
 function enrichSpreadsheetPolicyCandidate(policy, context = {}) {
   const fileName = context.fileName || policy.sourceFile || policy.documentTitle || 'Spreadsheet';
   const repoList = Array.isArray(context.repo) ? context.repo : [];
-  const next = {
+  // rc2e.47: defensively re-normalize person-name fields here too —
+  // applyColumnMap already does it for the local path, but
+  // documentOwner gets attached AFTER applyColumnMap (in the
+  // extractSpreadsheetFilesLocally .map step) so it can still arrive
+  // ALL-CAPS from the document profile.
+  const next = _normalizePersonNameFields({
     ...policy
-  };
+  });
   next.category = normalizeXlsxStorageCategory(next.category) || normalizeXlsxStorageCategory(inferXlsxPolicyCategory(next)) || next.category;
   if (next.insurer) next.insurer = normalizeInsurerName(next.insurer);
   if (isMissingXlsxInsurer(next.insurer)) {
@@ -9466,6 +9512,9 @@ function applyColumnMap(rows, columnMap, categoryColumn) {
     policy.extractionNotes = policy.extractionNotes || 'Parsed from spreadsheet' + (policy.sourceSheet ? ' sheet "' + policy.sourceSheet + '"' : '') + (policy.sourceRow ? ', row ' + policy.sourceRow : '');
     delete policy._premiumColumnName;
     if (confidence.length > 0) policy._confidence = confidence;
+    // rc2e.47: title-case ALL-CAPS person names so the family-routing
+    // modal, LA chip, and routing cockpit don't shout "TAN MEI LIAN".
+    _normalizePersonNameFields(policy);
     policies.push(policy);
   }
   return policies;
@@ -24336,8 +24385,9 @@ function ClientsTab() {
   const policyOwnerDisplay = p => {
     const owner = String(p?.policyOwner || '').trim();
     const life = String(p?.lifeInsured || '').trim();
-    if (owner && !weakPolicyName.test(owner)) return owner;
-    if (life && !weakPolicyName.test(life)) return life + ' (owner?)';
+    // rc2e.47: clean for display so ALL-CAPS source names render nicely
+    if (owner && !weakPolicyName.test(owner)) return cleanPersonDisplayName(owner);
+    if (life && !weakPolicyName.test(life)) return cleanPersonDisplayName(life) + ' (owner?)';
     return 'Owner unclear';
   };
   const policyMiniTitle = p => p.productName || p.policyName || p.subType || p.insurer || 'Untitled policy';
@@ -31228,7 +31278,10 @@ function PolicyOwnerRoutingModal({
         initPolicyRoutes[item.policyIndex] = defaultRouteFor(info, item);
       });
     }
-    const base = (currentClientName || '').trim();
+    // rc2e.47: clean the seed client name so "TAN MEI LIAN Family"
+    // becomes "Tan Mei Lian Family" (defense-in-depth — extraction
+    // normalization usually catches this upstream now).
+    const base = cleanPersonDisplayName((currentClientName || '').trim());
     setFamilyGroupName(base ? base + ' Family' : 'Family Review');
     setRoutes(init);
     setPolicyRoutes(initPolicyRoutes);
@@ -31347,8 +31400,10 @@ function PolicyOwnerRoutingModal({
     const confidence = item.ownerInferenceReason || item.documentOwner || source === 'policyOwner' ? 'High' : info.needsOwnerQuestion || source === 'lifeInsured' ? 'Medium' : 'Low';
     return {
       key: key + ':' + (item.policyIndex ?? idx),
-      owner: item.policyOwner || item.documentOwner || 'Not stated',
-      life: item.lifeInsured || info.displayName || 'Not stated',
+      // rc2e.47: clean for display — items can predate the data-layer
+      // normalization (existing extractions in DB) so wrap defensively.
+      owner: cleanPersonDisplayName(item.policyOwner || item.documentOwner || '') || 'Not stated',
+      life: cleanPersonDisplayName(item.lifeInsured || info.displayName || '') || 'Not stated',
       action: routeKindFor(route) + ': ' + routeLabelFor(route, info),
       confidence,
       evidence: item.ownerInferenceReason || item.extractionNotes || item.documentTitle || item.sourceImage || item.productName || 'No evidence text'
@@ -31684,7 +31739,7 @@ function PolicyOwnerRoutingModal({
         fontSize: 9,
         color: 'var(--text3)'
       }
-    }, "Owner: ", p.policyOwner || 'not stated', " | Life assured: ", p.lifeInsured || 'not stated', p.ownerInferenceReason ? ' | Trace: ' + p.ownerInferenceReason : '')))), /*#__PURE__*/React.createElement("select", {
+    }, "Owner: ", cleanPersonDisplayName(p.policyOwner || '') || 'not stated', " | Life assured: ", cleanPersonDisplayName(p.lifeInsured || '') || 'not stated', p.ownerInferenceReason ? ' | Trace: ' + p.ownerInferenceReason : '')))), /*#__PURE__*/React.createElement("select", {
       value: route,
       onChange: e => {
         const nextRoute = e.target.value;
@@ -31775,7 +31830,7 @@ function PolicyOwnerRoutingModal({
           overflow: 'hidden',
           textOverflow: 'ellipsis'
         }
-      }, item.sourceField === 'lifeInsured' ? 'Detected as life assured' : 'Detected as owner', " | Owner: ", item.policyOwner || 'not stated', " | Life: ", item.lifeInsured || 'not stated', item.ownerInferenceReason ? ' | Trace: ' + item.ownerInferenceReason : '')), /*#__PURE__*/React.createElement("select", {
+      }, item.sourceField === 'lifeInsured' ? 'Detected as life assured' : 'Detected as owner', " | Owner: ", cleanPersonDisplayName(item.policyOwner || '') || 'not stated', " | Life: ", cleanPersonDisplayName(item.lifeInsured || '') || 'not stated', item.ownerInferenceReason ? ' | Trace: ' + item.ownerInferenceReason : '')), /*#__PURE__*/React.createElement("select", {
         value: itemRoute,
         onChange: e => setPolicyRoutes(prev => ({
           ...prev,
@@ -42565,7 +42620,8 @@ function BulkVerifyModal({
     if (life && !weak.test(life)) return 'Life assured: ' + life + ' (owner unclear)';
     return '';
   };
-  const policyOwnerDisplay = it => ownerLabelForItem(it).replace(/^(Policy owner|Document owner):\s*/i, '').replace(/^Life assured:\s*/i, '') || 'Owner unclear';
+  // rc2e.47: clean for display so ALL-CAPS source names render nicely
+  const policyOwnerDisplay = it => cleanPersonDisplayName(ownerLabelForItem(it).replace(/^(Policy owner|Document owner):\s*/i, '').replace(/^Life assured:\s*/i, '')) || 'Owner unclear';
   const ownerKeyForItem = it => ownerLabelForItem(it).replace(/^(Policy owner|Document owner):\s*/i, '').replace(/^Life assured:\s*/i, '').replace(/\s*\(owner unclear\)\s*$/i, '');
   const needsDecisionForItem = it => {
     const verifiable = getVerifiableFields(it);
@@ -50810,22 +50866,25 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
           background: b.c + '22',
           color: b.c
         }
-      }, b.l)), p.lifeInsured && p.lifeInsured.trim() && /*#__PURE__*/React.createElement("span", {
-        title: 'Life Assured: ' + p.lifeInsured,
-        style: {
-          fontSize: 8,
-          fontWeight: 600,
-          padding: '1px 5px',
-          borderRadius: 3,
-          background: 'rgba(212,169,106,.12)',
-          color: 'var(--gold)',
-          border: '1px solid rgba(212,169,106,.25)',
-          maxWidth: 100,
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap'
-        }
-      }, "LA: ", p.lifeInsured), p.status && p.status !== 'inforce' && (() => {
+      }, b.l)), p.lifeInsured && p.lifeInsured.trim() && (() => {
+        const liDisplay = cleanPersonDisplayName(p.lifeInsured);
+        return /*#__PURE__*/React.createElement("span", {
+          title: 'Life Assured: ' + liDisplay,
+          style: {
+            fontSize: 8,
+            fontWeight: 600,
+            padding: '1px 5px',
+            borderRadius: 3,
+            background: 'rgba(212,169,106,.12)',
+            color: 'var(--gold)',
+            border: '1px solid rgba(212,169,106,.25)',
+            maxWidth: 100,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
+          }
+        }, "LA: ", liDisplay);
+      })(), p.status && p.status !== 'inforce' && (() => {
         const sb = STATUS_BADGES.find(x => x.code === p.status);
         const c = sb?.color || 'var(--text3)';
         const lbl = sb?.label || p.status.charAt(0).toUpperCase() + p.status.slice(1);
