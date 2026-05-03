@@ -462,7 +462,7 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.51';
+const APP_VERSION = 'v2.3.0-rc2e.52';
 const APP_VERSION_DATE = '2026-05-03';
 const APP_VERSION_NAME = 'Document-style file icons';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
@@ -45090,6 +45090,18 @@ function Policies() {
       } catch (_) {}
     }
   };
+
+  // rc2e.52: Pick a sensible default tier for newly-created clients.
+  // Previously hardcoded to UNASSIGNED_TIER, which surfaced as the
+  // confusing "Unassigned" badge in the My Profile header even though
+  // the client + policies were correctly linked. Now defaults to the
+  // FC's first defined tier (typically "A"), only falling back to
+  // Unassigned if no other tier is defined.
+  const pickDefaultTierForNewClient = () => {
+    const tiers = (tierDefinitions || []).filter(Boolean);
+    const firstNonUnassigned = tiers.find(t => t !== UNASSIGNED_TIER);
+    return firstNonUnassigned || UNASSIGNED_TIER;
+  };
   const ensureOwnerRouteClient = async (rawName, rawFamilyGroup) => {
     const trimName = cleanPersonDisplayName(rawName || '').trim();
     if (!trimName) return null;
@@ -45108,6 +45120,7 @@ function Policies() {
     }
     const clientId = crypto && crypto.randomUUID ? crypto.randomUUID() : 'client_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
     const now = new Date().toISOString();
+    const defaultTier = pickDefaultTierForNewClient();
     const profile = stampProfileSyncMeta({
       name: trimName,
       nric: '',
@@ -45133,7 +45146,7 @@ function Policies() {
       pendingReason: 'owner-route-client-create',
       pendingError: null,
       clientName: trimName,
-      tier: UNASSIGNED_TIER,
+      tier: defaultTier,
       familyGroup,
       lastReviewedAt: null,
       localOnly: true
@@ -45150,7 +45163,7 @@ function Policies() {
     ensureDriveFileForClient(clientId, {
       clientName: trimName,
       profile,
-      tier: UNASSIGNED_TIER,
+      tier: defaultTier,
       reason: 'owner-route-client-create'
     }).catch(async err => {
       await failDriveSyncPending(clientId, err, 'owner-route-client-create').catch(() => {});
@@ -51912,6 +51925,16 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
           importClientId = autoImportClient?.clientId || null;
           if (importClientId) {
             toast((autoImportClient.created ? 'Created' : 'Using') + ' client ' + (autoImportClient.clientName || inferredOwner.name) + ' for this import.', 'success', 4500);
+            // rc2e.52: when we just created a client for this import, switch
+            // the active view to it so the FC immediately sees the new
+            // client + policies instead of staying on the prior tab. Without
+            // this, the FC sees "Unassigned" badges on the previous view
+            // while the actual import lives elsewhere — confusing.
+            if (autoImportClient.created && typeof switchClient === 'function') {
+              try {
+                await switchClient(autoImportClient.clientId);
+              } catch (_) {}
+            }
           }
         }
         if (!importClientId) {
