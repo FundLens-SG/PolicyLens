@@ -674,7 +674,7 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.41';
+const APP_VERSION = 'v2.3.0-rc2e.42';
 const APP_VERSION_DATE = '2026-05-03';
 const APP_VERSION_NAME = 'Document-style file icons';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
@@ -4347,7 +4347,7 @@ async function pdfToImages(pdfDoc, maxPages = 12) {
 // CLEAN even if the FC never actually reviewed anything. Bumping the version
 // forces a re-extraction next time those same files are uploaded, and the
 // one-time cleanup in App init purges the stale entries from IndexedDB.
-const EXTRACT_PIPELINE_VERSION = 'v15.25-2026-05-03-age-and-remarks';
+const EXTRACT_PIPELINE_VERSION = 'v15.26-2026-05-03-lifeinsured-from-name';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -9812,6 +9812,56 @@ function _calculateAgeAtDate(dobValue, eventDateValue) {
   if (age < 0 || age > 120) return null;
   return age;
 }
+// rc2e.42: Test whether a string looks like a person name vs a version
+// marker / payment marker / product abbreviation / descriptive phrase.
+// Conservative: better to occasionally miss a real name than to wrongly
+// stamp "(II)" as a person.
+function _looksLikePersonName(s, docOwnerName = '') {
+  const v = String(s || '').trim();
+  if (!v || v.length < 3 || v.length > 30) return false;
+  if (!/[a-zA-Z]/.test(v)) return false;
+  if (/^\d/.test(v)) return false;
+  // Roman numerals / version markers
+  if (/^(I{1,4}|IV|V|VI{0,3}|IX|X)$/i.test(v)) return false;
+  if (/^\d{1,2}(st|nd|rd|th)?$/i.test(v)) return false;
+  // Payment / scheme markers
+  if (/^(SRS|CPF\s*OA|CPF\s*SA|CPFIS[-\s]*OA|CPFIS[-\s]*SA|MediSave|Cash|Cheque|GIRO)$/i.test(v)) return false;
+  // Product / sub-type / insurer abbreviations
+  if (/^(ILP|UL|WL|VUL|IUL|Term|Endowment|ISP|CI|PA|TPD|ADB|RP|MIP|MIB|TI|DII)$/i.test(v)) return false;
+  if (/^(NTUC|AIA|GE|Manulife|Pru|Prudential|HSBC|FWD|Singlife|Aviva|Etiqa|Zurich|Tokio|Tokio\s*Marine|China\s*Life|Great\s*Eastern|OCBC|DBS|UOB|Maybank|Citibank|Standard\s*Chartered|ICBC|BOC|FSMOne|POEMS|Endowus|StashAway|Syfe|iFAST|Saxo|IBKR|moomoo|Tiger\s*Brokers?|Philip\s*Securities)$/i.test(v)) return false;
+  // Descriptive keywords commonly seen in product-name suffixes
+  if (/\b(year|years|yr|yrs|month|months|mth|mths|pay|paying|premium|fund|plan|scheme|series|generation|growth|policy|advantage|investor|invest|ready|cash|sure|capital|ease|family|career|legacy|wealth|saver|protection|term|endowment|maturity)\b/i.test(v)) return false;
+  // Reject when candidate equals document-owner name (no info gained)
+  const norm = x => String(x || '').toLowerCase().replace(/[^a-z\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  const docKey = norm(docOwnerName);
+  const candKey = norm(v);
+  if (docKey && candKey && (candKey === docKey || docKey.includes(candKey) || candKey.includes(docKey))) return false;
+  // Final shape check: alphabetic + optional space/dash/period/apostrophe
+  return /^[a-zA-Z][a-zA-Z\s'.-]+$/.test(v);
+}
+// rc2e.42: Parse lifeInsured from product name parenthetical/suffix.
+// Examples:
+//   "AIA GEN3 (II) - KESTER" → "KESTER" (suffix; "(II)" rejected)
+//   "GREAT SP SERIES 12 (Sally Ong)" → "Sally Ong" (parenthetical)
+//   "Manulink Investor (II)-SRS" → null ("(II)" + "SRS" both rejected)
+//   "MANULIFE INVESTREADY (III) 13 YRS FLEXI 10" → null
+function inferLifeInsuredFromProductName(productName, docOwnerName = '') {
+  const t = String(productName || '');
+  if (!t.trim()) return null;
+  const candidates = [];
+  // 1. All parenthetical content
+  const parens = t.match(/\(([^)]+)\)/g) || [];
+  for (const p of parens) candidates.push(p.slice(1, -1).trim());
+  // 2. Trailing suffix after final " - " or " – " (em-dash) or "-"
+  // Strip parentheticals first so we don't pull "(SRS)" into the suffix
+  const stripped = t.replace(/\s*\([^)]+\)\s*/g, ' ').replace(/\s+/g, ' ').trim();
+  const suffixMatch = stripped.match(/[-–]\s*([^-–]+?)\s*$/);
+  if (suffixMatch) candidates.push(suffixMatch[1].trim());
+  for (const c of candidates) {
+    if (_looksLikePersonName(c, docOwnerName)) return c;
+  }
+  return null;
+}
 function applyFdColumnMap(rows, fdColumnMap, sectionLabel = '') {
   const policies = [];
   let lastBank = '';
@@ -9972,6 +10022,24 @@ async function extractSpreadsheetFilesLocally(files, opts = {}) {
         if (sheetProfile?.nric) sourceDocument.nric = sheetProfile.nric;
         if (sheetProfile?.dob) sourceDocument.dob = sheetProfile.dob;
         if (sheetProfile?.phone) sourceDocument.phone = sheetProfile.phone;
+        // rc2e.42: parse lifeInsured from product-name parenthetical
+        // or trailing suffix when no Life Insured column exists.
+        // Examples: "AIA GEN3 (II) - KESTER" → "KESTER",
+        // "GREAT SP SERIES 12 (Sally Ong)" → "Sally Ong".
+        // Must run BEFORE rc2e.41 age derivation so its lifeInsured-
+        // match guard correctly skips non-doc-owner rows.
+        if (!p.lifeInsured) {
+          const candidate = inferLifeInsuredFromProductName(p.productName || '', sheetProfile?.name || '');
+          if (candidate) {
+            p.lifeInsured = candidate;
+            p._confidence = Array.isArray(p._confidence) ? p._confidence : [];
+            p._confidence.push({
+              field: 'lifeInsured',
+              level: 'medium',
+              reason: 'Parsed from product name suffix/parenthetical — verify if this represents a separate life assured'
+            });
+          }
+        }
         // rc2e.41: derive ageAtEntry + premEndAge when DOB known.
         // Conservative: only when lifeInsured matches document owner
         // OR is empty (assume policy is on the document subject).
