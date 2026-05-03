@@ -452,7 +452,7 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.45';
+const APP_VERSION = 'v2.3.0-rc2e.46';
 const APP_VERSION_DATE = '2026-05-03';
 const APP_VERSION_NAME = 'Document-style file icons';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
@@ -31436,22 +31436,26 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
     return mapped;
   });
   const [activeTab, setActiveTab] = useState('all');
-  // ── QUICK VERIFY VIEW MODE ──
-  // 'quick' = compact card showing only fields the AI flagged as low/medium
-  //           confidence; everything else auto-trusted (the speed mode)
-  // 'full'  = original behaviour, every field editable inline
-  // Persisted in localStorage so the FC's preference sticks across sessions.
-  const [viewMode, setViewMode] = useState(() => {
-    try {
-      const stored = localStorage.getItem('policylens-bulkverify-viewmode');
-      return stored === 'full' ? 'full' : 'quick';
-    } catch(e) { return 'quick'; }
-  });
+  // rc2e.46: dropped the global Quick Verify / Full Review toggle — the
+  // modal now always behaves like the old "quick" mode (compact cards,
+  // verifiable fields only). Per-card `_expanded` (toggleExpanded) is the
+  // only escape hatch for FCs who need to edit every field on a single
+  // policy. The localStorage key 'policylens-bulkverify-viewmode' is
+  // intentionally left as-is — pre-existing entries are ignored harmlessly.
   const [showTrusted, setShowTrusted] = useState(false);
-  const setViewModeAndPersist = (mode) => {
-    setViewMode(mode);
-    try { localStorage.setItem('policylens-bulkverify-viewmode', mode); } catch(e){}
-  };
+  // rc2e.46: tracks which compact cards have their inline field-editor
+  // list expanded. Defaults to empty — FC sees concern pills + "Looks good"
+  // first, expands fields only when needed (or by clicking a pill).
+  const [editorOpenIds, setEditorOpenIds] = useState(new Set());
+  const toggleEditorOpen = (idx) => setEditorOpenIds(prev => {
+    const next = new Set(prev);
+    if (next.has(idx)) next.delete(idx); else next.add(idx);
+    return next;
+  });
+  const openEditor = (idx) => setEditorOpenIds(prev => {
+    if (prev.has(idx)) return prev;
+    const next = new Set(prev); next.add(idx); return next;
+  });
   // ── CONFLICT DETAILS PANEL STATE ──
   // When the FC taps a ⚠️ conflict badge, we surface a small panel
   // showing the field name, the base value, the incoming value that
@@ -31583,14 +31587,13 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
     return {...it, productName:r.productName, insurer:r.insurer, category:r.category, subType:r.subType, currency:r.currency||it.currency, _appliedRepo:true};
   }));
 
-  // ── QUICK VERIFY HELPERS ──
-  // viewMode is declared earlier in the component (default 'quick', sticky in
-  // localStorage). The helpers below operate on individual policies inside
-  // the modal:
+  // ── PER-POLICY HELPERS ──
+  // rc2e.46: the global Quick Verify / Full Review toggle was removed.
+  // The modal always behaves like the old "quick" mode now.
   //   markVerified — clears all confidence flags on a policy in one click,
   //                  used by the "Looks good" button. Records timestamp.
   //   toggleExpanded — per-card expand/collapse for switching one card from
-  //                    compact to full-detail without flipping global view.
+  //                    compact to full-detail (the only escape hatch).
 
   // markVerified: clear all confidence flags on a policy in one click.
   // Used by the "Looks good" button on a compact card. Records the timestamp
@@ -31843,7 +31846,7 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
   };
   const needsReviewCount = items.filter(needsDecisionForItem).length;
   const verifiedCount = items.filter(it => it._extractVerifiedAt || (getVerifiableFields(it).length === 0 && it._extractConfidence !== undefined)).length;
-  const visibleVerifyItems = viewMode === 'quick' && !showTrusted ? filtered.filter(needsDecisionForItem) : filtered;
+  const visibleVerifyItems = !showTrusted ? filtered.filter(needsDecisionForItem) : filtered;
   const advisorReviewQueue = items.filter(needsDecisionForItem).slice(0, 6);
   const trustedHiddenCount = filtered.length - visibleVerifyItems.length;
   const ownerKeysInView = [...new Set(visibleVerifyItems.map(it => normalizePersonNameKey(ownerKeyForItem(it))).filter(Boolean))];
@@ -31880,43 +31883,12 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
           <div style={{flex:'1 1 240px',minWidth:0}}>
             <h3 style={{fontSize:16,fontWeight:700}}>Verify Extracted Policies</h3>
             <p style={{fontSize:11,color:'var(--text3)',marginTop:2}}>
-              {viewMode === 'quick' ? (
-                needsReviewCount > 0
-                  ? <>AI extracted <strong style={{color:'var(--text2)'}}>{totalCount}</strong> polic{totalCount===1?'y':'ies'}. <strong style={{color:'var(--gold)'}}>{needsReviewCount}</strong> need your eye — the rest are auto-trusted.</>
-                  : <>AI extracted <strong style={{color:'var(--text2)'}}>{totalCount}</strong> polic{totalCount===1?'y':'ies'}. <strong style={{color:'var(--green2)'}}>All fields high confidence</strong> — review and import.</>
-              ) : (
-                <>Review every field on every policy. Uncheck to skip.</>
-              )}
+              {needsReviewCount > 0
+                ? <>AI extracted <strong style={{color:'var(--text2)'}}>{totalCount}</strong> polic{totalCount===1?'y':'ies'}. <strong style={{color:'var(--gold)'}}>{needsReviewCount}</strong> need your eye — the rest are auto-trusted.</>
+                : <>AI extracted <strong style={{color:'var(--text2)'}}>{totalCount}</strong> polic{totalCount===1?'y':'ies'}. <strong style={{color:'var(--green2)'}}>All fields high confidence</strong> — review and import.</>}
             </p>
           </div>
           <div style={{display:'flex',alignItems:'center',gap:8,flexShrink:0}}>
-            {/* ── VIEW MODE TOGGLE — Quick Verify vs Full Review ── */}
-            <div style={{display:'inline-flex',background:'var(--bg2)',borderRadius:8,padding:2,border:'1px solid var(--border)'}}>
-              <button
-                onClick={()=>setViewModeAndPersist('quick')}
-                style={{
-                  padding:'5px 11px',fontSize:10,fontWeight:600,borderRadius:6,border:'none',cursor:'pointer',
-                  background: viewMode==='quick' ? 'var(--gold)' : 'transparent',
-                  color: viewMode==='quick' ? 'var(--bg)' : 'var(--text3)',
-                  transition:'all .15s'
-                }}
-                title="Show only fields the AI flagged as low or medium confidence"
-              >
-                ⚡ Quick Verify
-              </button>
-              <button
-                onClick={()=>setViewModeAndPersist('full')}
-                style={{
-                  padding:'5px 11px',fontSize:10,fontWeight:600,borderRadius:6,border:'none',cursor:'pointer',
-                  background: viewMode==='full' ? 'var(--blue2)' : 'transparent',
-                  color: viewMode==='full' ? '#fff' : 'var(--text3)',
-                  transition:'all .15s'
-                }}
-                title="Show every field for every policy — original review behaviour"
-              >
-                Full Review
-              </button>
-            </div>
             <button onClick={onClose} style={{background:'none',color:'var(--text3)',fontSize:20,padding:'4px 8px'}}>×</button>
           </div>
         </div>
@@ -32065,7 +32037,7 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
           </div>
         )}
 
-        {viewMode === 'quick' && (
+        {(
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(120px,1fr))',gap:8,margin:'0 0 10px'}}>
             <div style={{background:'rgba(212,169,106,.07)',border:'1px solid rgba(212,169,106,.18)',borderRadius:9,padding:9}}>
               <div style={{fontSize:9,color:'var(--text3)',fontWeight:800,textTransform:'uppercase',letterSpacing:'.5px'}}>Decisions</div>
@@ -32165,20 +32137,20 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
           )}
 
           {/* ── MOBILE-FRIENDLY CARD GRID ── */}
-          {visibleVerifyItems.length === 0 && viewMode === 'quick' && (
+          {visibleVerifyItems.length === 0 && (
             <div style={{background:'rgba(91,168,160,.06)',border:'1px solid rgba(91,168,160,.16)',borderRadius:10,padding:14,marginBottom:10,textAlign:'center'}}>
               <div style={{fontSize:13,fontWeight:800,color:'var(--teal)'}}>No decisions needed in this view</div>
               <div style={{fontSize:10,color:'var(--text3)',marginTop:4}}>All visible extracted policies are trusted. Toggle "Show trusted" to inspect them before import.</div>
             </div>
           )}
           {visibleVerifyItems.map((item,i) => {
-            // Quick Verify uses the compact card UNLESS:
+            // rc2e.46: compact card is the default UNLESS:
             //   • the FC has manually expanded this card (_expanded), OR
             //   • the card is a duplicate (always show full so the FC can compare), OR
             //   • the policy is missing required header fields entirely (we
             //     fall back to full so the FC can fix everything in one place)
             const hasMinimumHeader = !!(item.productName || item.insurer);
-            const useCompact = viewMode === 'quick' && !item._expanded && !item._dupOf && hasMinimumHeader;
+            const useCompact = !item._expanded && !item._dupOf && hasMinimumHeader;
             const ownerLabel = ownerLabelForItem(item);
 
             if(useCompact) {
@@ -32276,18 +32248,19 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
                         {item.subType || item.category || '?'} · {item.currency || 'SGD'} {(parseFloat(item.annualPremium)||0).toLocaleString()}{freqLabel}
                         {parseFloat(item.sumAssured) > 0 && ' · SA '+parseFloat(item.sumAssured).toLocaleString()}
                       </div>
-                      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(118px,1fr))',gap:5,marginTop:7}}>
-                        <div style={{fontSize:9,color:'var(--text3)',background:'rgba(255,255,255,.025)',border:'1px solid rgba(255,255,255,.055)',borderRadius:5,padding:'4px 6px'}}>Owner <strong style={{color:'var(--text2)'}}>{policyOwnerDisplay(item)}</strong></div>
-                        <div style={{fontSize:9,color:'var(--text3)',background:'rgba(255,255,255,.025)',border:'1px solid rgba(255,255,255,.055)',borderRadius:5,padding:'4px 6px'}}>Policy <strong style={{color:'var(--text2)'}}>{item.policyNumber || '-'}</strong></div>
-                        {getPolicyAnnualPayout(item) > 0 && <div style={{fontSize:9,color:'var(--text3)',background:'rgba(255,255,255,.025)',border:'1px solid rgba(255,255,255,.055)',borderRadius:5,padding:'4px 6px'}}>Payout <strong style={{color:'var(--text2)'}}>${Math.round(getPolicyAnnualPayout(item)).toLocaleString()}/yr</strong></div>}
-                      </div>
+                      {/* rc2e.46: only render Owner/Policy/Payout cells when populated.
+                          Suppresses the "Owner -" / "Policy -" placeholder noise. */}
+                      {(policyOwnerDisplay(item) || item.policyNumber || getPolicyAnnualPayout(item) > 0) && (
+                        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(118px,1fr))',gap:5,marginTop:7}}>
+                          {policyOwnerDisplay(item) && <div style={{fontSize:9,color:'var(--text3)',background:'rgba(255,255,255,.025)',border:'1px solid rgba(255,255,255,.055)',borderRadius:5,padding:'4px 6px'}}>Owner <strong style={{color:'var(--text2)'}}>{policyOwnerDisplay(item)}</strong></div>}
+                          {item.policyNumber && <div style={{fontSize:9,color:'var(--text3)',background:'rgba(255,255,255,.025)',border:'1px solid rgba(255,255,255,.055)',borderRadius:5,padding:'4px 6px'}}>Policy <strong style={{color:'var(--text2)'}}>{item.policyNumber}</strong></div>}
+                          {getPolicyAnnualPayout(item) > 0 && <div style={{fontSize:9,color:'var(--text3)',background:'rgba(255,255,255,.025)',border:'1px solid rgba(255,255,255,.055)',borderRadius:5,padding:'4px 6px'}}>Payout <strong style={{color:'var(--text2)'}}>${Math.round(getPolicyAnnualPayout(item)).toLocaleString()}/yr</strong></div>}
+                        </div>
+                      )}
                     </div>
                     <div style={{display:'flex',gap:4,alignItems:'center',flexShrink:0}}>
-                      {item._gateScore != null && (
-                        <span style={{fontSize:8,fontWeight:600,color: item._gateScore >= 75 ? 'var(--green2)' : 'var(--gold)',whiteSpace:'nowrap'}} title={'Confidence score: '+item._gateScore+'%'}>
-                          {item._gateScore}%
-                        </span>
-                      )}
+                      {/* rc2e.46: dropped the standalone 83% confidence percentage —
+                          the TO CHECK / Trusted pill already conveys that signal. */}
                       {allClean ? (
                         <span style={{fontSize:9,fontWeight:700,color:'var(--teal)',padding:'2px 7px',borderRadius:4,background:'rgba(91,168,160,.08)',whiteSpace:'nowrap'}}>
                           Trusted
@@ -32300,47 +32273,58 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
                     </div>
                   </div>
 
-                  {/* ── v14.1: "WHY FLAGGED?" AMBER STRIP ── */}
+                  {/* ── rc2e.46: CONCERN PILLS (replaces the "Why flagged" bullet wall) ── */}
+                  {/* Each pill = one concern. Click → expands the inline editor list. */}
+                  {/* AI extraction notes go into a single pill with hover tooltip. */}
                   {!allClean && (() => {
-                    const whyReasons = [];
-                    // Collect gate reasons (structural failures)
+                    const pills = [];
+                    // Gate reasons (structural / policy-level concerns)
                     if (item._gateReasons && item._gateReasons.length > 0) {
-                      whyReasons.push(...item._gateReasons);
+                      for (const reason of item._gateReasons) {
+                        pills.push({ kind: 'gate', label: reason, tooltip: reason });
+                      }
                     }
-                    // Collect AI confidence reasons for flagged fields
+                    // Per-field confidence reasons
                     const confReasons = item._extractConfidenceReasons || {};
                     for (const [field, reason] of Object.entries(confReasons)) {
-                      if (field === '_overallQuality') continue; // already covered by gate
-                      if (reason && !whyReasons.includes(reason)) {
-                        const label = FIELD_LABELS[field] || field;
-                        whyReasons.push(label + ': ' + reason);
-                      }
+                      if (field === '_overallQuality') continue; // covered by gate
+                      if (!reason) continue;
+                      const label = FIELD_LABELS[field] || field;
+                      pills.push({ kind: 'field', field, label, tooltip: reason });
                     }
-                    // v14.2: Collect validation warnings from VALIDATE_RULES
+                    // Validation warnings
                     if (item._reviewReasons && item._reviewReasons.length > 0) {
                       for (const rr of item._reviewReasons) {
-                        if (rr && !whyReasons.includes(rr)) whyReasons.push(rr);
+                        if (rr) pills.push({ kind: 'review', label: rr, tooltip: rr });
                       }
                     }
-                    // Add extraction notes if available
+                    // AI extraction notes — single pill with full text in tooltip
                     if (item.extractionNotes) {
-                      whyReasons.push('AI note: ' + item.extractionNotes);
+                      pills.push({ kind: 'note', label: 'AI note', tooltip: item.extractionNotes });
                     }
-                    if (whyReasons.length === 0) return null;
+                    if (pills.length === 0) return null;
+                    const pillStyle = (kind) => {
+                      const c = kind === 'gate' ? 'var(--red)' : kind === 'review' ? 'var(--gold)' : kind === 'note' ? 'var(--text3)' : 'var(--gold)';
+                      return {
+                        fontSize: 9, fontWeight: 600, padding: '2px 7px', borderRadius: 4,
+                        background: kind === 'gate' ? 'rgba(239,83,80,.10)' : kind === 'note' ? 'rgba(255,255,255,.04)' : 'rgba(212,169,106,.12)',
+                        color: c,
+                        border: '1px solid ' + (kind === 'gate' ? 'rgba(239,83,80,.30)' : kind === 'note' ? 'rgba(255,255,255,.10)' : 'rgba(212,169,106,.30)'),
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                        maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis'
+                      };
+                    };
                     return (
-                      <div style={{
-                        marginTop:6, padding:'6px 10px', borderRadius:6,
-                        background:'rgba(212,169,106,.08)',
-                        borderLeft:'3px solid var(--gold)',
-                        fontSize:10, color:'var(--gold)', lineHeight:1.5
-                      }}>
-                        <div style={{fontWeight:700,marginBottom:2}}>⚠ Why flagged:</div>
-                        {whyReasons.map((r, ri) => (
-                          <div key={ri} style={{color:'var(--text3)',paddingLeft:8}}>• {r}</div>
+                      <div style={{display:'flex',flexWrap:'wrap',gap:4,marginTop:6}}>
+                        {pills.map((p, pi) => (
+                          <button key={pi} onClick={(e) => { e.stopPropagation(); openEditor(item._idx); }} title={p.tooltip} style={pillStyle(p.kind)}>
+                            {p.kind === 'note' ? '📝 ' : ''}{p.label}
+                          </button>
                         ))}
-                        {/* v14.4.1 Fix C: Clickable review actions */}
+                        {/* Clickable review-actions (e.g. "Swap sumAssured ↔ payout") */}
                         {item._reviewActions && item._reviewActions.length > 0 && item._reviewActions.map((action, ai) => (
-                          <button key={ai} onClick={(e) => {
+                          <button key={'act'+ai} onClick={(e) => {
                             e.stopPropagation();
                             setItems(prev => prev.map(it => {
                               if (it._idx !== item._idx) return it;
@@ -32348,12 +32332,11 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
                               next[action.toField] = action.fromValue;
                               next[action.fromField] = null;
                               next._reviewActions = (it._reviewActions || []).filter((_, j) => j !== ai);
-                              // Re-run derive + validate
                               try { runDerivePass(next, null); runValidatePass(next, null); } catch(_){}
                               return next;
                             }));
                             try { PolicyDB.putCorrection({ insurer: item.insurer || '', productName: item.productName || '', field: 'sumAssured_payout_swap', aiValue: action.fromValue, correctedValue: 'swapped' }); } catch(_){}
-                          }} style={{display:'block',marginTop:4,padding:'3px 8px',fontSize:10,fontWeight:600,background:'rgba(212,169,106,.15)',color:'var(--gold)',border:'1px solid rgba(212,169,106,.3)',borderRadius:4,cursor:'pointer'}}>
+                          }} style={{...pillStyle('review'), background:'rgba(91,168,160,.10)', color:'var(--teal)', border:'1px solid rgba(91,168,160,.30)'}}>
                             ↻ {action.label}
                           </button>
                         ))}
@@ -32361,12 +32344,12 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
                     );
                   })()}
 
-                  {/* ── BODY: verifiable fields list OR clean message ── */}
+                  {/* ── BODY: clean message OR collapsible inline editor list ── */}
                   {allClean ? (
                     <div style={{marginTop:8,padding:'6px 10px',background:'rgba(91,168,160,.04)',borderRadius:6,fontSize:10,color:'var(--text3)'}}>
                       ✅ All fields look good — {item._extractVerifiedAt ? 'verified' : 'AI extracted with high confidence'}.
                     </div>
-                  ) : (
+                  ) : editorOpenIds.has(item._idx) && (
                     <div style={{marginTop:8}}>
                       {verifiable.map(([field, level]) => {
                         const derivedMeta = item._derived && item._derived[field];
@@ -32438,23 +32421,33 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
                     </div>
                   )}
 
-                  {/* ── FOOTER: action buttons ── */}
-                  <div style={{display:'flex',gap:6,marginTop:8,paddingTop:6,borderTop:'1px solid var(--border)'}}>
+                  {/* ── rc2e.46: FOOTER — full-width "Looks good" primary,
+                       "Edit fields" / "Show all fields" as secondary text-link ── */}
+                  <div style={{marginTop:8,paddingTop:6,borderTop:'1px solid var(--border)'}}>
                     {!allClean && (
                       <button onClick={()=>markVerified(item._idx)} style={{
-                        flex:1,padding:'6px 10px',fontSize:11,fontWeight:600,borderRadius:6,
+                        width:'100%',padding:'7px 10px',fontSize:11,fontWeight:600,borderRadius:6,
                         background:'var(--green2)',color:'#0b0f1a',border:'none',cursor:'pointer'
                       }}>
                         ✓ Looks good
                       </button>
                     )}
-                    <button onClick={()=>toggleExpanded(item._idx)} style={{
-                      flex: allClean ? 1 : '0 0 auto',
-                      padding:'6px 12px',fontSize:11,fontWeight:500,borderRadius:6,
-                      background:'var(--bg2)',color:'var(--text2)',border:'1px solid var(--border)',cursor:'pointer'
-                    }}>
-                      {allClean ? 'Show all fields' : 'Edit full details →'}
-                    </button>
+                    <div style={{display:'flex',gap:10,justifyContent:'center',marginTop: allClean ? 0 : 6}}>
+                      {!allClean && (
+                        <button onClick={()=>toggleEditorOpen(item._idx)} style={{
+                          background:'none',border:'none',padding:'2px 4px',
+                          fontSize:10,color:'var(--text3)',cursor:'pointer',textDecoration:'underline'
+                        }}>
+                          {editorOpenIds.has(item._idx) ? 'Hide fields ↑' : 'Edit fields ↓'}
+                        </button>
+                      )}
+                      <button onClick={()=>toggleExpanded(item._idx)} style={{
+                        background:'none',border:'none',padding:'2px 4px',
+                        fontSize:10,color:'var(--text3)',cursor:'pointer',textDecoration:'underline'
+                      }}>
+                        {allClean ? 'Show all fields →' : 'Edit every field →'}
+                      </button>
+                    </div>
                   </div>
 
                   {/* ── REPO MATCH (if any) ── */}
@@ -32484,8 +32477,8 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
                   {ownerLabel}
                 </div>
               )}
-              {/* Collapse-back button when an expanded card is shown in Quick mode */}
-              {viewMode === 'quick' && item._expanded && (
+              {/* rc2e.46: Collapse-back button when an expanded card is shown */}
+              {item._expanded && (
                 <div style={{marginBottom:6,paddingBottom:6,borderBottom:'1px solid var(--border)'}}>
                   <button onClick={()=>toggleExpanded(item._idx)} style={{fontSize:10,padding:'3px 8px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:4,color:'var(--text2)',cursor:'pointer'}}>← Back to compact</button>
                 </div>

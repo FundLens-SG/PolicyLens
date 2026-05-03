@@ -462,7 +462,7 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.45';
+const APP_VERSION = 'v2.3.0-rc2e.46';
 const APP_VERSION_DATE = '2026-05-03';
 const APP_VERSION_NAME = 'Document-style file icons';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
@@ -12618,11 +12618,11 @@ const dbGet = (store, key) => {
   // Phase 8 polish: AI keys are now provided by the ckg-ai-proxy worker.
   // Stub any geminiKey* / anthropicKey* lookup so the legacy
   // `if (key) {...}` guards in AI callsites always pass.
-  if (store === 'settings' && key && (
-    key === 'geminiKey' || String(key).startsWith('geminiKey_') ||
-    key === 'anthropicKey' || String(key).startsWith('anthropicKey_')
-  )) {
-    return Promise.resolve({ key: key, value: 'proxy' });
+  if (store === 'settings' && key && (key === 'geminiKey' || String(key).startsWith('geminiKey_') || key === 'anthropicKey' || String(key).startsWith('anthropicKey_'))) {
+    return Promise.resolve({
+      key: key,
+      value: 'proxy'
+    });
   }
   return dbOp(store, 'readonly', s => s.get(key));
 };
@@ -42084,26 +42084,28 @@ function BulkVerifyModal({
     return mapped;
   });
   const [activeTab, setActiveTab] = useState('all');
-  // ── QUICK VERIFY VIEW MODE ──
-  // 'quick' = compact card showing only fields the AI flagged as low/medium
-  //           confidence; everything else auto-trusted (the speed mode)
-  // 'full'  = original behaviour, every field editable inline
-  // Persisted in localStorage so the FC's preference sticks across sessions.
-  const [viewMode, setViewMode] = useState(() => {
-    try {
-      const stored = localStorage.getItem('policylens-bulkverify-viewmode');
-      return stored === 'full' ? 'full' : 'quick';
-    } catch (e) {
-      return 'quick';
-    }
-  });
+  // rc2e.46: dropped the global Quick Verify / Full Review toggle — the
+  // modal now always behaves like the old "quick" mode (compact cards,
+  // verifiable fields only). Per-card `_expanded` (toggleExpanded) is the
+  // only escape hatch for FCs who need to edit every field on a single
+  // policy. The localStorage key 'policylens-bulkverify-viewmode' is
+  // intentionally left as-is — pre-existing entries are ignored harmlessly.
   const [showTrusted, setShowTrusted] = useState(false);
-  const setViewModeAndPersist = mode => {
-    setViewMode(mode);
-    try {
-      localStorage.setItem('policylens-bulkverify-viewmode', mode);
-    } catch (e) {}
-  };
+  // rc2e.46: tracks which compact cards have their inline field-editor
+  // list expanded. Defaults to empty — FC sees concern pills + "Looks good"
+  // first, expands fields only when needed (or by clicking a pill).
+  const [editorOpenIds, setEditorOpenIds] = useState(new Set());
+  const toggleEditorOpen = idx => setEditorOpenIds(prev => {
+    const next = new Set(prev);
+    if (next.has(idx)) next.delete(idx);else next.add(idx);
+    return next;
+  });
+  const openEditor = idx => setEditorOpenIds(prev => {
+    if (prev.has(idx)) return prev;
+    const next = new Set(prev);
+    next.add(idx);
+    return next;
+  });
   // ── CONFLICT DETAILS PANEL STATE ──
   // When the FC taps a ⚠️ conflict badge, we surface a small panel
   // showing the field name, the base value, the incoming value that
@@ -42271,14 +42273,13 @@ function BulkVerifyModal({
     };
   }));
 
-  // ── QUICK VERIFY HELPERS ──
-  // viewMode is declared earlier in the component (default 'quick', sticky in
-  // localStorage). The helpers below operate on individual policies inside
-  // the modal:
+  // ── PER-POLICY HELPERS ──
+  // rc2e.46: the global Quick Verify / Full Review toggle was removed.
+  // The modal always behaves like the old "quick" mode now.
   //   markVerified — clears all confidence flags on a policy in one click,
   //                  used by the "Looks good" button. Records timestamp.
   //   toggleExpanded — per-card expand/collapse for switching one card from
-  //                    compact to full-detail without flipping global view.
+  //                    compact to full-detail (the only escape hatch).
 
   // markVerified: clear all confidence flags on a policy in one click.
   // Used by the "Looks good" button on a compact card. Records the timestamp
@@ -42579,7 +42580,7 @@ function BulkVerifyModal({
   };
   const needsReviewCount = items.filter(needsDecisionForItem).length;
   const verifiedCount = items.filter(it => it._extractVerifiedAt || getVerifiableFields(it).length === 0 && it._extractConfidence !== undefined).length;
-  const visibleVerifyItems = viewMode === 'quick' && !showTrusted ? filtered.filter(needsDecisionForItem) : filtered;
+  const visibleVerifyItems = !showTrusted ? filtered.filter(needsDecisionForItem) : filtered;
   const advisorReviewQueue = items.filter(needsDecisionForItem).slice(0, 6);
   const trustedHiddenCount = filtered.length - visibleVerifyItems.length;
   const ownerKeysInView = [...new Set(visibleVerifyItems.map(it => normalizePersonNameKey(ownerKeyForItem(it))).filter(Boolean))];
@@ -42644,7 +42645,7 @@ function BulkVerifyModal({
       color: 'var(--text3)',
       marginTop: 2
     }
-  }, viewMode === 'quick' ? needsReviewCount > 0 ? /*#__PURE__*/React.createElement(React.Fragment, null, "AI extracted ", /*#__PURE__*/React.createElement("strong", {
+  }, needsReviewCount > 0 ? /*#__PURE__*/React.createElement(React.Fragment, null, "AI extracted ", /*#__PURE__*/React.createElement("strong", {
     style: {
       color: 'var(--text2)'
     }
@@ -42660,50 +42661,14 @@ function BulkVerifyModal({
     style: {
       color: 'var(--green2)'
     }
-  }, "All fields high confidence"), " \u2014 review and import.") : /*#__PURE__*/React.createElement(React.Fragment, null, "Review every field on every policy. Uncheck to skip."))), /*#__PURE__*/React.createElement("div", {
+  }, "All fields high confidence"), " \u2014 review and import."))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 8,
       flexShrink: 0
     }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'inline-flex',
-      background: 'var(--bg2)',
-      borderRadius: 8,
-      padding: 2,
-      border: '1px solid var(--border)'
-    }
   }, /*#__PURE__*/React.createElement("button", {
-    onClick: () => setViewModeAndPersist('quick'),
-    style: {
-      padding: '5px 11px',
-      fontSize: 10,
-      fontWeight: 600,
-      borderRadius: 6,
-      border: 'none',
-      cursor: 'pointer',
-      background: viewMode === 'quick' ? 'var(--gold)' : 'transparent',
-      color: viewMode === 'quick' ? 'var(--bg)' : 'var(--text3)',
-      transition: 'all .15s'
-    },
-    title: "Show only fields the AI flagged as low or medium confidence"
-  }, "\u26A1 Quick Verify"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => setViewModeAndPersist('full'),
-    style: {
-      padding: '5px 11px',
-      fontSize: 10,
-      fontWeight: 600,
-      borderRadius: 6,
-      border: 'none',
-      cursor: 'pointer',
-      background: viewMode === 'full' ? 'var(--blue2)' : 'transparent',
-      color: viewMode === 'full' ? '#fff' : 'var(--text3)',
-      transition: 'all .15s'
-    },
-    title: "Show every field for every policy \u2014 original review behaviour"
-  }, "Full Review")), /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -43078,7 +43043,7 @@ function BulkVerifyModal({
         cursor: 'pointer'
       }
     }, it._extractVerifiedAt ? 'Will add' : 'Add new')));
-  }))))), viewMode === 'quick' && /*#__PURE__*/React.createElement("div", {
+  }))))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: 'repeat(auto-fit,minmax(120px,1fr))',
@@ -43369,7 +43334,7 @@ function BulkVerifyModal({
       fontWeight: 700,
       color: 'var(--gold)'
     }
-  }, "\uD83D\uDD04 Possible duplicates detected \u2014 deselected automatically. Re-check to import if needed.")), visibleVerifyItems.length === 0 && viewMode === 'quick' && /*#__PURE__*/React.createElement("div", {
+  }, "\uD83D\uDD04 Possible duplicates detected \u2014 deselected automatically. Re-check to import if needed.")), visibleVerifyItems.length === 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       background: 'rgba(91,168,160,.06)',
       border: '1px solid rgba(91,168,160,.16)',
@@ -43391,13 +43356,13 @@ function BulkVerifyModal({
       marginTop: 4
     }
   }, "All visible extracted policies are trusted. Toggle \"Show trusted\" to inspect them before import.")), visibleVerifyItems.map((item, i) => {
-    // Quick Verify uses the compact card UNLESS:
+    // rc2e.46: compact card is the default UNLESS:
     //   • the FC has manually expanded this card (_expanded), OR
     //   • the card is a duplicate (always show full so the FC can compare), OR
     //   • the policy is missing required header fields entirely (we
     //     fall back to full so the FC can fix everything in one place)
     const hasMinimumHeader = !!(item.productName || item.insurer);
-    const useCompact = viewMode === 'quick' && !item._expanded && !item._dupOf && hasMinimumHeader;
+    const useCompact = !item._expanded && !item._dupOf && hasMinimumHeader;
     const ownerLabel = ownerLabelForItem(item);
     if (useCompact) {
       const verifiable = getVerifiableFields(item);
@@ -43576,14 +43541,14 @@ function BulkVerifyModal({
           color: 'var(--text3)',
           marginTop: 2
         }
-      }, item.subType || item.category || '?', " \xB7 ", item.currency || 'SGD', " ", (parseFloat(item.annualPremium) || 0).toLocaleString(), freqLabel, parseFloat(item.sumAssured) > 0 && ' · SA ' + parseFloat(item.sumAssured).toLocaleString()), /*#__PURE__*/React.createElement("div", {
+      }, item.subType || item.category || '?', " \xB7 ", item.currency || 'SGD', " ", (parseFloat(item.annualPremium) || 0).toLocaleString(), freqLabel, parseFloat(item.sumAssured) > 0 && ' · SA ' + parseFloat(item.sumAssured).toLocaleString()), (policyOwnerDisplay(item) || item.policyNumber || getPolicyAnnualPayout(item) > 0) && /*#__PURE__*/React.createElement("div", {
         style: {
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit,minmax(118px,1fr))',
           gap: 5,
           marginTop: 7
         }
-      }, /*#__PURE__*/React.createElement("div", {
+      }, policyOwnerDisplay(item) && /*#__PURE__*/React.createElement("div", {
         style: {
           fontSize: 9,
           color: 'var(--text3)',
@@ -43596,7 +43561,7 @@ function BulkVerifyModal({
         style: {
           color: 'var(--text2)'
         }
-      }, policyOwnerDisplay(item))), /*#__PURE__*/React.createElement("div", {
+      }, policyOwnerDisplay(item))), item.policyNumber && /*#__PURE__*/React.createElement("div", {
         style: {
           fontSize: 9,
           color: 'var(--text3)',
@@ -43609,7 +43574,7 @@ function BulkVerifyModal({
         style: {
           color: 'var(--text2)'
         }
-      }, item.policyNumber || '-')), getPolicyAnnualPayout(item) > 0 && /*#__PURE__*/React.createElement("div", {
+      }, item.policyNumber)), getPolicyAnnualPayout(item) > 0 && /*#__PURE__*/React.createElement("div", {
         style: {
           fontSize: 9,
           color: 'var(--text3)',
@@ -43629,15 +43594,7 @@ function BulkVerifyModal({
           alignItems: 'center',
           flexShrink: 0
         }
-      }, item._gateScore != null && /*#__PURE__*/React.createElement("span", {
-        style: {
-          fontSize: 8,
-          fontWeight: 600,
-          color: item._gateScore >= 75 ? 'var(--green2)' : 'var(--gold)',
-          whiteSpace: 'nowrap'
-        },
-        title: 'Confidence score: ' + item._gateScore + '%'
-      }, item._gateScore, "%"), allClean ? /*#__PURE__*/React.createElement("span", {
+      }, allClean ? /*#__PURE__*/React.createElement("span", {
         style: {
           fontSize: 9,
           fontWeight: 700,
@@ -43658,55 +43615,83 @@ function BulkVerifyModal({
           whiteSpace: 'nowrap'
         }
       }, verifiable.length, " TO CHECK"))), !allClean && (() => {
-        const whyReasons = [];
-        // Collect gate reasons (structural failures)
+        const pills = [];
+        // Gate reasons (structural / policy-level concerns)
         if (item._gateReasons && item._gateReasons.length > 0) {
-          whyReasons.push(...item._gateReasons);
+          for (const reason of item._gateReasons) {
+            pills.push({
+              kind: 'gate',
+              label: reason,
+              tooltip: reason
+            });
+          }
         }
-        // Collect AI confidence reasons for flagged fields
+        // Per-field confidence reasons
         const confReasons = item._extractConfidenceReasons || {};
         for (const [field, reason] of Object.entries(confReasons)) {
-          if (field === '_overallQuality') continue; // already covered by gate
-          if (reason && !whyReasons.includes(reason)) {
-            const label = FIELD_LABELS[field] || field;
-            whyReasons.push(label + ': ' + reason);
-          }
+          if (field === '_overallQuality') continue; // covered by gate
+          if (!reason) continue;
+          const label = FIELD_LABELS[field] || field;
+          pills.push({
+            kind: 'field',
+            field,
+            label,
+            tooltip: reason
+          });
         }
-        // v14.2: Collect validation warnings from VALIDATE_RULES
+        // Validation warnings
         if (item._reviewReasons && item._reviewReasons.length > 0) {
           for (const rr of item._reviewReasons) {
-            if (rr && !whyReasons.includes(rr)) whyReasons.push(rr);
+            if (rr) pills.push({
+              kind: 'review',
+              label: rr,
+              tooltip: rr
+            });
           }
         }
-        // Add extraction notes if available
+        // AI extraction notes — single pill with full text in tooltip
         if (item.extractionNotes) {
-          whyReasons.push('AI note: ' + item.extractionNotes);
+          pills.push({
+            kind: 'note',
+            label: 'AI note',
+            tooltip: item.extractionNotes
+          });
         }
-        if (whyReasons.length === 0) return null;
+        if (pills.length === 0) return null;
+        const pillStyle = kind => {
+          const c = kind === 'gate' ? 'var(--red)' : kind === 'review' ? 'var(--gold)' : kind === 'note' ? 'var(--text3)' : 'var(--gold)';
+          return {
+            fontSize: 9,
+            fontWeight: 600,
+            padding: '2px 7px',
+            borderRadius: 4,
+            background: kind === 'gate' ? 'rgba(239,83,80,.10)' : kind === 'note' ? 'rgba(255,255,255,.04)' : 'rgba(212,169,106,.12)',
+            color: c,
+            border: '1px solid ' + (kind === 'gate' ? 'rgba(239,83,80,.30)' : kind === 'note' ? 'rgba(255,255,255,.10)' : 'rgba(212,169,106,.30)'),
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
+            maxWidth: 240,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          };
+        };
         return /*#__PURE__*/React.createElement("div", {
           style: {
-            marginTop: 6,
-            padding: '6px 10px',
-            borderRadius: 6,
-            background: 'rgba(212,169,106,.08)',
-            borderLeft: '3px solid var(--gold)',
-            fontSize: 10,
-            color: 'var(--gold)',
-            lineHeight: 1.5
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 4,
+            marginTop: 6
           }
-        }, /*#__PURE__*/React.createElement("div", {
-          style: {
-            fontWeight: 700,
-            marginBottom: 2
-          }
-        }, "\u26A0 Why flagged:"), whyReasons.map((r, ri) => /*#__PURE__*/React.createElement("div", {
-          key: ri,
-          style: {
-            color: 'var(--text3)',
-            paddingLeft: 8
-          }
-        }, "\u2022 ", r)), item._reviewActions && item._reviewActions.length > 0 && item._reviewActions.map((action, ai) => /*#__PURE__*/React.createElement("button", {
-          key: ai,
+        }, pills.map((p, pi) => /*#__PURE__*/React.createElement("button", {
+          key: pi,
+          onClick: e => {
+            e.stopPropagation();
+            openEditor(item._idx);
+          },
+          title: p.tooltip,
+          style: pillStyle(p.kind)
+        }, p.kind === 'note' ? '📝 ' : '', p.label)), item._reviewActions && item._reviewActions.length > 0 && item._reviewActions.map((action, ai) => /*#__PURE__*/React.createElement("button", {
+          key: 'act' + ai,
           onClick: e => {
             e.stopPropagation();
             setItems(prev => prev.map(it => {
@@ -43717,7 +43702,6 @@ function BulkVerifyModal({
               next[action.toField] = action.fromValue;
               next[action.fromField] = null;
               next._reviewActions = (it._reviewActions || []).filter((_, j) => j !== ai);
-              // Re-run derive + validate
               try {
                 runDerivePass(next, null);
                 runValidatePass(next, null);
@@ -43735,16 +43719,10 @@ function BulkVerifyModal({
             } catch (_) {}
           },
           style: {
-            display: 'block',
-            marginTop: 4,
-            padding: '3px 8px',
-            fontSize: 10,
-            fontWeight: 600,
-            background: 'rgba(212,169,106,.15)',
-            color: 'var(--gold)',
-            border: '1px solid rgba(212,169,106,.3)',
-            borderRadius: 4,
-            cursor: 'pointer'
+            ...pillStyle('review'),
+            background: 'rgba(91,168,160,.10)',
+            color: 'var(--teal)',
+            border: '1px solid rgba(91,168,160,.30)'
           }
         }, "\u21BB ", action.label)));
       })(), allClean ? /*#__PURE__*/React.createElement("div", {
@@ -43756,7 +43734,7 @@ function BulkVerifyModal({
           fontSize: 10,
           color: 'var(--text3)'
         }
-      }, "\u2705 All fields look good \u2014 ", item._extractVerifiedAt ? 'verified' : 'AI extracted with high confidence', ".") : /*#__PURE__*/React.createElement("div", {
+      }, "\u2705 All fields look good \u2014 ", item._extractVerifiedAt ? 'verified' : 'AI extracted with high confidence', ".") : editorOpenIds.has(item._idx) && /*#__PURE__*/React.createElement("div", {
         style: {
           marginTop: 8
         }
@@ -43909,8 +43887,6 @@ function BulkVerifyModal({
         other: 'Other'
       }[rd.type] || rd.type, " $", (+rd.sa || 0).toLocaleString()))), /*#__PURE__*/React.createElement("div", {
         style: {
-          display: 'flex',
-          gap: 6,
           marginTop: 8,
           paddingTop: 6,
           borderTop: '1px solid var(--border)'
@@ -43918,8 +43894,8 @@ function BulkVerifyModal({
       }, !allClean && /*#__PURE__*/React.createElement("button", {
         onClick: () => markVerified(item._idx),
         style: {
-          flex: 1,
-          padding: '6px 10px',
+          width: '100%',
+          padding: '7px 10px',
           fontSize: 11,
           fontWeight: 600,
           borderRadius: 6,
@@ -43928,20 +43904,36 @@ function BulkVerifyModal({
           border: 'none',
           cursor: 'pointer'
         }
-      }, "\u2713 Looks good"), /*#__PURE__*/React.createElement("button", {
+      }, "\u2713 Looks good"), /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: 'flex',
+          gap: 10,
+          justifyContent: 'center',
+          marginTop: allClean ? 0 : 6
+        }
+      }, !allClean && /*#__PURE__*/React.createElement("button", {
+        onClick: () => toggleEditorOpen(item._idx),
+        style: {
+          background: 'none',
+          border: 'none',
+          padding: '2px 4px',
+          fontSize: 10,
+          color: 'var(--text3)',
+          cursor: 'pointer',
+          textDecoration: 'underline'
+        }
+      }, editorOpenIds.has(item._idx) ? 'Hide fields ↑' : 'Edit fields ↓'), /*#__PURE__*/React.createElement("button", {
         onClick: () => toggleExpanded(item._idx),
         style: {
-          flex: allClean ? 1 : '0 0 auto',
-          padding: '6px 12px',
-          fontSize: 11,
-          fontWeight: 500,
-          borderRadius: 6,
-          background: 'var(--bg2)',
-          color: 'var(--text2)',
-          border: '1px solid var(--border)',
-          cursor: 'pointer'
+          background: 'none',
+          border: 'none',
+          padding: '2px 4px',
+          fontSize: 10,
+          color: 'var(--text3)',
+          cursor: 'pointer',
+          textDecoration: 'underline'
         }
-      }, allClean ? 'Show all fields' : 'Edit full details →')), item._repoMatch && !item._appliedRepo && /*#__PURE__*/React.createElement("div", {
+      }, allClean ? 'Show all fields →' : 'Edit every field →'))), item._repoMatch && !item._appliedRepo && /*#__PURE__*/React.createElement("div", {
         style: {
           marginTop: 6,
           padding: '4px 8px',
@@ -44020,7 +44012,7 @@ function BulkVerifyModal({
         padding: '5px 8px',
         marginBottom: 8
       }
-    }, ownerLabel), viewMode === 'quick' && item._expanded && /*#__PURE__*/React.createElement("div", {
+    }, ownerLabel), item._expanded && /*#__PURE__*/React.createElement("div", {
       style: {
         marginBottom: 6,
         paddingBottom: 6,
@@ -65514,7 +65506,7 @@ function Settings() {
       color: 'var(--text3)',
       marginBottom: 12
     }
-  }, "AI inference (Gemini + Claude) is provided by CKG. No key entry needed \u2014 every signed-in user gets AI for free."), false && /*#__PURE__*/React.createElement("label", {
+  }, "AI inference (Gemini + Claude) is provided by CKG. No key entry needed \u2014 every signed-in user gets AI for free."), false && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("label", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -65544,7 +65536,7 @@ function Settings() {
     style: {
       color: 'var(--text3)'
     }
-  }, "(off keeps keys local to this device)"))), false && /*#__PURE__*/React.createElement("div", {
+  }, "(off keeps keys local to this device)"))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 10,
       background: 'var(--bg3)',
@@ -65659,7 +65651,7 @@ function Settings() {
     style: {
       color: '#4285f4'
     }
-  }, "aistudio.google.com"), " \u2192 Create API key. 1,500 free req/day.")), false && /*#__PURE__*/React.createElement("div", {
+  }, "aistudio.google.com"), " \u2192 Create API key. 1,500 free req/day.")), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 10,
       background: 'var(--bg3)',
@@ -65778,7 +65770,7 @@ function Settings() {
     style: {
       color: '#d97706'
     }
-  }, "console.anthropic.com"), " \u2192 Create Key \u2192 copy FULL key (~130 chars). ~$0.003/scan.")), /*#__PURE__*/React.createElement("div", {
+  }, "console.anthropic.com"), " \u2192 Create Key \u2192 copy FULL key (~130 chars). ~$0.003/scan."))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 10,
       background: 'var(--bg3)',
