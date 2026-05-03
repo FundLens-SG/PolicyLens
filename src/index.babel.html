@@ -664,7 +664,7 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.43';
+const APP_VERSION = 'v2.3.0-rc2e.44';
 const APP_VERSION_DATE = '2026-05-03';
 const APP_VERSION_NAME = 'Document-style file icons';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
@@ -37919,16 +37919,32 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
           const hasFI = fiItems.length > 0;
           const hasOther = otherItems.length > 0;
 
+          // rc2e.44: Single source of truth for policy badge codes.
+          // SV → CV (Cash Value), T → TPD, E → ECI per CK feedback +
+          // PA / WP added for Personal Accident and Waiver of Premium
+          // riders that previously had no chip.
+          const POLICY_BADGES = [
+            { code: 'D',   color: '#5b8fd9', label: 'Death Benefit' },
+            { code: 'TPD', color: '#9d8abf', label: 'Total & Permanent Disability' },
+            { code: 'CI',  color: '#c97b9a', label: 'Critical Illness' },
+            { code: 'ECI', color: '#d4a96a', label: 'Early Critical Illness' },
+            { code: 'DI',  color: '#5ba8a0', label: 'Disability Income' },
+            { code: 'PA',  color: '#e8a87c', label: 'Personal Accident' },
+            { code: 'WP',  color: '#a3b8a3', label: 'Waiver of Premium' },
+            { code: 'CV',  color: '#d4a96a', label: 'Cash Value' }
+          ];
           // Benefit icons renderer
           const benIcons = (p) => {
             const bens = [];
             const rds = p.riders||[];
             if(rds.some(r=>r.type==='death'&&parseFloat(r.sa)>0)||(p.category==='protection'&&parseFloat(p.sumAssured)>0)) bens.push({l:'D',c:'#5b8fd9'});
-            if(rds.some(r=>r.type==='tpd'&&parseFloat(r.sa)>0)) bens.push({l:'T',c:'#9d8abf'});
+            if(rds.some(r=>r.type==='tpd'&&parseFloat(r.sa)>0)) bens.push({l:'TPD',c:'#9d8abf'});
             if(rds.some(r=>r.type==='ci'&&parseFloat(r.sa)>0)||p.subType==='Critical Illness') bens.push({l:'CI',c:'#c97b9a'});
-            if(rds.some(r=>r.type==='eci'&&parseFloat(r.sa)>0)) bens.push({l:'E',c:'#d4a96a'});
+            if(rds.some(r=>r.type==='eci'&&parseFloat(r.sa)>0)) bens.push({l:'ECI',c:'#d4a96a'});
             if(rds.some(r=>r.type==='di'&&parseFloat(r.sa)>0)||p.subType==='Disability Income') bens.push({l:'DI',c:'#5ba8a0'});
-            if(parseFloat(p.cashValue)>0||['Whole Life','Universal Life (UL)','Indexed UL (IUL)','Variable UL (VUL)'].includes(p.subType)||p.category==='savings'||p.category==='investment'||p.category==='retirement') bens.push({l:'SV',c:'#d4a96a'});
+            if(rds.some(r=>r.type==='accidental'&&parseFloat(r.sa)>0)||p.subType==='Personal Accident') bens.push({l:'PA',c:'#e8a87c'});
+            if(rds.some(r=>r.type==='premium_waiver')) bens.push({l:'WP',c:'#a3b8a3'});
+            if(parseFloat(p.cashValue)>0||['Whole Life','Universal Life (UL)','Indexed UL (IUL)','Variable UL (VUL)'].includes(p.subType)||p.category==='savings'||p.category==='investment'||p.category==='retirement') bens.push({l:'CV',c:'#d4a96a'});
             return bens;
           };
 
@@ -37948,6 +37964,16 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
           const actions = (p) => <div style={{display:'flex',gap:4}}><button className="btn-secondary btn-sm" onClick={()=>{setEditing(p);setTimeout(()=>setShowForm(true),50)}}>Edit</button><button className="btn-danger btn-sm" onClick={()=>{if(confirm('Delete?'))deletePolicy(p.id)}}>×</button></div>;
 
           return (<>
+            {/* rc2e.44: Badge legend — explains the chip codes shown on each policy row. */}
+            <div style={{display:'flex',flexWrap:'wrap',alignItems:'center',gap:10,padding:'8px 12px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:8,marginBottom:12,fontSize:10}}>
+              <span style={{color:'var(--text3)',fontWeight:600,marginRight:4}}>Badges:</span>
+              {POLICY_BADGES.map(b => (
+                <span key={b.code} style={{display:'inline-flex',alignItems:'center',gap:5}}>
+                  <span style={{display:'inline-block',padding:'1px 6px',background:b.color+'22',color:b.color,borderRadius:4,fontWeight:700,fontSize:9,lineHeight:1.4}}>{b.code}</span>
+                  <span style={{color:'var(--text2)'}}>{b.label}</span>
+                </span>
+              ))}
+            </div>
             {/* ═══ INSURANCE ═══ */}
             {hasInsurance && (<>
               <div style={{display:'flex',alignItems:'center',gap:10,margin:'8px 0 6px'}}>
