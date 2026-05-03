@@ -664,7 +664,7 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.38';
+const APP_VERSION = 'v2.3.0-rc2e.39';
 const APP_VERSION_DATE = '2026-05-03';
 const APP_VERSION_NAME = 'Document-style file icons';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
@@ -5116,7 +5116,7 @@ async function pdfToImages(pdfDoc, maxPages=12) {
 // CLEAN even if the FC never actually reviewed anything. Bumping the version
 // forces a re-extraction next time those same files are uploaded, and the
 // one-time cleanup in App init purges the stale entries from IndexedDB.
-const EXTRACT_PIPELINE_VERSION = 'v15.22-2026-05-03-vivolife-greatsp-status';
+const EXTRACT_PIPELINE_VERSION = 'v15.23-2026-05-03-srs-payment-method';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -9564,6 +9564,32 @@ function applyColumnMap(rows, columnMap, categoryColumn) {
         }
       }
     }
+    // rc2e.39: Auto-detect payment method from product name. Mirrors
+    // the AI prompt's PAYMENT METHODS rules (line ~33382). FCs label
+    // SRS positions as "Manulink Investor (II)-SRS" or "FSSA Dividend
+    // Advantage (SRS)" — the local extractor previously left payment
+    // method blank for these.
+    if (!policy.paymentMethod) {
+      const t = String(policy.productName || '');
+      let pm = '';
+      if (/\bSRS\b/i.test(t))                                     pm = 'SRS';
+      else if (/CPFIS[-\s]*OA|CPF\s*OA|CPF\s*Ordinary/i.test(t))  pm = 'CPF OA';
+      else if (/CPFIS[-\s]*SA|CPF\s*SA|CPF\s*Special/i.test(t))   pm = 'CPF SA';
+      else if (/MediSave/i.test(t))                                pm = 'MediSave';
+      if (pm) {
+        policy.paymentMethod = pm;
+        confidence.push({ field: 'paymentMethod', level: 'high', reason: 'Payment method derived from product name marker (' + pm + ')' });
+      }
+    }
+    // rc2e.39: SRS positions are almost always single-premium top-ups
+    // (you accumulate SRS contributions then deploy in lump sums).
+    // Default to Single Premium when no explicit frequency was read.
+    if (policy.paymentMethod === 'SRS' && (!policy.premFrequency || policy.premFrequency === 'unknown')) {
+      policy.premFrequency = 'single';
+      policy.premSingle = true;
+      policy.premiumStructure = 'Single Premium';
+      confidence.push({ field: 'premFrequency', level: 'medium', reason: 'SRS investment defaulted to Single Premium — verify if this is a recurring drip' });
+    }
     if (!policy.premFrequency && (policy.premiumAmount != null || policy.annualPremium != null)) {
       const headerFrequency = normalizeXlsxPremiumFrequency(policy._premiumColumnName || '');
       policy.premFrequency = headerFrequency || 'unknown';
@@ -9571,14 +9597,15 @@ function applyColumnMap(rows, columnMap, categoryColumn) {
     }
     if (policy.premiumAmount != null && policy.annualPremium == null) policy.annualPremium = policy.premiumAmount;
     if (policy.annualPremium != null && policy.premiumAmount == null) policy.premiumAmount = policy.annualPremium;
-    // rc2e.37: For SRS unit trusts and other single-premium investments
-    // the spreadsheet's "Premium Amount" column IS the AUM/principal —
-    // there's no separate Cash Value column. Mirror it so the policy
-    // doesn't display $0 next to the $30k premium. ILP wrappers
-    // (InvestReady / Manulink) excluded per CK direction because their
-    // actual cash value diverges from premium paid (fund performance +
-    // charges). FD subType excluded because applyFdColumnMap already
-    // mirrors fdPrincipal → cashValue + sumAssured.
+    // rc2e.37/39: For SRS unit trusts and other single-premium
+    // investments the spreadsheet's "Premium Amount" column IS the
+    // AUM/principal — mirror it to cashValue so the policy doesn't
+    // display $0 next to the $30k premium. ILP wrappers excluded
+    // because their actual cash value diverges from premium paid.
+    // rc2e.39: do NOT mirror to sumAssured — sum assured is an
+    // insurance concept, nonsensical for unit trusts and other
+    // pure investment products. The FD applier owns its own
+    // mirror and is unchanged.
     {
       const subTypeStr = String(policy.subType || '');
       const eligibleByType =
@@ -9587,12 +9614,9 @@ function applyColumnMap(rows, columnMap, categoryColumn) {
         (policy.category === 'cash_investments' && subTypeStr !== 'Fixed Deposit');
       const principal = parseFloat(policy.premiumAmount);
       const noCash = !policy.cashValue || parseFloat(policy.cashValue) === 0;
-      const noSA = !policy.sumAssured || parseFloat(policy.sumAssured) === 0;
-      if (eligibleByType && principal > 0 && noCash && noSA) {
+      if (eligibleByType && principal > 0 && noCash) {
         policy.cashValue = principal;
-        policy.sumAssured = principal;
         confidence.push({ field: 'cashValue', level: 'medium', reason: 'Mirrored from premium amount — single-premium investment uses principal as AUM' });
-        confidence.push({ field: 'sumAssured', level: 'medium', reason: 'Mirrored from premium amount — investment principal stand-in (no separate sum-assured column)' });
       }
     }
     if (!policy.insurer) {
