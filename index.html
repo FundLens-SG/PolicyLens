@@ -674,7 +674,7 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.39';
+const APP_VERSION = 'v2.3.0-rc2e.40';
 const APP_VERSION_DATE = '2026-05-03';
 const APP_VERSION_NAME = 'Document-style file icons';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
@@ -4347,7 +4347,7 @@ async function pdfToImages(pdfDoc, maxPages = 12) {
 // CLEAN even if the FC never actually reviewed anything. Bumping the version
 // forces a re-extraction next time those same files are uploaded, and the
 // one-time cleanup in App init purges the stale entries from IndexedDB.
-const EXTRACT_PIPELINE_VERSION = 'v15.23-2026-05-03-srs-payment-method';
+const EXTRACT_PIPELINE_VERSION = 'v15.24-2026-05-03-iso-dates-premterm';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -8605,6 +8605,21 @@ function enrichSpreadsheetPolicyCandidate(policy, context = {}) {
   }
   const repoMatch = matchRepoForPolicy(next, repoList) || matchRepoForPolicyLoose(next, repoList);
   if (repoMatch && repoMatch.score >= 0.90) applyHighConfidenceRepoMatchToPolicy(next, repoMatch, 'spreadsheet-repo-match');
+  // rc2e.40: Final premTerm fallback — parse repo notes when name and
+  // date math both came up empty. Conservative regex inside the helper
+  // skips ambiguous "10/15/20yr" lists.
+  if (!next.premTerm && !next.premSingle && repoMatch?.repo?.notes) {
+    const fromNotes = inferPremiumTermFromRepoNotes(repoMatch.repo.notes);
+    if (fromNotes && fromNotes > 0 && fromNotes <= 99) {
+      next.premTerm = fromNotes;
+      next._confidence = Array.isArray(next._confidence) ? next._confidence : [];
+      next._confidence.push({
+        field: 'premTerm',
+        level: 'medium',
+        reason: 'Premium term parsed from repository notes (' + repoMatch.repo.productName + ')'
+      });
+    }
+  }
   next.category = normalizeXlsxStorageCategory(next.category) || next.category;
   if (isSpreadsheetNonPolicyRow(next)) return null;
   attachXlsxSourceEvidence(next, fileName);
@@ -9422,6 +9437,12 @@ function applyColumnMap(rows, columnMap, categoryColumn) {
         policy.premTerm = isNaN(num) ? 0 : num;
       } else if (targetField === 'premFrequency') {
         policy.premFrequency = normalizeXlsxPremiumFrequency(val) || String(val).trim();
+      } else if (targetField === 'inceptionDate' || targetField === 'maturityDate' || targetField === 'premiumEndDate') {
+        // rc2e.40: route dates through the same loose-ISO converter the
+        // FD applier uses, so HTML date inputs (YYYY-MM-DD) parse them.
+        // Falls back to raw string if the date can't be parsed.
+        const iso = _toIsoDateLoose(val);
+        policy[targetField] = iso || String(val).trim();
       } else {
         policy[targetField] = String(val).trim();
       }
@@ -9539,6 +9560,38 @@ function applyColumnMap(rows, columnMap, categoryColumn) {
     }
     if (policy.premiumAmount != null && policy.annualPremium == null) policy.annualPremium = policy.premiumAmount;
     if (policy.annualPremium != null && policy.premiumAmount == null) policy.premiumAmount = policy.annualPremium;
+    // rc2e.40: derive premium term when not explicitly read from XLSX.
+    // Skip single-premium products (premTerm doesn't apply: one payment).
+    // 1) Try to parse it out of the product name (highest signal).
+    // 2) Fall back to date math (premiumEndDate - inceptionDate, both ISO).
+    // 3) Repository fuzzy-match fallback runs later in
+    //    enrichSpreadsheetPolicyCandidate where SEED_REPOSITORY is in scope.
+    if (!policy.premTerm && !policy.premSingle) {
+      const fromName = inferPremiumTermFromProductName(policy.productName || '');
+      if (fromName?.premTerm) {
+        policy.premTerm = fromName.premTerm;
+        confidence.push({
+          field: 'premTerm',
+          level: 'high',
+          reason: 'Premium term parsed from product name (' + fromName.reason + ')'
+        });
+        if (fromName.policyTerm && !policy.policyTerm) policy.policyTerm = fromName.policyTerm;
+      } else if (policy.inceptionDate && policy.premiumEndDate) {
+        const a = new Date(policy.inceptionDate);
+        const b = new Date(policy.premiumEndDate);
+        if (!isNaN(a.getTime()) && !isNaN(b.getTime()) && b.getTime() > a.getTime()) {
+          const yrs = Math.round((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24 * 365.25));
+          if (yrs > 0 && yrs <= 99) {
+            policy.premTerm = yrs;
+            confidence.push({
+              field: 'premTerm',
+              level: 'medium',
+              reason: 'Premium term derived from date span (premium end − inception)'
+            });
+          }
+        }
+      }
+    }
     // rc2e.37/39: For SRS unit trusts and other single-premium
     // investments the spreadsheet's "Premium Amount" column IS the
     // AUM/principal — mirror it to cashValue so the policy doesn't
@@ -9630,6 +9683,64 @@ function _normalizePolicyStatus(rawStatus) {
   if (/surrender/.test(s)) return 'surrendered';
   if (/matured|maturity/.test(s)) return 'matured';
   return s;
+}
+// rc2e.40: Derive premium term (and optionally policy term) from
+// product naming conventions FCs use in spreadsheets, e.g.
+//   "INVESTREADY (III) 13 YRS FLEXI 10"  → policyTerm 13, premTerm 10
+//   "Manulife InvestReady Growth - 15 Years Flexi 10" → 15 / 10
+//   "LifeReady 25 Pay" / "Lifetime 10-Pay" → premTerm only
+//   "Limited Pay 20" → premTerm 20
+//   "ILP MIP 15yr" → premTerm 15 (Minimum Investment Period)
+// Returns null if no pattern matches. Patterns require explicit
+// keywords (Pay / Flexi / Limited Pay / MIP) so a bare "Term 20" or
+// "20-year endowment" doesn't false-fire.
+function inferPremiumTermFromProductName(name) {
+  const t = String(name || '');
+  if (!t) return null;
+  let m = t.match(/\b(\d{1,3})\s*(?:yrs?|years?)\s*flexi\s*(\d{1,3})\b/i);
+  if (m) return {
+    premTerm: parseInt(m[2], 10),
+    policyTerm: parseInt(m[1], 10),
+    reason: 'X YRS FLEXI Y pattern'
+  };
+  m = t.match(/\bflexi\s*(\d{1,3})\b/i);
+  if (m) return {
+    premTerm: parseInt(m[1], 10),
+    reason: 'Flexi N pattern'
+  };
+  m = t.match(/\b(\d{1,3})[-\s]*(?:year[s]?\s+)?pay\b/i);
+  if (m) return {
+    premTerm: parseInt(m[1], 10),
+    reason: 'N Pay pattern'
+  };
+  m = t.match(/\blimited\s*pay\s*(\d{1,3})\b/i);
+  if (m) return {
+    premTerm: parseInt(m[1], 10),
+    reason: 'Limited Pay N pattern'
+  };
+  m = t.match(/\bmip\s*(\d{1,3})\s*(?:yr|year)/i);
+  if (m) return {
+    premTerm: parseInt(m[1], 10),
+    reason: 'MIP Nyr pattern'
+  };
+  return null;
+}
+// rc2e.40: Parse premium-term hints out of repository notes free-text.
+// Conservative: only match unambiguous singular patterns. A note like
+// "Limited pay 10/15/20/25yr" (multiple options) returns null because
+// we can't pick one without guessing.
+function inferPremiumTermFromRepoNotes(notes) {
+  const t = String(notes || '');
+  if (!t) return null;
+  // Skip notes that list multiple terms (ambiguous)
+  if (/\b\d+\s*\/\s*\d+\s*\/\s*\d+/.test(t)) return null;
+  let m = t.match(/\bMIP\s*(\d{1,3})[-\s]*yr/i);
+  if (m) return parseInt(m[1], 10);
+  m = t.match(/\b(\d{1,3})[-\s]*year\s*pay\b/i);
+  if (m) return parseInt(m[1], 10);
+  m = t.match(/\blimited\s*pay\s*(\d{1,3})\s*yr\b/i);
+  if (m) return parseInt(m[1], 10);
+  return null;
 }
 function applyFdColumnMap(rows, fdColumnMap, sectionLabel = '') {
   const policies = [];
