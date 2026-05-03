@@ -452,7 +452,7 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.53';
+const APP_VERSION = 'v2.3.0-rc2e.54';
 const APP_VERSION_DATE = '2026-05-03';
 const APP_VERSION_NAME = 'Document-style file icons';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
@@ -14267,22 +14267,22 @@ const driveLSDel = (k) => { try { localStorage.removeItem(k); } catch (_) {} };
 // v2.2.0-rc1.11: Backend-mediated auth flow is now universal (flag removed).
 // Previously gated behind localStorage policylens_drive_backend_dev flag.
 
-// Default Local-only mode flipped from ON to OFF in rc2e.51 (the long-
-// promised "Phase C" flip from v2.1.0-rc). Fresh browsers now default to
-// "wants Drive sync" — but that doesn't trigger any silent uploads:
-// Drive still requires OAuth before _driveAccessToken is non-null.
-// Existing users with an explicit setting (`'1'` or `'0'` in localStorage)
-// are unchanged. Existing users with no explicit setting flip to
-// wants-sync; the rc2e.51 DriveSyncPromptModal nudges them to actually
-// connect when they have data.
+// rc2e.54 Option C Phase 2 cleanup: local-only mode is gone. Drive is
+// mandatory for client data (the Supabase carve-out is preserved for
+// app-level settings only). isDriveLocalOnly is kept callable for
+// backward-compat with vestigial callers but always returns false. The
+// LocalOnlyMigrationModal handles the one-time transition for legacy
+// users with localOnlyMode='1' still in localStorage. setDriveLocalOnly
+// is kept callable but no longer reads/writes the legacy flag (no-op,
+// only the migration flow touches DRIVE_LS.localOnlyMode directly).
 function isDriveLocalOnly() {
-  const v = driveLSGet(DRIVE_LS.localOnlyMode);
-  if (v === '0') return false;
-  if (v === '1') return true;
-  return false; // rc2e.51: default OFF (wants Drive sync)
+  return false;
 }
-function setDriveLocalOnly(on) {
-  driveLSSet(DRIVE_LS.localOnlyMode, on ? '1' : '0');
+function setDriveLocalOnly(_on) {
+  // no-op — local-only mode retired in rc2e.54. The migration modal
+  // is the only path that touches DRIVE_LS.localOnlyMode (to clear the
+  // legacy flag after Connect). No setter callers should rely on this
+  // having any side effect.
 }
 
 // Drive access tokens are ephemeral — never persisted client-side.
@@ -26774,6 +26774,49 @@ function DriveSyncPromptModal({ open, onSkip, onConnect }) {
     </div>
   );
 }
+// rc2e.54 Option C Phase 2: Migration modal for existing local-only users.
+// Fires once per user when their localStorage holds the legacy
+// localOnlyMode='1' opt-out. Offers Connect (recommended) and Export-then-
+// connect paths. Backdrop click disabled — same no-soft-dismiss pattern as
+// rc2e.53 DriveSyncPromptModal.
+const LOCAL_MIGRATION_DONE_KEY = 'policylens_local_migration_done';
+function LocalOnlyMigrationModal({ open, onConnect, onExport, hasExported }) {
+  if (!open) return null;
+  const modalBg = {position:'fixed',inset:0,zIndex:10001,background:'rgba(0,0,0,.78)',display:'flex',alignItems:'center',justifyContent:'center',padding:16};
+  const modalBox = {background:'#1a2332',borderRadius:16,border:'1px solid rgba(212,169,106,.4)',maxWidth:480,width:'100%',padding:24,boxShadow:'0 20px 60px rgba(0,0,0,.5)'};
+  return (
+    <div style={modalBg}>
+      <div style={modalBox}>
+        <h2 style={{fontSize:16,fontWeight:700,color:'#e8e8e8',margin:'0 0 8px',display:'flex',alignItems:'center',gap:8}}>
+          <span style={{fontSize:20}}>🔒</span>
+          Drive sync is now required
+        </h2>
+        <p style={{fontSize:12,color:'var(--text3)',marginBottom:14,lineHeight:1.55}}>
+          PolicyLens used to support a local-only mode where your data stayed on this device. That mode is being retired — your client data needs to live in your own Google Drive going forward (privacy + cross-device + backup).
+        </p>
+        {hasExported && (
+          <div style={{fontSize:11,color:'var(--teal)',marginBottom:14,padding:'8px 10px',background:'rgba(91,168,160,.08)',border:'1px solid rgba(91,168,160,.25)',borderRadius:6}}>
+            ✓ Local backup downloaded. Now connect Drive to keep using PolicyLens.
+          </div>
+        )}
+        <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:8}}>
+          <button onClick={onConnect} style={{background:'var(--teal)',color:'#0b0f1a',border:'none',borderRadius:8,padding:'12px 16px',fontSize:13,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+            → Connect Google Drive
+            <span style={{fontSize:9,fontWeight:500,opacity:.75}}>recommended</span>
+          </button>
+          {!hasExported && (
+            <button onClick={onExport} style={{background:'transparent',color:'var(--text2)',border:'1px solid var(--border2)',borderRadius:8,padding:'10px 16px',fontSize:11,cursor:'pointer'}}>
+              📥 Export my data first (JSON download)
+            </button>
+          )}
+        </div>
+        <p style={{fontSize:10,color:'var(--text3)',marginTop:14,textAlign:'center'}}>
+          Need help? Contact <a href="mailto:support@ckgtools.com" style={{color:'var(--gold)'}}>support@ckgtools.com</a>
+        </p>
+      </div>
+    </div>
+  );
+}
 function FoundInDriveReviewModal({ open, found, onClose, onApply }) {
   const [choices, setChoices] = useState({});
   const [confirms, setConfirms] = useState({});
@@ -33003,6 +33046,12 @@ function Policies() {
   // per 7 days when user is signed in + has data + Drive disconnected.
   const [driveSyncPromptOpen, setDriveSyncPromptOpen] = useState(false);
   const driveSyncPromptCheckedRef = useRef(false);
+  // rc2e.54: hard migration modal for legacy local-only users. Fires when
+  // user is signed in AND localStorage holds the legacy localOnlyMode='1'
+  // opt-out AND migration not yet completed. Mandatory — no soft dismiss.
+  const [legacyMigrationOpen, setLegacyMigrationOpen] = useState(false);
+  const [legacyMigrationExported, setLegacyMigrationExported] = useState(false);
+  const legacyMigrationCheckedRef = useRef(false);
   const [newClientModalOpen, setNewClientModalOpen] = useState(false);
   const [newClientData, setNewClientData] = useState({allStates:[],allPolicies:[]});
   const pendingNewClientRoutesRef = useRef([]);
@@ -33019,7 +33068,7 @@ function Policies() {
     driveSyncPromptCheckedRef.current = true;
     try {
       if (!window._user?.id) return; // not signed in
-      if (driveClient.isLocalOnly()) return; // user explicitly opted out before — respect it
+      if (driveLSGet(DRIVE_LS.localOnlyMode) === '1') return; // legacy local-only user — handled by migration modal below
       if (driveClient.getStatus() === 'connected') return; // already on Drive
       const dismissedAt = parseInt(driveLSGet(DRIVE_PROMPT_DISMISS_KEY) || '0', 10);
       if (dismissedAt && (Date.now() - dismissedAt) < DRIVE_PROMPT_DISMISS_MS) return;
@@ -33027,6 +33076,21 @@ function Policies() {
       setTimeout(() => setDriveSyncPromptOpen(true), 1500);
     } catch(_){}
   }, [policies?.length]);
+
+  // rc2e.54: Mandatory migration modal for legacy localOnlyMode='1' users.
+  // Reads the raw localStorage flag (not isDriveLocalOnly which now always
+  // returns false post-cleanup). Fires once per mount via ref guard.
+  useEffect(() => {
+    if (legacyMigrationCheckedRef.current) return;
+    legacyMigrationCheckedRef.current = true;
+    try {
+      if (!window._user?.id) return;
+      if (driveLSGet(DRIVE_LS.localOnlyMode) !== '1') return; // not a legacy user
+      if (driveLSGet(LOCAL_MIGRATION_DONE_KEY) === '1') return; // already migrated
+      // Open immediately on mount — no settle delay; this is mandatory
+      setLegacyMigrationOpen(true);
+    } catch(_){}
+  }, []);
 
   const openNextOwnerRouteNewClient = async (queue) => {
     if (Array.isArray(queue)) pendingNewClientRoutesRef.current = [...queue];
@@ -37907,6 +37971,20 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
         }}
         onConnect={() => {
           try { driveClient.setLocalOnly(false); } catch(_){}
+          // Bounce to ckgtools-admin OAuth — same path as Settings handleConnect
+          window.location.href = '/';
+        }}
+      />
+      {/* rc2e.54: Hard migration modal for legacy localOnlyMode='1' users. */}
+      <LocalOnlyMigrationModal
+        open={legacyMigrationOpen}
+        hasExported={legacyMigrationExported}
+        onExport={() => {
+          try { doLocalSave(clientProfile, clientName, policies); setLegacyMigrationExported(true); } catch(e) { try { toast('Export failed: ' + (e.message||e), 'error', 5000); } catch(_){} }
+        }}
+        onConnect={() => {
+          try { driveLSSet(DRIVE_LS.localOnlyMode, '0'); } catch(_){}
+          try { driveLSSet(LOCAL_MIGRATION_DONE_KEY, '1'); } catch(_){}
           // Bounce to ckgtools-admin OAuth — same path as Settings handleConnect
           window.location.href = '/';
         }}
