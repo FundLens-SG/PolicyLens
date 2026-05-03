@@ -452,7 +452,7 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.49';
+const APP_VERSION = 'v2.3.0-rc2e.50';
 const APP_VERSION_DATE = '2026-05-03';
 const APP_VERSION_NAME = 'Document-style file icons';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
@@ -45127,6 +45127,16 @@ function Settings() {
         <PdfPasswordEditor />
       </div>
 
+      {/* rc2e.50: Six debug/diagnostics cards (Scan Cache, Extraction Queue,
+          Extraction Diagnostics, Correction Memory, Learned Patterns, Pipeline
+          Telemetry) collapsed under one Advanced disclosure. Default closed
+          so daily-use Settings stays clean for the FC; one click reveals all
+          tools intact for troubleshooting. */}
+      <details style={{marginBottom:16,background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:8}}>
+        <summary style={{cursor:'pointer',padding:'10px 14px',fontSize:12,fontWeight:600,color:'var(--text2)',userSelect:'none'}}>
+          Advanced (debug tools — for troubleshooting)
+        </summary>
+        <div style={{padding:'4px 12px 12px'}}>
       {/* ═══ EXTRACT CACHE ═══ */}
       <div className="card" style={{marginBottom:16}}>
         <h3 style={{fontSize:14,fontWeight:600,marginBottom:4}}>📦 Scan Cache</h3>
@@ -45177,6 +45187,9 @@ function Settings() {
 
       {/* ═══ v15 STAGE 11: TELEMETRY DIAGNOSTICS ═══ */}
       <TelemetryDiagnostics />
+        </div>
+      </details>
+      {/* rc2e.50: end Advanced disclosure */}
 
       <div className="card">
         <h3 style={{fontSize:14,fontWeight:600,marginBottom:8}}>About PolicyLens {APP_VERSION}</h3>
