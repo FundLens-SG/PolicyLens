@@ -28,7 +28,15 @@ function getAllowedOrigin(request, env) {
   const configured = (env.POLICYLENS_ALLOWED_ORIGIN || '*').trim();
   if (!configured || configured === '*') return '*';
   const allowed = configured.split(',').map(s => s.trim()).filter(Boolean);
-  return allowed.includes(origin) ? origin : allowed[0];
+  if (allowed.includes(origin)) return origin;
+  // Wildcard subdomain support: "https://*.pages.dev" matches "https://foo.pages.dev"
+  for (const a of allowed) {
+    if (a.includes('*')) {
+      const re = new RegExp('^' + a.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^.]+') + '$');
+      if (re.test(origin)) return origin;
+    }
+  }
+  return allowed[0]; // browser will reject; intentional
 }
 
 function corsHeaders(request, env) {
