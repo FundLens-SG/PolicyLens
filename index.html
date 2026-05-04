@@ -523,9 +523,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.57';
-const APP_VERSION_DATE = '2026-05-03';
-const APP_VERSION_NAME = 'Document-style file icons';
+const APP_VERSION = 'v2.3.0-rc2e.58';
+const APP_VERSION_DATE = '2026-05-04';
+const APP_VERSION_NAME = 'Phase 7A cleanup — dead Drive auth code';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 const APP_TAB_IDS = new Set(['profile', 'dashboard', 'policies', 'clients', 'repository', 'report', 'settings']);
 function getInitialPolicyLensTab() {
@@ -13325,7 +13325,8 @@ const AppCtx = createContext();
 // Scope: drive.file — the app can only see files it created.
 // ═══════════════════════════════════════════════════════════════
 
-const DRIVE_CLIENT_ID = '502722318908-lsdr6qhoavkok0kd3ipa94mip1uqu3kp.apps.googleusercontent.com';
+// rc2e.58: DRIVE_CLIENT_ID removed — dead since Phase 7A (hub OAuth + drive-auth-dev
+// Edge Function handle all Drive token work; PolicyLens never invokes GIS directly).
 const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
 const DRIVE_FOLDER_NAME = 'PolicyLens';
 // v2.2.0-rc1: Tier/client folder caches (cleared on signOut)
@@ -13398,7 +13399,7 @@ function setDriveLocalOnly(_on) {
 // Refresh token lives server-side in Supabase drive_tokens (RLS, service-role only).
 // _driveFetch handles 401 retry; mount-time refresh handles expired tokens across sessions.
 let _driveAccessToken = null;
-let _driveTokenClient = null;
+// rc2e.58: _driveTokenClient removed — only used by the deleted _ensureDriveTokenClient.
 let _driveStatus = 'disconnected'; // 'disconnected' | 'checking' | 'connected' | 'reconnect-needed'
 let _driveStartupSyncInFlight = false;
 const _driveStatusListeners = new Set();
@@ -16106,19 +16107,11 @@ async function _readDriveTokenFromHubSession() {
   }
 }
 
-// ── Initialize the OAuth token client (idempotent) ──
-// v2.1.0c: signInInteractive bypasses GIS entirely and uses the manual
-// authorization code + PKCE redirect flow above.
-function _ensureDriveTokenClient() {
-  if (_driveTokenClient) return _driveTokenClient;
-  if (!window.google?.accounts?.oauth2) return null;
-  _driveTokenClient = window.google.accounts.oauth2.initTokenClient({
-    client_id: DRIVE_CLIENT_ID,
-    scope: DRIVE_SCOPE,
-    callback: () => {} // overridden per-request below
-  });
-  return _driveTokenClient;
-}
+// rc2e.58: _ensureDriveTokenClient removed — dead since Phase 7A. The GIS
+// initTokenClient path is no longer used; PolicyLens reads the hub session's
+// provider_token (fast path) and falls back to the drive-auth-dev Edge
+// Function (mode=refresh) for ongoing access tokens. See _readDriveTokenFromHubSession
+// + _refreshDriveTokenViaEdgeFn above.
 
 // ── mapDriveError: classify a Drive API failure for the UI ──
 // Returns { kind, message }. UI consumes `kind` to decide whether
