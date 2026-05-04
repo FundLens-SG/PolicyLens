@@ -86,9 +86,17 @@ async function requireAuthenticatedUser(request, env) {
     },
   });
   const user = await userResp.json().catch(() => ({}));
-  if (!userResp.ok || !user.id) throw new Error('Invalid PolicyLens session');
+  if (!userResp.ok || !user.id || !user.email) throw new Error('Invalid PolicyLens session');
 
-  const profileResp = await fetch(supabaseUrl + '/rest/v1/profiles?id=eq.' + encodeURIComponent(user.id) + '&select=approved', {
+  // Phase 7A: ckgtools-admin's public.profiles is keyed by EMAIL (not id)
+  // and has STATUS ('active' | 'revoked') — not approved. The previous
+  // ?id=eq.<uuid>&select=approved query returned 400 every call (no id
+  // column), profileResp.ok was false, and the check was silently
+  // bypassed. Fix: query by email + read status. Defaults to allow on
+  // any non-2xx so a brief profiles-table outage doesn't break Document
+  // AI for active users — the /auth/v1/user check above is the primary
+  // identity gate and remains strict.
+  const profileResp = await fetch(supabaseUrl + '/rest/v1/profiles?email=eq.' + encodeURIComponent(user.email) + '&select=status,role', {
     headers: {
       apikey: env.SUPABASE_ANON_KEY,
       authorization: auth,
@@ -96,8 +104,8 @@ async function requireAuthenticatedUser(request, env) {
   });
   if (profileResp.ok) {
     const profiles = await profileResp.json().catch(() => []);
-    if (profiles.length && profiles[0].approved === false) {
-      throw new Error('PolicyLens account is not approved');
+    if (profiles.length && profiles[0].status === 'revoked') {
+      throw new Error('PolicyLens account is revoked');
     }
   }
   return user;
