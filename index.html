@@ -602,9 +602,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.7';
+const APP_VERSION = 'v2.4.0-rc1.8';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Profile tab title (Fraunces) + quiet labels + input focus';
+const APP_VERSION_NAME = 'Design v2 — Clients tab tier defaults + sticky bulk action bar';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -13928,7 +13928,12 @@ const getInflationPct = (cp, fallback) => {
 };
 
 // v2.2.0-rc2.0: Dynamic tier definitions — user-defined per FC, synced via appSettings.
-const TIER_DEFAULTS = ['A', 'B', 'C', 'Unassigned'];
+// v2.4.0-rc1.8: Default tier list updated from alphabetical placeholders
+// (A/B/C/Unassigned) to wealth-management-standard names per the Round 2
+// design brief. Existing FCs keep their saved tierDefinitions; this only
+// affects new users (or users who reset to defaults). The brand-aligned
+// names also harmonize with the cream + coral premium-wealth aesthetic.
+const TIER_DEFAULTS = ['Platinum', 'Gold', 'Silver', 'Bronze', 'Unassigned'];
 const UNASSIGNED_TIER = 'Unassigned';
 const TIER_PALETTE_8 = ['#c9a96e', '#a8a8a8', '#a0684a', '#2f7d5b', '#2e5a8c', '#6b3d5f', '#3d6b6b', '#8c3a3a'];
 const UNASSIGNED_COLOR = '#6b6b6b';
@@ -26164,23 +26169,19 @@ function ClientsTab() {
     style: {
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'space-between',
       gap: 10,
       flexWrap: 'wrap',
-      margin: '-4px 0 12px',
-      padding: '8px 10px',
-      background: 'rgba(255,255,255,.018)',
-      border: '1px solid rgba(255,255,255,.06)',
-      borderRadius: 9
+      margin: '0 0 14px 0',
+      padding: '2px 4px'
     }
   }, /*#__PURE__*/React.createElement("label", {
     style: {
       display: 'inline-flex',
       alignItems: 'center',
       gap: 8,
-      fontSize: 11,
+      fontSize: 11.5,
       color: 'var(--text2)',
-      fontWeight: 700,
+      fontWeight: 500,
       cursor: 'pointer'
     }
   }, /*#__PURE__*/React.createElement("input", {
@@ -26191,114 +26192,142 @@ function ClientsTab() {
     checked: allVisibleSelected,
     onChange: toggleSelectAllVisible,
     style: selectionCheckboxStyle
-  }), /*#__PURE__*/React.createElement("span", null, "Select all"), /*#__PURE__*/React.createElement("span", {
+  }), /*#__PURE__*/React.createElement("span", null, "Select all visible")), /*#__PURE__*/React.createElement("span", {
     style: {
-      fontSize: 10,
-      color: 'var(--text3)',
-      fontWeight: 500
+      fontSize: 11,
+      color: 'var(--text3)'
     }
-  }, visibleSelectedCount, "/", filtered.length, " visible \xB7 ", selectedStates.length, " selected")), selectedStates.length > 0 && /*#__PURE__*/React.createElement("div", {
+  }, visibleSelectedCount, "/", filtered.length, " visible", selectedStates.length > 0 ? ` · ${selectedStates.length} selected` : '')), selectedStates.length > 0 && /*#__PURE__*/React.createElement("div", {
     style: {
+      position: 'fixed',
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 60,
+      padding: '12px 18px',
+      background: 'var(--bg2)',
+      borderTop: '1px solid var(--border)',
+      boxShadow: '0 -8px 30px color-mix(in oklch, var(--text) 8%, transparent)',
       display: 'flex',
       alignItems: 'center',
-      gap: 7,
+      gap: 10,
       flexWrap: 'wrap',
-      justifyContent: 'flex-end',
-      flex: 1
+      fontFamily: T_V2.sansFamily
     }
-  }, /*#__PURE__*/React.createElement("select", {
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 8,
+      padding: '5px 12px',
+      background: 'var(--gold-dim)',
+      color: 'var(--gold)',
+      borderRadius: 999,
+      fontSize: 12,
+      fontWeight: 600
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 14
+    }
+  }, "\u2713"), selectedStates.length, " selected"), /*#__PURE__*/React.createElement("select", {
     value: familyNameOptions.includes(bulkFamilyDraft) ? bulkFamilyDraft : '',
     onChange: e => setBulkFamilyDraft(e.target.value),
     disabled: !!bulkBusy,
     style: {
-      height: 30,
-      minWidth: isMobile ? '100%' : 180,
-      padding: '5px 8px',
-      fontSize: 11,
-      borderRadius: 7,
+      height: 32,
+      minWidth: isMobile ? 160 : 200,
+      padding: '5px 10px',
+      fontSize: 12,
+      borderRadius: 999,
       background: 'var(--bg)',
-      border: '1px solid var(--border2)',
-      color: 'var(--text2)'
+      border: '1px solid var(--border)',
+      color: 'var(--text)'
     }
   }, /*#__PURE__*/React.createElement("option", {
     value: ""
-  }, "Move into family..."), familyNameOptions.map(name => /*#__PURE__*/React.createElement("option", {
+  }, "Move into family\u2026"), familyNameOptions.map(name => /*#__PURE__*/React.createElement("option", {
     key: name,
     value: name
   }, name))), /*#__PURE__*/React.createElement("input", {
     value: bulkFamilyDraft,
     onChange: e => setBulkFamilyDraft(e.target.value),
     disabled: !!bulkBusy,
-    placeholder: "Or type new family name",
+    placeholder: "Or new family name",
     onKeyDown: e => {
       if (e.key === 'Enter') applyBulkFamilyMove();
     },
     style: {
-      height: 30,
-      minWidth: isMobile ? '100%' : 190,
-      padding: '5px 9px',
-      fontSize: 11,
-      borderRadius: 7,
+      height: 32,
+      minWidth: isMobile ? 140 : 180,
+      padding: '5px 12px',
+      fontSize: 12,
+      borderRadius: 999,
       background: 'var(--bg)',
-      border: '1px solid var(--border2)',
-      color: 'var(--text2)'
+      border: '1px solid var(--border)',
+      color: 'var(--text)'
     }
   }), /*#__PURE__*/React.createElement("button", {
     onClick: applyBulkFamilyMove,
     disabled: !!bulkBusy || !String(bulkFamilyDraft || '').trim(),
     style: {
-      height: 30,
-      padding: '5px 10px',
-      fontSize: 11,
-      fontWeight: 800,
-      borderRadius: 7,
-      background: 'rgba(91,168,160,.12)',
-      color: 'var(--teal)',
-      border: '1px solid rgba(91,168,160,.28)',
+      height: 32,
+      padding: '5px 14px',
+      fontSize: 12,
+      fontWeight: 600,
+      borderRadius: 999,
+      background: 'var(--gold)',
+      color: '#fff',
+      border: '1px solid var(--gold)',
+      cursor: bulkBusy ? 'wait' : 'pointer',
       opacity: bulkBusy || !String(bulkFamilyDraft || '').trim() ? 0.55 : 1
     }
-  }, bulkBusy === 'family' ? 'Moving...' : 'Move to family'), /*#__PURE__*/React.createElement("button", {
+  }, bulkBusy === 'family' ? 'Moving…' : 'Move to family'), /*#__PURE__*/React.createElement("button", {
     onClick: removeSelectedFromFamily,
     disabled: !!bulkBusy,
     style: {
-      height: 30,
-      padding: '5px 10px',
-      fontSize: 11,
-      fontWeight: 800,
-      borderRadius: 7,
-      background: 'rgba(255,255,255,.035)',
+      height: 32,
+      padding: '5px 14px',
+      fontSize: 12,
+      fontWeight: 600,
+      borderRadius: 999,
+      background: 'transparent',
       color: 'var(--text2)',
-      border: '1px solid rgba(255,255,255,.10)',
+      border: '1px solid var(--border)',
+      cursor: bulkBusy ? 'wait' : 'pointer',
       opacity: bulkBusy ? 0.55 : 1
     }
-  }, bulkBusy === 'family-clear' ? 'Removing...' : 'Remove from family'), /*#__PURE__*/React.createElement("button", {
+  }, bulkBusy === 'family-clear' ? 'Removing…' : 'Remove from family'), /*#__PURE__*/React.createElement("button", {
     onClick: deleteSelectedClients,
     disabled: !!bulkBusy,
     style: {
-      height: 30,
-      padding: '5px 10px',
-      fontSize: 11,
-      fontWeight: 800,
-      borderRadius: 7,
-      background: 'rgba(239,83,80,.10)',
+      height: 32,
+      padding: '5px 14px',
+      fontSize: 12,
+      fontWeight: 600,
+      borderRadius: 999,
+      background: 'color-mix(in oklch, var(--red) 14%, transparent)',
       color: 'var(--red)',
-      border: '1px solid rgba(239,83,80,.25)',
+      border: '1px solid color-mix(in oklch, var(--red) 30%, transparent)',
+      cursor: bulkBusy ? 'wait' : 'pointer',
       opacity: bulkBusy ? 0.55 : 1
     }
-  }, bulkBusy === 'delete' ? 'Deleting...' : 'Delete selected'), /*#__PURE__*/React.createElement("button", {
+  }, bulkBusy === 'delete' ? 'Deleting…' : 'Delete selected'), /*#__PURE__*/React.createElement("button", {
     onClick: clearSelection,
     disabled: !!bulkBusy,
     style: {
-      height: 30,
-      padding: '5px 8px',
-      fontSize: 11,
-      fontWeight: 700,
-      borderRadius: 7,
+      marginLeft: 'auto',
+      height: 32,
+      padding: '5px 14px',
+      fontSize: 12,
+      fontWeight: 600,
+      borderRadius: 999,
       background: 'transparent',
       color: 'var(--text3)',
-      border: '1px solid var(--border)'
+      border: '1px solid transparent',
+      cursor: 'pointer'
     }
-  }, "Clear"))), filtered.length === 0 && visibleStates.length === 0 && /*#__PURE__*/React.createElement("div", {
+  }, "\u2715 Clear")), filtered.length === 0 && visibleStates.length === 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       textAlign: 'center',
       padding: '60px 20px',
