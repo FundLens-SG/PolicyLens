@@ -558,9 +558,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.1';
+const APP_VERSION = 'v2.4.0-rc1.2';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 foundation — tokens + atoms';
+const APP_VERSION_NAME = 'Design v2 — header + tab pills (light cream chrome)';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -27097,147 +27097,215 @@ function Header() {
       }
     } catch (_) {}
   }, []);
-  const saveBtnStyle = {
-    background: 'var(--gold-dim)',
-    color: 'var(--gold)',
-    border: '1px solid rgba(212,169,106,.25)',
+
+  // v2.4.0-rc1.2: New chrome — light cream surface, Fraunces wordmark,
+  // pill-style tabs, gradient-avatar client switcher. Old handlers + refs +
+  // modal anchors all preserved so existing flows (Save/Load checkpoint,
+  // New Client guard -> modal, Undo, Help, Cost meter, Client View) keep
+  // their behaviour. Only the visual layer changes here.
+  const T = T_V2;
+
+  // shared icon-button style for the right-side cluster (Save / Load / Help).
+  // Same 28x28 footprint as the legacy header so click targets don't shift.
+  const iconBtnStyle = (enabled = true) => ({
+    background: T.bg2,
+    color: T.text2,
+    border: '1px solid ' + T.border,
     width: 28,
     height: 28,
-    borderRadius: '50%',
+    borderRadius: 999,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    cursor: activeClientId ? 'pointer' : 'not-allowed',
+    cursor: enabled ? 'pointer' : 'not-allowed',
     fontSize: 13,
     flexShrink: 0,
-    opacity: activeClientId ? 1 : .4
-  };
+    opacity: enabled ? 1 : 0.4,
+    padding: 0,
+    fontFamily: T.sansFamily,
+    transition: T.motion ? 'all 180ms ease' : 'none'
+  });
+
+  // Avatar initial for the client switcher (Fraunces, gradient circle)
+  const initial = (clientName || '?').trim().slice(0, 1).toUpperCase() || '?';
+  const tierLabel = clientProfile?.tier || (activeClientId ? 'Unassigned' : '');
   const tabs = [{
     id: 'profile',
-    label: 'My Profile',
-    icon: '👤'
+    label: 'Profile',
+    emoji: '👤'
   }, {
     id: 'dashboard',
     label: 'Dashboard',
-    icon: '📊'
+    emoji: '🏡'
   }, {
     id: 'policies',
     label: 'Policies',
-    icon: '📋'
+    emoji: '📋'
   }, {
     id: 'clients',
     label: 'Clients',
-    icon: '👥'
+    emoji: '👥'
   }, {
     id: 'repository',
-    label: 'Repository',
-    icon: '🗄️'
+    label: 'Notes',
+    emoji: '📚'
   }, {
     id: 'report',
     label: 'Report',
-    icon: '📄'
+    emoji: '📄'
   }, {
     id: 'settings',
     label: 'Settings',
-    icon: '⚙️'
+    emoji: '⚙️'
   }];
   return /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'var(--bg2)',
-      borderBottom: '1px solid var(--border)',
-      flexShrink: 0
+      background: T.bg,
+      borderBottom: '1px solid ' + T.border,
+      flexShrink: 0,
+      fontFamily: T.sansFamily
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
-      padding: '8px 8px 4px',
-      gap: 4,
-      overflow: 'hidden'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: 4,
-      minWidth: 0,
-      flex: '1 1 auto',
+      gap: isMobile ? 8 : 14,
+      padding: isMobile ? '10px 12px 8px' : '14px 18px 10px',
       overflow: 'hidden'
     }
   }, /*#__PURE__*/React.createElement("button", {
-    title: "Back to CKGTools",
+    title: "Back to CKG hub",
     onClick: () => {
       window.location.href = '/';
     },
     style: {
-      background: 'var(--bg3)',
-      color: 'var(--text2)',
-      border: '1px solid var(--border2)',
+      background: 'transparent',
+      border: 'none',
+      padding: 0,
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      flexShrink: 0
+    }
+  }, /*#__PURE__*/React.createElement(PLMark, {
+    T: T,
+    size: isMobile ? 22 : 28
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: 'left'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: T.serifFamily,
+      fontSize: isMobile ? 17 : 22,
+      color: T.text,
+      letterSpacing: '-0.02em',
+      lineHeight: 1,
+      fontWeight: 400
+    }
+  }, "PolicyLens"), !isMobile && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: T.sansFamily,
+      fontSize: 11,
+      color: T.primary,
+      marginTop: 3,
+      fontWeight: 500
+    }
+  }, "Your portfolio, made simple"))), !isMobile && /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 1,
+      height: 30,
+      background: T.hair,
+      flexShrink: 0
+    }
+  }), clientName && /*#__PURE__*/React.createElement("button", {
+    onClick: () => setTab('clients'),
+    title: "Switch client",
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      padding: '4px 12px 4px 4px',
+      background: T.bg2,
+      border: '1px solid ' + T.border,
+      borderRadius: 999,
+      cursor: 'pointer',
+      minWidth: 0,
+      fontFamily: T.sansFamily,
+      transition: T.motion ? 'border-color 180ms ease' : 'none'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
       width: 28,
       height: 28,
-      borderRadius: '50%',
+      borderRadius: 999,
+      background: 'linear-gradient(135deg, ' + T.primary + ', ' + T.lavender + ')',
+      color: 'white',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      cursor: 'pointer',
+      fontFamily: T.serifFamily,
       fontSize: 14,
-      flexShrink: 0,
-      padding: 0
-    }
-  }, "\u2190"), /*#__PURE__*/React.createElement(LogoMark, {
-    size: 20
-  }), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontWeight: 700,
-      fontSize: 14,
-      letterSpacing: '-0.3px',
-      color: '#d4a96a',
       flexShrink: 0
     }
-  }, "PolicyLens"), !isMobile && /*#__PURE__*/React.createElement("span", {
+  }, initial), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 9,
-      fontWeight: 800,
-      color: 'var(--teal)',
-      background: 'rgba(91,168,160,.08)',
-      border: '1px solid rgba(91,168,160,.18)',
-      borderRadius: 999,
-      padding: '2px 7px',
-      whiteSpace: 'nowrap'
-    }
-  }, "Advisor Workbench"), clientName && /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 10,
-      color: 'var(--text3)',
-      overflow: 'hidden',
-      textOverflow: 'ellipsis',
-      whiteSpace: 'nowrap',
+      textAlign: 'left',
       minWidth: 0
     }
-  }, "\u2014 ", clientName)), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
+      fontSize: 13,
+      color: T.text,
+      fontWeight: 600,
+      lineHeight: 1.1,
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      maxWidth: isMobile ? 90 : 200
+    }
+  }, clientName), !isMobile && tierLabel && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10.5,
+      color: T.text3,
+      marginTop: 1
+    }
+  }, tierLabel)), /*#__PURE__*/React.createElement("span", {
+    style: {
+      marginLeft: 4,
+      color: T.text4,
+      fontSize: 11,
+      flexShrink: 0
+    }
+  }, "\u25BE")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginLeft: 'auto',
       display: 'flex',
       alignItems: 'center',
-      gap: 4,
+      gap: isMobile ? 4 : 6,
       flexShrink: 0
     }
   }, /*#__PURE__*/React.createElement("button", {
     title: "New Client",
     onClick: () => setNewClientGuardOpen(true),
     style: {
-      background: 'rgba(212,169,106,.15)',
-      color: 'var(--gold)',
-      border: '1px solid rgba(212,169,106,.4)',
+      background: T.primaryDim,
+      color: T.primary,
+      border: '1px solid ' + T.primaryDim,
       width: 28,
       height: 28,
-      borderRadius: '50%',
+      borderRadius: 999,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       cursor: 'pointer',
       fontSize: 14,
       fontWeight: 700,
-      flexShrink: 0
+      flexShrink: 0,
+      fontFamily: T.sansFamily,
+      padding: 0,
+      transition: T.motion ? 'all 180ms ease' : 'none'
     }
   }, "+"), /*#__PURE__*/React.createElement(SyncStatusPill, {
     driveState: driveState
@@ -27251,7 +27319,7 @@ function Header() {
     title: "Save checkpoint",
     onClick: () => setSaveOpen(o => !o),
     disabled: !activeClientId,
-    style: saveBtnStyle
+    style: iconBtnStyle(!!activeClientId)
   }, "\uD83D\uDCBE"), /*#__PURE__*/React.createElement(CheckpointSavePopover, {
     open: saveOpen,
     onClose: () => setSaveOpen(false),
@@ -27261,21 +27329,7 @@ function Header() {
     title: "Load checkpoint",
     onClick: () => setLoadOpen(true),
     disabled: !activeClientId,
-    style: {
-      background: 'var(--bg3)',
-      color: 'var(--text2)',
-      border: '1px solid var(--border2)',
-      width: 28,
-      height: 28,
-      borderRadius: '50%',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      cursor: activeClientId ? 'pointer' : 'not-allowed',
-      fontSize: 13,
-      flexShrink: 0,
-      opacity: activeClientId ? 1 : .4
-    }
+    style: iconBtnStyle(!!activeClientId)
   }, "\uD83D\uDCC2"), /*#__PURE__*/React.createElement("button", {
     title: "Undo last import/delete",
     onClick: async () => {
@@ -27285,20 +27339,22 @@ function Header() {
     },
     disabled: !activeClientId,
     style: {
-      background: 'var(--bg3)',
-      color: 'var(--text2)',
-      border: '1px solid var(--border2)',
+      background: T.bg2,
+      color: T.text2,
+      border: '1px solid ' + T.border,
       height: 28,
-      borderRadius: 14,
-      padding: '0 9px',
+      borderRadius: 999,
+      padding: '0 12px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       cursor: activeClientId ? 'pointer' : 'not-allowed',
-      fontSize: 10,
-      fontWeight: 800,
+      fontSize: 11.5,
+      fontWeight: 600,
       flexShrink: 0,
-      opacity: activeClientId ? 1 : .4
+      opacity: activeClientId ? 1 : 0.4,
+      fontFamily: T.sansFamily,
+      transition: T.motion ? 'all 180ms ease' : 'none'
     }
   }, "Undo"), /*#__PURE__*/React.createElement(CheckpointLoadModal, {
     open: loadOpen,
@@ -27324,98 +27380,91 @@ function Header() {
     allPolicies: newClientData.allPolicies,
     onClose: () => setNewClientModalOpen(false)
   }), !isMobile && /*#__PURE__*/React.createElement("button", {
-    onClick: () => window.dispatchEvent(new Event('policylens-open-guide')),
     title: "Guide",
-    style: {
-      background: 'var(--gold-dim)',
-      color: 'var(--gold)',
-      border: '1px solid rgba(212,169,106,.2)',
-      width: 28,
-      height: 28,
-      borderRadius: '50%',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      cursor: 'pointer',
-      fontSize: 13,
-      fontWeight: 700,
-      flexShrink: 0
-    }
+    onClick: () => window.dispatchEvent(new Event('policylens-open-guide')),
+    style: iconBtnStyle(true)
   }, "?"), /*#__PURE__*/React.createElement(CostMeterChip, null), /*#__PURE__*/React.createElement("button", {
+    title: "Client Presentation - full-screen read-only view",
     onClick: () => setPresentMode(true),
     disabled: policies.length === 0,
-    title: "Client Presentation - full-screen read-only view",
     style: {
-      background: policies.length === 0 ? 'var(--bg3)' : 'linear-gradient(135deg,#d4a96a,#b8935a)',
-      color: policies.length === 0 ? 'var(--text3)' : '#0b0f1a',
-      border: '1px solid rgba(212,169,106,.3)',
-      padding: isMobile ? '0 8px' : '0 10px',
+      background: policies.length === 0 ? T.bg2 : 'linear-gradient(135deg, ' + T.primary + ', ' + T.lavender + ')',
+      color: policies.length === 0 ? T.text4 : '#fff',
+      border: policies.length === 0 ? '1px solid ' + T.border : '1px solid transparent',
+      padding: isMobile ? '0 10px' : '0 14px',
       height: 28,
-      borderRadius: 14,
+      borderRadius: 999,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
+      gap: 5,
       cursor: policies.length === 0 ? 'not-allowed' : 'pointer',
-      fontSize: 11,
-      fontWeight: 700,
+      fontSize: 12,
+      fontWeight: 600,
+      opacity: policies.length === 0 ? 0.5 : 1,
       flexShrink: 0,
-      opacity: policies.length === 0 ? .4 : 1,
-      gap: 4
+      fontFamily: T.sansFamily,
+      transition: T.motion ? 'all 180ms ease' : 'none'
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
-      fontSize: 13
+      fontSize: 12
     }
   }, "\u25B6"), !isMobile && ' Client View'))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '0 6px 6px',
-      gap: 2
+      padding: isMobile ? '0 8px 8px' : '0 18px 10px',
+      gap: 4,
+      overflowX: 'auto'
     }
-  }, tabs.map(t => /*#__PURE__*/React.createElement("button", {
-    key: t.id,
-    onClick: () => setTab(t.id),
-    style: {
-      flex: '1 1 0',
-      minWidth: 0,
-      background: tab === t.id ? 'rgba(212,169,106,.12)' : 'transparent',
-      color: tab === t.id ? 'var(--gold)' : 'var(--text3)',
-      border: tab === t.id ? '1px solid rgba(212,169,106,.2)' : '1px solid transparent',
-      padding: '6px 2px',
-      borderRadius: 8,
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      gap: 2,
-      cursor: 'pointer',
-      position: 'relative'
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 16
-    }
-  }, t.icon), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 9,
-      fontWeight: tab === t.id ? 700 : 400,
-      letterSpacing: '-0.2px',
-      lineHeight: 1
-    }
-  }, t.label), t.id === 'policies' && policies.length > 0 && /*#__PURE__*/React.createElement("span", {
-    style: {
-      position: 'absolute',
-      top: 2,
-      right: 'calc(50% - 16px)',
-      background: 'var(--gold)',
-      color: '#0b0f1a',
-      fontSize: 8,
-      padding: '0px 4px',
-      borderRadius: 6,
-      fontWeight: 700
-    }
-  }, policies.length)))));
+  }, tabs.map(t => {
+    const active = tab === t.id;
+    return /*#__PURE__*/React.createElement("button", {
+      key: t.id,
+      onClick: () => setTab(t.id),
+      style: {
+        background: active ? T.primary : 'transparent',
+        color: active ? '#fff' : T.text2,
+        border: 'none',
+        padding: isMobile ? '6px 10px' : '8px 14px',
+        borderRadius: 999,
+        fontFamily: T.sansFamily,
+        fontSize: isMobile ? 11.5 : 12.5,
+        fontWeight: active ? 600 : 500,
+        cursor: 'pointer',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 7,
+        transition: T.motion ? 'all 180ms ease' : 'none',
+        whiteSpace: 'nowrap',
+        flexShrink: 0,
+        position: 'relative'
+      },
+      onMouseEnter: e => {
+        if (!active && T.motion) e.currentTarget.style.background = T.bg3;
+      },
+      onMouseLeave: e => {
+        if (!active) e.currentTarget.style.background = 'transparent';
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 14,
+        filter: active ? 'none' : 'grayscale(0.3)'
+      }
+    }, t.emoji), t.label, t.id === 'policies' && policies.length > 0 && /*#__PURE__*/React.createElement("span", {
+      style: {
+        marginLeft: 2,
+        padding: '1px 7px',
+        background: active ? 'rgba(255,255,255,0.25)' : T.primaryDim,
+        color: active ? '#fff' : T.primary,
+        fontSize: 10,
+        fontWeight: 700,
+        borderRadius: 999,
+        lineHeight: 1.4
+      }
+    }, policies.length));
+  })));
 }
 
 // ═══════════════════════════════════════════════════════════════

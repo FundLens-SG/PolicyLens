@@ -548,9 +548,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.1';
+const APP_VERSION = 'v2.4.0-rc1.2';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 foundation — tokens + atoms';
+const APP_VERSION_NAME = 'Design v2 — header + tab pills (light cream chrome)';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -23516,100 +23516,247 @@ function Header() {
     } catch(_){}
   }, []);
 
-  const saveBtnStyle = {background:'var(--gold-dim)',color:'var(--gold)',border:'1px solid rgba(212,169,106,.25)',width:28,height:28,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',cursor:activeClientId?'pointer':'not-allowed',fontSize:13,flexShrink:0,opacity:activeClientId?1:.4};
+  // v2.4.0-rc1.2: New chrome — light cream surface, Fraunces wordmark,
+  // pill-style tabs, gradient-avatar client switcher. Old handlers + refs +
+  // modal anchors all preserved so existing flows (Save/Load checkpoint,
+  // New Client guard -> modal, Undo, Help, Cost meter, Client View) keep
+  // their behaviour. Only the visual layer changes here.
+  const T = T_V2;
+
+  // shared icon-button style for the right-side cluster (Save / Load / Help).
+  // Same 28x28 footprint as the legacy header so click targets don't shift.
+  const iconBtnStyle = (enabled = true) => ({
+    background: T.bg2, color: T.text2,
+    border: '1px solid ' + T.border,
+    width: 28, height: 28, borderRadius: 999,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    cursor: enabled ? 'pointer' : 'not-allowed', fontSize: 13, flexShrink: 0,
+    opacity: enabled ? 1 : 0.4, padding: 0,
+    fontFamily: T.sansFamily,
+    transition: T.motion ? 'all 180ms ease' : 'none',
+  });
+
+  // Avatar initial for the client switcher (Fraunces, gradient circle)
+  const initial = (clientName || '?').trim().slice(0,1).toUpperCase() || '?';
+  const tierLabel = clientProfile?.tier || (activeClientId ? 'Unassigned' : '');
 
   const tabs = [
-    {id:'profile',label:'My Profile',icon:'👤'},
-    {id:'dashboard',label:'Dashboard',icon:'📊'},
-    {id:'policies',label:'Policies',icon:'📋'},
-    {id:'clients',label:'Clients',icon:'👥'},
-    {id:'repository',label:'Repository',icon:'🗄️'},
-    {id:'report',label:'Report',icon:'📄'},
-    {id:'settings',label:'Settings',icon:'⚙️'},
+    { id:'profile',    label:'Profile',    emoji:'👤' },
+    { id:'dashboard',  label:'Dashboard',  emoji:'🏡' },
+    { id:'policies',   label:'Policies',   emoji:'📋' },
+    { id:'clients',    label:'Clients',    emoji:'👥' },
+    { id:'repository', label:'Notes',      emoji:'📚' },
+    { id:'report',     label:'Report',     emoji:'📄' },
+    { id:'settings',   label:'Settings',   emoji:'⚙️' },
   ];
   return (
-    <div style={{background:'var(--bg2)',borderBottom:'1px solid var(--border)',flexShrink:0}}>
-      {/* ── Row 1: Logo + client + actions ── */}
-      <div style={{display:'flex',alignItems:'center',padding:'8px 8px 4px',gap:4,overflow:'hidden'}}>
-        <div style={{display:'flex',alignItems:'center',gap:4,minWidth:0,flex:'1 1 auto',overflow:'hidden'}}>
-          {/* Phase 7: Back to ckgtools.com hub */}
-          <button title="Back to CKGTools" onClick={() => { window.location.href = '/'; }}
-            style={{background:'var(--bg3)',color:'var(--text2)',border:'1px solid var(--border2)',width:28,height:28,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',fontSize:14,flexShrink:0,padding:0}}>
-            ←
-          </button>
-          <LogoMark size={20} />
-          <span style={{fontWeight:700,fontSize:14,letterSpacing:'-0.3px',color:'#d4a96a',flexShrink:0}}>PolicyLens</span>
-          {!isMobile && <span style={{fontSize:9,fontWeight:800,color:'var(--teal)',background:'rgba(91,168,160,.08)',border:'1px solid rgba(91,168,160,.18)',borderRadius:999,padding:'2px 7px',whiteSpace:'nowrap'}}>Advisor Workbench</span>}
-          {clientName && <span style={{fontSize:10,color:'var(--text3)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',minWidth:0}}>— {clientName}</span>}
-        </div>
-        <div style={{display:'flex',alignItems:'center',gap:4,flexShrink:0}}>
-          {/* v2.3.0-rc2c.3a: + New Client button */}
-          <button title="New Client" onClick={() => setNewClientGuardOpen(true)}
-            style={{background:'rgba(212,169,106,.15)',color:'var(--gold)',border:'1px solid rgba(212,169,106,.4)',width:28,height:28,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',fontSize:14,fontWeight:700,flexShrink:0}}>+</button>
-          {/* v2.2.0-beta: Desktop sync status pill — left of Save */}
-          <SyncStatusPill driveState={driveState} />
-          {/* v2.3.0-rc2c.2a: Save = checkpoint popover */}
-          <div style={{position:'relative',display:'inline-block'}}>
-            <button ref={saveButtonRef} title="Save checkpoint" onClick={() => setSaveOpen(o => !o)} disabled={!activeClientId}
-              style={saveBtnStyle}>
-              💾
-            </button>
-            <CheckpointSavePopover open={saveOpen} onClose={() => setSaveOpen(false)} clientId={activeClientId} anchorRef={saveButtonRef} />
+    <div style={{
+      background: T.bg, borderBottom: '1px solid ' + T.border, flexShrink: 0,
+      fontFamily: T.sansFamily,
+    }}>
+      {/* Row 1: Logo + wordmark + client switcher + right-side actions */}
+      <div style={{
+        display: 'flex', alignItems: 'center',
+        gap: isMobile ? 8 : 14,
+        padding: isMobile ? '10px 12px 8px' : '14px 18px 10px',
+        overflow: 'hidden',
+      }}>
+        {/* Logo + wordmark — clicking returns to the CKG hub */}
+        <button title="Back to CKG hub" onClick={() => { window.location.href = '/'; }}
+          style={{
+            background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0,
+          }}>
+          <PLMark T={T} size={isMobile ? 22 : 28} />
+          <div style={{ textAlign: 'left' }}>
+            <div style={{
+              fontFamily: T.serifFamily, fontSize: isMobile ? 17 : 22,
+              color: T.text, letterSpacing: '-0.02em', lineHeight: 1, fontWeight: 400,
+            }}>PolicyLens</div>
+            {!isMobile && <div style={{
+              fontFamily: T.sansFamily, fontSize: 11, color: T.primary,
+              marginTop: 3, fontWeight: 500,
+            }}>Your portfolio, made simple</div>}
           </div>
-          {/* v2.3.0-rc2c.2a: Load = checkpoint modal */}
+        </button>
+
+        {!isMobile && <div style={{ width: 1, height: 30, background: T.hair, flexShrink: 0 }} />}
+
+        {/* Client switcher pill — gradient avatar + name + tier subline + chevron */}
+        {clientName && (
+          <button onClick={() => setTab('clients')} title="Switch client"
+            style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              padding: '4px 12px 4px 4px',
+              background: T.bg2, border: '1px solid ' + T.border,
+              borderRadius: 999, cursor: 'pointer', minWidth: 0,
+              fontFamily: T.sansFamily,
+              transition: T.motion ? 'border-color 180ms ease' : 'none',
+            }}>
+            <div style={{
+              width: 28, height: 28, borderRadius: 999,
+              background: 'linear-gradient(135deg, ' + T.primary + ', ' + T.lavender + ')',
+              color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontFamily: T.serifFamily, fontSize: 14, flexShrink: 0,
+            }}>{initial}</div>
+            <div style={{ textAlign: 'left', minWidth: 0 }}>
+              <div style={{
+                fontSize: 13, color: T.text, fontWeight: 600, lineHeight: 1.1,
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                maxWidth: isMobile ? 90 : 200,
+              }}>{clientName}</div>
+              {!isMobile && tierLabel && <div style={{
+                fontSize: 10.5, color: T.text3, marginTop: 1,
+              }}>{tierLabel}</div>}
+            </div>
+            <span style={{ marginLeft: 4, color: T.text4, fontSize: 11, flexShrink: 0 }}>▾</span>
+          </button>
+        )}
+
+        {/* Right-side action cluster (everything from the legacy header, themed v2) */}
+        <div style={{
+          marginLeft: 'auto',
+          display: 'flex', alignItems: 'center',
+          gap: isMobile ? 4 : 6, flexShrink: 0,
+        }}>
+          {/* + New Client */}
+          <button title="New Client" onClick={() => setNewClientGuardOpen(true)}
+            style={{
+              background: T.primaryDim, color: T.primary,
+              border: '1px solid ' + T.primaryDim,
+              width: 28, height: 28, borderRadius: 999,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', fontSize: 14, fontWeight: 700, flexShrink: 0,
+              fontFamily: T.sansFamily, padding: 0,
+              transition: T.motion ? 'all 180ms ease' : 'none',
+            }}>+</button>
+
+          {/* Drive sync status pill — existing component, unchanged */}
+          <SyncStatusPill driveState={driveState} />
+
+          {/* Save checkpoint (popover) */}
+          <div style={{ position: 'relative', display: 'inline-block' }}>
+            <button ref={saveButtonRef} title="Save checkpoint"
+              onClick={() => setSaveOpen(o => !o)} disabled={!activeClientId}
+              style={iconBtnStyle(!!activeClientId)}>💾</button>
+            <CheckpointSavePopover open={saveOpen} onClose={() => setSaveOpen(false)}
+              clientId={activeClientId} anchorRef={saveButtonRef} />
+          </div>
+
+          {/* Load checkpoint */}
           <button title="Load checkpoint" onClick={() => setLoadOpen(true)} disabled={!activeClientId}
-            style={{background:'var(--bg3)',color:'var(--text2)',border:'1px solid var(--border2)',width:28,height:28,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',cursor:activeClientId?'pointer':'not-allowed',fontSize:13,flexShrink:0,opacity:activeClientId?1:.4}}>
-            📂
-          </button>
+            style={iconBtnStyle(!!activeClientId)}>📂</button>
+
+          {/* Undo */}
           <button title="Undo last import/delete" onClick={async () => {
-            if (!activeClientId || typeof restoreLastUndo !== 'function') return;
-            if (!confirm('Restore the last import/delete change for this client?')) return;
-            await restoreLastUndo();
-          }} disabled={!activeClientId}
-            style={{background:'var(--bg3)',color:'var(--text2)',border:'1px solid var(--border2)',height:28,borderRadius:14,padding:'0 9px',display:'flex',alignItems:'center',justifyContent:'center',cursor:activeClientId?'pointer':'not-allowed',fontSize:10,fontWeight:800,flexShrink:0,opacity:activeClientId?1:.4}}>
-            Undo
-          </button>
-          <CheckpointLoadModal open={loadOpen} onClose={() => setLoadOpen(false)} clientId={activeClientId}
-            switchClient={switchClient} setTab={setTab} />
-          <NewClientGuardModal open={newClientGuardOpen} onClose={() => setNewClientGuardOpen(false)}
+              if (!activeClientId || typeof restoreLastUndo !== 'function') return;
+              if (!confirm('Restore the last import/delete change for this client?')) return;
+              await restoreLastUndo();
+            }} disabled={!activeClientId}
+            style={{
+              background: T.bg2, color: T.text2,
+              border: '1px solid ' + T.border,
+              height: 28, borderRadius: 999, padding: '0 12px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: activeClientId ? 'pointer' : 'not-allowed',
+              fontSize: 11.5, fontWeight: 600, flexShrink: 0,
+              opacity: activeClientId ? 1 : 0.4,
+              fontFamily: T.sansFamily,
+              transition: T.motion ? 'all 180ms ease' : 'none',
+            }}>Undo</button>
+
+          {/* Modals — same handlers, unchanged */}
+          <CheckpointLoadModal open={loadOpen} onClose={() => setLoadOpen(false)}
+            clientId={activeClientId} switchClient={switchClient} setTab={setTab} />
+          <NewClientGuardModal open={newClientGuardOpen}
+            onClose={() => setNewClientGuardOpen(false)}
             onProceed={async () => {
               setNewClientGuardOpen(false);
-              const [states, pols] = await Promise.all([PolicyDB.getAllDriveStates().catch(()=>[]), dbGetAll('policies').catch(()=>[])]);
-              setNewClientData({allStates:states,allPolicies:pols});
+              const [states, pols] = await Promise.all([
+                PolicyDB.getAllDriveStates().catch(()=>[]),
+                dbGetAll('policies').catch(()=>[]),
+              ]);
+              setNewClientData({allStates:states, allPolicies:pols});
               setNewClientModalOpen(true);
             }} currentClientName={clientName} />
-          {newClientModalOpen && <NewClientModal allStates={newClientData.allStates} allPolicies={newClientData.allPolicies} onClose={() => setNewClientModalOpen(false)} />}
-          {!isMobile && <button onClick={()=>window.dispatchEvent(new Event('policylens-open-guide'))}
-            title="Guide"
-            style={{background:'var(--gold-dim)',color:'var(--gold)',border:'1px solid rgba(212,169,106,.2)',width:28,height:28,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',fontSize:13,fontWeight:700,flexShrink:0}}>
-            ?
-          </button>}
-          {/* v15 STAGE 10: SESSION COST METER */}
+          {newClientModalOpen && <NewClientModal allStates={newClientData.allStates}
+            allPolicies={newClientData.allPolicies}
+            onClose={() => setNewClientModalOpen(false)} />}
+
+          {/* Help — desktop only */}
+          {!isMobile && <button title="Guide"
+            onClick={() => window.dispatchEvent(new Event('policylens-open-guide'))}
+            style={iconBtnStyle(true)}>?</button>}
+
+          {/* v15 STAGE 10: SESSION COST METER (existing component) */}
           <CostMeterChip />
-          <button onClick={()=>setPresentMode(true)} disabled={policies.length===0}
-            title="Client Presentation - full-screen read-only view"
-            style={{background:policies.length===0?'var(--bg3)':'linear-gradient(135deg,#d4a96a,#b8935a)',color:policies.length===0?'var(--text3)':'#0b0f1a',border:'1px solid rgba(212,169,106,.3)',padding:isMobile?'0 8px':'0 10px',height:28,borderRadius:14,display:'flex',alignItems:'center',justifyContent:'center',cursor:policies.length===0?'not-allowed':'pointer',fontSize:11,fontWeight:700,flexShrink:0,opacity:policies.length===0?.4:1,gap:4}}>
-            <span style={{fontSize:13}}>▶</span>{!isMobile && ' Client View'}
+
+          {/* Client View — primary gradient pill when policies exist, disabled otherwise */}
+          <button title="Client Presentation - full-screen read-only view"
+            onClick={() => setPresentMode(true)} disabled={policies.length === 0}
+            style={{
+              background: policies.length === 0
+                ? T.bg2
+                : 'linear-gradient(135deg, ' + T.primary + ', ' + T.lavender + ')',
+              color: policies.length === 0 ? T.text4 : '#fff',
+              border: policies.length === 0
+                ? '1px solid ' + T.border
+                : '1px solid transparent',
+              padding: isMobile ? '0 10px' : '0 14px', height: 28,
+              borderRadius: 999,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+              cursor: policies.length === 0 ? 'not-allowed' : 'pointer',
+              fontSize: 12, fontWeight: 600,
+              opacity: policies.length === 0 ? 0.5 : 1, flexShrink: 0,
+              fontFamily: T.sansFamily,
+              transition: T.motion ? 'all 180ms ease' : 'none',
+            }}>
+            <span style={{ fontSize: 12 }}>▶</span>{!isMobile && ' Client View'}
           </button>
         </div>
       </div>
-      {/* ── Row 2: Tab bar — icons + short labels, fits on one line ── */}
-      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 6px 6px',gap:2}}>
-        {tabs.map(t => (
-          <button key={t.id} onClick={()=>setTab(t.id)}
-            style={{
-              flex:'1 1 0',minWidth:0,
-              background:tab===t.id?'rgba(212,169,106,.12)':'transparent',
-              color:tab===t.id?'var(--gold)':'var(--text3)',
-              border:tab===t.id?'1px solid rgba(212,169,106,.2)':'1px solid transparent',
-              padding:'6px 2px',borderRadius:8,
-              display:'flex',flexDirection:'column',alignItems:'center',gap:2,
-              cursor:'pointer',position:'relative'}}>
-            <span style={{fontSize:16}}>{t.icon}</span>
-            <span style={{fontSize:9,fontWeight:tab===t.id?700:400,letterSpacing:'-0.2px',lineHeight:1}}>{t.label}</span>
-            {t.id==='policies' && policies.length>0 && <span style={{position:'absolute',top:2,right:'calc(50% - 16px)',background:'var(--gold)',color:'#0b0f1a',fontSize:8,padding:'0px 4px',borderRadius:6,fontWeight:700}}>{policies.length}</span>}
-          </button>
-        ))}
+
+      {/* Row 2: Tab bar — pill style, primary-fill active, ghost inactive */}
+      <div style={{
+        display: 'flex', alignItems: 'center',
+        padding: isMobile ? '0 8px 8px' : '0 18px 10px',
+        gap: 4, overflowX: 'auto',
+      }}>
+        {tabs.map(t => {
+          const active = tab === t.id;
+          return (
+            <button key={t.id} onClick={() => setTab(t.id)}
+              style={{
+                background: active ? T.primary : 'transparent',
+                color: active ? '#fff' : T.text2,
+                border: 'none',
+                padding: isMobile ? '6px 10px' : '8px 14px',
+                borderRadius: 999,
+                fontFamily: T.sansFamily,
+                fontSize: isMobile ? 11.5 : 12.5,
+                fontWeight: active ? 600 : 500,
+                cursor: 'pointer',
+                display: 'inline-flex', alignItems: 'center', gap: 7,
+                transition: T.motion ? 'all 180ms ease' : 'none',
+                whiteSpace: 'nowrap', flexShrink: 0,
+                position: 'relative',
+              }}
+              onMouseEnter={(e) => { if (!active && T.motion) e.currentTarget.style.background = T.bg3; }}
+              onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent'; }}>
+              <span style={{ fontSize: 14, filter: active ? 'none' : 'grayscale(0.3)' }}>{t.emoji}</span>
+              {t.label}
+              {t.id === 'policies' && policies.length > 0 && (
+                <span style={{
+                  marginLeft: 2, padding: '1px 7px',
+                  background: active ? 'rgba(255,255,255,0.25)' : T.primaryDim,
+                  color: active ? '#fff' : T.primary,
+                  fontSize: 10, fontWeight: 700,
+                  borderRadius: 999, lineHeight: 1.4,
+                }}>{policies.length}</span>
+              )}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
