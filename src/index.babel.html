@@ -599,9 +599,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.16';
+const APP_VERSION = 'v2.4.0-rc1.17';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Policies tab (Fraunces title + section headers + unified rider legend)';
+const APP_VERSION_NAME = 'Design v2 — Clients tab tier sections + 3-up card grid';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -23342,65 +23342,149 @@ function ClientsTab() {
           ))}
         </div>
       )}
-      <div style={{display:familyMode === 'list' ? 'grid' : 'none',gap:8}}>
-        {filtered.map(ds => {
-          const isActive = ds.clientId === activeClientId;
-          const clientPols = allPolicies.filter(p => p.clientId === ds.clientId);
-          const totalPrem = clientPols.reduce((sum, p) => sum + annualizedPremium(p), 0);
-          const tierLabel = ds.tier || UNASSIGNED_TIER;
-          const ts = tierStyle(tierLabel, tierDefinitions);
-          const syncState = syncStateFor(ds);
-          const syncLabel = syncState.label;
-          const syncColor = syncState.color;
-          return (
-            <div key={ds.clientId} onClick={() => openClientView(ds.clientId, 'profile')}
-              style={{background:isActive?'color-mix(in oklch, var(--gold) 9%, transparent)':'var(--bg2)',border:isActive?'1px solid color-mix(in oklch, var(--gold) 56%, transparent)':'1px solid var(--border)',borderRadius:10,padding:'12px 14px',cursor:'pointer',transition:'border-color .15s'}}>
-              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
-                <input type="checkbox" checked={selectedSet.has(ds.clientId)}
-                  title={'Select ' + (ds.clientName || 'client')}
-                  onClick={e => e.stopPropagation()}
-                  onChange={e => { e.stopPropagation(); toggleClientSelection(ds.clientId); }}
-                  style={selectionCheckboxStyle} />
-                <span style={{fontSize:14,fontWeight:600,color:'var(--text)',flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{ds.clientName || 'Untitled'}</span>
-                <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
-                  <TierPicker
-                    currentTier={tierLabel}
-                    tierDefinitions={tierDefinitions}
-                    size="sm"
-                    onTierChange={async (newTier) => {
-                      try {
-                        await handleTierChange(ds.clientId, newTier, tierLabel, (cid, nt) => {
-                          setAllStates(prev => prev.map(s => s.clientId === cid ? {...s, tier: nt} : s));
-                          if (cid === activeClientId && driveState) {
-                            setDriveState({...driveState, tier: nt});
-                          }
-                        });
-                      } catch(_) {}
-                      try { window.dispatchEvent(new CustomEvent('policylens-trigger-drive-write', { detail: { clientId: ds.clientId } })); } catch(_) {}
+      {/* v2.4.0-rc1.17: List-mode rendering reorganized into tier sections.
+          Each tier (Platinum / Gold / Silver / Bronze / Unassigned) gets
+          its own section header (color dot + Fraunces tier name + count
+          chip) and a 3-up responsive card grid. Empty tiers render a
+          dashed-border 'No {tier} clients yet' placeholder. Hides empty
+          non-Unassigned tiers by default; shows empty Unassigned so FCs
+          know untiered clients land there. */}
+      <div style={{display:familyMode === 'list' ? 'block' : 'none'}}>
+        {(() => {
+          // Group filtered clients by tier, preserving tierDefinitions order
+          const groupsByTier = {};
+          for (const t of tierDefinitions) groupsByTier[t] = [];
+          for (const ds of filtered) {
+            const tierName = ds.tier || UNASSIGNED_TIER;
+            if (!groupsByTier[tierName]) groupsByTier[tierName] = [];
+            groupsByTier[tierName].push(ds);
+          }
+          const isFiltered = filter !== 'all';
+          const renderClientCard = (ds) => {
+            const isActive = ds.clientId === activeClientId;
+            const clientPols = allPolicies.filter(p => p.clientId === ds.clientId);
+            const totalPrem = clientPols.reduce((sum, p) => sum + annualizedPremium(p), 0);
+            const tierLabel = ds.tier || UNASSIGNED_TIER;
+            const syncState = syncStateFor(ds);
+            const syncLabel = syncState.label;
+            const syncColor = syncState.color;
+            const initial = (ds.clientName || '?').trim().slice(0,1).toUpperCase() || '?';
+            return (
+              <div key={ds.clientId} onClick={() => openClientView(ds.clientId, 'profile')}
+                style={{
+                  background:isActive?'color-mix(in oklch, var(--gold) 9%, transparent)':'var(--bg2)',
+                  border:isActive?'1px solid color-mix(in oklch, var(--gold) 56%, transparent)':`1px solid ${T_V2.border}`,
+                  borderRadius:T_V2.radius||14, padding:'14px 16px',
+                  cursor:'pointer', transition:'border-color .15s, transform .15s',
+                  boxShadow:isActive?T_V2.shadow:'none',
+                  fontFamily:T_V2.sansFamily,
+                }}
+                onMouseEnter={e => { if (!isActive) e.currentTarget.style.borderColor = T_V2.primaryDim; }}
+                onMouseLeave={e => { if (!isActive) e.currentTarget.style.borderColor = T_V2.border; }}>
+                <div style={{display:'flex',alignItems:'center',gap:10}}>
+                  <input type="checkbox" checked={selectedSet.has(ds.clientId)}
+                    title={'Select ' + (ds.clientName || 'client')}
+                    onClick={e => e.stopPropagation()}
+                    onChange={e => { e.stopPropagation(); toggleClientSelection(ds.clientId); }}
+                    style={{...selectionCheckboxStyle, flexShrink:0}} />
+                  <div style={{
+                    width:34, height:34, borderRadius:999, flexShrink:0,
+                    background:`linear-gradient(135deg, ${T_V2.primary}, ${T_V2.lavender})`,
+                    color:'white', display:'flex', alignItems:'center', justifyContent:'center',
+                    fontFamily:T_V2.serifFamily, fontSize:15, fontWeight:500,
+                  }}>{initial}</div>
+                  <div style={{flex:1, minWidth:0}}>
+                    <div style={{
+                      fontFamily:T_V2.serifFamily, fontSize:16, color:'var(--text)',
+                      letterSpacing:'-0.01em', fontWeight:500,
+                      whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis',
+                    }}>{ds.clientName || 'Untitled'}</div>
+                    <div style={{fontSize:11, color:'var(--text3)', marginTop:2}}>
+                      {totalPrem > 0 ? 'S$' + Math.round(totalPrem).toLocaleString() + '/yr' : 'No premiums'} · {clientPols.length} {clientPols.length===1?'policy':'policies'}
+                    </div>
+                  </div>
+                  <div style={{display:'flex',alignItems:'center',gap:4,flexShrink:0}} onClick={e => e.stopPropagation()}>
+                    <TierPicker
+                      currentTier={tierLabel}
+                      tierDefinitions={tierDefinitions}
+                      size="sm"
+                      onTierChange={async (newTier) => {
+                        try {
+                          await handleTierChange(ds.clientId, newTier, tierLabel, (cid, nt) => {
+                            setAllStates(prev => prev.map(s => s.clientId === cid ? {...s, tier: nt} : s));
+                            if (cid === activeClientId && driveState) {
+                              setDriveState({...driveState, tier: nt});
+                            }
+                          });
+                        } catch(_) {}
+                        try { window.dispatchEvent(new CustomEvent('policylens-trigger-drive-write', { detail: { clientId: ds.clientId } })); } catch(_) {}
+                      }}
+                    />
+                    <button onClick={async (e) => {
+                      e.stopPropagation();
+                      const cname = ds.clientName || 'this client';
+                      if (!confirm('Destroy ' + cname + '?\n\nDrive folder will be moved to Trash (30-day recovery window).\n\nThis cannot be undone from PolicyLens.')) return;
+                      try { await destroyClient(ds); } catch(err) { toast('Error: ' + err.message, 'error'); }
                     }}
-                  />
-                  {/* v2.3.0-rc2c.5n: Per-client delete */}
-                  <button onClick={async (e) => {
-                    e.stopPropagation();
-                    const cname = ds.clientName || 'this client';
-                    if (!confirm('Destroy ' + cname + '?\n\nDrive folder will be moved to Trash (30-day recovery window).\n\nThis cannot be undone from PolicyLens.')) return;
-                    try { await destroyClient(ds); } catch(err) { toast('Error: ' + err.message, 'error'); }
-                  }}
-                    title={'Delete ' + (ds.clientName || 'client')}
-                    style={{background:'transparent',color:'var(--text3)',border:'none',width:24,height:24,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',fontSize:14,opacity:0.5,flexShrink:0}}
-                    onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = 'var(--red)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.opacity = '0.5'; e.currentTarget.style.color = 'var(--text3)'; }}>
-                    ✕
-                  </button>
+                      title={'Delete ' + (ds.clientName || 'client')}
+                      style={{background:'transparent',color:'var(--text3)',border:'none',width:24,height:24,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',fontSize:14,opacity:0.5,flexShrink:0}}
+                      onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = 'var(--red)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.opacity = '0.5'; e.currentTarget.style.color = 'var(--text3)'; }}>
+                      ✕
+                    </button>
+                  </div>
+                </div>
+                <div style={{fontSize:10.5,color:'var(--text4)',marginTop:8,paddingLeft:46,fontFamily:T_V2.sansFamily}}>
+                  {ds.lastReviewedAt ? 'Reviewed ' + fmtRelativeTime(ds.lastReviewedAt) : 'Never reviewed'}
+                  {syncLabel && <span style={{color:syncColor}}> · {syncLabel}</span>}
                 </div>
               </div>
-              <div style={{fontSize:11,color:'var(--text3)',marginTop:4}}>
-                {totalPrem > 0 ? '$' + Math.round(totalPrem).toLocaleString() + '/yr' : 'No premiums'} · {clientPols.length} {clientPols.length===1?'policy':'policies'} · {ds.lastReviewedAt ? 'reviewed ' + fmtRelativeTime(ds.lastReviewedAt) : 'never reviewed'}
-                {syncLabel && <span style={{color:syncColor}}> · {syncLabel}</span>}
+            );
+          };
+          return tierDefinitions.map(tier => {
+            const tierClients = groupsByTier[tier] || [];
+            // Hide empty tiers when filter is set to specific tier, OR when
+            // filter is 'all' but tier has no clients (except Unassigned).
+            if (isFiltered && tierClients.length === 0) return null;
+            if (!isFiltered && tierClients.length === 0 && tier === UNASSIGNED_TIER) {
+              // Skip empty Unassigned too unless there's literally nothing else;
+              // otherwise leaves a confusing empty card on common views.
+              const hasAnyClients = filtered.length > 0;
+              if (hasAnyClients) return null;
+            }
+            if (!isFiltered && tierClients.length === 0 && tier !== UNASSIGNED_TIER) return null;
+            const ts = tierStyle(tier, tierDefinitions);
+            const tierAccent = ts.color || T_V2.text3;
+            return (
+              <div key={tier} style={{marginBottom:24}}>
+                <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:10,padding:'0 4px'}}>
+                  <span style={{width:10,height:10,borderRadius:999,background:tierAccent,flexShrink:0}} />
+                  <h3 style={{fontFamily:T_V2.serifFamily,fontSize:18,fontWeight:400,letterSpacing:'-0.01em',color:'var(--text)',margin:0}}>{tier}</h3>
+                  <span style={{
+                    fontSize:11,fontWeight:600,color:'var(--text3)',
+                    padding:'2px 9px',background:`color-mix(in oklch, ${tierAccent} 10%, var(--bg3))`,
+                    borderRadius:999,fontFamily:T_V2.sansFamily,
+                  }}>{tierClients.length}</span>
+                  <div style={{flex:1,height:1,background:`linear-gradient(90deg, ${tierAccent}55, transparent)`}} />
+                </div>
+                {tierClients.length === 0 ? (
+                  <div style={{
+                    padding:'28px 20px',background:'var(--bg2)',
+                    border:`1px dashed ${T_V2.border2}`,borderRadius:T_V2.radius||14,
+                    textAlign:'center',color:'var(--text3)',fontSize:12.5,
+                    fontFamily:T_V2.sansFamily,
+                  }}>
+                    No {tier} clients yet — clients tier up automatically when you change their tier above.
+                  </div>
+                ) : (
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(280px, 1fr))',gap:10}}>
+                    {tierClients.map(renderClientCard)}
+                  </div>
+                )}
               </div>
-            </div>
-          );
-        })}
+            );
+          });
+        })()}
       </div>
       {showNewClient && <NewClientModal allStates={allStates} allPolicies={allPolicies} onClose={() => setShowNewClient(false)} />}
       <NewClientGuardModal open={clientsGuardOpen} onClose={() => setClientsGuardOpen(false)}
