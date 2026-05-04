@@ -609,9 +609,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.18';
+const APP_VERSION = 'v2.4.0-rc1.19';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Empty-state Onboarding (PLMark + Fraunces 32 + 3 large action cards)';
+const APP_VERSION_NAME = 'Design v2 — Getting Started checklist quieter eyebrow + hint';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -44296,10 +44296,11 @@ function GettingStartedChecklist({
     }
   }, "\uD83D\uDE80"), /*#__PURE__*/React.createElement("div", {
     style: {
+      fontFamily: 'inherit',
       fontSize: 11,
-      fontWeight: 700,
-      color: GOLD,
-      letterSpacing: '1px',
+      fontWeight: 600,
+      color: 'var(--text3)',
+      letterSpacing: '0.04em',
       textTransform: 'uppercase'
     }
   }, "Getting Started"), /*#__PURE__*/React.createElement("div", {
@@ -44412,13 +44413,17 @@ function GettingStartedChecklist({
         flexShrink: 0,
         whiteSpace: 'nowrap'
       }
-    }, step.actionLabel, " \u2192"), step.hint && /*#__PURE__*/React.createElement("div", {
+    }, step.actionLabel, " \u2192"), step.hint &&
+    /*#__PURE__*/
+    /* rc1.19: hint text muted instead of orange/gold italic */
+    React.createElement("div", {
       style: {
-        fontSize: 10,
-        color: 'var(--gold2)',
-        fontStyle: 'italic',
+        fontSize: 11,
+        color: 'var(--text2)',
         flex: 1,
-        minWidth: 0
+        minWidth: 0,
+        fontStyle: 'italic',
+        lineHeight: 1.5
       }
     }, step.hint)));
   }));
