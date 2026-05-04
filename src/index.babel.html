@@ -513,9 +513,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.58';
+const APP_VERSION = 'v2.3.0-rc2e.59';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Phase 7A cleanup — dead Drive auth code';
+const APP_VERSION_NAME = 'Realtime subscription schema fix (policylens)';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 
 const APP_TAB_IDS = new Set(['profile','dashboard','policies','clients','repository','report','settings']);
@@ -19452,12 +19452,12 @@ function App() {
       let channel = sb.channel('user-data-' + uid);
       if (isSupabaseClientDataSyncEnabled()) {
         channel = channel
-          .on('postgres_changes', { event:'*', schema:'public', table:'user_policies', filter:'user_id=eq.'+uid },
+          .on('postgres_changes', { event:'*', schema:'policylens', table:'user_policies', filter:'user_id=eq.'+uid },
             async (payload) => {
               try { console.log('[Realtime] Policy event:', payload.eventType, payload.new?.id||payload.old?.id); if (shouldSkipRealtime()) return; if (runCloudSyncRef.current) await runCloudSyncRef.current({force:true}); }
               catch (err) { console.warn('[Realtime] Policy handler error:', err); }
             })
-          .on('postgres_changes', { event:'*', schema:'public', table:'user_client_profile', filter:'user_id=eq.'+uid },
+          .on('postgres_changes', { event:'*', schema:'policylens', table:'user_client_profile', filter:'user_id=eq.'+uid },
             async (payload) => {
               try { console.log('[Realtime] Profile event:', payload.eventType); if (shouldSkipRealtime()) return; if (runCloudSyncRef.current) await runCloudSyncRef.current({force:true}); }
               catch (err) { console.warn('[Realtime] Profile handler error:', err); }
@@ -19466,7 +19466,7 @@ function App() {
         console.log('[Realtime] Drive mode — skipping user_policies + user_client_profile subscriptions');
       }
       channel = channel
-        .on('postgres_changes', { event:'*', schema:'public', table:'user_app_settings', filter:'user_id=eq.'+uid },
+        .on('postgres_changes', { event:'*', schema:'policylens', table:'user_app_settings', filter:'user_id=eq.'+uid },
           async (payload) => {
             try { console.log('[Realtime] Settings event:', payload.eventType); if (shouldSkipRealtime()) return; if (runCloudSyncRef.current) await runCloudSyncRef.current({force:true}); }
             catch (err) { console.warn('[Realtime] Settings handler error:', err); }

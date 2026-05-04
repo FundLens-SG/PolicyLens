@@ -523,9 +523,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.58';
+const APP_VERSION = 'v2.3.0-rc2e.59';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Phase 7A cleanup — dead Drive auth code';
+const APP_VERSION_NAME = 'Realtime subscription schema fix (policylens)';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 const APP_TAB_IDS = new Set(['profile', 'dashboard', 'policies', 'clients', 'repository', 'report', 'settings']);
 function getInitialPolicyLensTab() {
@@ -20039,7 +20039,7 @@ function App() {
       if (isSupabaseClientDataSyncEnabled()) {
         channel = channel.on('postgres_changes', {
           event: '*',
-          schema: 'public',
+          schema: 'policylens',
           table: 'user_policies',
           filter: 'user_id=eq.' + uid
         }, async payload => {
@@ -20054,7 +20054,7 @@ function App() {
           }
         }).on('postgres_changes', {
           event: '*',
-          schema: 'public',
+          schema: 'policylens',
           table: 'user_client_profile',
           filter: 'user_id=eq.' + uid
         }, async payload => {
@@ -20073,7 +20073,7 @@ function App() {
       }
       channel = channel.on('postgres_changes', {
         event: '*',
-        schema: 'public',
+        schema: 'policylens',
         table: 'user_app_settings',
         filter: 'user_id=eq.' + uid
       }, async payload => {
