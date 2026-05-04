@@ -609,9 +609,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.9';
+const APP_VERSION = 'v2.4.0-rc1.10';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — hide legacy strip + slim sync pill + Fraunces section titles';
+const APP_VERSION_NAME = 'Design v2 — Repository title (Fraunces) + clearer Sync button';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -61545,6 +61545,7 @@ function Repository() {
     refreshRepo,
     repoSource
   } = useContext(AppCtx);
+  const isMobile = useViewportIsMobile();
   const [repoScanning, setRepoScanning] = useState(false);
   const handleRepoDrop = async files => {
     if (!files || !files.length) return;
@@ -61690,44 +61691,79 @@ function Repository() {
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
-      alignItems: 'center',
+      alignItems: 'flex-start',
       justifyContent: 'space-between',
-      marginBottom: 16,
+      marginBottom: T_V2.sectionGap || 28,
       flexWrap: 'wrap',
-      gap: 8
+      gap: 14
     }
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h2", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 18,
-      fontWeight: 600
+      minWidth: 0,
+      flex: '1 1 auto'
+    }
+  }, /*#__PURE__*/React.createElement("h2", {
+    style: {
+      fontFamily: T_V2.serifFamily,
+      fontSize: 32,
+      fontWeight: 400,
+      letterSpacing: '-0.015em',
+      color: 'var(--text)',
+      margin: 0,
+      lineHeight: 1.1
     }
   }, "Product Repository"), /*#__PURE__*/React.createElement("p", {
     style: {
-      fontSize: 12,
-      color: 'var(--text3)'
+      fontSize: 13,
+      color: 'var(--text3)',
+      marginTop: 6,
+      lineHeight: 1.5,
+      margin: '6px 0 0'
     }
-  }, repo.length, " products \u2022 ", repoSource === 'supabase' ? '☁️ Shared (Supabase)' : '💾 Local only', " \u2022 ", isAdmin ? 'Admin: full edit + delete' : 'Advisor: add comments')), /*#__PURE__*/React.createElement("div", {
+  }, repo.length, " products \xB7 ", repoSource === 'supabase' ? 'Shared library' : 'Local only', " \xB7 ", isAdmin ? 'Admin (full edit + delete)' : 'Advisor (add comments)')), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
-      gap: 6
+      gap: 8,
+      alignItems: 'center',
+      flexShrink: 0
     }
-  }, refreshRepo && /*#__PURE__*/React.createElement("button", {
-    className: "btn-secondary btn-sm",
+  }, /*#__PURE__*/React.createElement("input", {
+    value: search,
+    onChange: e => setSearch(e.target.value),
+    placeholder: "Search products\u2026",
+    style: {
+      width: isMobile ? 160 : 240,
+      height: 32,
+      fontSize: 12,
+      borderRadius: 999,
+      padding: '0 14px'
+    }
+  }), refreshRepo && /*#__PURE__*/React.createElement("button", {
     disabled: syncing,
     onClick: async () => {
       setSyncing(true);
       const ok = await refreshRepo();
       setSyncing(false);
       if (ok) toast('Synced ' + repo.length + ' products from cloud', 'success');else toast('Sync failed — check connection', 'error');
-    }
-  }, syncing ? 'Syncing…' : '🔄 Sync'), /*#__PURE__*/React.createElement("input", {
-    value: search,
-    onChange: e => setSearch(e.target.value),
-    placeholder: "Search products\u2026",
+    },
     style: {
-      width: 200
+      height: 32,
+      padding: '0 16px',
+      fontSize: 12,
+      fontWeight: 600,
+      borderRadius: 999,
+      background: 'var(--gold-dim)',
+      color: 'var(--gold)',
+      border: '1px solid color-mix(in oklch, var(--gold) 30%, transparent)',
+      cursor: syncing ? 'wait' : 'pointer',
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 6,
+      whiteSpace: 'nowrap',
+      transition: 'all 180ms ease',
+      opacity: syncing ? 0.6 : 1
     }
-  }))), /*#__PURE__*/React.createElement(DropZone, {
+  }, syncing ? 'Syncing…' : '⟲ Sync from Drive'))), /*#__PURE__*/React.createElement(DropZone, {
     active: true,
     onFiles: handleRepoDrop,
     label: repoScanning ? "🔄 Scanning documents for products..." : "📎 Drop product summaries, benefit illustrations, or policy documents here to add to the repository"

@@ -599,9 +599,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.9';
+const APP_VERSION = 'v2.4.0-rc1.10';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — hide legacy strip + slim sync pill + Fraunces section titles';
+const APP_VERSION_NAME = 'Design v2 — Repository title (Fraunces) + clearer Sync button';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -42857,6 +42857,7 @@ function FundAllocationEditor({allocations,onChange,reinvest,onSyncWeighted,poli
 
 function Repository() {
   const {repo,saveRepo,deleteRepo,refreshRepo,repoSource} = useContext(AppCtx);
+  const isMobile = useViewportIsMobile();
   const [repoScanning, setRepoScanning] = useState(false);
 
   const handleRepoDrop = async (files) => {
@@ -42954,18 +42955,32 @@ function Repository() {
 
   return (
     <div className="fade-in">
-      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16,flexWrap:'wrap',gap:8}}>
-        <div>
-          <h2 style={{fontSize:18,fontWeight:600}}>Product Repository</h2>
-          <p style={{fontSize:12,color:'var(--text3)'}}>
-            {repo.length} products • {repoSource==='supabase'?'☁️ Shared (Supabase)':'💾 Local only'} • {isAdmin?'Admin: full edit + delete':'Advisor: add comments'}
+      {/* v2.4.0-rc1.10: Repository page header — Fraunces title +
+          subtitle + 'Sync from Drive' button (clearer label per the
+          Round 2 brief). */}
+      <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:T_V2.sectionGap||28,flexWrap:'wrap',gap:14}}>
+        <div style={{minWidth:0,flex:'1 1 auto'}}>
+          <h2 style={{fontFamily:T_V2.serifFamily,fontSize:32,fontWeight:400,letterSpacing:'-0.015em',color:'var(--text)',margin:0,lineHeight:1.1}}>Product Repository</h2>
+          <p style={{fontSize:13,color:'var(--text3)',marginTop:6,lineHeight:1.5,margin:'6px 0 0'}}>
+            {repo.length} products · {repoSource==='supabase'?'Shared library':'Local only'} · {isAdmin?'Admin (full edit + delete)':'Advisor (add comments)'}
           </p>
         </div>
-        <div style={{display:'flex',gap:6}}>
-          {refreshRepo && <button className="btn-secondary btn-sm" disabled={syncing} onClick={async()=>{setSyncing(true);const ok=await refreshRepo();setSyncing(false);if(ok)toast('Synced '+repo.length+' products from cloud','success');else toast('Sync failed — check connection','error');}}>
-            {syncing?'Syncing…':'🔄 Sync'}
+        <div style={{display:'flex',gap:8,alignItems:'center',flexShrink:0}}>
+          <input value={search} onChange={e=>setSearch(e.target.value)}
+            placeholder="Search products…"
+            style={{width:isMobile?160:240,height:32,fontSize:12,borderRadius:999,padding:'0 14px'}} />
+          {refreshRepo && <button disabled={syncing}
+            onClick={async()=>{setSyncing(true);const ok=await refreshRepo();setSyncing(false);if(ok)toast('Synced '+repo.length+' products from cloud','success');else toast('Sync failed — check connection','error');}}
+            style={{
+              height:32,padding:'0 16px',fontSize:12,fontWeight:600,
+              borderRadius:999,background:'var(--gold-dim)',
+              color:'var(--gold)',border:'1px solid color-mix(in oklch, var(--gold) 30%, transparent)',
+              cursor:syncing?'wait':'pointer',display:'inline-flex',
+              alignItems:'center',gap:6,whiteSpace:'nowrap',
+              transition:'all 180ms ease',opacity:syncing?0.6:1,
+            }}>
+            {syncing?'Syncing…':'⟲ Sync from Drive'}
           </button>}
-          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search products…" style={{width:200}} />
         </div>
       </div>
 
