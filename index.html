@@ -384,6 +384,9 @@ function sb(){return _SB;}
 async function authLogout(){
   try { await sb().auth.signOut(); } catch(_){}
   _user=null;_prof=null;_isAdmin=false;
+  // rc2e.60: keep window._isAdmin in sync so a re-mount before redirect
+  // doesn't see a stale truthy value.
+  window._isAdmin = false;
   window.location.href = '/';
 }
 
@@ -399,8 +402,36 @@ async function authCheck(){
     }
     _user = sess.data.session.user;
     console.log('[Auth] User:', _user.email, 'UID:', _user.id);
-    _prof = { email:_user.email, full_name:_user.user_metadata?.full_name||'', approved:true, role:'user' };
-    _isAdmin = false;
+
+    // rc2e.60: Read role + status from hub public.profiles. RLS allows
+    // every authenticated user to read their own row (policy "users read
+    // own profile" matches on auth.jwt() ->> 'email'). Defaults to
+    // role='member' / approved=true on any read failure so an outage in
+    // the profile lookup never locks a signed-in FC out of the tool.
+    var role = 'member';
+    var status = 'active';
+    try {
+      var profileResp = await s.from('profiles')
+        .select('role,status')
+        .eq('email', _user.email)
+        .maybeSingle();
+      if (profileResp && profileResp.error) {
+        console.warn('[Auth] hub profile read error:', profileResp.error.message);
+      } else if (profileResp && profileResp.data) {
+        if (profileResp.data.role) role = profileResp.data.role;
+        if (profileResp.data.status) status = profileResp.data.status;
+      }
+    } catch (profileErr) {
+      console.warn('[Auth] hub profile read threw:', profileErr && profileErr.message ? profileErr.message : profileErr);
+    }
+
+    _prof = { email:_user.email, full_name:_user.user_metadata?.full_name||'', approved: status === 'active', role: role };
+    _isAdmin = (role === 'admin' || role === 'owner');
+    // Mirror to window for React consumers that read window._isAdmin
+    // directly (App's isAdmin useState seeds from it; the
+    // policylens-auth-changed event below re-syncs).
+    window._isAdmin = _isAdmin;
+    console.log('[Auth] Role:', role, 'Admin:', _isAdmin, 'Status:', status);
     // Cache the Drive provider token for driveClient (set by hub OAuth on sign-in).
     window._driveProviderToken = sess.data.session.provider_token || null;
     authGrant();
@@ -523,9 +554,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.59';
+const APP_VERSION = 'v2.3.0-rc2e.60';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Realtime subscription schema fix (policylens)';
+const APP_VERSION_NAME = 'Wire isAdmin to hub profiles.role';
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 const APP_TAB_IDS = new Set(['profile', 'dashboard', 'policies', 'clients', 'repository', 'report', 'settings']);
 function getInitialPolicyLensTab() {
