@@ -609,9 +609,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.24';
+const APP_VERSION = 'v2.4.0-rc1.25';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Dual-slider What-If + 25-year Cashflows chart';
+const APP_VERSION_NAME = 'Design v2 — Dashboard hero & sidebar polished to prototype';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -39251,6 +39251,12 @@ function Dashboard() {
   })();
   const fcFirst = (window._user?.user_metadata?.full_name || window._user?.email || 'there').split(/[\s@]/)[0];
   const clientFirst = p.name && String(p.name).trim().split(/\s+/)[0] || clientFirstLabel || 'this client';
+  // v2.4.0-rc1.25: client last name → drives "Smith family" wording on hero
+  const clientLastName = (() => {
+    if (!p.name) return null;
+    const parts = String(p.name).trim().split(/\s+/);
+    return parts.length > 1 ? parts[parts.length - 1] : null;
+  })();
   // Family tree nodes — main client + dependants
   const familyNodes = (() => {
     const nodes = [];
@@ -39589,7 +39595,7 @@ function Dashboard() {
       color: T.primary,
       fontStyle: 'italic'
     }
-  }, clientFirst), " portfolio looks today."), /*#__PURE__*/React.createElement("div", {
+  }, clientLastName || clientFirst), " ", clientLastName ? 'family' : 'portfolio', " is doing today."), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13.5,
       color: T.text2,
@@ -39597,7 +39603,14 @@ function Dashboard() {
       lineHeight: 1.55,
       maxWidth: 540
     }
-  }, activePols.length === 0 ? `No policies on file yet — drop a document above or open Policies to add the first one.` : `${activePols.length} active polic${activePols.length === 1 ? 'y' : 'ies'} across ${insurerCount} insurer${insurerCount === 1 ? '' : 's'}. ${scoreLabel.toLowerCase()} — overall score ${overallScore} / 100.`), /*#__PURE__*/React.createElement("div", {
+  }, activePols.length === 0 ? `No policies on file yet — drop a document above or open Policies to add the first one.` : (() => {
+    const sentences = [];
+    sentences.push(`${activePols.length} active polic${activePols.length === 1 ? 'y' : 'ies'} across ${insurerCount} insurer${insurerCount === 1 ? '' : 's'}, all reconciled this morning.`);
+    if (overallScore >= 70) sentences.push(`Protection is in good shape`);else if (overallScore >= 50) sentences.push(`Protection has room to grow`);else sentences.push(`Protection has noticeable gaps`);
+    if (retCoverPct > 0) sentences[sentences.length - 1] += `, retirement is ${retCoverPct >= 80 ? 'on track' : 'tracking'} at ${retCoverPct}%`;
+    sentences[sentences.length - 1] += pendingScans ? `, and there ${pendingScans.count === 1 ? 'is' : 'are'} ${pendingScans.count} new scan${pendingScans.count === 1 ? '' : 's'} waiting for review.` : '.';
+    return sentences.join(' ');
+  })()), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
@@ -39608,7 +39621,12 @@ function Dashboard() {
     tone: "primary",
     size: "md",
     onClick: () => setTab('report')
-  }, "\uD83D\uDCC4 Generate report"), activePols.length > 0 && /*#__PURE__*/React.createElement(PLPill, {
+  }, "\uD83D\uDCC4 Generate report"), pendingScans ? /*#__PURE__*/React.createElement(PLPill, {
+    T: T,
+    tone: "soft",
+    size: "md",
+    onClick: () => setTab('policies')
+  }, "\u2728 Review ", pendingScans.count, " scan", pendingScans.count === 1 ? '' : 's') : activePols.length > 0 && /*#__PURE__*/React.createElement(PLPill, {
     T: T,
     tone: "soft",
     size: "md",
@@ -39633,22 +39651,41 @@ function Dashboard() {
       gap: 14,
       marginTop: 12
     }
-  }, [['Age', age || '—'], ['Children', (p.dependants || []).filter(d => /child|son|daughter/i.test(d.relationship || '')).length || '—'], ['Income', annualIncome > 0 ? `S$${Math.round(annualIncome / 1000)}k/yr` : '—'], ['Premium / income', annualIncome > 0 ? `${Math.round(totalPremium.annual / annualIncome * 100)}%` : '—']].map(([k, v]) => /*#__PURE__*/React.createElement("div", {
-    key: k
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 11,
-      color: T.text3,
-      fontWeight: 500
+  }, (() => {
+    // v2.4.0-rc1.25: sidebar fields aligned with the prototype
+    // (Spouse + Children + Income + Last review). Falls back
+    // to Age + Premium/income for clients without spouse/review data.
+    const spouse = (p.dependants || []).find(d => /spouse|wife|husband|partner/i.test(d.relationship || ''));
+    const childCount = (p.dependants || []).filter(d => /child|son|daughter/i.test(d.relationship || '')).length;
+    // Last review = lastReviewedAt from drive state, formatted as "Nd ago"
+    const lastReviewed = driveState?.lastReviewedAt;
+    let lastReviewedLabel = '—';
+    if (lastReviewed) {
+      const days = Math.floor((Date.now() - new Date(lastReviewed).getTime()) / 86400000);
+      lastReviewedLabel = days === 0 ? 'Today' : days === 1 ? 'Yesterday' : `${days}d ago`;
     }
-  }, k), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 14,
-      color: T.text,
-      fontWeight: 600,
-      marginTop: 2
-    }
-  }, v))))))), /*#__PURE__*/React.createElement("div", {
+    const fields = [];
+    if (spouse?.name) fields.push(['Spouse', spouse.name.split(' ')[0]]);else fields.push(['Age', age || '—']);
+    fields.push(['Children', childCount || '—']);
+    fields.push(['Income', annualIncome > 0 ? `S$${Math.round(annualIncome / 1000)}k/yr` : '—']);
+    fields.push([lastReviewed ? 'Last review' : 'Premium / income', lastReviewed ? lastReviewedLabel : annualIncome > 0 ? `${Math.round(totalPremium.annual / annualIncome * 100)}%` : '—']);
+    return fields.map(([k, v]) => /*#__PURE__*/React.createElement("div", {
+      key: k
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11,
+        color: T.text3,
+        fontWeight: 500
+      }
+    }, k), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 14,
+        color: T.text,
+        fontWeight: 600,
+        marginTop: 2
+      }
+    }, v)));
+  })())))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: 'repeat(5, 1fr)',

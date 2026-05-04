@@ -599,9 +599,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.24';
+const APP_VERSION = 'v2.4.0-rc1.25';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Dual-slider What-If + 25-year Cashflows chart';
+const APP_VERSION_NAME = 'Design v2 — Dashboard hero & sidebar polished to prototype';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -30427,6 +30427,12 @@ function Dashboard() {
   const greeting = (() => { const h = new Date().getHours(); return h<12?'Good morning':h<18?'Good afternoon':'Good evening'; })();
   const fcFirst = (window._user?.user_metadata?.full_name || window._user?.email || 'there').split(/[\s@]/)[0];
   const clientFirst = (p.name && String(p.name).trim().split(/\s+/)[0]) || (clientFirstLabel || 'this client');
+  // v2.4.0-rc1.25: client last name → drives "Smith family" wording on hero
+  const clientLastName = (() => {
+    if (!p.name) return null;
+    const parts = String(p.name).trim().split(/\s+/);
+    return parts.length > 1 ? parts[parts.length - 1] : null;
+  })();
   // Family tree nodes — main client + dependants
   const familyNodes = (() => {
     const nodes = [];
@@ -30589,16 +30595,27 @@ function Dashboard() {
               {greeting}, {fcFirst} ☕
             </div>
             <div style={{ fontFamily: T.serifFamily, fontSize: 42, color: T.text, letterSpacing: '-0.025em', lineHeight: 1.05, fontWeight: 400 }}>
-              Here&apos;s how the <span style={{ color: T.primary, fontStyle: 'italic' }}>{clientFirst}</span> portfolio looks today.
+              Here&apos;s how the <span style={{ color: T.primary, fontStyle: 'italic' }}>{clientLastName || clientFirst}</span> {clientLastName ? 'family' : 'portfolio'} is doing today.
             </div>
             <div style={{ fontSize: 13.5, color: T.text2, marginTop: 14, lineHeight: 1.55, maxWidth: 540 }}>
               {activePols.length === 0
                 ? `No policies on file yet — drop a document above or open Policies to add the first one.`
-                : `${activePols.length} active polic${activePols.length===1?'y':'ies'} across ${insurerCount} insurer${insurerCount===1?'':'s'}. ${scoreLabel.toLowerCase()} — overall score ${overallScore} / 100.`}
+                : (() => {
+                    const sentences = [];
+                    sentences.push(`${activePols.length} active polic${activePols.length===1?'y':'ies'} across ${insurerCount} insurer${insurerCount===1?'':'s'}, all reconciled this morning.`);
+                    if (overallScore >= 70) sentences.push(`Protection is in good shape`);
+                    else if (overallScore >= 50) sentences.push(`Protection has room to grow`);
+                    else sentences.push(`Protection has noticeable gaps`);
+                    if (retCoverPct > 0) sentences[sentences.length-1] += `, retirement is ${retCoverPct >= 80 ? 'on track' : 'tracking'} at ${retCoverPct}%`;
+                    sentences[sentences.length-1] += pendingScans ? `, and there ${pendingScans.count===1?'is':'are'} ${pendingScans.count} new scan${pendingScans.count===1?'':'s'} waiting for review.` : '.';
+                    return sentences.join(' ');
+                  })()}
             </div>
             <div style={{ display:'flex', gap: 8, marginTop: 20 }}>
               <PLPill T={T} tone="primary" size="md" onClick={() => setTab('report')}>📄 Generate report</PLPill>
-              {activePols.length > 0 && <PLPill T={T} tone="soft" size="md" onClick={() => setTab('policies')}>✨ Review policies</PLPill>}
+              {pendingScans
+                ? <PLPill T={T} tone="soft" size="md" onClick={() => setTab('policies')}>✨ Review {pendingScans.count} scan{pendingScans.count===1?'':'s'}</PLPill>
+                : (activePols.length > 0 && <PLPill T={T} tone="soft" size="md" onClick={() => setTab('policies')}>✨ Review policies</PLPill>)}
             </div>
           </div>
           <div style={{
@@ -30607,17 +30624,33 @@ function Dashboard() {
           }}>
             <PLLabel T={T} style={{ marginBottom: 8 }}>This client at a glance</PLLabel>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap: 14, marginTop: 12 }}>
-              {[
-                ['Age', age || '—'],
-                ['Children', (p.dependants||[]).filter(d => /child|son|daughter/i.test(d.relationship||'')).length || '—'],
-                ['Income', annualIncome > 0 ? `S$${Math.round(annualIncome/1000)}k/yr` : '—'],
-                ['Premium / income', annualIncome > 0 ? `${Math.round(totalPremium.annual/annualIncome*100)}%` : '—'],
-              ].map(([k,v]) => (
-                <div key={k}>
-                  <div style={{ fontSize: 11, color: T.text3, fontWeight: 500 }}>{k}</div>
-                  <div style={{ fontSize: 14, color: T.text, fontWeight: 600, marginTop: 2 }}>{v}</div>
-                </div>
-              ))}
+              {(() => {
+                // v2.4.0-rc1.25: sidebar fields aligned with the prototype
+                // (Spouse + Children + Income + Last review). Falls back
+                // to Age + Premium/income for clients without spouse/review data.
+                const spouse = (p.dependants||[]).find(d => /spouse|wife|husband|partner/i.test(d.relationship||''));
+                const childCount = (p.dependants||[]).filter(d => /child|son|daughter/i.test(d.relationship||'')).length;
+                // Last review = lastReviewedAt from drive state, formatted as "Nd ago"
+                const lastReviewed = driveState?.lastReviewedAt;
+                let lastReviewedLabel = '—';
+                if (lastReviewed) {
+                  const days = Math.floor((Date.now() - new Date(lastReviewed).getTime()) / 86400000);
+                  lastReviewedLabel = days === 0 ? 'Today' : days === 1 ? 'Yesterday' : `${days}d ago`;
+                }
+                const fields = [];
+                if (spouse?.name) fields.push(['Spouse', spouse.name.split(' ')[0]]);
+                else fields.push(['Age', age || '—']);
+                fields.push(['Children', childCount || '—']);
+                fields.push(['Income', annualIncome > 0 ? `S$${Math.round(annualIncome/1000)}k/yr` : '—']);
+                fields.push([lastReviewed ? 'Last review' : 'Premium / income',
+                  lastReviewed ? lastReviewedLabel : (annualIncome > 0 ? `${Math.round(totalPremium.annual/annualIncome*100)}%` : '—')]);
+                return fields.map(([k,v]) => (
+                  <div key={k}>
+                    <div style={{ fontSize: 11, color: T.text3, fontWeight: 500 }}>{k}</div>
+                    <div style={{ fontSize: 14, color: T.text, fontWeight: 600, marginTop: 2 }}>{v}</div>
+                  </div>
+                ));
+              })()}
             </div>
           </div>
         </div>
