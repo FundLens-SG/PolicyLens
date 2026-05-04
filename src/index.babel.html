@@ -28,6 +28,10 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PolicyLens">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<!-- v2.4.0 design system: Plus Jakarta Sans (UI) + Fraunces (display serif) + Geist Mono (numerals/IDs) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap" rel="stylesheet">
 <script>
 // ═══════════════════════════════════════════════════════════════
 // v2.3.0-rc2d.13: SERVICE WORKER REGISTRATION
@@ -544,9 +548,247 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.3.0-rc2e.60';
+const APP_VERSION = 'v2.4.0-rc1.1';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Wire isAdmin to hub profiles.role';
+const APP_VERSION_NAME = 'Design v2 foundation — tokens + atoms';
+
+// ═══════════════════════════════════════════════════════════════
+// MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
+// ───────────────────────────────────────────────────────────────
+// Source: design_handoff_policylens/components/tokens.jsx (the
+// pixel-perfect handoff brief). This block defines:
+//   • PL_TOKENS_DEFAULTS — the shipping defaults (warmth 0.6,
+//     sunset palette, rounded 0.7, density 0.6, motion 0.7, light).
+//   • plTokens(t) — resolves a tweak object into a flat token map.
+//   • T_V2 — the resolved default token object, available globally
+//     to v2 components. (Old chrome/UI keeps using its inline-style
+//     palette + the legacy CSS custom properties on :root until the
+//     remaining batches replace each surface.)
+//   • Atom helpers: PLLabel, PLCard, PLPill, PLNumber, PLMark,
+//     PLBlob, PLSparkline.
+//
+// Soft-dark mode is preserved via mode: 'soft-dark' so a future
+// Settings toggle can switch without code changes.
+// ═══════════════════════════════════════════════════════════════
+
+const PL_TOKENS_DEFAULTS = {
+  warmth: 0.6,
+  accentMix: 'sunset',
+  rounded: 0.7,
+  density: 0.6,
+  motion: 0.7,
+  mode: 'light',
+};
+
+function plTokens(t) {
+  const isLight = t.mode === 'light';
+  const w = t.warmth;
+  const bg  = isLight ? `oklch(${0.985 - w * 0.01} ${0.012 + w * 0.008} ${70 - w * 8})` : `oklch(0.22 0.014 65)`;
+  const bg2 = isLight ? `oklch(${0.97  - w * 0.012} ${0.014 + w * 0.008} ${70 - w * 8})` : `oklch(0.26 0.014 65)`;
+  const bg3 = isLight ? `oklch(${0.94  - w * 0.015} ${0.018 + w * 0.008} ${70 - w * 8})` : `oklch(0.30 0.014 65)`;
+  const bg4 = isLight ? `oklch(${0.90  - w * 0.02 } ${0.022 + w * 0.008} ${70 - w * 8})` : `oklch(0.34 0.014 65)`;
+  const text  = isLight ? `oklch(0.26 0.022 50)` : `oklch(0.96 0.012 80)`;
+  const text2 = isLight ? `oklch(0.42 0.022 50)` : `oklch(0.78 0.012 80)`;
+  const text3 = isLight ? `oklch(0.58 0.022 50)` : `oklch(0.62 0.012 80)`;
+  const text4 = isLight ? `oklch(0.72 0.018 50)` : `oklch(0.46 0.012 80)`;
+  const border  = isLight ? `oklch(0.88 0.014 70)` : `oklch(0.36 0.014 65)`;
+  const border2 = isLight ? `oklch(0.82 0.018 70)` : `oklch(0.44 0.014 65)`;
+  const hair    = isLight ? `oklch(0.26 0.022 50 / 0.08)` : `oklch(0.96 0.012 80 / 0.08)`;
+  const palettes = {
+    sunset: { primary: 'oklch(0.72 0.16 38)',  primary2: 'oklch(0.82 0.13 38)',  sage: 'oklch(0.74 0.10 155)', sky: 'oklch(0.74 0.12 230)', lavender: 'oklch(0.74 0.11 295)', sun: 'oklch(0.86 0.14 90)', blush: 'oklch(0.82 0.10 5)' },
+    garden: { primary: 'oklch(0.66 0.13 155)', primary2: 'oklch(0.78 0.11 155)', sage: 'oklch(0.74 0.13 130)', sky: 'oklch(0.74 0.10 220)', lavender: 'oklch(0.74 0.10 290)', sun: 'oklch(0.84 0.13 80)', blush: 'oklch(0.80 0.12 20)' },
+    sea:    { primary: 'oklch(0.66 0.14 220)', primary2: 'oklch(0.78 0.12 220)', sage: 'oklch(0.74 0.10 175)', sky: 'oklch(0.78 0.10 245)', lavender: 'oklch(0.72 0.11 290)', sun: 'oklch(0.84 0.13 85)', blush: 'oklch(0.80 0.11 15)' },
+  };
+  const P = palettes[t.accentMix] || palettes.sunset;
+  const primary = P.primary, primary2 = P.primary2;
+  const primaryDim  = isLight ? `color-mix(in oklch, ${primary} 18%, transparent)` : `color-mix(in oklch, ${primary} 24%, transparent)`;
+  const primarySoft = isLight ? `color-mix(in oklch, ${primary} 10%, ${bg2})`      : `color-mix(in oklch, ${primary} 18%, ${bg2})`;
+  const cat = { Protection: P.sky, Savings: P.sage, Health: P.blush, Investment: P.lavender, Retirement: P.sun, Maternity: P.blush };
+  const radius   = 6 + t.rounded * 14;
+  const radiusLg = 10 + t.rounded * 20;
+  const radiusSm = 4 + t.rounded * 8;
+  const cardPad  = 16 + t.density * 12;
+  const sectionGap = 22 + t.density * 16;
+  const sansFamily  = `"Plus Jakarta Sans", "Geist", system-ui, sans-serif`;
+  const monoFamily  = `"Geist Mono", ui-monospace, monospace`;
+  const serifFamily = `"Fraunces", "Instrument Serif", Georgia, serif`;
+  const shadow = isLight
+    ? `0 1px 2px oklch(0.26 0.022 50 / 0.04), 0 8px 24px oklch(0.26 0.022 50 / 0.06)`
+    : `0 8px 30px rgba(0,0,0,0.3)`;
+  return {
+    bg, bg2, bg3, bg4,
+    text, text2, text3, text4,
+    border, border2, hair,
+    primary, primary2, primaryDim, primarySoft,
+    radius, radiusLg, radiusSm, cardPad, sectionGap,
+    sansFamily, monoFamily, serifFamily,
+    motion: t.motion, mode: t.mode,
+    shadow, cat,
+    sage: P.sage, sky: P.sky, lavender: P.lavender, sun: P.sun, blush: P.blush,
+    green: 'oklch(0.68 0.13 155)',
+    red:   'oklch(0.65 0.18 25)',
+    warn:  'oklch(0.78 0.14 65)',
+    accentMix: t.accentMix,
+  };
+}
+
+const T_V2 = plTokens(PL_TOKENS_DEFAULTS);
+
+// ── ATOM: PLLabel — small uppercase eyebrow label (11/600/0.04em) ──
+function PLLabel({ T = T_V2, children, style = {} }) {
+  return (
+    <div style={{
+      fontFamily: T.sansFamily, fontSize: 11, fontWeight: 600,
+      letterSpacing: '0.04em', color: T.text3, textTransform: 'uppercase',
+      ...style,
+    }}>{children}</div>
+  );
+}
+
+// ── ATOM: PLCard — surface with border, radius, shadow, optional padding ──
+function PLCard({ T = T_V2, children, style = {}, pad = true, soft = false, onClick }) {
+  return (
+    <div onClick={onClick} style={{
+      background: soft ? T.primarySoft : T.bg2,
+      border: `1px solid ${T.border}`,
+      borderRadius: T.radiusLg,
+      padding: pad ? T.cardPad : 0,
+      boxShadow: T.shadow,
+      cursor: onClick ? 'pointer' : 'default',
+      transition: T.motion ? 'border-color 200ms ease, transform 200ms ease, box-shadow 200ms ease' : 'none',
+      ...style,
+    }}>{children}</div>
+  );
+}
+
+// ── ATOM: PLPill — pill button with tones (primary/soft/ghost/success/warn/danger) ──
+function PLPill({ T = T_V2, children, tone = 'primary', size = 'md', icon = null, onClick, active, style = {} }) {
+  const tones = {
+    primary: { bg: T.primary, fg: T.mode === 'light' ? '#fff' : '#1a1408', br: T.primary },
+    soft:    { bg: T.primaryDim, fg: T.primary, br: 'transparent' },
+    ghost:   { bg: 'transparent', fg: T.text2, br: T.border },
+    success: { bg: `color-mix(in oklch, ${T.green} 18%, transparent)`, fg: T.green, br: 'transparent' },
+    warn:    { bg: `color-mix(in oklch, ${T.warn} 22%, transparent)`,  fg: 'oklch(0.55 0.16 65)', br: 'transparent' },
+    danger:  { bg: `color-mix(in oklch, ${T.red} 18%, transparent)`,   fg: T.red, br: 'transparent' },
+  };
+  const c = tones[tone] || tones.primary;
+  const sizes = { sm: { p: '5px 10px', f: 11.5 }, md: { p: '8px 14px', f: 12.5 }, lg: { p: '11px 20px', f: 13.5 } };
+  const s = sizes[size];
+  return (
+    <button onClick={onClick} style={{
+      background: active ? T.primary : c.bg,
+      color: active ? '#fff' : c.fg,
+      border: `1px solid ${active ? T.primary : c.br}`,
+      borderRadius: 999, padding: s.p, fontSize: s.f,
+      fontFamily: T.sansFamily, fontWeight: 500,
+      cursor: onClick ? 'pointer' : 'default',
+      display: 'inline-flex', alignItems: 'center', gap: 6,
+      transition: T.motion ? 'all 180ms ease' : 'none',
+      whiteSpace: 'nowrap',
+      ...style,
+    }}>
+      {icon && <span style={{ display: 'inline-flex' }}>{icon}</span>}
+      {children}
+    </button>
+  );
+}
+
+// ── ATOM: PLNumber — animated count-up numeral with prefix/suffix ──
+function PLNumber({ T = T_V2, value, prefix = '', suffix = '', size = 28, weight = 500, animate = true, decimals = 0, color = null, serif = false }) {
+  const [v, setV] = React.useState(animate && T.motion ? 0 : value);
+  React.useEffect(() => {
+    if (!animate || !T.motion) { setV(value); return; }
+    const dur = 800 * T.motion;
+    const t0 = performance.now();
+    let raf;
+    const step = (now) => {
+      const p = Math.min(1, (now - t0) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setV(value * eased);
+      if (p < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [value, animate, T.motion]);
+  const fmt = (n) => decimals === 0 ? Math.round(n).toLocaleString() : n.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  return (
+    <span style={{
+      fontFamily: serif ? T.serifFamily : T.sansFamily,
+      fontSize: size, fontWeight: weight,
+      fontVariantNumeric: 'tabular-nums lining-nums',
+      letterSpacing: serif ? '-0.02em' : '-0.015em',
+      lineHeight: 1, color: color || T.text,
+    }}>
+      {prefix && <span style={{ fontSize: size * 0.5, color: T.text3, marginRight: 4, fontWeight: 500 }}>{prefix}</span>}
+      {fmt(v)}
+      {suffix && <span style={{ fontSize: size * 0.45, color: T.text3, marginLeft: 5, fontWeight: 500 }}>{suffix}</span>}
+    </span>
+  );
+}
+
+// ── ATOM: PLMark — magnifying-lens logo SVG ──
+function PLMark({ T = T_V2, size = 22, color }) {
+  const c = color || T.primary;
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
+      <circle cx="13" cy="13" r="9.5" fill={c} opacity="0.18" />
+      <circle cx="13" cy="13" r="9.5" fill="none" stroke={c} strokeWidth="2" />
+      <circle cx="11" cy="11" r="2.5" fill="white" opacity="0.7" />
+      <line x1="20.5" y1="20.5" x2="27" y2="27" stroke={c} strokeWidth="2.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// ── ATOM: PLBlob — soft blurred circle for decorative card highlights ──
+function PLBlob({ T = T_V2, color, size = 200, style = {} }) {
+  return (
+    <div style={{
+      position: 'absolute', width: size, height: size,
+      borderRadius: '50%', background: color,
+      filter: 'blur(60px)', opacity: 0.5, pointerEvents: 'none',
+      ...style,
+    }} />
+  );
+}
+
+// ── ATOM: PLSparkline — tiny inline trend chart (used in KPI cards) ──
+function PLSparkline({ T = T_V2, data, color, width = 90, height = 26 }) {
+  if (!data || !data.length) return null;
+  const min = Math.min(...data), max = Math.max(...data);
+  const range = max - min || 1;
+  const pts = data.map((v, i) => {
+    const x = (i / (data.length - 1)) * width;
+    const y = height - ((v - min) / range) * (height - 4) - 2;
+    return `${x},${y}`;
+  }).join(' ');
+  const last = data[data.length - 1];
+  const lastY = height - ((last - min) / range) * (height - 4) - 2;
+  const gid = 'pl-spark-' + Math.random().toString(36).slice(2, 8);
+  return (
+    <svg width={width} height={height} style={{ overflow: 'visible' }}>
+      <defs>
+        <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.25" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polyline points={`0,${height} ${pts} ${width},${height}`} fill={`url(#${gid})`} stroke="none" />
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" />
+      <circle cx={width} cy={lastY} r="2.5" fill={color} />
+    </svg>
+  );
+}
+
+// Expose for v2 components in later batches (and console diagnostics).
+if (typeof window !== 'undefined') {
+  window.T_V2 = T_V2;
+  window.plTokens = plTokens;
+  window.PL_TOKENS_DEFAULTS = PL_TOKENS_DEFAULTS;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// END MODULE: DESIGN_SYSTEM_V2
+// ═══════════════════════════════════════════════════════════════
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
 
 const APP_TAB_IDS = new Set(['profile','dashboard','policies','clients','repository','report','settings']);
