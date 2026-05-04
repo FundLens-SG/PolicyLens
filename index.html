@@ -609,9 +609,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.25';
+const APP_VERSION = 'v2.4.0-rc1.26';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Dashboard hero & sidebar polished to prototype';
+const APP_VERSION_NAME = 'Design v2 — Notes & Report tabs harmonized to prototype';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -62562,13 +62562,21 @@ function Repository() {
       margin: 0,
       lineHeight: 1.1
     }
-  }, "Product Repository"), /*#__PURE__*/React.createElement("p", {
+  }, "Notes"), /*#__PURE__*/React.createElement("p", {
     style: {
       fontSize: 13,
       color: 'var(--text3)',
       marginTop: 6,
       lineHeight: 1.5,
       margin: '6px 0 0'
+    }
+  }, "Your private library of product quirks and reminders"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontSize: 11,
+      color: 'var(--text4)',
+      marginTop: 4,
+      lineHeight: 1.5,
+      margin: '4px 0 0'
     }
   }, repo.length, " products \xB7 ", repoSource === 'supabase' ? 'Shared library' : 'Local only', " \xB7 ", isAdmin ? 'Admin (full edit + delete)' : 'Advisor (add comments)')), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -66276,129 +66284,325 @@ function ReportTab() {
     }
     setGenerating(false);
   };
+
+  // v2.4.0-rc1.26: Report tab visual harmonization to match prototype's
+  // PLReport — Fraunces title + subtitle, polished card styling, and a
+  // preview tile that hints at the report aesthetics. The 3 PDF flavours
+  // (Visual / Family Visual / Classic) are kept and now render as a 3-up
+  // grid of design-system cards.
+  const clientHeadName = clientProfile?.name || clientName || 'this client';
   return /*#__PURE__*/React.createElement("div", {
     className: "fade-in",
     style: {
-      maxWidth: 640
+      padding: '4px 4px 60px'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      marginBottom: T_V2.sectionGap || 28,
+      flexWrap: 'wrap',
+      gap: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      minWidth: 0,
+      flex: '1 1 auto'
     }
   }, /*#__PURE__*/React.createElement("h2", {
     style: {
-      fontSize: 18,
-      fontWeight: 600,
-      marginBottom: 12
+      fontFamily: T_V2.serifFamily,
+      fontSize: 32,
+      fontWeight: 400,
+      letterSpacing: '-0.015em',
+      color: 'var(--text)',
+      margin: 0,
+      lineHeight: 1.1
     }
-  }, "Generate PDF Report"), /*#__PURE__*/React.createElement("div", {
-    className: "card",
+  }, "Report"), /*#__PURE__*/React.createElement("p", {
     style: {
-      marginBottom: 14,
-      background: 'linear-gradient(135deg,var(--bg2),var(--bg3))',
-      border: '1px solid var(--gold-dim)'
+      fontSize: 13,
+      color: 'var(--text3)',
+      marginTop: 6,
+      lineHeight: 1.5,
+      margin: '6px 0 0'
+    }
+  }, "A clean summary you can hand to ", clientHeadName))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+      gap: 14,
+      marginBottom: 24
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: 'var(--bg2)',
+      border: '1px solid var(--border)',
+      borderRadius: T_V2.radiusLg,
+      padding: 24,
+      boxShadow: T_V2.shadow,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 12
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
-      gap: 8,
-      marginBottom: 8
+      gap: 10
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
-      fontSize: 18
+      fontSize: 22
     }
   }, "\u2728"), /*#__PURE__*/React.createElement("h3", {
     style: {
-      fontSize: 15,
-      fontWeight: 700,
-      color: 'var(--gold)'
+      fontFamily: T_V2.serifFamily,
+      fontSize: 20,
+      fontWeight: 400,
+      letterSpacing: '-0.015em',
+      color: 'var(--text)',
+      margin: 0,
+      lineHeight: 1.2
     }
-  }, "Visual Premium Report"), /*#__PURE__*/React.createElement("span", {
+  }, "Visual Premium"), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 9,
       background: 'var(--gold)',
-      color: 'var(--bg)',
-      padding: '2px 6px',
-      borderRadius: 4,
-      fontWeight: 700
+      color: '#fff',
+      padding: '3px 8px',
+      borderRadius: 999,
+      fontWeight: 700,
+      letterSpacing: '0.04em',
+      textTransform: 'uppercase'
     }
-  }, "NEW")), /*#__PURE__*/React.createElement("p", {
+  }, "New")), /*#__PURE__*/React.createElement("p", {
     style: {
-      fontSize: 12,
+      fontSize: 12.5,
       color: 'var(--text2)',
-      marginBottom: 14,
-      lineHeight: 1.5
+      lineHeight: 1.55,
+      margin: 0,
+      flex: 1
     }
-  }, "Premium visual layout with hero cover page, dashboard snapshot with interactive charts (insurer donut, premium cashflow line, protection gauge, coverage bars), protection gap detail page, compact per-policy cards with insurer branding, and prioritized recommendations. Best for client-facing presentations."), /*#__PURE__*/React.createElement("button", {
+  }, "Hero cover, dashboard snapshot with charts, protection gap detail, per-policy cards, prioritised recommendations. Best for client-facing presentations."), /*#__PURE__*/React.createElement("button", {
     className: "btn-primary",
     onClick: generateVisualReport,
-    disabled: generatingVisual || generating || policies.length === 0
-  }, generatingVisual ? '⏳ Rendering charts & building report…' : '✨ Generate Visual Report'), policies.length === 0 && /*#__PURE__*/React.createElement("div", {
+    disabled: generatingVisual || generating || policies.length === 0,
+    style: {
+      width: '100%'
+    }
+  }, generatingVisual ? '⏳ Rendering charts…' : '⬇ Download Visual PDF'), policies.length === 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 11,
-      color: 'var(--text3)',
-      marginTop: 8
+      color: 'var(--text3)'
     }
   }, "Add at least one policy to generate a report.")), /*#__PURE__*/React.createElement("div", {
-    className: "card",
     style: {
-      marginBottom: 14,
-      background: 'linear-gradient(135deg,var(--bg2),var(--bg3))',
-      border: '1px solid rgba(91,168,160,.28)'
+      background: 'var(--bg2)',
+      border: '1px solid var(--border)',
+      borderRadius: T_V2.radiusLg,
+      padding: 24,
+      boxShadow: T_V2.shadow,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 12
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
-      gap: 8,
-      marginBottom: 8
+      gap: 10
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
-      fontSize: 18
+      fontSize: 22
     }
-  }, "\uD83D\uDC65"), /*#__PURE__*/React.createElement("h3", {
+  }, "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67\u200D\uD83D\uDC66"), /*#__PURE__*/React.createElement("h3", {
     style: {
-      fontSize: 15,
-      fontWeight: 700,
-      color: 'var(--teal)'
+      fontFamily: T_V2.serifFamily,
+      fontSize: 20,
+      fontWeight: 400,
+      letterSpacing: '-0.015em',
+      color: 'var(--text)',
+      margin: 0,
+      lineHeight: 1.2
     }
-  }, "Family Visual Report")), /*#__PURE__*/React.createElement("p", {
+  }, "Family Visual")), /*#__PURE__*/React.createElement("p", {
     style: {
-      fontSize: 12,
+      fontSize: 12.5,
       color: 'var(--text2)',
-      marginBottom: 14,
-      lineHeight: 1.5
+      lineHeight: 1.55,
+      margin: 0,
+      flex: 1
     }
-  }, "Client-facing family portfolio report using the same navy/gold visual standard, with household KPIs, member summaries, policy distribution, and per-member policy cards."), /*#__PURE__*/React.createElement("button", {
+  }, "Whole-household portfolio report \u2014 KPIs, member summaries, policy distribution, per-member cards using the same visual standard as the Visual Premium."), /*#__PURE__*/React.createElement("button", {
     className: "btn-primary",
     onClick: generateFamilyVisualReport,
-    disabled: generatingFamilyVisual || generatingVisual || generating || !activeClientId
-  }, generatingFamilyVisual ? 'Rendering family report...' : 'Generate Family Visual Report'), !activeClientId && /*#__PURE__*/React.createElement("div", {
+    disabled: generatingFamilyVisual || generatingVisual || generating || !activeClientId,
+    style: {
+      width: '100%'
+    }
+  }, generatingFamilyVisual ? '⏳ Rendering…' : '⬇ Download Family PDF'), !activeClientId && /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 11,
-      color: 'var(--text3)',
-      marginTop: 8
+      color: 'var(--text3)'
     }
   }, "Open a client first to anchor the family report.")), /*#__PURE__*/React.createElement("div", {
-    className: "card"
-  }, /*#__PURE__*/React.createElement("h3", {
     style: {
-      fontSize: 13,
-      fontWeight: 600,
-      marginBottom: 6,
-      color: 'var(--text2)'
+      background: 'var(--bg2)',
+      border: '1px solid var(--border)',
+      borderRadius: T_V2.radiusLg,
+      padding: 24,
+      boxShadow: T_V2.shadow,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 12
     }
-  }, "Classic Report"), /*#__PURE__*/React.createElement("p", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 11,
-      color: 'var(--text3)',
-      marginBottom: 12,
-      lineHeight: 1.5
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10
     }
-  }, "Original text-dense layout with executive summary, protection gap analysis, rider coverage matrix, premium schedule, per-policy detail blocks, cash value timeline, and next steps. Best for analytical deep-dives and archive copies."), /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 22
+    }
+  }, "\uD83D\uDCC4"), /*#__PURE__*/React.createElement("h3", {
+    style: {
+      fontFamily: T_V2.serifFamily,
+      fontSize: 20,
+      fontWeight: 400,
+      letterSpacing: '-0.015em',
+      color: 'var(--text)',
+      margin: 0,
+      lineHeight: 1.2
+    }
+  }, "Classic")), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontSize: 12.5,
+      color: 'var(--text2)',
+      lineHeight: 1.55,
+      margin: 0,
+      flex: 1
+    }
+  }, "Text-dense layout \u2014 executive summary, protection gap analysis, rider matrix, premium schedule, per-policy detail blocks, cash value timeline, next steps. Best for analytical deep-dives."), /*#__PURE__*/React.createElement("button", {
     className: "btn-secondary",
     onClick: generate,
-    disabled: generating || generatingVisual || policies.length === 0
-  }, generating ? '⏳ Building Report…' : '📄 Generate Classic Report')));
+    disabled: generating || generatingVisual || policies.length === 0,
+    style: {
+      width: '100%'
+    }
+  }, generating ? '⏳ Building…' : '⬇ Download Classic PDF'))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: '#fefdf9',
+      border: '1px solid var(--border)',
+      borderRadius: T_V2.radiusLg,
+      padding: '48px 60px',
+      boxShadow: T_V2.shadow,
+      color: '#2a2418',
+      position: 'relative'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: '#888',
+      letterSpacing: '0.15em',
+      textTransform: 'uppercase',
+      fontWeight: 600
+    }
+  }, "Portfolio Review \xB7 prepared for"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: T_V2.serifFamily,
+      fontSize: 42,
+      marginTop: 8,
+      letterSpacing: '-0.02em',
+      color: '#1a1408',
+      fontWeight: 400,
+      lineHeight: 1.1
+    }
+  }, clientHeadName === 'this client' ? 'Your client' : clientHeadName.split(/\s+/).slice(-1)[0] + ' family'), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: '#666',
+      marginTop: 8
+    }
+  }, "Prepared ", new Date().toLocaleDateString('en-SG', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: 1,
+      background: '#d8cfba',
+      margin: '28px 0'
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(3, 1fr)',
+      gap: 32
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: '#888',
+      letterSpacing: '0.1em',
+      textTransform: 'uppercase',
+      fontWeight: 600
+    }
+  }, "Active policies"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: T_V2.serifFamily,
+      fontSize: 32,
+      marginTop: 6,
+      color: '#1a1408',
+      fontWeight: 400
+    }
+  }, policies.filter(pp => pp.status !== 'lapsed' && pp.status !== 'surrendered' && pp.status !== 'matured').length)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: '#888',
+      letterSpacing: '0.1em',
+      textTransform: 'uppercase',
+      fontWeight: 600
+    }
+  }, "Insurers"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: T_V2.serifFamily,
+      fontSize: 32,
+      marginTop: 6,
+      color: '#1a1408',
+      fontWeight: 400
+    }
+  }, new Set(policies.map(pp => pp.insurer).filter(Boolean)).size)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: '#888',
+      letterSpacing: '0.1em',
+      textTransform: 'uppercase',
+      fontWeight: 600
+    }
+  }, "Annual income"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: T_V2.serifFamily,
+      fontSize: 32,
+      marginTop: 6,
+      color: '#1a1408',
+      fontWeight: 400
+    }
+  }, annualIncome > 0 ? 'S$ ' + Math.round(annualIncome / 1000) + 'k' : '—'))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'absolute',
+      top: 18,
+      right: 24,
+      fontSize: 10,
+      color: '#888',
+      letterSpacing: '0.05em',
+      fontStyle: 'italic'
+    }
+  }, "preview only \xB7 generate above for the full PDF")));
 }
 
 // ═══════════════════════════════════════════════════════════════
