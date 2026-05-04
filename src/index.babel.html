@@ -592,9 +592,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.5';
+const APP_VERSION = 'v2.4.0-rc1.6';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — color sweeps (brass → coral, navy → cream)';
+const APP_VERSION_NAME = 'Design v2 — internal CKG suite strip + page padding';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -820,6 +820,81 @@ function PLSparkline({ T = T_V2, data, color, width = 90, height = 26 }) {
       <polyline points={pts} fill="none" stroke={color} strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" />
       <circle cx={width} cy={lastY} r="2.5" fill={color} />
     </svg>
+  );
+}
+
+// ── COMPONENT: PLSuiteStrip — internal CKG cross-tool nav ──
+// rc1.6: Slim cream bar that sits above the PolicyLens header.
+//   Left: gold/coral '← CKG Suite' pill, then uppercase mono breadcrumb
+//        ('Suite / PolicyLens / {clientName}').
+//   Right: live Drive sync indicator (green dot + 'Drive synced · just now'
+//        when connected; warn dot + 'Reconnect needed' when 401; cream
+//        text when disconnected).
+// Reads driveStatus + clientName via context safely (no error if context
+// is not yet provided — strip still renders).
+function PLSuiteStrip() {
+  const T = T_V2;
+  let clientName = '', driveStatus = 'disconnected';
+  try {
+    const ctx = React.useContext(AppCtx);
+    if (ctx) {
+      clientName = ctx.clientName || '';
+      driveStatus = ctx.driveState?.status || (typeof getDriveStatus === 'function' ? getDriveStatus() : 'disconnected');
+    }
+  } catch(_) {}
+  const isMobile = (typeof useViewportIsMobile === 'function') ? useViewportIsMobile() : false;
+  const driveIndicator = (() => {
+    if (driveStatus === 'connected')         return { color: T.green, text: 'Drive synced' };
+    if (driveStatus === 'checking')          return { color: T.warn,  text: 'Checking Drive…' };
+    if (driveStatus === 'reconnect-needed')  return { color: T.warn,  text: 'Reconnect Drive' };
+    return { color: T.text4, text: 'Drive offline' };
+  })();
+  return (
+    <div style={{
+      height: isMobile ? 44 : 36, flexShrink: 0,
+      background: T.bg2, borderBottom: '1px solid ' + T.hair,
+      display: 'flex', alignItems: 'center', gap: 12,
+      padding: isMobile ? '0 12px' : '0 18px',
+      fontFamily: T.sansFamily,
+    }}>
+      <button onClick={() => { window.location.href = '/'; }} title="Back to CKG hub"
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          padding: isMobile ? '4px 10px' : '5px 12px',
+          background: T.primaryDim, color: T.primary,
+          border: 'none', borderRadius: 999,
+          fontFamily: T.sansFamily, fontSize: isMobile ? 11 : 11.5, fontWeight: 500,
+          cursor: 'pointer', flexShrink: 0,
+          transition: T.motion ? 'all 180ms ease' : 'none',
+        }}>
+        <span style={{ fontSize: isMobile ? 11 : 12 }}>←</span> CKG Suite
+      </button>
+      {!isMobile && (
+        <span style={{
+          fontFamily: T.monoFamily, fontSize: 10.5,
+          letterSpacing: '0.18em', textTransform: 'uppercase',
+          color: T.text3, minWidth: 0, overflow: 'hidden',
+          whiteSpace: 'nowrap', textOverflow: 'ellipsis',
+        }}>
+          Suite <span style={{ color: T.text4, margin: '0 6px' }}>/</span>
+          <span style={{ color: T.text2, fontWeight: 500 }}>PolicyLens</span>
+          {clientName && (<>
+            <span style={{ color: T.text4, margin: '0 6px' }}>/</span>
+            <span style={{ color: T.text2 }}>{clientName}</span>
+          </>)}
+        </span>
+      )}
+      <div style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+        <span style={{
+          width: 7, height: 7, borderRadius: 999,
+          background: driveIndicator.color,
+          boxShadow: driveStatus === 'connected' ? '0 0 6px ' + driveIndicator.color : 'none',
+        }} />
+        <span style={{ fontFamily: T.sansFamily, fontSize: 11, color: T.text3 }}>
+          {driveIndicator.text}
+        </span>
+      </div>
+    </div>
   );
 }
 
@@ -20891,8 +20966,13 @@ function App() {
         </div>
       </div>}
       <DriveReconnectBar />
+      {/* v2.4.0-rc1.6: Internal CKG Suite Strip — slim cream bar that
+          sits ABOVE the PolicyLens header, providing cross-tool nav
+          + breadcrumb + sync indicator. Per the design brief Round 2
+          (G2). Heights match the prototype: 36px desktop, 44px mobile. */}
+      <PLSuiteStrip />
       <Header />
-      <div style={{flex:1,overflow:'auto',padding:'12px clamp(10px, 3vw, 20px) 40px'}}>
+      <div style={{flex:1,overflow:'auto',padding:'20px clamp(16px, 3vw, 24px) 60px',background:'var(--bg)'}}>
         {tab==='profile' && <ErrorBoundary key="profile"><ProfileTab /></ErrorBoundary>}
         {tab==='dashboard' && <ErrorBoundary key="dashboard"><Dashboard /></ErrorBoundary>}
         <div style={{display:tab==='policies'?'block':'none'}}><Policies /></div>
