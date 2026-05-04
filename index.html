@@ -254,13 +254,20 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
   .modal{max-width:95vw!important;max-height:90vh!important;padding:16px!important;}
 }
 
-/* ===== CKG Suite Strip — global cross-tool nav ===== */
-:root { --ckg-strip-h: 36px; }
-@media (max-width: 640px) { :root { --ckg-strip-h: 44px; } }
-body { padding-top: var(--ckg-strip-h) !important; }
-.ckg-suite-strip {
+/* ===== CKG Suite Strip — global cross-tool nav (LEGACY, pre-v2.4) =====
+   v2.4.0-rc1.9: PolicyLens now renders its own cream-themed PLSuiteStrip
+   inside the React tree, providing the same cross-tool nav (← CKG Suite
+   pill + breadcrumb) plus a live Drive sync indicator. The legacy black
+   strip below is suppressed (display: none) and the body's reserved
+   padding zeroed out. Style rules retained for future reactivation if
+   needed. ============================================================ */
+:root { --ckg-strip-h: 0px; }
+@media (max-width: 640px) { :root { --ckg-strip-h: 0px; } }
+body { padding-top: 0 !important; }
+.ckg-suite-strip { display: none !important; }
+.ckg-suite-strip-LEGACY-UNUSED {
   position: fixed; top: 0; left: 0; right: 0;
-  height: var(--ckg-strip-h);
+  height: 36px;
   background: #0a0a0a;
   border-bottom: 1px solid rgba(214, 168, 122, 0.18);
   display: flex; align-items: center;
@@ -602,9 +609,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.8';
+const APP_VERSION = 'v2.4.0-rc1.9';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Clients tab tier defaults + sticky bulk action bar';
+const APP_VERSION_NAME = 'Design v2 — hide legacy strip + slim sync pill + Fraunces section titles';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -24390,54 +24397,62 @@ function SyncStatusPill({
     const d = new Date(ts);
     return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
   };
-  let label = '';
-  let color = 'var(--text3)';
-  let bg = 'var(--bg3)';
-  let border = 'var(--border)';
+  // v2.4.0-rc1.9: Split the previous one-giant-chunky-chip
+  // 'Saved locally · Synced to Drive · 18 hrs ago' into atoms per the
+  // Round 2 brief's PLSyncBar pattern: colored dot + short status word
+  // + age in muted text. The full long-form label is preserved as the
+  // tooltip (title=) so FCs can hover for the detailed state.
+  let dot = 'var(--text4)';
+  let status = 'Synced';
+  let age = '';
   let title = 'Sync activity';
   if (syncPhase === 'failed' || driveState?.pendingError) {
-    label = 'Saved locally · Drive retry needed';
-    color = 'var(--red)';
-    bg = 'var(--red-dim)';
-    border = 'rgba(239,83,80,.25)';
-    title = syncPhaseState?.message || driveState?.pendingError || 'Drive sync needs retry';
+    dot = 'var(--red)';
+    status = 'Retry needed';
+    age = '';
+    title = syncPhaseState?.message || driveState?.pendingError || 'Drive sync needs retry — open menu for activity log.';
   } else if (deleteSyncStatus) {
-    label = deleteSyncLabel;
-    color = deleteSyncStatus.status === 'queued' || deleteSyncStatus.status === 'syncing' ? 'var(--gold)' : 'var(--teal)';
-    bg = deleteSyncStatus.status === 'synced' ? 'rgba(91,168,160,.10)' : 'color-mix(in oklch, var(--gold) 14%, transparent)';
-    border = deleteSyncStatus.status === 'synced' ? 'rgba(91,168,160,.24)' : 'color-mix(in oklch, var(--gold) 34%, transparent)';
+    dot = deleteSyncStatus.status === 'queued' || deleteSyncStatus.status === 'syncing' ? 'var(--gold)' : 'var(--teal)';
+    status = deleteSyncStatus.status === 'synced' ? 'Deleted from Drive' : deleteSyncStatus.status === 'queued' ? 'Delete queued' : 'Deleting…';
+    age = '';
     title = (deleteSyncStatus.clientName || 'Client') + (deleteSyncStatus.status === 'queued' ? ' is queued for Drive Trash' : deleteSyncStatus.status === 'syncing' ? ' is being moved to Drive Trash' : ' was moved to Drive Trash') + ' at ' + new Date(deleteSyncStatus.at).toLocaleString();
   } else if (syncPhase === 'checking') {
-    label = 'Saved locally · Checking Drive sync';
-    color = 'var(--gold)';
-    bg = 'color-mix(in oklch, var(--gold) 14%, transparent)';
-    border = 'color-mix(in oklch, var(--gold) 34%, transparent)';
+    dot = 'var(--gold)';
+    status = 'Checking Drive…';
+    age = '';
     title = 'PolicyLens is reconnecting to Drive. Local data is already available.';
   } else if (syncPhase === 'pulling') {
-    label = 'Saved locally - Pulling Drive updates';
-    color = 'var(--gold)';
+    dot = 'var(--gold)';
+    status = 'Pulling…';
+    age = '';
     title = 'Local data is available. PolicyLens is applying newer Drive data.';
   } else if (syncPhase === 'conflict') {
-    label = 'Saved locally - Resolving Drive conflict';
-    color = 'var(--gold)';
+    dot = 'var(--gold)';
+    status = 'Resolving…';
+    age = '';
     title = 'Local data is available. PolicyLens is merging Drive and local changes.';
   } else if (syncPhase === 'uploading') {
-    label = 'Saved locally · Syncing to Drive';
-    color = 'var(--gold)';
+    dot = 'var(--gold)';
+    status = 'Syncing…';
+    age = '';
     title = 'Changes are saved locally. Drive upload is in progress.';
   } else if (syncPhase === 'queued' || _driveSyncTimer !== null) {
-    label = 'Saved locally · Drive queued';
-    color = 'var(--gold)';
+    dot = 'var(--gold)';
+    status = 'Queued';
+    age = '';
     title = 'Changes are saved locally and queued for Drive' + (syncPhaseState?.reason ? ': ' + syncPhaseState.reason : '');
   } else if (driveState?.lastSyncedAt) {
-    label = 'Saved locally · Synced to Drive · ' + ageLabel(driveState.lastSyncedAt);
+    dot = _driveSyncJustSaved ? 'var(--teal)' : 'var(--green)';
+    status = 'Synced';
+    age = ageLabel(driveState.lastSyncedAt);
     if (driveState.lastSyncDeviceName && driveState.lastSyncDeviceName !== getPolicyLensDeviceName()) {
-      label += ' from ' + driveState.lastSyncDeviceName;
+      age += ' · ' + driveState.lastSyncDeviceName;
     }
-    color = _driveSyncJustSaved ? 'var(--teal)' : 'var(--text3)';
     title = 'Saved locally. Last Drive sync ' + new Date(driveState.lastSyncedAt).toLocaleString();
   } else {
-    label = 'Saved locally · Drive ready';
+    dot = 'var(--text4)';
+    status = 'Drive ready';
+    age = '';
     title = 'Drive is connected. Local edits are saved first.';
   }
   return /*#__PURE__*/React.createElement("span", {
@@ -24453,17 +24468,44 @@ function SyncStatusPill({
     },
     title: title,
     style: {
-      fontSize: 10,
-      color,
-      padding: '2px 8px',
-      background: bg,
-      borderRadius: 10,
-      border: '1px solid ' + border,
-      whiteSpace: 'nowrap',
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 7,
+      height: 28,
+      padding: '0 12px',
+      background: 'transparent',
+      color: 'var(--text2)',
+      border: '1px solid var(--border)',
+      borderRadius: 999,
+      fontSize: 11.5,
+      fontWeight: 500,
       cursor: 'pointer',
-      animation: isSaving ? 'pulse 1.5s ease-in-out infinite' : 'none'
+      whiteSpace: 'nowrap',
+      fontFamily: 'inherit',
+      animation: isSaving ? 'pulse 1.5s ease-in-out infinite' : 'none',
+      transition: 'all 180ms ease'
     }
-  }, label), open && /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 7,
+      height: 7,
+      borderRadius: 999,
+      background: dot,
+      flexShrink: 0,
+      boxShadow: dot === 'var(--green)' ? '0 0 4px var(--green)' : 'none'
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: 'var(--text)',
+      fontWeight: 500
+    }
+  }, status), age && /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: 'var(--text3)',
+      fontSize: 10.5,
+      letterSpacing: '0.01em'
+    }
+  }, "\xB7 ", age)), open && /*#__PURE__*/React.createElement("div", {
     onClick: e => e.stopPropagation(),
     style: {
       position: 'absolute',
@@ -34660,9 +34702,14 @@ function ProfileTab() {
     }
   }, /*#__PURE__*/React.createElement("h3", {
     style: {
-      fontSize: 14,
-      fontWeight: 600,
-      marginBottom: 12
+      fontFamily: T_V2.serifFamily,
+      fontSize: 22,
+      fontWeight: 400,
+      letterSpacing: '-0.015em',
+      color: 'var(--text)',
+      marginBottom: 14,
+      marginTop: 0,
+      lineHeight: 1.2
     }
   }, "Client Details"), /*#__PURE__*/React.createElement("div", {
     className: "grid-3"
@@ -34835,15 +34882,20 @@ function ProfileTab() {
     }
   }, /*#__PURE__*/React.createElement("h3", {
     style: {
-      fontSize: 14,
-      fontWeight: 600,
-      marginBottom: 12
+      fontFamily: T_V2.serifFamily,
+      fontSize: 22,
+      fontWeight: 400,
+      letterSpacing: '-0.015em',
+      color: 'var(--text)',
+      marginBottom: 4,
+      marginTop: 0,
+      lineHeight: 1.2
     }
   }, "Financial Profile"), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 11,
+      fontSize: 12,
       color: 'var(--text3)',
-      marginBottom: 10
+      marginBottom: 14
     }
   }, "Used for protection gap analysis, retirement projections, and cashflow timeline"), /*#__PURE__*/React.createElement("div", {
     className: "resp-2col",
@@ -35676,8 +35728,13 @@ function ProfileTab() {
     }
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", {
     style: {
-      fontSize: 14,
-      fontWeight: 600
+      fontFamily: T_V2.serifFamily,
+      fontSize: 22,
+      fontWeight: 400,
+      letterSpacing: '-0.015em',
+      color: 'var(--text)',
+      margin: 0,
+      lineHeight: 1.2
     }
   }, "Dependants"), /*#__PURE__*/React.createElement("p", {
     style: {
