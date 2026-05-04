@@ -609,9 +609,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.15';
+const APP_VERSION = 'v2.4.0-rc1.16';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Fix: false-positive Drive sync prompt for connected users';
+const APP_VERSION_NAME = 'Design v2 — Policies tab (Fraunces title + section headers + unified rider legend)';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -51886,36 +51886,64 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
-      alignItems: 'center',
+      alignItems: 'flex-start',
       justifyContent: 'space-between',
-      marginBottom: 16,
+      marginBottom: T_V2.sectionGap || 28,
       flexWrap: 'wrap',
-      gap: 8
+      gap: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      minWidth: 0,
+      flex: '1 1 auto'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
-      alignItems: 'center',
-      gap: 8
+      alignItems: 'baseline',
+      gap: 14,
+      flexWrap: 'wrap'
     }
   }, /*#__PURE__*/React.createElement("h2", {
     style: {
-      fontSize: 18,
-      fontWeight: 600
+      fontFamily: T_V2.serifFamily,
+      fontSize: 32,
+      fontWeight: 400,
+      letterSpacing: '-0.015em',
+      color: 'var(--text)',
+      margin: 0,
+      lineHeight: 1.1
     }
   }, "Policies"), /*#__PURE__*/React.createElement("select", {
     value: filter,
     onChange: e => setFilter(e.target.value),
     style: {
       fontSize: 12,
-      padding: '4px 8px'
+      padding: '6px 12px',
+      height: 32,
+      borderRadius: 999,
+      background: 'var(--bg2)',
+      border: `1px solid ${T_V2.border}`,
+      color: 'var(--text2)'
     }
   }, /*#__PURE__*/React.createElement("option", {
     value: "all"
-  }, "All Categories"), Object.entries(CATEGORIES).map(([k, v]) => /*#__PURE__*/React.createElement("option", {
+  }, "All categories"), Object.entries(CATEGORIES).map(([k, v]) => /*#__PURE__*/React.createElement("option", {
     key: k,
     value: k
-  }, v.label)))), /*#__PURE__*/React.createElement("div", {
+  }, v.label)))), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontSize: 13,
+      color: 'var(--text3)',
+      marginTop: 6,
+      lineHeight: 1.5,
+      margin: '6px 0 0'
+    }
+  }, policies.length, " polic", policies.length === 1 ? 'y' : 'ies', policies.length > 0 && (() => {
+    const totalPrem = policies.filter(p => p.status !== 'matured' && p.status !== 'surrendered' && p.status !== 'lapsed').reduce((s, p) => s + (parseFloat(p.annualPremium) || 0), 0);
+    const insurers = new Set(policies.map(p => p.insurer).filter(Boolean)).size;
+    return /*#__PURE__*/React.createElement("span", null, " \xB7 ", insurers, " insurer", insurers === 1 ? '' : 's', " \xB7 S$", Math.round(totalPrem).toLocaleString(), "/yr");
+  })())), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 6,
@@ -53176,37 +53204,40 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
         display: 'flex',
         flexWrap: 'wrap',
         alignItems: 'center',
-        gap: 10,
-        padding: '8px 12px',
+        gap: 14,
+        padding: '12px 16px',
         background: 'var(--bg2)',
-        border: '1px solid var(--border)',
-        borderRadius: 8,
-        marginBottom: 12,
-        fontSize: 10
+        border: `1px solid ${T_V2.border}`,
+        borderRadius: T_V2.radius || 14,
+        marginBottom: T_V2.sectionGap || 28,
+        fontFamily: T_V2.sansFamily
       }
     }, /*#__PURE__*/React.createElement("span", {
       style: {
-        color: 'var(--text3)',
+        fontSize: 11,
         fontWeight: 600,
-        marginRight: 4
+        color: 'var(--text3)',
+        textTransform: 'uppercase',
+        letterSpacing: '0.04em'
       }
-    }, "Badges:"), POLICY_BADGES.map(b => /*#__PURE__*/React.createElement("span", {
+    }, "Rider legend"), POLICY_BADGES.map(b => /*#__PURE__*/React.createElement("span", {
       key: b.code,
       style: {
         display: 'inline-flex',
         alignItems: 'center',
-        gap: 5
+        gap: 6,
+        fontSize: 11.5,
+        color: 'var(--text3)'
       }
     }, /*#__PURE__*/React.createElement("span", {
       style: {
-        display: 'inline-block',
-        padding: '1px 6px',
-        background: b.color + '22',
-        color: b.color,
-        borderRadius: 4,
-        fontWeight: 700,
-        fontSize: 9,
-        lineHeight: 1.4
+        padding: '2px 8px',
+        borderRadius: 999,
+        fontWeight: 600,
+        fontSize: 10,
+        lineHeight: 1.4,
+        background: 'var(--gold-dim)',
+        color: 'var(--gold)'
       }
     }, b.code), /*#__PURE__*/React.createElement("span", {
       style: {
@@ -53214,55 +53245,55 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       }
     }, b.label))), /*#__PURE__*/React.createElement("span", {
       style: {
-        color: 'var(--text3)',
-        marginLeft: 6,
-        marginRight: 2
+        width: 1,
+        height: 14,
+        background: T_V2.border,
+        margin: '0 4px'
       }
-    }, "\xB7"), /*#__PURE__*/React.createElement("span", {
+    }), /*#__PURE__*/React.createElement("span", {
       style: {
-        color: 'var(--text3)',
+        fontSize: 11,
         fontWeight: 600,
-        marginRight: 4
+        color: 'var(--text3)',
+        textTransform: 'uppercase',
+        letterSpacing: '0.04em'
       }
-    }, "Status:"), STATUS_BADGES.map(s => /*#__PURE__*/React.createElement("span", {
+    }, "Status"), STATUS_BADGES.map(s => /*#__PURE__*/React.createElement("span", {
       key: s.code,
       style: {
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 5
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        display: 'inline-block',
-        padding: '1px 6px',
-        background: s.color + '22',
-        color: s.color,
-        borderRadius: 4,
-        fontWeight: 700,
-        fontSize: 9,
+        padding: '2px 8px',
+        borderRadius: 999,
+        fontWeight: 600,
+        fontSize: 10,
         lineHeight: 1.4,
-        border: `1px solid ${s.color}40`
+        background: `color-mix(in oklch, ${s.color} 16%, transparent)`,
+        color: s.color
       }
-    }, s.label)))), hasInsurance && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    }, s.label))), hasInsurance && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'center',
         gap: 10,
-        margin: '8px 0 6px'
+        margin: '18px 0 10px'
       }
-    }, /*#__PURE__*/React.createElement("h3", {
+    }, /*#__PURE__*/React.createElement("span", {
       style: {
-        fontSize: 17,
-        fontWeight: 800,
-        color: 'var(--gold)',
-        letterSpacing: '.3px',
+        fontSize: 18
+      }
+    }, "\uD83D\uDEE1\uFE0F"), /*#__PURE__*/React.createElement("h3", {
+      style: {
+        fontFamily: T_V2.serifFamily,
+        fontSize: 22,
+        fontWeight: 400,
+        color: 'var(--text)',
+        letterSpacing: '-0.015em',
         margin: 0
       }
     }, "Insurance"), /*#__PURE__*/React.createElement("div", {
       style: {
         flex: 1,
-        height: 2,
-        background: 'linear-gradient(90deg,var(--gold3),transparent)'
+        height: 1,
+        background: `linear-gradient(90deg, ${T_V2.border}, transparent)`
       }
     })), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -53494,21 +53525,26 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
         display: 'flex',
         alignItems: 'center',
         gap: 10,
-        margin: '12px 0 6px'
+        margin: '18px 0 10px'
       }
-    }, /*#__PURE__*/React.createElement("h3", {
+    }, /*#__PURE__*/React.createElement("span", {
       style: {
-        fontSize: 17,
-        fontWeight: 800,
-        color: 'var(--teal)',
-        letterSpacing: '.3px',
+        fontSize: 18
+      }
+    }, "\uD83C\uDFE6"), /*#__PURE__*/React.createElement("h3", {
+      style: {
+        fontFamily: T_V2.serifFamily,
+        fontSize: 22,
+        fontWeight: 400,
+        color: 'var(--text)',
+        letterSpacing: '-0.015em',
         margin: 0
       }
     }, "Fixed Deposits, T-bills & Bonds"), /*#__PURE__*/React.createElement("div", {
       style: {
         flex: 1,
-        height: 2,
-        background: 'linear-gradient(90deg,rgba(91,168,160,.3),transparent)'
+        height: 1,
+        background: `linear-gradient(90deg, ${T_V2.border}, transparent)`
       }
     })), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -53633,21 +53669,26 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
         display: 'flex',
         alignItems: 'center',
         gap: 10,
-        margin: '12px 0 6px'
+        margin: '18px 0 10px'
       }
-    }, /*#__PURE__*/React.createElement("h3", {
+    }, /*#__PURE__*/React.createElement("span", {
       style: {
-        fontSize: 17,
-        fontWeight: 800,
-        color: '#8b7355',
-        letterSpacing: '.3px',
+        fontSize: 18
+      }
+    }, "\uD83C\uDFE0"), /*#__PURE__*/React.createElement("h3", {
+      style: {
+        fontFamily: T_V2.serifFamily,
+        fontSize: 22,
+        fontWeight: 400,
+        color: 'var(--text)',
+        letterSpacing: '-0.015em',
         margin: 0
       }
     }, "Other Assets"), /*#__PURE__*/React.createElement("div", {
       style: {
         flex: 1,
-        height: 2,
-        background: 'linear-gradient(90deg,rgba(139,115,85,.3),transparent)'
+        height: 1,
+        background: `linear-gradient(90deg, ${T_V2.border}, transparent)`
       }
     })), /*#__PURE__*/React.createElement("div", {
       style: {
