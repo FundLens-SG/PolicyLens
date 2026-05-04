@@ -609,9 +609,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.13';
+const APP_VERSION = 'v2.4.0-rc1.14';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Profile cards (emoji icons + Identity rename + visual lift)';
+const APP_VERSION_NAME = 'Design v2 — Settings page header + Quick actions card (Load/Undo/Help)';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -67986,7 +67986,11 @@ function Settings() {
     tierDefinitions,
     saveTierDefinitions,
     setShowChangelog,
-    isAdmin
+    isAdmin,
+    activeClientId,
+    switchClient,
+    setTab,
+    restoreLastUndo
   } = useContext(AppCtx);
   const [geminiKey, setGeminiKey] = useState('');
   const [anthropicKey, setAnthropicKey] = useState('');
@@ -67994,6 +67998,9 @@ function Settings() {
   const [syncApiKeysToCloud, setSyncApiKeysToCloud] = useState(false);
   const [name, setName] = useState(clientName);
   const loadRef = useRef(null);
+  // v2.4.0-rc1.14: Surface controls that rc1.11 removed from the header
+  // (Load checkpoint, Undo, Help) so users can still reach them.
+  const [checkpointLoadOpen, setCheckpointLoadOpen] = useState(false);
   const [advisorName, setAdvisorName] = useState('');
   const [advisorCompany, setAdvisorCompany] = useState('');
 
@@ -68094,15 +68101,186 @@ function Settings() {
   return /*#__PURE__*/React.createElement("div", {
     className: "fade-in",
     style: {
-      maxWidth: 600
+      maxWidth: 720
     }
   }, /*#__PURE__*/React.createElement("h2", {
     style: {
-      fontSize: 18,
-      fontWeight: 600,
-      marginBottom: 16
+      fontFamily: T_V2.serifFamily,
+      fontSize: 32,
+      fontWeight: 400,
+      letterSpacing: '-0.015em',
+      color: 'var(--text)',
+      margin: 0,
+      lineHeight: 1.1
     }
   }, "Settings"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: 'var(--text3)',
+      marginTop: 6,
+      lineHeight: 1.5,
+      marginBottom: T_V2.sectionGap || 28
+    }
+  }, "Advisor identity, AI keys, firm defaults, sync, and account."), /*#__PURE__*/React.createElement("div", {
+    className: "card",
+    style: {
+      marginBottom: T_V2.sectionGap || 28,
+      padding: 24,
+      boxShadow: T_V2.shadow,
+      border: `1px solid ${T_V2.border}`,
+      borderRadius: T_V2.radiusLg
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      marginBottom: 14
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 22
+    }
+  }, "\u26A1"), /*#__PURE__*/React.createElement("h3", {
+    style: {
+      fontFamily: T_V2.serifFamily,
+      fontSize: 22,
+      fontWeight: 400,
+      letterSpacing: '-0.015em',
+      color: 'var(--text)',
+      margin: 0,
+      lineHeight: 1.2
+    }
+  }, "Quick actions")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: 'var(--text3)',
+      marginBottom: 16,
+      marginLeft: 32
+    }
+  }, "Save runs from the header (or ", /*#__PURE__*/React.createElement("kbd", {
+    style: {
+      padding: '1px 6px',
+      background: 'var(--bg3)',
+      border: '1px solid var(--border)',
+      borderRadius: 4,
+      fontSize: 11,
+      fontFamily: T_V2.monoFamily
+    }
+  }, "\u2318S"), "). Load, Undo, and Help live here."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setCheckpointLoadOpen(true),
+    disabled: !activeClientId,
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      padding: '14px 16px',
+      background: 'var(--bg3)',
+      border: `1px solid ${T_V2.border}`,
+      borderRadius: T_V2.radius || 14,
+      cursor: activeClientId ? 'pointer' : 'not-allowed',
+      opacity: activeClientId ? 1 : 0.5,
+      textAlign: 'left',
+      fontFamily: T_V2.sansFamily,
+      transition: T_V2.motion ? 'all 180ms ease' : 'none'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 18
+    }
+  }, "\uD83D\uDCC2"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      fontWeight: 600,
+      color: 'var(--text)'
+    }
+  }, "Load checkpoint"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--text3)',
+      marginTop: 2
+    }
+  }, "Restore from snapshot history"))), /*#__PURE__*/React.createElement("button", {
+    onClick: async () => {
+      if (!activeClientId || typeof restoreLastUndo !== 'function') return;
+      if (!confirm('Restore the last import/delete change for this client?')) return;
+      await restoreLastUndo();
+    },
+    disabled: !activeClientId,
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      padding: '14px 16px',
+      background: 'var(--bg3)',
+      border: `1px solid ${T_V2.border}`,
+      borderRadius: T_V2.radius || 14,
+      cursor: activeClientId ? 'pointer' : 'not-allowed',
+      opacity: activeClientId ? 1 : 0.5,
+      textAlign: 'left',
+      fontFamily: T_V2.sansFamily,
+      transition: T_V2.motion ? 'all 180ms ease' : 'none'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 18
+    }
+  }, "\u21B6"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      fontWeight: 600,
+      color: 'var(--text)'
+    }
+  }, "Undo last change"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--text3)',
+      marginTop: 2
+    }
+  }, "Reverts the last import or delete"))), /*#__PURE__*/React.createElement("button", {
+    onClick: () => window.dispatchEvent(new Event('policylens-open-guide')),
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      padding: '14px 16px',
+      background: 'var(--bg3)',
+      border: `1px solid ${T_V2.border}`,
+      borderRadius: T_V2.radius || 14,
+      cursor: 'pointer',
+      textAlign: 'left',
+      fontFamily: T_V2.sansFamily,
+      transition: T_V2.motion ? 'all 180ms ease' : 'none'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 18
+    }
+  }, "?"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      fontWeight: 600,
+      color: 'var(--text)'
+    }
+  }, "Help & guide"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--text3)',
+      marginTop: 2
+    }
+  }, "Open the user walkthrough")))), /*#__PURE__*/React.createElement(CheckpointLoadModal, {
+    open: checkpointLoadOpen,
+    onClose: () => setCheckpointLoadOpen(false),
+    clientId: activeClientId,
+    switchClient: switchClient,
+    setTab: setTab
+  })), /*#__PURE__*/React.createElement("div", {
     className: "card",
     style: {
       marginBottom: 16
