@@ -609,9 +609,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.17';
+const APP_VERSION = 'v2.4.0-rc1.18';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Clients tab tier sections + 3-up card grid';
+const APP_VERSION_NAME = 'Design v2 — Empty-state Onboarding (PLMark + Fraunces 32 + 3 large action cards)';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -38832,21 +38832,32 @@ function Dashboard() {
       window.dispatchEvent(new Event('policylens-pending-scan'));
       e.target.value = '';
     }
-  }), /*#__PURE__*/React.createElement(LogoMark, {
-    size: 56
-  }), /*#__PURE__*/React.createElement("h2", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 22,
-      fontWeight: 600,
-      marginBottom: 8
+      display: 'flex',
+      justifyContent: 'center',
+      marginBottom: 18
+    }
+  }, /*#__PURE__*/React.createElement(PLMark, {
+    T: T_V2,
+    size: 48
+  })), /*#__PURE__*/React.createElement("h2", {
+    style: {
+      fontFamily: T_V2.serifFamily,
+      fontSize: 32,
+      fontWeight: 400,
+      letterSpacing: '-0.015em',
+      color: 'var(--text)',
+      margin: '0 0 8px',
+      lineHeight: 1.1
     }
   }, "Scan first policy"), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 12,
+      fontSize: 13.5,
       color: 'var(--text2)',
       maxWidth: 520,
-      margin: '0 auto 12px',
-      lineHeight: 1.45
+      margin: '0 auto 16px',
+      lineHeight: 1.55
     }
   }, hasProfileBasics ? 'Start with one document for ' + clientFirstLabel + '. The dashboard will build itself from there.' : 'Start with one policy document. PolicyLens can also use it to fill client profile details for you.'), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -38898,9 +38909,10 @@ function Dashboard() {
     }
   }, "Snap a photo of any policy contract, benefit illustration, or CRM screen")), /*#__PURE__*/React.createElement("div", {
     style: {
-      display: 'flex',
-      gap: 8,
-      marginTop: 8
+      display: 'grid',
+      gridTemplateColumns: 'repeat(3, 1fr)',
+      gap: 10,
+      marginTop: 14
     }
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => {
@@ -38921,46 +38933,102 @@ function Dashboard() {
       inp.click();
     },
     style: {
-      flex: 1,
-      background: 'var(--bg3)',
-      border: '1px solid var(--border2)',
-      borderRadius: 10,
-      padding: '12px 8px',
+      background: 'var(--bg2)',
+      border: `1px solid ${T_V2.border}`,
+      borderRadius: T_V2.radiusLg,
+      padding: '20px 16px',
       cursor: 'pointer',
-      textAlign: 'center'
+      textAlign: 'center',
+      minHeight: 120,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      fontFamily: T_V2.sansFamily,
+      transition: T_V2.motion ? 'all 180ms ease' : 'none'
+    },
+    onMouseEnter: e => {
+      e.currentTarget.style.borderColor = T_V2.primaryDim;
+      e.currentTarget.style.transform = 'translateY(-2px)';
+    },
+    onMouseLeave: e => {
+      e.currentTarget.style.borderColor = T_V2.border;
+      e.currentTarget.style.transform = 'none';
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 20
+      width: 42,
+      height: 42,
+      borderRadius: 999,
+      background: `color-mix(in oklch, ${T_V2.sky} 18%, transparent)`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: 22
     }
   }, "\uD83D\uDDBC"), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 10,
-      color: 'var(--text2)',
-      marginTop: 2
+      fontSize: 13.5,
+      fontWeight: 600,
+      color: 'var(--text)'
     }
-  }, "Gallery")), /*#__PURE__*/React.createElement("button", {
+  }, "Gallery"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--text3)',
+      lineHeight: 1.4
+    }
+  }, "From phone gallery")), /*#__PURE__*/React.createElement("button", {
     onClick: () => welcomeUploadRef.current?.click(),
     style: {
-      flex: 1,
-      background: 'var(--bg3)',
-      border: '1px solid var(--border2)',
-      borderRadius: 10,
-      padding: '12px 8px',
+      background: 'var(--bg2)',
+      border: `1px solid ${T_V2.border}`,
+      borderRadius: T_V2.radiusLg,
+      padding: '20px 16px',
       cursor: 'pointer',
-      textAlign: 'center'
+      textAlign: 'center',
+      minHeight: 120,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      fontFamily: T_V2.sansFamily,
+      transition: T_V2.motion ? 'all 180ms ease' : 'none'
+    },
+    onMouseEnter: e => {
+      e.currentTarget.style.borderColor = T_V2.primaryDim;
+      e.currentTarget.style.transform = 'translateY(-2px)';
+    },
+    onMouseLeave: e => {
+      e.currentTarget.style.borderColor = T_V2.border;
+      e.currentTarget.style.transform = 'none';
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 20
+      width: 42,
+      height: 42,
+      borderRadius: 999,
+      background: `color-mix(in oklch, ${T_V2.sage} 18%, transparent)`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: 22
     }
   }, "\uD83D\uDCC4"), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 10,
-      color: 'var(--text2)',
-      marginTop: 2
+      fontSize: 13.5,
+      fontWeight: 600,
+      color: 'var(--text)'
     }
-  }, "Upload Files")), /*#__PURE__*/React.createElement("button", {
+  }, "Upload files"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--text3)',
+      lineHeight: 1.4
+    }
+  }, "From your computer")), /*#__PURE__*/React.createElement("button", {
     onClick: () => {
       setTab('policies');
       setTimeout(() => {
@@ -38969,25 +39037,53 @@ function Dashboard() {
       }, 100);
     },
     style: {
-      flex: 1,
-      background: 'var(--bg3)',
-      border: '1px solid var(--border2)',
-      borderRadius: 10,
-      padding: '12px 8px',
+      background: 'var(--bg2)',
+      border: `1px solid ${T_V2.border}`,
+      borderRadius: T_V2.radiusLg,
+      padding: '20px 16px',
       cursor: 'pointer',
-      textAlign: 'center'
+      textAlign: 'center',
+      minHeight: 120,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      fontFamily: T_V2.sansFamily,
+      transition: T_V2.motion ? 'all 180ms ease' : 'none'
+    },
+    onMouseEnter: e => {
+      e.currentTarget.style.borderColor = T_V2.primaryDim;
+      e.currentTarget.style.transform = 'translateY(-2px)';
+    },
+    onMouseLeave: e => {
+      e.currentTarget.style.borderColor = T_V2.border;
+      e.currentTarget.style.transform = 'none';
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 20
+      width: 42,
+      height: 42,
+      borderRadius: 999,
+      background: `color-mix(in oklch, ${T_V2.lavender} 18%, transparent)`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: 22
     }
   }, "\u270F\uFE0F"), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 10,
-      color: 'var(--text2)',
-      marginTop: 2
+      fontSize: 13.5,
+      fontWeight: 600,
+      color: 'var(--text)'
     }
-  }, "Manual")))), welcomeStaged.length > 0 && /*#__PURE__*/React.createElement("div", {
+  }, "Manual"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--text3)',
+      lineHeight: 1.4
+    }
+  }, "Type policy details")))), welcomeStaged.length > 0 && /*#__PURE__*/React.createElement("div", {
     className: "card",
     style: {
       maxWidth: 420,
