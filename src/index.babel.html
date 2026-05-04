@@ -599,9 +599,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.30';
+const APP_VERSION = 'v2.4.0-rc1.36';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Cream-theme sweep across Clients & BulkVerify diagnostics';
+const APP_VERSION_NAME = 'Design v2 — Chart hover, KPI rings, Protection gap fix, LIA inputs, PA tracker';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -29587,6 +29587,287 @@ function ReviewSession({onClose}) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// MODULE: PLRetirementProjectionChart — interactive retirement income
+//   chart with hover tooltips, used inside the Dashboard. Extracted as
+//   its own memoized component so we can use React hooks (useState for
+//   the hover index) which can't safely live inside the JSX IIFE that
+//   the Dashboard's render uses for inline computations.
+//
+// Props:
+//   T           — design tokens (cream theme)
+//   timeline    — array of { age, cpf, policy, dividends, other, total, desired }
+//   retAge      — client's retirement age (drives the marker line + status)
+//   age         — client's current age (drives the inflation factor)
+//   inflPct     — inflation rate as a percent number (e.g. 2.5 for 2.5%)
+// ═══════════════════════════════════════════════════════════════
+const PLRetirementProjectionChart = React.memo(function PLRetirementProjectionChart({ T, timeline, retAge, age, inflPct }) {
+  const [hoverIdx, setHoverIdx] = React.useState(null);
+
+  if (!timeline || timeline.length < 2) return null;
+  const filtered = timeline.filter(r => r.age >= Math.max(50, retAge - 5) && r.age <= 90);
+  if (filtered.length < 2) return null;
+
+  const hasTarget = filtered.some(r => r.desired > 0);
+  const hasIncome = filtered.some(r => r.total > 0);
+  const w = 760, h = 240, padL = 50, padR = 16, padT = 30, padB = 32;
+  const innerW = w - padL - padR;
+  const innerH = h - padT - padB;
+  const maxV = Math.max(1, ...filtered.map(r => Math.max(r.total, r.desired)));
+  const axisMax = Math.ceil(maxV / 1000) * 1000;
+  const xStep = innerW / Math.max(1, filtered.length - 1);
+  const xAt = (i) => padL + i * xStep;
+  const yAt = (v) => padT + innerH - (v / axisMax) * innerH;
+  const barW = Math.min(20, Math.max(8, xStep * 0.66));
+
+  const stackKeys = [
+    { key: 'cpf',       label: 'CPF LIFE',       color: T.sun },
+    { key: 'policy',    label: 'Policy income',  color: T.primary },
+    { key: 'dividends', label: 'Dividends',      color: T.lavender },
+    { key: 'other',     label: 'Other sources',  color: T.sage },
+  ];
+
+  const linePath = filtered.map((r, i) => `${i === 0 ? 'M' : 'L'} ${xAt(i)} ${yAt(r.desired)}`).join(' ');
+  const gapTopPath = filtered.map((r, i) => `${i === 0 ? 'M' : 'L'} ${xAt(i)} ${yAt(Math.max(r.desired, r.total))}`).join(' ');
+  const gapBotPath = [...filtered].reverse().map((r, i) => `L ${xAt(filtered.length - 1 - i)} ${yAt(r.total)}`).join(' ');
+  const gapPath = `${gapTopPath} ${gapBotPath} Z`;
+  const ySteps = [0, 0.25, 0.5, 0.75, 1].map(f => Math.round(axisMax * f));
+  const xLabels = filtered.filter(r => r.age % 5 === 0 || r.age === retAge);
+  const retRow = filtered.find(r => r.age === retAge) || filtered[0];
+  const peakYear = filtered.reduce((m, r) => (r.total > m.total ? r : m), filtered[0]);
+  const gapAtRet = Math.max(0, (retRow.desired || 0) - (retRow.total || 0));
+
+  let summaryTone = T.text3, summaryLabel = '';
+  if (!hasTarget && !hasIncome) { summaryTone = T.text3; summaryLabel = 'Set income & target on Profile'; }
+  else if (!hasTarget) { summaryTone = T.warn; summaryLabel = 'No retirement target set'; }
+  else if (!hasIncome) { summaryTone = T.red; summaryLabel = 'No retirement income on file'; }
+  else if (gapAtRet === 0) { summaryTone = T.green; summaryLabel = '✓ On track at age ' + retAge; }
+  else if (gapAtRet < (retRow.desired || 1) * 0.2) { summaryTone = T.warn; summaryLabel = 'Gap at ' + retAge + ': S$' + gapAtRet.toLocaleString() + '/mo'; }
+  else { summaryTone = T.red; summaryLabel = 'Gap at ' + retAge + ': S$' + gapAtRet.toLocaleString() + '/mo'; }
+
+  const hoverRow = hoverIdx !== null ? filtered[hoverIdx] : null;
+  // Position the floating tooltip — anchor near the column, clamp to chart bounds.
+  const hoverX = hoverIdx !== null ? xAt(hoverIdx) : 0;
+  const tooltipW = 200;
+  const tooltipLeftPct = hoverIdx !== null ? Math.max(0, Math.min(100 - (tooltipW / w) * 100, ((hoverX - tooltipW / 2) / w) * 100)) : 0;
+
+  return (
+    <div style={{ background: T.bg2, border: `1px solid ${T.border}`, borderRadius: T.radiusLg, padding: T.cardPad, boxShadow: T.shadow }}>
+      <div style={{ display:'flex', alignItems:'baseline', justifyContent:'space-between', marginBottom: 6, flexWrap:'wrap', gap: 12 }}>
+        <div>
+          <div style={{ fontFamily: T.serifFamily, fontSize: 22, color: T.text, letterSpacing: '-0.015em' }}>Retirement income projection</div>
+          <div style={{ fontSize: 12.5, color: T.text3, marginTop: 4 }}>
+            Year-by-year monthly income from age {filtered[0].age} to 90 — dashed line is your desired lifestyle, growing at {inflPct.toFixed(1)}%/yr inflation
+          </div>
+        </div>
+        <div style={{
+          padding:'8px 14px', borderRadius: 999,
+          background: `color-mix(in oklch, ${summaryTone} 18%, transparent)`,
+          color: summaryTone, fontSize: 12, fontWeight: 600,
+          fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap',
+        }}>
+          {summaryLabel}
+        </div>
+      </div>
+
+      {/* Legend strip */}
+      <div style={{ display:'flex', flexWrap:'wrap', gap: 16, marginTop: 14, marginBottom: 4, fontSize: 11.5 }}>
+        {stackKeys.map(k => (
+          <span key={k.key} style={{ display:'flex', alignItems:'center', gap: 6, color: T.text2 }}>
+            <span style={{ width: 12, height: 8, borderRadius: 2, background: k.color }} />{k.label}
+          </span>
+        ))}
+        <span style={{ display:'flex', alignItems:'center', gap: 6, color: T.text2 }}>
+          <svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke={T.red} strokeWidth="2" strokeDasharray="4 3" /></svg>
+          Desired (with inflation)
+        </span>
+        <span style={{ display:'flex', alignItems:'center', gap: 6, color: T.text2 }}>
+          <span style={{ width: 12, height: 8, borderRadius: 2, background: `color-mix(in oklch, ${T.red} 16%, transparent)`, border: `1px dashed color-mix(in oklch, ${T.red} 40%, transparent)` }} />
+          Shortfall
+        </span>
+      </div>
+
+      <div style={{ position:'relative' }}>
+        <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="xMidYMid meet" style={{ display:'block', overflow:'visible' }}>
+          <defs>
+            <pattern id="plRetGapPattern" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+              <line x1="0" y1="0" x2="0" y2="6" stroke={T.red} strokeWidth="1.2" opacity="0.32" />
+            </pattern>
+          </defs>
+
+          {/* Y-axis grid + labels */}
+          {ySteps.map((v, i) => (
+            <g key={i}>
+              <line x1={padL} y1={yAt(v)} x2={w - padR} y2={yAt(v)}
+                stroke={T.border} strokeWidth="1" opacity={i === 0 ? 0.7 : 0.35} strokeDasharray={i === 0 ? '0' : '2 4'} />
+              <text x={padL - 8} y={yAt(v) + 3} fontSize="10" fill={T.text3} textAnchor="end" fontVariantNumeric="tabular-nums">
+                {v >= 1000 ? '$' + (v / 1000).toFixed(0) + 'k' : '$' + v}
+              </text>
+            </g>
+          ))}
+
+          {/* Stacked bars */}
+          {filtered.map((r, i) => {
+            const x = xAt(i);
+            let yCursor = yAt(0);
+            const isHover = hoverIdx === i;
+            return (
+              <g key={'b' + r.age} opacity={hoverIdx !== null && !isHover ? 0.55 : 1}
+                style={{ transition: T.motion ? 'opacity 140ms ease' : 'none' }}>
+                {stackKeys.map(k => {
+                  const v = r[k.key] || 0;
+                  if (v <= 0) return null;
+                  const segH = (v / axisMax) * innerH;
+                  yCursor -= segH;
+                  return (
+                    <rect key={k.key} x={x - barW / 2} y={yCursor} width={barW} height={segH}
+                      fill={k.color} opacity="0.92" rx="1" />
+                  );
+                })}
+              </g>
+            );
+          })}
+
+          {/* Shortfall band (where desired > total) */}
+          <path d={gapPath} fill="url(#plRetGapPattern)" stroke="none" />
+
+          {/* Desired (target) dashed line */}
+          <path d={linePath} fill="none" stroke={T.red} strokeWidth="2" strokeDasharray="5 4" strokeLinecap="round" opacity="0.85" />
+
+          {/* Retirement age marker */}
+          {(() => {
+            const idx = filtered.findIndex(r => r.age === retAge);
+            if (idx < 0) return null;
+            const x = xAt(idx);
+            return (
+              <g>
+                <line x1={x} y1={padT - 6} x2={x} y2={padT + innerH} stroke={T.lavender} strokeWidth="1.2" strokeDasharray="3 3" />
+                <rect x={x - 32} y={padT - 18} width="64" height="14" rx="7"
+                  fill={T.bg} stroke={T.lavender} strokeWidth="1" />
+                <text x={x} y={padT - 8} fontSize="9.5" fill={T.lavender} textAnchor="middle" fontWeight="600">
+                  Retire at {retAge}
+                </text>
+              </g>
+            );
+          })()}
+
+          {/* X-axis age labels */}
+          {xLabels.map(r => {
+            const i = filtered.indexOf(r);
+            return (
+              <text key={r.age} x={xAt(i)} y={h - 12} fontSize="10" fill={T.text3} textAnchor="middle" fontVariantNumeric="tabular-nums">
+                {r.age}
+              </text>
+            );
+          })}
+          <text x={padL - 4} y={h - 1} fontSize="9.5" fill={T.text4} textAnchor="end">Age</text>
+
+          {/* Hover hit-area rects covering each year's column. Capture mouseenter
+              to set the hover index, mouseleave to clear it. Rendered last so
+              they sit on top of the visual layers. Cursor stays default; we
+              rely on the floating tooltip for affordance. */}
+          {filtered.map((r, i) => {
+            const x = xAt(i);
+            return (
+              <rect key={'h' + r.age}
+                x={x - xStep / 2} y={padT} width={xStep} height={innerH}
+                fill="transparent"
+                onMouseEnter={() => setHoverIdx(i)}
+                onMouseLeave={() => setHoverIdx(null)} />
+            );
+          })}
+
+          {/* Hover marker — vertical line + dot at totals point */}
+          {hoverRow && (
+            <g pointerEvents="none">
+              <line x1={xAt(hoverIdx)} y1={padT} x2={xAt(hoverIdx)} y2={padT + innerH}
+                stroke={T.text2} strokeWidth="1" opacity="0.32" strokeDasharray="2 3" />
+              {hoverRow.total > 0 && (
+                <circle cx={xAt(hoverIdx)} cy={yAt(hoverRow.total)} r="4"
+                  fill={T.bg} stroke={T.text} strokeWidth="1.5" />
+              )}
+              {hoverRow.desired > 0 && (
+                <circle cx={xAt(hoverIdx)} cy={yAt(hoverRow.desired)} r="3.5"
+                  fill={T.red} opacity="0.9" />
+              )}
+            </g>
+          )}
+        </svg>
+
+        {/* Floating tooltip — overlays the chart above the hovered column.
+            Uses CSS percentage left so it tracks the SVG's responsive width.
+            Hidden when no column is hovered. */}
+        {hoverRow && (
+          <div style={{
+            position:'absolute', top: 6, left: tooltipLeftPct + '%',
+            width: tooltipW, pointerEvents: 'none',
+            background: T.bg, border: `1px solid ${T.border}`,
+            borderRadius: 10, padding: '10px 12px',
+            boxShadow: '0 8px 24px rgba(60,40,20,0.10)',
+            fontFamily: T.sansFamily, fontSize: 11.5,
+            zIndex: 5,
+            transition: T.motion ? 'left 80ms ease' : 'none',
+          }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom: 6 }}>
+              <span style={{ fontSize: 10.5, color: T.text3, fontWeight: 600, letterSpacing:'0.04em', textTransform:'uppercase' }}>Age {hoverRow.age}</span>
+              {hoverRow.age === retAge && <span style={{ fontSize: 9, color: T.lavender, fontWeight: 700 }}>RETIRE</span>}
+            </div>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom: 8, paddingBottom: 8, borderBottom: `1px solid ${T.border}` }}>
+              <span style={{ color: T.text2, fontWeight: 500 }}>Total income</span>
+              <span style={{ color: T.text, fontWeight: 700, fontVariantNumeric:'tabular-nums' }}>S${(hoverRow.total || 0).toLocaleString()}</span>
+            </div>
+            {stackKeys.map(k => {
+              const v = hoverRow[k.key] || 0;
+              if (v <= 0) return null;
+              return (
+                <div key={k.key} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap: 8, marginBottom: 3 }}>
+                  <span style={{ display:'flex', alignItems:'center', gap: 6, color: T.text3 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: 2, background: k.color }} />
+                    {k.label}
+                  </span>
+                  <span style={{ color: T.text2, fontVariantNumeric:'tabular-nums' }}>S${v.toLocaleString()}</span>
+                </div>
+              );
+            })}
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop: 8, paddingTop: 8, borderTop: `1px dashed ${T.border}` }}>
+              <span style={{ color: T.red, fontWeight: 600 }}>Desired</span>
+              <span style={{ color: T.red, fontVariantNumeric:'tabular-nums', fontWeight: 700 }}>S${(hoverRow.desired || 0).toLocaleString()}</span>
+            </div>
+            {hoverRow.desired > hoverRow.total && (
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop: 4 }}>
+                <span style={{ color: T.text3 }}>Gap</span>
+                <span style={{ color: T.red, fontVariantNumeric:'tabular-nums', fontWeight: 600 }}>S${(hoverRow.desired - hoverRow.total).toLocaleString()}/mo</span>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Detail strip — projected at retirement, peak year, inflation factor */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap: 14, marginTop: 14, paddingTop: 14, borderTop: `1px dashed ${T.border}` }}>
+        <div>
+          <div style={{ fontSize: 10.5, color: T.text3, fontWeight: 600, letterSpacing:'0.04em', textTransform:'uppercase' }}>At age {retAge}</div>
+          <div style={{ fontSize: 16, color: T.text, fontWeight: 600, marginTop: 4, fontVariantNumeric: 'tabular-nums' }}>
+            S${(retRow.total || 0).toLocaleString()}<span style={{ fontSize: 11, color: T.text3, fontWeight: 500 }}> / S${(retRow.desired || 0).toLocaleString()}</span>
+          </div>
+        </div>
+        <div>
+          <div style={{ fontSize: 10.5, color: T.text3, fontWeight: 600, letterSpacing:'0.04em', textTransform:'uppercase' }}>Peak income</div>
+          <div style={{ fontSize: 16, color: T.text, fontWeight: 600, marginTop: 4, fontVariantNumeric: 'tabular-nums' }}>
+            S${(peakYear.total || 0).toLocaleString()}<span style={{ fontSize: 11, color: T.text3, fontWeight: 500 }}> at age {peakYear.age}</span>
+          </div>
+        </div>
+        <div>
+          <div style={{ fontSize: 10.5, color: T.text3, fontWeight: 600, letterSpacing:'0.04em', textTransform:'uppercase' }}>Inflation</div>
+          <div style={{ fontSize: 16, color: T.text, fontWeight: 600, marginTop: 4, fontVariantNumeric: 'tabular-nums' }}>
+            {inflPct.toFixed(1)}%<span style={{ fontSize: 11, color: T.text3, fontWeight: 500 }}> /yr · target ×{Math.pow(1+inflPct/100, Math.max(0, retAge - age)).toFixed(2)}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+// ═══════════════════════════════════════════════════════════════
 // MODULE: UPLOAD_PORTAL — Client document collection link
 // ═══════════════════════════════════════════════════════════════
 function Dashboard() {
@@ -29778,6 +30059,13 @@ function Dashboard() {
     {label:'Early CI (' + eciYrs + 'yr ' + basisLabel + ')', cur:coverage.eci, need:reqECI, weight:10},
     {label:'Disability/mth', cur:coverage.di, need:reqDI, weight:10},
     {label:'Hospitalisation', cur:coverage.hasISP?1:0, need:1, weight:15, isFlag:true, note:coverage.hasISP?(coverage.ispRider?'ISP + Rider':'ISP only — deductible & co-insurance apply'):'No ISP held'},
+    // v2.4.0-rc1.36 — Personal Accident gap tracker, restored from the
+    // legacy PolicyLens. PA is a yes/no check (do you carry any PA cover?)
+    // since exact SA varies by lifestyle and isn't a strict LIA need.
+    {label:'Personal Accident', cur: coverage.add > 0 ? 1 : 0, need: 1, weight: 5, isFlag: true,
+      note: coverage.add > 0
+        ? `ADB ${fmt(coverage.add)}${coverage.amr > 0 ? ' · medical reimb '+fmt(coverage.amr) : ''}`
+        : 'No personal accident cover'},
   ];
 
   const overallScore = Math.round(gaps.reduce((s,g) => {
@@ -30410,14 +30698,31 @@ function Dashboard() {
   const activePols = policies.filter(p => p && p.status !== 'matured' && p.status !== 'surrendered' && p.status !== 'lapsed');
   const insurerCount = new Set(activePols.map(p => p.insurer).filter(Boolean)).size;
   const protectionGap = (() => {
-    // rc1.4 fix: gaps[].cur (not .have) is the legacy field name for current
-    // coverage. The rc1.3 build read .have which was always undefined → the
-    // KPI showed full need as a gap.
+    // v2.4.0-rc1.34 — fix mixing of monthly DI with lump-sum gaps.
+    // Previous behaviour summed cur/need straight from the gaps array.
+    // But Disability/mth is in MONTHLY $ (e.g. $7000) while Death/TPD/CI
+    // are in LUMP SUM ($XXX,XXX). Adding them produced misleadingly tiny
+    // totals when only DI was short (~$375 monthly gap masquerading as
+    // total protection gap, e.g. user's screenshot).
+    //
+    // Fix: capitalise the DI monthly gap into a lump-sum equivalent
+    // (× 12 × max(15, retAge - age) years of disability replacement).
+    // This treats DI like a present-value lump sum the FC would need
+    // to build to fully protect against income loss.
     let g = 0;
+    const diYrs = Math.max(15, (retAge || 65) - (age || 35));
     for (const row of (gaps || [])) {
       if (row.isFlag) continue; // skip Hospitalisation (boolean, not $)
       const need = parseFloat(row.need)||0, have = parseFloat(row.cur)||0;
-      if (need > have) g += (need - have);
+      if (need > have) {
+        const rowGap = need - have;
+        // Detect the DI monthly row by its label and capitalise it.
+        if ((row.label || '').toLowerCase().includes('disability/mth')) {
+          g += rowGap * 12 * diYrs;
+        } else {
+          g += rowGap;
+        }
+      }
     }
     return g;
   })();
@@ -30470,23 +30775,44 @@ function Dashboard() {
     arr[arr.length - 1] = current;
     return arr;
   };
+  // v2.4.0-rc1.33: each KPI now carries a `ringPct` (0..1) for a small
+  // mini-ring indicator on the right of the card. Replaces the previous
+  // synthesized sparkline which showed fake trend data. The ring is a
+  // truthful, current-state indicator instead.
+  //   - Insured value:   covered / sum-of-LIA-needs (lump-sum metrics only)
+  //   - Annual premium:  premium / income (capped at 100%)
+  //   - Active policies: null (no meaningful ratio — just the count)
+  //   - Protection gap:  share of LIA need that's already covered
+  //   - Retirement @ R:  coverage percentage of desired monthly income
+  const lumpSumNeed = (gaps || [])
+    .filter(g => !g.isFlag && !((g.label || '').toLowerCase().includes('disability/mth')))
+    .reduce((s, g) => s + (parseFloat(g.need) || 0), 0);
+  const lumpSumHave = (gaps || [])
+    .filter(g => !g.isFlag && !((g.label || '').toLowerCase().includes('disability/mth')))
+    .reduce((s, g) => s + Math.min(parseFloat(g.cur) || 0, parseFloat(g.need) || 0), 0);
+  const insuredRingPct = lumpSumNeed > 0 ? Math.min(1, lumpSumHave / lumpSumNeed) : 0;
+  const premRingPct = annualIncome > 0 ? Math.min(1, totalPremium.annual / annualIncome) : 0;
+  const gapRingPct = lumpSumNeed > 0 ? Math.max(0, Math.min(1, lumpSumHave / lumpSumNeed)) : 1;
+
   const kpis = [
-    { label:'Insured value', value: totalCoverage, prefix:'S$', delta: totalCoverage > 0 ? `${activePols.length} polic${activePols.length===1?'y':'ies'}` : 'Add a policy', tone: totalCoverage > 0 ? 'good' : 'neutral', accent: T.primary, emoji:'🛡️', spark: sparkOf(totalCoverage, 'up') },
-    { label:'Annual premium', value: totalPremium.annual, prefix:'S$', delta: annualIncome>0 ? `${Math.round(totalPremium.annual/annualIncome*100)}% of income` : 'Income unknown', tone:'neutral', accent: T.sage, emoji:'💰', spark: sparkOf(totalPremium.annual, 'up') },
-    { label:'Active policies', value: activePols.length, delta: insurerCount > 0 ? `${insurerCount} insurer${insurerCount===1?'':'s'}` : '—', tone:'neutral', accent: T.sky, emoji:'📋', spark: sparkOf(activePols.length, 'up') },
-    { label:'Protection gap', value: protectionGap, prefix:'S$', delta: protectionGap > 0 ? scoreLabel : 'Well covered', tone: protectionGap > 0 ? 'warn' : 'good', accent: protectionGap > 0 ? T.warn : T.green, emoji: protectionGap > 0 ? '⚠️' : '✓', spark: sparkOf(protectionGap, 'down') },
-    { label:`Retirement @ ${retAge}`, value: retCoverPct, suffix:'%', delta: retCoverPct >= 80 ? 'On track' : retCoverPct >= 50 ? 'Below target' : 'Action needed', tone: retCoverPct >= 80 ? 'good' : retCoverPct >= 50 ? 'warn' : 'warn', accent: T.lavender, emoji:'🌅', spark: sparkOf(retCoverPct, 'up') },
+    { label:'Insured value', value: totalCoverage, prefix:'S$', delta: totalCoverage > 0 ? `${activePols.length} polic${activePols.length===1?'y':'ies'}` : 'Add a policy', tone: totalCoverage > 0 ? 'good' : 'neutral', accent: T.primary, emoji:'🛡️', ringPct: insuredRingPct },
+    { label:'Annual premium', value: totalPremium.annual, prefix:'S$', delta: annualIncome>0 ? `${Math.round(totalPremium.annual/annualIncome*100)}% of income` : 'Income unknown', tone:'neutral', accent: T.sage, emoji:'💰', ringPct: premRingPct },
+    { label:'Active policies', value: activePols.length, delta: insurerCount > 0 ? `${insurerCount} insurer${insurerCount===1?'':'s'}` : '—', tone:'neutral', accent: T.sky, emoji:'📋', ringPct: null, insurerCount },
+    { label:'Protection gap', value: protectionGap, prefix:'S$', delta: protectionGap > 0 ? scoreLabel : 'Well covered', tone: protectionGap > 0 ? 'warn' : 'good', accent: protectionGap > 0 ? T.warn : T.green, emoji: protectionGap > 0 ? '⚠️' : '✓', ringPct: gapRingPct },
+    { label:`Retirement @ ${retAge}`, value: retCoverPct, suffix:'%', delta: retCoverPct >= 80 ? 'On track' : retCoverPct >= 50 ? 'Below target' : 'Action needed', tone: retCoverPct >= 80 ? 'good' : retCoverPct >= 50 ? 'warn' : 'warn', accent: T.lavender, emoji:'🌅', ringPct: Math.min(1, retCoverPct / 100) },
   ];
-  // Protection rows (4 — Death/TPD/CI/DI)
-  // rc1.4 fix: read g.cur (legacy field name), and pick the four numeric
-  // gap rows (Death / TPD / CI / Disability) — skip Early CI (subset of CI)
-  // and Hospitalisation (isFlag, not numeric).
-  const protectionRows = [0, 1, 2, 4].map(i => gaps?.[i]).filter(Boolean).map(g => ({
+  // Protection rows — v2.4.0-rc1.36: includes the two flag rows
+  // (Hospitalisation + Personal Accident) so the dashboard's protection
+  // coverage card shows them next to the numeric Death/TPD/CI/DI bars,
+  // matching the legacy PolicyLens layout the user asked to restore.
+  const protectionRows = [0, 1, 2, 4, 5, 6].map(i => gaps?.[i]).filter(Boolean).map(g => ({
     key: g.label || 'gap',
     label: (g.label || '').replace(/\s*\([^)]*\)\s*$/, ''), // strip trailing "(20yr expenses)" detail
     have: parseFloat(g.cur)||0,
     need: parseFloat(g.need)||0,
-  })).filter(r => r.need > 0);
+    isFlag: !!g.isFlag,
+    note: g.note || '',
+  })).filter(r => r.isFlag || r.need > 0);
   // Retirement bar segments
   const retSegments = [];
   if (retirementLite?.cpfEligible && (retirementLite?.cpfPayout?.mid || 0) > 0) retSegments.push({ key:'cpf',     label:`CPF LIFE (${retirementLite.cpfScheme || 'standard'})`, value: retirementLite.cpfPayout.mid, color: T.sun });
@@ -30680,8 +31006,45 @@ function Dashboard() {
                 }}>
                   {k.tone === 'good' && '↑ '}{k.tone === 'warn' && '⚠ '}{k.delta}
                 </div>
-                {/* rc1.12: sparkline anchored bottom-right of the KPI card */}
-                <PLSparkline T={T} data={k.spark} color={k.accent} width={72} height={22} />
+                {/* v2.4.0-rc1.33: replaced the synthesized sparkline with a
+                    truthful mini-ring (or insurer dot tally for "Active
+                    policies"). Each KPI's ring shows a current-state ratio
+                    relevant to that metric (see kpis array above). */}
+                {k.ringPct != null ? (() => {
+                  const size = 38, sw = 3, r = (size - sw) / 2, c = size / 2, circ = 2 * Math.PI * r;
+                  const pct = Math.max(0, Math.min(1, k.ringPct));
+                  return (
+                    <svg width={size} height={size} style={{ flexShrink: 0 }}>
+                      <g transform={`rotate(-90 ${c} ${c})`}>
+                        <circle cx={c} cy={c} r={r} fill="none" stroke={T.bg3} strokeWidth={sw} />
+                        <circle cx={c} cy={c} r={r} fill="none" stroke={k.accent} strokeWidth={sw}
+                          strokeDasharray={circ} strokeDashoffset={circ * (1 - pct)}
+                          strokeLinecap="round"
+                          style={{ transition: T.motion ? 'stroke-dashoffset 800ms ease' : 'none' }} />
+                      </g>
+                      <text x={c} y={c} dy=".35em" textAnchor="middle"
+                        fontSize="10" fontWeight="700" fill={k.accent} fontVariantNumeric="tabular-nums">
+                        {Math.round(pct * 100)}%
+                      </text>
+                    </svg>
+                  );
+                })() : (() => {
+                  // Active policies: render a tiny tally of insurer dots (max 6).
+                  const dots = Math.min(6, k.insurerCount || 0);
+                  return (
+                    <div style={{ display:'flex', gap: 4, flexShrink: 0 }}>
+                      {Array.from({length: dots}).map((_, i) => (
+                        <span key={i} style={{
+                          width: 8, height: 8, borderRadius: 999,
+                          background: k.accent, opacity: 0.85 - i * 0.08,
+                        }} />
+                      ))}
+                      {(k.insurerCount || 0) > 6 && (
+                        <span style={{ fontSize: 10, color: T.text3, marginLeft: 2 }}>+{(k.insurerCount || 0) - 6}</span>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           </div>
@@ -30700,7 +31063,14 @@ function Dashboard() {
             </div>
             <PLPill T={T} tone="soft" size="sm">{familyNodes.length} {familyNodes.length === 1 ? 'person' : 'people'}</PLPill>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:`repeat(${Math.max(2, Math.min(4, familyNodes.length))}, 1fr)`, gap: 14, marginTop: 22 }}>
+          {/* v2.4.0-rc1.32: solo-household card centers itself in a fixed
+              280px width instead of stretching across the full row. With
+              >1 person we keep the responsive grid: 2 cols for 2 people,
+              3 for 3, 4 for 4+. */}
+          <div style={familyNodes.length === 1
+            ? { display:'flex', justifyContent:'center', marginTop: 22 }
+            : { display:'grid', gridTemplateColumns:`repeat(${Math.min(4, familyNodes.length)}, 1fr)`, gap: 14, marginTop: 22 }
+          }>
             {familyNodes.map((person, i) => {
               const ringColor = person.coverage >= 0.9 ? T.green : person.coverage >= 0.6 ? T.warn : T.red;
               const r = 36, c = 40, sw = 4, circ = 2 * Math.PI * r;
@@ -30711,6 +31081,9 @@ function Dashboard() {
                   background: person.primary ? T.primarySoft : T.bg,
                   border: `1px solid ${person.primary ? T.primary : T.border}`,
                   minWidth: 0, position:'relative',
+                  // v2.4.0-rc1.32: in solo-household mode the parent uses
+                  // flex/center; cap card width so it doesn't sprawl.
+                  ...(familyNodes.length === 1 ? { width: 280, maxWidth: '100%' } : {}),
                 }}>
                   <div style={{ position:'relative', width: 80, height: 80 }}>
                     <svg width="80" height="80" style={{ position:'absolute', top:0, left:0, transform:'rotate(-90deg)' }}>
@@ -30764,15 +31137,44 @@ function Dashboard() {
             {protectionRows.length === 0 ? (
               <div style={{ fontSize: 12, color: T.text3, fontStyle:'italic' }}>Add an income figure on the Profile tab to compute recommended coverage.</div>
             ) : protectionRows.map(row => {
+              // v2.4.0-rc1.36: handle two row types — numeric (Death/TPD/CI/DI)
+              // shows a percent + progress bar; flag (Hospitalisation, PA)
+              // shows a Held / Not held pill with the relevant note copy.
+              const isDI = (row.label || '').toLowerCase().includes('disability/mth');
+              if (row.isFlag) {
+                const held = row.have >= row.need && row.need > 0;
+                const tone = held ? T.green : T.red;
+                return (
+                  <div key={row.key}>
+                    <div style={{ display:'flex', alignItems:'baseline', justifyContent:'space-between', marginBottom: 8 }}>
+                      <span style={{ fontSize: 13, color: T.text, fontWeight: 600 }}>{row.label}</span>
+                      <span style={{
+                        padding: '3px 10px', borderRadius: 999,
+                        background: `color-mix(in oklch, ${tone} 18%, transparent)`,
+                        color: tone, fontWeight: 600, fontSize: 11,
+                      }}>{held ? '✓ Held' : '○ Not held'}</span>
+                    </div>
+                    {row.note && (
+                      <div style={{ fontSize: 11.5, color: T.text3, fontStyle: held ? 'normal' : 'italic', lineHeight: 1.4 }}>
+                        {row.note}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
               const pct = Math.min(1, row.have / Math.max(row.need, 1));
               const tone = pct >= 0.95 ? T.green : pct >= 0.7 ? T.warn : T.red;
+              // DI is monthly $ — render as $X / $Y not k/k
+              const fmtVal = isDI
+                ? (v) => 'S$' + Math.round(v).toLocaleString() + '/mo'
+                : (v) => 'S$' + (v / 1000).toFixed(0) + 'k';
               return (
                 <div key={row.key}>
                   <div style={{ display:'flex', alignItems:'baseline', justifyContent:'space-between', marginBottom: 8 }}>
                     <span style={{ fontSize: 13, color: T.text, fontWeight: 600 }}>{row.label}</span>
                     <span style={{ fontSize: 12, color: T.text2 }}>
-                      <span style={{ fontWeight: 600, color: T.text, fontVariantNumeric: 'tabular-nums' }}>S${(row.have/1000).toFixed(0)}k</span>
-                      <span style={{ color: T.text4 }}> / S${(row.need/1000).toFixed(0)}k</span>
+                      <span style={{ fontWeight: 600, color: T.text, fontVariantNumeric: 'tabular-nums' }}>{fmtVal(row.have)}</span>
+                      <span style={{ color: T.text4 }}> / {fmtVal(row.need)}</span>
                       <span style={{
                         marginLeft: 10, padding: '2px 8px', borderRadius: 999,
                         background: `color-mix(in oklch, ${tone} 18%, transparent)`,
@@ -30840,6 +31242,129 @@ function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* ── 3d.5. Coverage Guidelines (LIA Framework) — v2.4.0-rc1.35 ──
+          Surfaces the previously buried LIA inputs: CI calc method
+          (income vs expenses), expense components included, sum-assured
+          overrides for retired clients with manual targets, and a
+          read-only summary of the LIA standard multipliers. Collapsible
+          to keep the dashboard quiet by default. */}
+      <details style={{
+        background: T.bg2, border: `1px solid ${T.border}`,
+        borderRadius: T.radiusLg, boxShadow: T.shadow, padding: 0,
+      }}>
+        <summary style={{
+          padding: '16px 20px', cursor: 'pointer', listStyle: 'none',
+          display: 'flex', alignItems: 'center', gap: 12,
+          fontFamily: T.sansFamily, color: T.text2, fontSize: 13,
+        }}>
+          <span style={{ fontSize: 18 }}>📐</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontFamily: T.serifFamily, fontSize: 18, color: T.text, letterSpacing: '-0.015em', lineHeight: 1.2 }}>
+              Coverage Guidelines (LIA Framework)
+            </div>
+            <div style={{ fontSize: 12, color: T.text3, marginTop: 3 }}>
+              How recommended sum-assured is calculated · click to adjust method &amp; overrides
+            </div>
+          </div>
+          <span style={{ fontSize: 11, color: T.text3 }}>
+            Death {LIA_MULTIPLIERS.deathYrs}× · TPD {LIA_MULTIPLIERS.tpdYrs}× · CI {LIA_MULTIPLIERS.ciYrs}× · ECI {LIA_MULTIPLIERS.eciYrs}× · DI {LIA_MULTIPLIERS.diPct}%
+          </span>
+        </summary>
+
+        <div style={{ padding: '4px 20px 20px', borderTop: `1px solid ${T.border}`, paddingTop: 16 }}>
+          {/* Method: Income vs Expenses */}
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 11, color: T.text3, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 8 }}>
+              Calculation method
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {[['income', 'Income × Years'], ['expenses', 'Expenses × Years']].map(([key, label]) => (
+                <button key={key} onClick={() => setCiMethod(key)}
+                  style={{
+                    padding: '8px 14px', borderRadius: 999,
+                    background: ciMethod === key ? T.primary : T.bg3,
+                    color: ciMethod === key ? '#fff' : T.text2,
+                    border: `1px solid ${ciMethod === key ? T.primary : T.border}`,
+                    cursor: 'pointer', fontSize: 12, fontWeight: 600,
+                    fontFamily: T.sansFamily,
+                    transition: T.motion ? 'all 180ms ease' : 'none',
+                  }}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Expense components — only visible when method is "expenses" */}
+          {ciMethod === 'expenses' && (
+            <div style={{ marginBottom: 14, padding: 12, background: T.bg, borderRadius: T.radius || 14, border: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: 11, color: T.text3, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 8 }}>
+                Include in expenses basis
+              </div>
+              <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                {[['exp', ciIncExp, setCiIncExp, 'Living expenses'],
+                  ['mort', ciIncMort, setCiIncMort, 'Mortgage'],
+                  ['dep', ciIncDep, setCiIncDep, 'Dependant support']].map(([key, val, setter, label]) => (
+                  <label key={key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: T.text2, cursor: 'pointer' }}>
+                    <input type="checkbox" checked={val} onChange={e => setter(e.target.checked)}
+                      style={{ accentColor: T.primary }} />
+                    {label}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Multipliers info — read-only, the LIA standard */}
+          <div style={{ marginBottom: 14, padding: 12, background: T.bg, borderRadius: T.radius || 14, border: `1px solid ${T.border}` }}>
+            <div style={{ fontSize: 11, color: T.text3, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 8 }}>
+              LIA standard multipliers <span style={{ fontWeight: 500, textTransform: 'none', letterSpacing: 0 }}>· industry baseline</span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 10 }}>
+              {[['Death', LIA_MULTIPLIERS.deathYrs + ' × ' + (ciMethod === 'income' ? 'income' : 'expenses') + ' / yr'],
+                ['TPD', LIA_MULTIPLIERS.tpdYrs + ' × ' + (ciMethod === 'income' ? 'income' : 'expenses') + ' / yr'],
+                ['CI', LIA_MULTIPLIERS.ciYrs + ' × ' + (ciMethod === 'income' ? 'income' : 'expenses') + ' / yr'],
+                ['Early CI', LIA_MULTIPLIERS.eciYrs + ' × ' + (ciMethod === 'income' ? 'income' : 'expenses') + ' / yr'],
+                ['Disability', LIA_MULTIPLIERS.diPct + '% of monthly income']].map(([k, v]) => (
+                <div key={k}>
+                  <div style={{ fontSize: 11, color: T.text3, fontWeight: 500 }}>{k}</div>
+                  <div style={{ fontSize: 12.5, color: T.text, fontWeight: 600, marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>{v}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Sum-Assured overrides for retired clients / manual targets */}
+          <div style={{ padding: 12, background: T.bg, borderRadius: T.radius || 14, border: `1px solid ${T.border}` }}>
+            <div style={{ fontSize: 11, color: T.text3, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 4 }}>
+              Sum-Assured overrides <span style={{ fontWeight: 500, textTransform: 'none', letterSpacing: 0 }}>· optional, blank to use LIA</span>
+            </div>
+            <div style={{ fontSize: 11, color: T.text3, marginBottom: 10, lineHeight: 1.45 }}>
+              For retired clients (no income) or where you've agreed a manual target with the client. Leave blank to use the multipliers above.
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
+              {[['Death', deathOverride, setDeathOverride],
+                ['TPD', tpdOverride, setTpdOverride],
+                ['CI', ciOverride, setCiOverride],
+                ['Early CI', eciOverride, setEciOverride],
+                ['DI / mth', diOverride, setDiOverride]].map(([label, val, setter]) => (
+                <div key={label}>
+                  <label style={{ fontSize: 11, color: T.text3, fontWeight: 500, display: 'block', marginBottom: 4 }}>{label}</label>
+                  <input type="number" value={val} onChange={e => setter(e.target.value)} placeholder="Auto"
+                    style={{
+                      width: '100%', height: 32, padding: '0 10px',
+                      background: T.bg2, border: `1px solid ${T.border}`,
+                      borderRadius: 8, fontSize: 12, color: T.text,
+                      fontFamily: T.sansFamily, fontVariantNumeric: 'tabular-nums',
+                      outline: 'none',
+                    }} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </details>
 
       {/* ── 3e. What-if scenario tool — v2.4.0-rc1.24 ──
           Dual-slider What-If matching the prototype's PLWhatIf:
@@ -30944,196 +31469,17 @@ function Dashboard() {
           built once in the Dashboard's retirement computation block.
           This is the same dataset the PDF report uses, so the on-screen
           projection matches the printed projection exactly. */}
-      {retirementLite?.timeline && retirementLite.timeline.length >= 2 && (() => {
-        const tl = retirementLite.timeline;
-        const filtered = tl.filter(r => r.age >= Math.max(50, retAge - 5) && r.age <= 90);
-        if (filtered.length < 2) return null;
-        const inflPct = retirementLite.inflationRate || 0;
-        // v2.4.0-rc1.29: distinguish empty-state cases for the status pill.
-        // When desired is 0 (target not set) we shouldn't claim "on track" —
-        // we don't know what the target is. Same for "no income" case.
-        const hasTarget = filtered.some(r => r.desired > 0);
-        const hasIncome = filtered.some(r => r.total > 0);
-        const w = 760, h = 240, padL = 50, padR = 16, padT = 30, padB = 32;
-        const innerW = w - padL - padR;
-        const innerH = h - padT - padB;
-        const maxV = Math.max(1, ...filtered.map(r => Math.max(r.total, r.desired)));
-        const axisMax = Math.ceil(maxV / 1000) * 1000;
-        const xStep = innerW / Math.max(1, filtered.length - 1);
-        const xAt = (i) => padL + i * xStep;
-        const yAt = (v) => padT + innerH - (v / axisMax) * innerH;
-        const barW = Math.min(20, Math.max(8, xStep * 0.66));
-        const stackKeys = [
-          { key: 'cpf',       label: 'CPF LIFE',       color: T.sun },
-          { key: 'policy',    label: 'Policy income',  color: T.primary },
-          { key: 'dividends', label: 'Dividends',      color: T.lavender },
-          { key: 'other',     label: 'Other sources',  color: T.sage },
-        ];
-        const linePath = filtered.map((r, i) => `${i === 0 ? 'M' : 'L'} ${xAt(i)} ${yAt(r.desired)}`).join(' ');
-        const gapTopPath = filtered.map((r, i) => `${i === 0 ? 'M' : 'L'} ${xAt(i)} ${yAt(Math.max(r.desired, r.total))}`).join(' ');
-        const gapBotPath = [...filtered].reverse().map((r, i) => `L ${xAt(filtered.length - 1 - i)} ${yAt(r.total)}`).join(' ');
-        const gapPath = `${gapTopPath} ${gapBotPath} Z`;
-        const ySteps = [0, 0.25, 0.5, 0.75, 1].map(f => Math.round(axisMax * f));
-        const xLabels = filtered.filter(r => r.age % 5 === 0 || r.age === retAge);
-        const retRow = filtered.find(r => r.age === retAge) || filtered[0];
-        const peakYear = filtered.reduce((m, r) => (r.total > m.total ? r : m), filtered[0]);
-        const gapAtRet = Math.max(0, (retRow.desired || 0) - (retRow.total || 0));
-        // Status pill tone + label depend on whether target & income exist.
-        let summaryTone = T.text3;
-        let summaryLabel = '';
-        if (!hasTarget && !hasIncome) {
-          summaryTone = T.text3;
-          summaryLabel = 'Set income & target on Profile';
-        } else if (!hasTarget) {
-          summaryTone = T.warn;
-          summaryLabel = 'No retirement target set';
-        } else if (!hasIncome) {
-          summaryTone = T.red;
-          summaryLabel = 'No retirement income on file';
-        } else if (gapAtRet === 0) {
-          summaryTone = T.green;
-          summaryLabel = '✓ On track at age ' + retAge;
-        } else if (gapAtRet < (retRow.desired || 1) * 0.2) {
-          summaryTone = T.warn;
-          summaryLabel = 'Gap at ' + retAge + ': S$' + gapAtRet.toLocaleString() + '/mo';
-        } else {
-          summaryTone = T.red;
-          summaryLabel = 'Gap at ' + retAge + ': S$' + gapAtRet.toLocaleString() + '/mo';
-        }
-
-        return (
-        <div style={{ background: T.bg2, border: `1px solid ${T.border}`, borderRadius: T.radiusLg, padding: T.cardPad, boxShadow: T.shadow }}>
-          <div style={{ display:'flex', alignItems:'baseline', justifyContent:'space-between', marginBottom: 6, flexWrap:'wrap', gap: 12 }}>
-            <div>
-              <div style={{ fontFamily: T.serifFamily, fontSize: 22, color: T.text, letterSpacing: '-0.015em' }}>Retirement income projection</div>
-              <div style={{ fontSize: 12.5, color: T.text3, marginTop: 4 }}>
-                Year-by-year monthly income from age {filtered[0].age} to 90 — dashed line is your desired lifestyle, growing at {inflPct.toFixed(1)}%/yr inflation
-              </div>
-            </div>
-            <div style={{
-              padding:'8px 14px', borderRadius: 999,
-              background: `color-mix(in oklch, ${summaryTone} 18%, transparent)`,
-              color: summaryTone, fontSize: 12, fontWeight: 600,
-              fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap',
-            }}>
-              {summaryLabel}
-            </div>
-          </div>
-
-          {/* Legend strip */}
-          <div style={{ display:'flex', flexWrap:'wrap', gap: 16, marginTop: 14, marginBottom: 4, fontSize: 11.5 }}>
-            {stackKeys.map(k => (
-              <span key={k.key} style={{ display:'flex', alignItems:'center', gap: 6, color: T.text2 }}>
-                <span style={{ width: 12, height: 8, borderRadius: 2, background: k.color }} />{k.label}
-              </span>
-            ))}
-            <span style={{ display:'flex', alignItems:'center', gap: 6, color: T.text2 }}>
-              <svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke={T.red} strokeWidth="2" strokeDasharray="4 3" /></svg>
-              Desired (with inflation)
-            </span>
-            <span style={{ display:'flex', alignItems:'center', gap: 6, color: T.text2 }}>
-              <span style={{ width: 12, height: 8, borderRadius: 2, background: `color-mix(in oklch, ${T.red} 16%, transparent)`, border: `1px dashed color-mix(in oklch, ${T.red} 40%, transparent)` }} />
-              Shortfall
-            </span>
-          </div>
-
-          <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="xMidYMid meet" style={{ display:'block', overflow:'visible' }}>
-            <defs>
-              <pattern id="plRetGapPattern" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
-                <line x1="0" y1="0" x2="0" y2="6" stroke={T.red} strokeWidth="1.2" opacity="0.32" />
-              </pattern>
-            </defs>
-
-            {/* Y-axis grid + labels */}
-            {ySteps.map((v, i) => (
-              <g key={i}>
-                <line x1={padL} y1={yAt(v)} x2={w - padR} y2={yAt(v)}
-                  stroke={T.border} strokeWidth="1" opacity={i === 0 ? 0.7 : 0.35} strokeDasharray={i === 0 ? '0' : '2 4'} />
-                <text x={padL - 8} y={yAt(v) + 3} fontSize="10" fill={T.text3} textAnchor="end" fontVariantNumeric="tabular-nums">
-                  {v >= 1000 ? '$' + (v / 1000).toFixed(0) + 'k' : '$' + v}
-                </text>
-              </g>
-            ))}
-
-            {/* Stacked bars */}
-            {filtered.map((r, i) => {
-              const x = xAt(i);
-              let yCursor = yAt(0);
-              return (
-                <g key={'b' + r.age}>
-                  {stackKeys.map(k => {
-                    const v = r[k.key] || 0;
-                    if (v <= 0) return null;
-                    const segH = (v / axisMax) * innerH;
-                    yCursor -= segH;
-                    return (
-                      <rect key={k.key} x={x - barW / 2} y={yCursor} width={barW} height={segH}
-                        fill={k.color} opacity="0.92" rx="1" />
-                    );
-                  })}
-                </g>
-              );
-            })}
-
-            {/* Shortfall band (where desired > total) */}
-            <path d={gapPath} fill="url(#plRetGapPattern)" stroke="none" />
-
-            {/* Desired (target) dashed line */}
-            <path d={linePath} fill="none" stroke={T.red} strokeWidth="2" strokeDasharray="5 4" strokeLinecap="round" opacity="0.85" />
-
-            {/* Retirement age marker */}
-            {(() => {
-              const idx = filtered.findIndex(r => r.age === retAge);
-              if (idx < 0) return null;
-              const x = xAt(idx);
-              return (
-                <g>
-                  <line x1={x} y1={padT - 6} x2={x} y2={padT + innerH} stroke={T.lavender} strokeWidth="1.2" strokeDasharray="3 3" />
-                  <rect x={x - 32} y={padT - 18} width="64" height="14" rx="7"
-                    fill={T.bg} stroke={T.lavender} strokeWidth="1" />
-                  <text x={x} y={padT - 8} fontSize="9.5" fill={T.lavender} textAnchor="middle" fontWeight="600">
-                    Retire at {retAge}
-                  </text>
-                </g>
-              );
-            })()}
-
-            {/* X-axis age labels */}
-            {xLabels.map(r => {
-              const i = filtered.indexOf(r);
-              return (
-                <text key={r.age} x={xAt(i)} y={h - 12} fontSize="10" fill={T.text3} textAnchor="middle" fontVariantNumeric="tabular-nums">
-                  {r.age}
-                </text>
-              );
-            })}
-            <text x={padL - 4} y={h - 1} fontSize="9.5" fill={T.text4} textAnchor="end">Age</text>
-          </svg>
-
-          {/* Detail strip — projected at retirement, peak year, inflation factor */}
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap: 14, marginTop: 14, paddingTop: 14, borderTop: `1px dashed ${T.border}` }}>
-            <div>
-              <div style={{ fontSize: 10.5, color: T.text3, fontWeight: 600, letterSpacing:'0.04em', textTransform:'uppercase' }}>At age {retAge}</div>
-              <div style={{ fontSize: 16, color: T.text, fontWeight: 600, marginTop: 4, fontVariantNumeric: 'tabular-nums' }}>
-                S${(retRow.total || 0).toLocaleString()}<span style={{ fontSize: 11, color: T.text3, fontWeight: 500 }}> / S${(retRow.desired || 0).toLocaleString()}</span>
-              </div>
-            </div>
-            <div>
-              <div style={{ fontSize: 10.5, color: T.text3, fontWeight: 600, letterSpacing:'0.04em', textTransform:'uppercase' }}>Peak income</div>
-              <div style={{ fontSize: 16, color: T.text, fontWeight: 600, marginTop: 4, fontVariantNumeric: 'tabular-nums' }}>
-                S${(peakYear.total || 0).toLocaleString()}<span style={{ fontSize: 11, color: T.text3, fontWeight: 500 }}> at age {peakYear.age}</span>
-              </div>
-            </div>
-            <div>
-              <div style={{ fontSize: 10.5, color: T.text3, fontWeight: 600, letterSpacing:'0.04em', textTransform:'uppercase' }}>Inflation</div>
-              <div style={{ fontSize: 16, color: T.text, fontWeight: 600, marginTop: 4, fontVariantNumeric: 'tabular-nums' }}>
-                {inflPct.toFixed(1)}%<span style={{ fontSize: 11, color: T.text3, fontWeight: 500 }}> /yr · target ×{Math.pow(1+inflPct/100, Math.max(0, retAge - age)).toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        );
-      })()}
+      {/* v2.4.0-rc1.31: chart extracted into PLRetirementProjectionChart
+          component so it can use React hooks for the interactive hover
+          tooltip layer. Same data, same render — now with hover-to-see-
+          numbers behavior. */}
+      <PLRetirementProjectionChart
+        T={T}
+        timeline={retirementLite?.timeline || []}
+        retAge={retAge}
+        age={age}
+        inflPct={retirementLite?.inflationRate || 0}
+      />
 
       {/* ── 3g. All policies, grouped by category ── */}
       <div style={{ background: T.bg2, border: `1px solid ${T.border}`, borderRadius: T.radiusLg, boxShadow: T.shadow, overflow:'hidden' }}>
