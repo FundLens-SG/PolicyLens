@@ -831,16 +831,24 @@ function PLSparkline({ T = T_V2, data, color, width = 90, height = 26 }) {
 }
 
 // ── COMPONENT: PLSuiteStrip — internal CKG cross-tool nav ──
-// rc1.6: Slim cream bar that sits above the PolicyLens header.
-//   Left: gold/coral '← CKG Suite' pill, then uppercase mono breadcrumb
-//        ('Suite / PolicyLens / {clientName}').
-//   Right: live Drive sync indicator (green dot + 'Drive synced · just now'
-//        when connected; warn dot + 'Reconnect needed' when 401; cream
-//        text when disconnected).
-// Reads driveStatus + clientName via context safely (no error if context
-// is not yet provided — strip still renders).
+// 2026-05-05: Switched from PolicyLens cream/light theme to the dark+
+//   brass aesthetic shared by FundLens / Illustration / AutoDial /
+//   Report Builder. Hardcodes the suite-strip palette so it stays
+//   consistent with the hub and other tools regardless of the
+//   PolicyLens light/dark mode toggle (which still controls the
+//   tool's interior).
+//
+//   Click "← CKG ▾" pill → opens an inline dropdown listing Suite
+//   Home + all 6 tools, matching what /_ckg-strip-enhance.js
+//   produces on the other tools. Implements its own dropdown state
+//   inside React so it survives re-renders (the plain-DOM enhancer
+//   script can't safely mutate React-managed nodes).
+//
+//   Right side keeps the live Drive sync indicator unchanged.
 function PLSuiteStrip() {
-  const T = T_V2;
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  const wrapRef = React.useRef(null);
+
   let clientName = '', driveStatus = 'disconnected';
   try {
     const ctx = React.useContext(AppCtx);
@@ -850,57 +858,180 @@ function PLSuiteStrip() {
     }
   } catch(_) {}
   const isMobile = (typeof useViewportIsMobile === 'function') ? useViewportIsMobile() : false;
+
+  // Click-outside / Escape close
+  React.useEffect(() => {
+    if (!menuOpen) return undefined;
+    function onClick(e) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) setMenuOpen(false);
+    }
+    function onKey(e) { if (e.key === 'Escape') setMenuOpen(false); }
+    document.addEventListener('click', onClick);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('click', onClick);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [menuOpen]);
+
+  // Hardcoded dark palette so PolicyLens's strip matches the hub
+  // and the other tools regardless of internal theme state.
+  const STRIP = {
+    bg:        '#0a0a0a',
+    border:    'rgba(214, 168, 122, 0.18)',
+    pillBg:    'transparent',
+    pillBr:    'rgba(214, 168, 122, 0.32)',
+    pillFg:    '#d6a87a',
+    crumb:     'rgba(244, 241, 232, 0.58)',
+    crumbDim:  'rgba(244, 241, 232, 0.36)',
+    crumbStrong: 'rgba(244, 241, 232, 0.78)',
+    sansFamily: '"Geist", "Inter", system-ui, -apple-system, sans-serif',
+    monoFamily: '"Geist Mono", "JetBrains Mono", ui-monospace, monospace',
+  };
   const driveIndicator = (() => {
-    if (driveStatus === 'connected')         return { color: T.green, text: 'Drive synced' };
-    if (driveStatus === 'checking')          return { color: T.warn,  text: 'Checking Drive…' };
-    if (driveStatus === 'reconnect-needed')  return { color: T.warn,  text: 'Reconnect Drive' };
-    return { color: T.text4, text: 'Drive offline' };
+    if (driveStatus === 'connected')         return { color: 'oklch(0.78 0.13 145)', text: 'Drive synced' };
+    if (driveStatus === 'checking')          return { color: 'oklch(0.78 0.14 65)',  text: 'Checking Drive…' };
+    if (driveStatus === 'reconnect-needed')  return { color: 'oklch(0.78 0.14 65)',  text: 'Reconnect Drive' };
+    return { color: 'rgba(244, 241, 232, 0.40)', text: 'Drive offline' };
   })();
+
+  const NAV = [
+    { id: 'home',         name: 'Suite Home',         desc: 'All tools',           href: 'https://ckgtools.com/',                          primary: true  },
+    { id: 'fundlens',     name: 'FundLens',           desc: 'Portfolio analysis',  href: 'https://ckgtools.com/tools/fundlens/'                            },
+    { id: 'policylens',   name: 'PolicyLens',         desc: 'Policy intelligence', href: 'https://ckgtools.com/tools/policylens/',         current: true  },
+    { id: 'illustration', name: 'Illustration Studio', desc: 'Client illustrations',href: 'https://ckgtools.com/tools/illustration/'                       },
+    { id: 'autodial',     name: 'AutoDial',           desc: 'Calling cockpit',     href: 'https://ckgtools.com/tools/autodial/'                            },
+    { id: 'reports',      name: 'Report Builder',     desc: 'Snapshot reports',    href: 'https://ckgtools.com/tools/report-builder/docs/'                 },
+    { id: 'crmlens',      name: 'CRMLens',            desc: 'Coming soon',         href: '#',                                              disabled: true },
+  ];
+
+  function renderItem(t) {
+    const itemBaseStyle = {
+      display: 'grid', gridTemplateColumns: '1fr auto', gap: 8,
+      alignItems: 'center',
+      padding: '10px 12px',
+      borderRadius: 8,
+      textDecoration: 'none',
+      color: '#f4f1e8',
+      fontSize: 13,
+      border: '1px solid transparent',
+      background: 'transparent',
+      transition: 'background 120ms ease-out, border-color 120ms ease-out',
+    };
+    if (t.current) {
+      itemBaseStyle.background = 'rgba(214, 168, 122, 0.10)';
+      itemBaseStyle.borderColor = 'rgba(214, 168, 122, 0.28)';
+    }
+    if (t.primary) {
+      itemBaseStyle.borderBottom = '1px solid rgba(255,255,255,0.06)';
+      itemBaseStyle.borderRadius = '8px 8px 0 0';
+      itemBaseStyle.marginBottom = 4;
+      itemBaseStyle.paddingBottom = 12;
+    }
+    if (t.disabled) {
+      itemBaseStyle.opacity = 0.42;
+      itemBaseStyle.cursor = 'not-allowed';
+    } else {
+      itemBaseStyle.cursor = 'pointer';
+    }
+    const body = (
+      <>
+        <span>
+          <span style={{ fontWeight: 500, lineHeight: 1.2, color: t.current ? '#d6a87a' : '#f4f1e8' }}>{t.name}</span>
+          <span style={{ display: 'block', fontSize: 11, color: 'rgba(244,241,232,0.5)', marginTop: 2, lineHeight: 1.2 }}>{t.desc}</span>
+        </span>
+        {t.disabled
+          ? <span style={{ fontFamily: STRIP.monoFamily, fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(244,241,232,0.4)', border: '1px solid rgba(255,255,255,0.08)', padding: '3px 8px', borderRadius: 3 }}>Coming Soon</span>
+          : <span style={{ color: 'rgba(244,241,232,0.4)', fontSize: 12 }} aria-hidden="true">→</span>
+        }
+      </>
+    );
+    if (t.disabled) {
+      return (
+        <div key={t.id} role="menuitem" aria-disabled="true" style={itemBaseStyle}>{body}</div>
+      );
+    }
+    return (
+      <a key={t.id} href={t.href} role="menuitem" aria-current={t.current ? 'page' : undefined} style={itemBaseStyle}>{body}</a>
+    );
+  }
+
   return (
-    <div style={{
-      height: isMobile ? 44 : 36, flexShrink: 0,
-      background: T.bg2, borderBottom: '1px solid ' + T.hair,
-      display: 'flex', alignItems: 'center', gap: 12,
-      padding: isMobile ? '0 12px' : '0 18px',
-      fontFamily: T.sansFamily,
-    }}>
-      <button onClick={() => { window.location.href = '/'; }} title="Back to CKG hub"
-        style={{
-          display: 'inline-flex', alignItems: 'center', gap: 6,
-          padding: isMobile ? '4px 10px' : '5px 12px',
-          background: T.primaryDim, color: T.primary,
-          border: 'none', borderRadius: 999,
-          fontFamily: T.sansFamily, fontSize: isMobile ? 11 : 11.5, fontWeight: 500,
-          cursor: 'pointer', flexShrink: 0,
-          transition: T.motion ? 'all 180ms ease' : 'none',
-        }}>
-        <span style={{ fontSize: isMobile ? 11 : 12 }}>←</span> CKG Suite
-      </button>
-      {!isMobile && (
-        <span style={{
-          fontFamily: T.monoFamily, fontSize: 10.5,
-          letterSpacing: '0.18em', textTransform: 'uppercase',
-          color: T.text3, minWidth: 0, overflow: 'hidden',
-          whiteSpace: 'nowrap', textOverflow: 'ellipsis',
-        }}>
-          Suite <span style={{ color: T.text4, margin: '0 6px' }}>/</span>
-          <span style={{ color: T.text2, fontWeight: 500 }}>PolicyLens</span>
-          {clientName && (<>
-            <span style={{ color: T.text4, margin: '0 6px' }}>/</span>
-            <span style={{ color: T.text2 }}>{clientName}</span>
-          </>)}
-        </span>
-      )}
-      <div style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-        <span style={{
-          width: 7, height: 7, borderRadius: 999,
-          background: driveIndicator.color,
-          boxShadow: driveStatus === 'connected' ? '0 0 6px ' + driveIndicator.color : 'none',
-        }} />
-        <span style={{ fontFamily: T.sansFamily, fontSize: 11, color: T.text3 }}>
-          {driveIndicator.text}
-        </span>
+    <div ref={wrapRef} style={{ position: 'relative', flexShrink: 0, zIndex: 50 }}>
+      <div style={{
+        height: isMobile ? 44 : 36,
+        background: STRIP.bg,
+        borderBottom: '1px solid ' + STRIP.border,
+        display: 'flex', alignItems: 'center', gap: 12,
+        padding: isMobile ? '0 12px' : '0 18px',
+        fontFamily: STRIP.sansFamily,
+      }}>
+        <button
+          onClick={() => setMenuOpen(o => !o)}
+          title="Switch tool"
+          aria-haspopup="menu"
+          aria-expanded={menuOpen ? 'true' : 'false'}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            padding: isMobile ? '5px 12px' : '6px 14px',
+            background: STRIP.pillBg, color: STRIP.pillFg,
+            border: '1px solid ' + STRIP.pillBr,
+            borderRadius: 999,
+            fontFamily: STRIP.sansFamily, fontSize: isMobile ? 11 : 11.5, fontWeight: 500,
+            letterSpacing: '0.06em',
+            cursor: 'pointer', flexShrink: 0,
+            transition: 'all 150ms ease-out',
+          }}>
+          <span style={{ fontSize: isMobile ? 11 : 12 }}>←</span>
+          <span>CKG</span>
+          <span style={{ fontSize: 9, opacity: 0.6, marginLeft: 1 }}>▾</span>
+        </button>
+
+        {!isMobile && (
+          <span style={{
+            fontFamily: STRIP.monoFamily, fontSize: 10.5,
+            letterSpacing: '0.18em', textTransform: 'uppercase',
+            color: STRIP.crumb, minWidth: 0, overflow: 'hidden',
+            whiteSpace: 'nowrap', textOverflow: 'ellipsis',
+          }}>
+            Suite <span style={{ color: STRIP.crumbDim, margin: '0 6px' }}>/</span>
+            <span style={{ color: STRIP.crumbStrong, fontWeight: 500 }}>PolicyLens</span>
+            {clientName && (<>
+              <span style={{ color: STRIP.crumbDim, margin: '0 6px' }}>/</span>
+              <span style={{ color: STRIP.crumbStrong }}>{clientName}</span>
+            </>)}
+          </span>
+        )}
+
+        <div style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+          <span style={{
+            width: 7, height: 7, borderRadius: 999,
+            background: driveIndicator.color,
+            boxShadow: driveStatus === 'connected' ? '0 0 6px ' + driveIndicator.color : 'none',
+          }} />
+          <span style={{ fontFamily: STRIP.sansFamily, fontSize: 11, color: 'rgba(244, 241, 232, 0.66)' }}>
+            {driveIndicator.text}
+          </span>
+        </div>
       </div>
+
+      {menuOpen && (
+        <div role="menu" aria-label="Switch tool"
+          style={{
+            position: 'absolute', top: '100%', left: isMobile ? 6 : 14,
+            marginTop: 4,
+            background: '#0a0a0a',
+            border: '1px solid rgba(214, 168, 122, 0.32)',
+            borderRadius: 12,
+            boxShadow: '0 24px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04)',
+            fontFamily: STRIP.sansFamily,
+            minWidth: 280, maxWidth: '92vw',
+            padding: 6,
+            zIndex: 999998,
+          }}>
+          {NAV.map(renderItem)}
+        </div>
+      )}
     </div>
   );
 }
