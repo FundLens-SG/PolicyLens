@@ -17566,11 +17566,50 @@ async function sbRepoSave(item) {
       onConflict: 'user_id,id'
     });
     if (error) console.warn('[Repo] Save error:', error.message);
+    // Cross-tool activity log for the ckgtools landing page. Idempotent
+    // on (user_id, tool_id, action, entity_id) — second-and-later saves
+    // of the same policy are silent no-ops.
+    if (!error) {
+      trackPolicyScanned(item).catch(() => {});
+    }
     return !error;
   } catch (e) {
     console.warn('[Repo] Save failed:', e.message);
     return false;
   }
+}
+
+// Emit a `policy_scanned` event into public.tool_activity_events so the
+// ckgtools landing page can count it in the YTD cockpit + recent feed.
+// Errors are swallowed — tracking must never block the save flow.
+async function trackPolicyScanned(item) {
+  try {
+    const s = getSB();
+    const uid = window._user?.id;
+    if (!s || !uid || !item?.id) return;
+    const policyName = item.productName || item.policyName || item.subType || 'Policy';
+    const clientName = item.policyOwner || item.lifeInsured || null;
+    const {
+      error
+    } = await s.from('tool_activity_events').insert({
+      user_id: uid,
+      tool_id: 'policylens',
+      action: 'policy_scanned',
+      entity_type: 'policy_document',
+      entity_id: String(item.id),
+      entity_name: policyName,
+      client_name: clientName,
+      status: 'completed',
+      actor_name: window._user?.email || null,
+      metadata: {
+        policy_number: item.policyNumber || null,
+        insurer: item.insurer || null,
+        document_type: item.documentType || null
+      }
+    });
+    // 23505 = unique-violation = already tracked this entity. Silent no-op.
+    if (error && error.code !== '23505') console.warn('[Activity] policy_scanned:', error.message);
+  } catch (_) {/* never block on tracking */}
 }
 async function sbRepoDelete(id) {
   try {
@@ -64880,24 +64919,75 @@ function ReportTab() {
         doc.setFillColor(...T.sunSoft);
         doc.circle(-18, H + 18, 72, 'F');
       };
-      const pageHeader = (title, subtitle = '') => {
+      // v2.4.0-rc1.49: Section openings + running header.
+      //   Sections are numbered 01..07 (Cover is 00 / unnumbered). Each
+      //   pageHeader paints a slim running strip (POLICYLENS · progress
+      //   dots · date) plus a serif section number badge above the title
+      //   so readers can navigate the printed deck like a magazine.
+      // sectionN  — index 1..N for the dot strip
+      // sectionTotal — fixed at 7 (At a glance / Protection / Retirement /
+      //   Premium / Timeline / Action / Inventory). Cover doesn't call
+      //   pageHeader, so it doesn't appear in the dots.
+      const SECTION_TOTAL = 7;
+      const pageHeader = (title, subtitle = '', sectionN = null) => {
         pageBg();
-        label('POLICYLENS', M, 13, T.primary);
-        text(today, W - M, 13, {
-          size: 6.8,
+        // Top running strip
+        label('POLICYLENS', M, 11, T.primary);
+        // Progress dots — center
+        if (sectionN) {
+          const dotR = 0.85,
+            dotGap = 3.4;
+          const dotsW = (SECTION_TOTAL - 1) * dotGap;
+          const dotsX = W / 2 - dotsW / 2;
+          for (let i = 1; i <= SECTION_TOTAL; i++) {
+            doc.setFillColor(...(i === sectionN ? T.primary : T.border));
+            doc.circle(dotsX + (i - 1) * dotGap, 10, dotR, 'F');
+          }
+          text('Section ' + String(sectionN).padStart(2, '0') + ' of ' + String(SECTION_TOTAL).padStart(2, '0'), W / 2, 14, {
+            size: 5.6,
+            color: T.text3,
+            align: 'center'
+          });
+        }
+        text(today, W - M, 11, {
+          size: 6.4,
           color: T.text3,
           align: 'right'
         });
-        text(title, M, 25, {
-          family: 'times',
-          style: 'bold',
-          size: 16,
-          color: T.text
-        });
-        if (subtitle) text(subtitle, M, 31, {
-          size: 7.4,
-          color: T.text3
-        });
+        // Hairline beneath the strip
+        doc.setDrawColor(...T.border);
+        doc.setLineWidth(0.18);
+        doc.line(M, 17, W - M, 17);
+        // Section number badge (big serif "0X")
+        if (sectionN) {
+          text(String(sectionN).padStart(2, '0'), M, 32, {
+            family: 'times',
+            style: 'bold',
+            size: 22,
+            color: T.primary
+          });
+          text(title, M + 18, 28, {
+            family: 'times',
+            style: 'bold',
+            size: 16,
+            color: T.text
+          });
+          if (subtitle) text(subtitle, M + 18, 34, {
+            size: 7.4,
+            color: T.text3
+          });
+        } else {
+          text(title, M, 28, {
+            family: 'times',
+            style: 'bold',
+            size: 16,
+            color: T.text
+          });
+          if (subtitle) text(subtitle, M, 34, {
+            size: 7.4,
+            color: T.text3
+          });
+        }
       };
       const kpi = (x, y, w, h, title, value, note, color = T.primary) => {
         card(x, y, w, h, T.surface, T.border, 5);
@@ -65191,6 +65281,90 @@ function ReportTab() {
         const endAge = parseInt(pol.premEndAge) || (parseInt(pol.premTerm) ? startAge + parseInt(pol.premTerm) : startAge + 25);
         return endAge > retirementAge;
       }).length;
+
+      // v2.4.0-rc1.49: Multi-currency exposure — only render when the
+      // portfolio actually has non-SGD policies. Aggregates premium and
+      // coverage by currency in native units (no FX conversion in this
+      // panel — that lives in the dashboard's FX consolidation logic).
+      const currencyTotals = {};
+      activePolicies.forEach(pol => {
+        const ccy = (pol.currency || 'SGD').toUpperCase();
+        if (!currencyTotals[ccy]) currencyTotals[ccy] = {
+          prem: 0,
+          coverage: 0,
+          count: 0
+        };
+        currencyTotals[ccy].prem += annualizedPremium(pol);
+        currencyTotals[ccy].coverage += n(pol.sumAssured);
+        currencyTotals[ccy].count += 1;
+      });
+      const currencies = Object.keys(currencyTotals).sort((a, b) => currencyTotals[b].prem - currencyTotals[a].prem);
+      const hasMultiCurrency = currencies.length > 1 || currencies.length === 1 && currencies[0] !== 'SGD';
+      const totalPremAllCcy = currencies.reduce((s, c) => s + currencyTotals[c].prem, 0) || 1;
+
+      // v2.4.0-rc1.49: Premium financing / loan exposure — only render
+      // when at least one policy has pol.financed === true. Computes
+      // total loan principal vs aggregated cash value for the financed
+      // subset, and the net position (positive = client-owned).
+      const financedPolicies = activePolicies.filter(pol => !!pol.financed);
+      const financedLoanTotal = financedPolicies.reduce((s, pol) => s + n(pol.finLoan), 0);
+      const financedCVTotal = financedPolicies.reduce((s, pol) => s + n(pol.cashValue), 0);
+      const financedNet = financedCVTotal - financedLoanTotal;
+      const hasFinanced = financedPolicies.length > 0;
+
+      // v2.4.0-rc1.49: Lifecycle event collection for the timeline page.
+      // Pulls premium-end ages, policy maturity ages, and milestone
+      // markers (today, retirement, CPF LIFE, age 95) into a single
+      // sortable list. Each event has {age, kind, label, color}.
+      const lifecycleEvents = [];
+      lifecycleEvents.push({
+        age: currentAge,
+        kind: 'today',
+        label: 'Today · age ' + currentAge,
+        sub: 'Starting point for projections',
+        color: T.text2
+      });
+      lifecycleEvents.push({
+        age: retirementAge,
+        kind: 'retire',
+        label: 'Retirement target · age ' + retirementAge,
+        sub: 'Income switch from work to portfolio',
+        color: T.lavender
+      });
+      const cpfStart = parseInt(p.cpfStartAge) || (typeof DEFAULT_HOUSE_VALUES !== 'undefined' ? DEFAULT_HOUSE_VALUES.cpfStartAge : 65);
+      if (cpfStart && cpfStart >= currentAge && cpfStart <= 95) {
+        lifecycleEvents.push({
+          age: cpfStart,
+          kind: 'cpf',
+          label: 'CPF LIFE begins · age ' + cpfStart,
+          sub: 'Monthly payouts start',
+          color: T.sun
+        });
+      }
+      activePolicies.forEach(pol => {
+        const startAge = parseInt(pol.premStartAge) || parseInt(pol.ageAtEntry) || currentAge;
+        const premEndAge = parseInt(pol.premEndAge) || (parseInt(pol.premTerm) ? startAge + parseInt(pol.premTerm) : null);
+        if (premEndAge && premEndAge >= currentAge && premEndAge <= 95 && !isSinglePremium(pol)) {
+          lifecycleEvents.push({
+            age: premEndAge,
+            kind: 'premEnd',
+            label: 'Premium ends · ' + safe(pol.productName || pol.policyName || pol.subType || pol.insurer, 32),
+            sub: pol.insurer ? safe(pol.insurer, 24) + (annualizedPremium(pol) > 0 ? ' · ' + money(annualizedPremium(pol)) + '/yr stops' : '') : '',
+            color: T.primary
+          });
+        }
+        const maturityAge = parseInt(pol.maturityAge) || parseInt(pol.policyEndAge);
+        if (maturityAge && maturityAge >= currentAge && maturityAge <= 95) {
+          lifecycleEvents.push({
+            age: maturityAge,
+            kind: 'maturity',
+            label: 'Policy matures · ' + safe(pol.productName || pol.policyName || pol.subType || pol.insurer, 32),
+            sub: n(pol.maturityAmount) > 0 ? money(pol.maturityAmount) + ' projected payout' : n(pol.cashValue) > 0 ? money(pol.cashValue) + ' cash value' : '',
+            color: T.sage
+          });
+        }
+      });
+      lifecycleEvents.sort((a, b) => a.age - b.age);
       const actions = [];
       weakest.slice(0, 4).forEach(row => actions.push({
         priority: 'High',
@@ -65303,7 +65477,7 @@ function ReportTab() {
 
       // Page 2 — at a glance
       doc.addPage();
-      pageHeader('At a glance', 'A client-facing summary of the current portfolio, gaps and retirement target.');
+      pageHeader('At a glance', 'A client-facing summary of the current portfolio, gaps and retirement target.', 1);
       const topW = (CW - 8) / 5;
       [['Insured value', money(totalCoverage), activePolicies.length + ' policies', T.sky], ['Annual premium', money(totalAnnualPrem), premiumRatio ? premiumRatio + '% income' : 'recurring', premiumRatio > 15 ? T.red : T.sun], ['Active policies', String(activePolicies.length), activeInsurers + ' insurers', T.lavender], ['Protection gap', money(protectionGap), weakest.length ? 'action needed' : 'on track', T.primary], ['Retirement @ ' + retirementAge, retPct + '%', money(retTotal, {
         suffix: '/mo'
@@ -65387,7 +65561,7 @@ function ReportTab() {
 
       // Page 3 — protection coverage
       doc.addPage();
-      pageHeader('Protection coverage', 'Current cover versus recommended planning target.');
+      pageHeader('Protection coverage', 'Current cover versus recommended planning target.', 2);
       card(M, 42, CW, 30, T.surface, T.border, 6);
       label('Overall protection score', M + 6, 55);
       text(score + ' / 100', M + 6, 67, {
@@ -65467,7 +65641,7 @@ function ReportTab() {
 
       // Page 4 — retirement readiness
       doc.addPage();
-      pageHeader('Retirement readiness', 'Projected monthly income at retirement versus desired lifestyle.');
+      pageHeader('Retirement readiness', 'Projected monthly income at retirement versus desired lifestyle.', 3);
       card(M, 42, CW, 54, T.surface, T.border, 6);
       label('Projected income at age ' + retirementAge, M + 6, 56);
       text(money(retTotal, {
@@ -65581,7 +65755,7 @@ function ReportTab() {
 
       // Page 5 — premium sustainability
       doc.addPage();
-      pageHeader('Premium sustainability', 'Recurring commitments and when premiums may end.');
+      pageHeader('Premium sustainability', 'Recurring commitments and when premiums may end.', 4);
       const statW = (CW - 8) / 4;
       [['Annual premium', money(totalAnnualPrem), 'Recurring policies', totalAnnualPrem > 0 ? T.sun : T.text3], ['Monthly premium', money(totalAnnualPrem / 12), 'Estimated average', T.primary], ['Premium ratio', premiumRatio ? premiumRatio + '%' : '-', annualIncome ? 'of income' : 'income missing', premiumRatio > 15 ? T.red : T.green], ['After retirement', String(continuingAfterRet), 'policies payable', continuingAfterRet ? T.warn : T.green]].forEach((m, i) => kpi(M + i * (statW + 2.6), 43, statW, 38, m[0], m[1], m[2], m[3]));
       card(M, 98, CW, 76, T.surface, T.border, 6);
@@ -65637,9 +65811,227 @@ function ReportTab() {
         lineH: 4
       });
 
+      // v2.4.0-rc1.49: Conditional risk panels — multi-currency + premium
+      // financing. Only rendered when their data warrants it (no empty
+      // states cluttering the page when not applicable). Layout adapts:
+      //   - both present  → 2-up half-width row at y=246
+      //   - only one      → full-width at y=246
+      //   - neither       → page ends at y=240, action page comes next
+      const riskPanels = [];
+      if (hasMultiCurrency) riskPanels.push('currency');
+      if (hasFinanced) riskPanels.push('financing');
+      if (riskPanels.length > 0) {
+        const panelW = riskPanels.length === 1 ? CW : (CW - 6) / 2;
+        const panelY = 246;
+        riskPanels.forEach((kind, idx) => {
+          const px = M + idx * (panelW + 6);
+          if (kind === 'currency') {
+            card(px, panelY, panelW, 28, T.skySoft, T.skySoft, 5);
+            label('Multi-currency exposure', px + 6, panelY + 8, T.sky);
+            // Inline rows: CCY · count · % of premium
+            const innerY = panelY + 14;
+            const colW = (panelW - 12) / Math.max(1, currencies.length);
+            currencies.forEach((ccy, ci) => {
+              const cx = px + 6 + ci * colW;
+              const share = currencyTotals[ccy].prem / totalPremAllCcy * 100;
+              text(ccy, cx, innerY + 1, {
+                size: 8.6,
+                style: 'bold',
+                color: T.text
+              });
+              text(currencyTotals[ccy].count + ' polic' + (currencyTotals[ccy].count === 1 ? 'y' : 'ies'), cx, innerY + 6, {
+                size: 6.2,
+                color: T.text3
+              });
+              text(share.toFixed(0) + '% premium', cx, innerY + 10, {
+                size: 6.2,
+                color: T.sky,
+                style: 'bold'
+              });
+            });
+          } else if (kind === 'financing') {
+            const netTone = financedNet >= 0 ? T.green : T.red;
+            const netSoftBg = financedNet >= 0 ? T.greenSoft : T.redSoft;
+            card(px, panelY, panelW, 28, netSoftBg, netSoftBg, 5);
+            label('Premium financing exposure', px + 6, panelY + 8, netTone);
+            text(financedPolicies.length + ' financed polic' + (financedPolicies.length === 1 ? 'y' : 'ies'), px + 6, panelY + 14, {
+              size: 7,
+              color: T.text2
+            });
+            // Loan vs CV breakdown
+            const labelX = px + (panelW > 90 ? 80 : panelW / 2 + 4);
+            text('Loan ' + money(financedLoanTotal), labelX, panelY + 12, {
+              size: 6.6,
+              color: T.text3
+            });
+            text('CV ' + money(financedCVTotal), labelX, panelY + 18, {
+              size: 6.6,
+              color: T.text3
+            });
+            text((financedNet >= 0 ? 'Net +' : 'Net ') + money(financedNet), px + panelW - 6, panelY + 15, {
+              size: 8.4,
+              style: 'bold',
+              color: netTone,
+              align: 'right'
+            });
+            text(financedNet >= 0 ? 'Client-owned position' : 'Loan exceeds cash value', px + panelW - 6, panelY + 22, {
+              size: 6.2,
+              color: T.text3,
+              align: 'right'
+            });
+          }
+        });
+      }
+
+      // v2.4.0-rc1.49: Section 05 — Policy lifecycle timeline
+      doc.addPage();
+      pageHeader('Policy timeline', 'Premium-end ages, policy maturities, and retirement milestones over the next 40 years.', 5);
+      // Stats strip
+      const tlStatsY = 43,
+        tlStatW = (CW - 8) / 4;
+      [['Tracked events', String(lifecycleEvents.length), 'milestones in view', T.lavender], ['Premiums ending', String(lifecycleEvents.filter(e => e.kind === 'premEnd').length), 'in next 40 yrs', T.primary], ['Policies maturing', String(lifecycleEvents.filter(e => e.kind === 'maturity').length), 'in next 40 yrs', T.sage], ['First milestone', lifecycleEvents[0] ? 'Age ' + lifecycleEvents[0].age : '-', lifecycleEvents[0] ? lifecycleEvents[0].kind : 'no events', T.sun]].forEach((m, i) => kpi(M + i * (tlStatW + 2.6), tlStatsY, tlStatW, 38, m[0], m[1], m[2], m[3]));
+      // Big horizontal timeline
+      card(M, 90, CW, 110, T.surface, T.border, 6);
+      label('Lifecycle horizon · age ' + currentAge + ' to 95', M + 6, 104);
+      const tlX = M + 12,
+        tlY = 130,
+        tlW = CW - 24;
+      const ageMin = currentAge,
+        ageMax = 95;
+      const ageAt = a => tlX + (a - ageMin) / (ageMax - ageMin) * tlW;
+      // Axis line
+      doc.setDrawColor(...T.border2);
+      doc.setLineWidth(0.4);
+      doc.line(tlX, tlY, tlX + tlW, tlY);
+      // Decade tick marks
+      for (let a = Math.ceil(ageMin / 5) * 5; a <= ageMax; a += 5) {
+        const tx = ageAt(a);
+        doc.setDrawColor(...T.border);
+        doc.setLineWidth(0.18);
+        doc.line(tx, tlY - 1.5, tx, tlY + 1.5);
+        if (a % 10 === 0) text(String(a), tx, tlY + 5, {
+          size: 5.6,
+          color: T.text3,
+          align: 'center'
+        });
+      }
+      // Retirement vertical band
+      const retX = ageAt(retirementAge);
+      doc.setDrawColor(...T.lavender);
+      doc.setLineWidth(0.5);
+      doc.setLineDashPattern([1.2, 1.2], 0);
+      doc.line(retX, 110, retX, 198);
+      doc.setLineDashPattern([], 0);
+      // Event markers — alternate above/below to avoid label collision
+      const above = [],
+        below = [];
+      lifecycleEvents.forEach((evt, idx) => {
+        (idx % 2 === 0 ? above : below).push(evt);
+      });
+      const drawEvent = (evt, side) => {
+        const ex = ageAt(evt.age);
+        const ey = tlY;
+        doc.setFillColor(...evt.color);
+        doc.circle(ex, ey, 1.4, 'F');
+        doc.setDrawColor(...evt.color);
+        doc.setLineWidth(0.2);
+        if (side === 'above') {
+          doc.line(ex, ey - 1.4, ex, ey - 8);
+          text(evt.label, ex, ey - 10, {
+            size: 5.4,
+            style: 'bold',
+            color: T.text,
+            align: 'center',
+            maxW: 46,
+            maxLines: 1
+          });
+          if (evt.sub) text(evt.sub, ex, ey - 14, {
+            size: 4.6,
+            color: T.text3,
+            align: 'center',
+            maxW: 46,
+            maxLines: 1
+          });
+        } else {
+          doc.line(ex, ey + 1.4, ex, ey + 8);
+          text(evt.label, ex, ey + 12, {
+            size: 5.4,
+            style: 'bold',
+            color: T.text,
+            align: 'center',
+            maxW: 46,
+            maxLines: 1
+          });
+          if (evt.sub) text(evt.sub, ex, ey + 16, {
+            size: 4.6,
+            color: T.text3,
+            align: 'center',
+            maxW: 46,
+            maxLines: 1
+          });
+        }
+      };
+      above.forEach(evt => drawEvent(evt, 'above'));
+      below.forEach(evt => drawEvent(evt, 'below'));
+      // Legend strip
+      const legendY = 210;
+      const legendItems = [['Today', T.text2], ['Retirement', T.lavender], ['CPF LIFE', T.sun], ['Premium ends', T.primary], ['Policy matures', T.sage]];
+      let lgx = M + 6;
+      text('Legend', lgx, legendY, {
+        size: 6.4,
+        style: 'bold',
+        color: T.text3
+      });
+      lgx += 18;
+      legendItems.forEach(([lbl, col]) => {
+        doc.setFillColor(...col);
+        doc.circle(lgx + 1.6, legendY - 1.6, 1.4, 'F');
+        text(lbl, lgx + 5, legendY, {
+          size: 6.6,
+          color: T.text2
+        });
+        lgx += 5 + doc.getTextWidth(lbl) + 9;
+      });
+      // Detail list of next 5 events
+      card(M, 220, CW, 50, T.surface, T.border, 5);
+      label('Next 5 milestones', M + 6, 232);
+      const nextFew = lifecycleEvents.filter(e => e.age >= currentAge).slice(0, 5);
+      let detY = 240;
+      if (nextFew.length === 0) {
+        text('No upcoming policy lifecycle events in the next 40 years.', M + 6, detY, {
+          size: 7,
+          color: T.text3,
+          fontStyle: 'italic'
+        });
+      } else {
+        nextFew.forEach(evt => {
+          doc.setFillColor(...evt.color);
+          doc.circle(M + 9, detY - 1.5, 1.3, 'F');
+          text('Age ' + evt.age, M + 14, detY, {
+            size: 6.4,
+            style: 'bold',
+            color: T.text2
+          });
+          text(evt.label, M + 30, detY, {
+            size: 7,
+            color: T.text,
+            maxW: 90,
+            maxLines: 1
+          });
+          if (evt.sub) text(evt.sub, W - M - 6, detY, {
+            size: 6.2,
+            color: T.text3,
+            align: 'right',
+            maxW: 60,
+            maxLines: 1
+          });
+          detY += 6;
+        });
+      }
+
       // Page 6 — action plan
       doc.addPage();
-      pageHeader('Action plan', 'Meeting-ready priorities before product selection.');
+      pageHeader('Action plan', 'Meeting-ready priorities before product selection.', 6);
       let ay = 44;
       actions.slice(0, 6).forEach((a, idx) => {
         const tone = a.priority === 'High' ? 'danger' : a.priority === 'Medium' ? 'warn' : 'success';
@@ -65719,7 +66111,7 @@ function ReportTab() {
       });
       const startInventoryPage = (sub = 'Compact grouped appendix for advisor follow-up.') => {
         doc.addPage();
-        pageHeader('Policy inventory', sub);
+        pageHeader('Policy inventory', sub, 7);
         return 43;
       };
       let py = startInventoryPage();
