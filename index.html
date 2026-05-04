@@ -558,9 +558,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.2';
+const APP_VERSION = 'v2.4.0-rc1.3';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — header + tab pills (light cream chrome)';
+const APP_VERSION_NAME = 'Design v2 — Dashboard (hero + KPIs + family + bars + cashflow + policies)';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -38618,6 +38618,1012 @@ function Dashboard() {
       marginTop: 6
     }
   }, "Take all the photos you need, then hit Extract All")));
+
+  // v2.4.0-rc1.3: Design v2 Dashboard. Pulls from existing derivations
+  // (policies, gaps, retirementLite, byCategory, premiumBreakdown) — no
+  // new data sources. The legacy 947-line return below this v2 block is
+  // unreachable but retained for one batch as a quick-revert escape hatch;
+  // Batch 4+ will delete it.
+  const T = T_V2;
+  const activePols = policies.filter(p => p && p.status !== 'matured' && p.status !== 'surrendered' && p.status !== 'lapsed');
+  const insurerCount = new Set(activePols.map(p => p.insurer).filter(Boolean)).size;
+  const protectionGap = (() => {
+    let g = 0;
+    for (const row of gaps || []) {
+      const need = parseFloat(row.need) || 0,
+        have = parseFloat(row.have) || 0;
+      if (need > have) g += need - have;
+    }
+    return g;
+  })();
+  const totalAtRet = (retirementLite?.cpfPayout?.mid || 0) + (retirementLite?.policyMonthlyIncome || 0) + (retirementLite?.policyDividends || 0) + (retirementLite?.otherMonthly || 0);
+  const desiredMonthly = retirementLite?.desiredMonthly || 0;
+  const retCoverPct = desiredMonthly > 0 ? Math.round(totalAtRet / desiredMonthly * 100) : 0;
+  const greeting = (() => {
+    const h = new Date().getHours();
+    return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+  })();
+  const fcFirst = (window._user?.user_metadata?.full_name || window._user?.email || 'there').split(/[\s@]/)[0];
+  const clientFirst = p.name && String(p.name).trim().split(/\s+/)[0] || clientFirstLabel || 'this client';
+  // Family tree nodes — main client + dependants
+  const familyNodes = (() => {
+    const nodes = [];
+    const policyByLife = life => activePols.filter(pol => (pol.lifeInsured || '').toLowerCase().trim() === (life || '').toLowerCase().trim());
+    if (p.name) {
+      const ownPols = policyByLife(p.name);
+      const cov = overallScore / 100;
+      nodes.push({
+        initial: (p.name[0] || '?').toUpperCase(),
+        name: p.name,
+        role: age ? `Self · ${age}` : 'Self',
+        policies: ownPols.length || activePols.length,
+        coverage: cov,
+        primary: true
+      });
+    }
+    for (const d of p.dependants || []) {
+      if (!d?.name) continue;
+      const dPols = policyByLife(d.name);
+      const role = (d.relationship || 'Dependant') + (d.dob ? ` · ${(() => {
+        try {
+          return new Date().getFullYear() - new Date(d.dob).getFullYear();
+        } catch (_) {
+          return '';
+        }
+      })()}` : '');
+      nodes.push({
+        initial: (d.name[0] || '?').toUpperCase(),
+        name: d.name,
+        role,
+        policies: dPols.length,
+        coverage: dPols.length > 0 ? 0.9 : 0
+      });
+    }
+    return nodes.slice(0, 4);
+  })();
+  // KPI cards
+  const kpis = [{
+    label: 'Insured value',
+    value: totalCoverage,
+    prefix: 'S$',
+    delta: totalCoverage > 0 ? `${activePols.length} polic${activePols.length === 1 ? 'y' : 'ies'}` : 'Add a policy',
+    tone: totalCoverage > 0 ? 'good' : 'neutral',
+    accent: T.primary,
+    emoji: '🛡️'
+  }, {
+    label: 'Annual premium',
+    value: totalPremium.annual,
+    prefix: 'S$',
+    delta: annualIncome > 0 ? `${Math.round(totalPremium.annual / annualIncome * 100)}% of income` : 'Income unknown',
+    tone: 'neutral',
+    accent: T.sage,
+    emoji: '💰'
+  }, {
+    label: 'Active policies',
+    value: activePols.length,
+    delta: insurerCount > 0 ? `${insurerCount} insurer${insurerCount === 1 ? '' : 's'}` : '—',
+    tone: 'neutral',
+    accent: T.sky,
+    emoji: '📋'
+  }, {
+    label: 'Protection gap',
+    value: protectionGap,
+    prefix: 'S$',
+    delta: protectionGap > 0 ? scoreLabel : 'Well covered',
+    tone: protectionGap > 0 ? 'warn' : 'good',
+    accent: protectionGap > 0 ? T.warn : T.green,
+    emoji: protectionGap > 0 ? '⚠️' : '✓'
+  }, {
+    label: `Retirement @ ${retAge}`,
+    value: retCoverPct,
+    suffix: '%',
+    delta: retCoverPct >= 80 ? 'On track' : retCoverPct >= 50 ? 'Below target' : 'Action needed',
+    tone: retCoverPct >= 80 ? 'good' : retCoverPct >= 50 ? 'warn' : 'warn',
+    accent: T.lavender,
+    emoji: '🌅'
+  }];
+  // Protection rows (4 — Death/TPD/CI/DI)
+  const protectionRows = (gaps || []).slice(0, 4).map(g => ({
+    key: g.label || g.key,
+    label: g.label,
+    have: parseFloat(g.have) || 0,
+    need: parseFloat(g.need) || 0
+  })).filter(r => r.need > 0);
+  // Retirement bar segments
+  const retSegments = [];
+  if (retirementLite?.cpfEligible && (retirementLite?.cpfPayout?.mid || 0) > 0) retSegments.push({
+    key: 'cpf',
+    label: `CPF LIFE (${retirementLite.cpfScheme || 'standard'})`,
+    value: retirementLite.cpfPayout.mid,
+    color: T.sun
+  });
+  if ((retirementLite?.policyMonthlyIncome || 0) > 0) retSegments.push({
+    key: 'policy',
+    label: 'Policy income',
+    value: retirementLite.policyMonthlyIncome,
+    color: T.primary
+  });
+  if ((retirementLite?.policyDividends || 0) > 0) retSegments.push({
+    key: 'div',
+    label: 'Dividends',
+    value: retirementLite.policyDividends,
+    color: T.lavender
+  });
+  if ((retirementLite?.otherMonthly || 0) > 0) retSegments.push({
+    key: 'other',
+    label: 'Other sources',
+    value: retirementLite.otherMonthly,
+    color: T.sage
+  });
+  const retBarMax = Math.max(desiredMonthly, totalAtRet, 1);
+  // Categories grouped — for All policies table
+  const catOrder = ['protection', 'savings', 'health', 'investment', 'retirement', 'maternity'];
+  const catLabel = {
+    protection: 'Protection',
+    savings: 'Savings',
+    health: 'Health',
+    investment: 'Investment',
+    retirement: 'Retirement',
+    maternity: 'Maternity'
+  };
+  const catTone = {
+    protection: T.sky,
+    savings: T.sage,
+    health: T.blush,
+    investment: T.lavender,
+    retirement: T.sun,
+    maternity: T.blush
+  };
+  // What-if state
+  const [whatIfPct, setWhatIfPct] = React.useState(100);
+  const whatIfDesired = Math.round(desiredMonthly * (whatIfPct / 100));
+  const whatIfGap = Math.max(0, whatIfDesired - totalAtRet);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "fade-in",
+    style: {
+      background: T.bg,
+      color: T.text,
+      fontFamily: T.sansFamily,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: T.sectionGap
+    }
+  }, /*#__PURE__*/React.createElement(GettingStartedChecklist, {
+    compact: true
+  }), /*#__PURE__*/React.createElement(DropZone, {
+    active: true,
+    onFiles: handleDashDrop,
+    label: "\uD83D\uDCCE Drop or paste any document \u2014 client profile, policy contracts, benefit illustrations"
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'relative',
+      overflow: 'hidden',
+      background: `linear-gradient(135deg, ${T.primarySoft}, ${T.bg2} 60%)`,
+      border: `1px solid ${T.border}`,
+      borderRadius: T.radiusLg,
+      padding: '32px 32px 28px',
+      boxShadow: T.shadow
+    }
+  }, /*#__PURE__*/React.createElement(PLBlob, {
+    T: T,
+    color: T.primary,
+    size: 300,
+    style: {
+      top: -80,
+      right: -60,
+      opacity: 0.18
+    }
+  }), /*#__PURE__*/React.createElement(PLBlob, {
+    T: T,
+    color: T.lavender,
+    size: 200,
+    style: {
+      bottom: -60,
+      right: 100,
+      opacity: 0.12
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'relative',
+      display: 'grid',
+      gridTemplateColumns: '1.5fr 1fr',
+      gap: 36,
+      alignItems: 'center'
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: T.primary,
+      fontWeight: 600,
+      marginBottom: 10
+    }
+  }, greeting, ", ", fcFirst, " \u2615"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: T.serifFamily,
+      fontSize: 42,
+      color: T.text,
+      letterSpacing: '-0.025em',
+      lineHeight: 1.05,
+      fontWeight: 400
+    }
+  }, "Here's how the ", /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: T.primary,
+      fontStyle: 'italic'
+    }
+  }, clientFirst), " portfolio looks today."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13.5,
+      color: T.text2,
+      marginTop: 14,
+      lineHeight: 1.55,
+      maxWidth: 540
+    }
+  }, activePols.length === 0 ? `No policies on file yet — drop a document above or open Policies to add the first one.` : `${activePols.length} active polic${activePols.length === 1 ? 'y' : 'ies'} across ${insurerCount} insurer${insurerCount === 1 ? '' : 's'}. ${scoreLabel.toLowerCase()} — overall score ${overallScore} / 100.`), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8,
+      marginTop: 20
+    }
+  }, /*#__PURE__*/React.createElement(PLPill, {
+    T: T,
+    tone: "primary",
+    size: "md",
+    onClick: () => setTab('report')
+  }, "\uD83D\uDCC4 Generate report"), activePols.length > 0 && /*#__PURE__*/React.createElement(PLPill, {
+    T: T,
+    tone: "soft",
+    size: "md",
+    onClick: () => setTab('policies')
+  }, "\u2728 Review policies"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: T.bg2,
+      borderRadius: T.radiusLg,
+      padding: 20,
+      border: `1px solid ${T.border}`,
+      boxShadow: T.shadow
+    }
+  }, /*#__PURE__*/React.createElement(PLLabel, {
+    T: T,
+    style: {
+      marginBottom: 8
+    }
+  }, "This client at a glance"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: 14,
+      marginTop: 12
+    }
+  }, [['Age', age || '—'], ['Children', (p.dependants || []).filter(d => /child|son|daughter/i.test(d.relationship || '')).length || '—'], ['Income', annualIncome > 0 ? `S$${Math.round(annualIncome / 1000)}k/yr` : '—'], ['Premium / income', annualIncome > 0 ? `${Math.round(totalPremium.annual / annualIncome * 100)}%` : '—']].map(([k, v]) => /*#__PURE__*/React.createElement("div", {
+    key: k
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: T.text3,
+      fontWeight: 500
+    }
+  }, k), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 14,
+      color: T.text,
+      fontWeight: 600,
+      marginTop: 2
+    }
+  }, v))))))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(5, 1fr)',
+      gap: 12
+    }
+  }, kpis.map(k => /*#__PURE__*/React.createElement("div", {
+    key: k.label,
+    style: {
+      position: 'relative',
+      overflow: 'hidden',
+      minHeight: 130,
+      background: T.bg2,
+      border: `1px solid ${T.border}`,
+      borderRadius: T.radiusLg,
+      padding: T.cardPad,
+      boxShadow: T.shadow
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'absolute',
+      top: -20,
+      right: -20,
+      width: 80,
+      height: 80,
+      borderRadius: '50%',
+      background: k.accent,
+      opacity: 0.12,
+      filter: 'blur(20px)'
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'relative'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: 14
+    }
+  }, /*#__PURE__*/React.createElement(PLLabel, {
+    T: T,
+    style: {
+      fontSize: 10.5
+    }
+  }, k.label), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 18
+    }
+  }, k.emoji)), /*#__PURE__*/React.createElement(PLNumber, {
+    T: T,
+    value: k.value || 0,
+    prefix: k.prefix || '',
+    suffix: k.suffix || '',
+    size: 28,
+    weight: 600
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 10,
+      fontSize: 11.5,
+      fontWeight: 500,
+      color: k.tone === 'good' ? T.green : k.tone === 'warn' ? 'oklch(0.55 0.16 65)' : T.text3
+    }
+  }, k.tone === 'good' && '↑ ', k.tone === 'warn' && '⚠ ', k.delta))))), familyNodes.length > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: T.bg2,
+      border: `1px solid ${T.border}`,
+      borderRadius: T.radiusLg,
+      padding: T.cardPad,
+      boxShadow: T.shadow
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'baseline',
+      justifyContent: 'space-between',
+      marginBottom: 6
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: T.serifFamily,
+      fontSize: 22,
+      color: T.text,
+      letterSpacing: '-0.015em'
+    }
+  }, "The household"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12.5,
+      color: T.text3,
+      marginTop: 4
+    }
+  }, "Coverage by person \u2014 ring shows protection vs. recommended")), /*#__PURE__*/React.createElement(PLPill, {
+    T: T,
+    tone: "soft",
+    size: "sm"
+  }, familyNodes.length, " ", familyNodes.length === 1 ? 'person' : 'people')), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: `repeat(${Math.max(2, Math.min(4, familyNodes.length))}, 1fr)`,
+      gap: 14,
+      marginTop: 22
+    }
+  }, familyNodes.map((person, i) => {
+    const ringColor = person.coverage >= 0.9 ? T.green : person.coverage >= 0.6 ? T.warn : T.red;
+    const r = 36,
+      c = 40,
+      sw = 4,
+      circ = 2 * Math.PI * r;
+    return /*#__PURE__*/React.createElement("div", {
+      key: i,
+      style: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: 14,
+        borderRadius: T.radiusLg,
+        background: person.primary ? T.primarySoft : T.bg,
+        border: `1px solid ${person.primary ? T.primary : T.border}`,
+        minWidth: 0,
+        position: 'relative'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: 'relative',
+        width: 80,
+        height: 80
+      }
+    }, /*#__PURE__*/React.createElement("svg", {
+      width: "80",
+      height: "80",
+      style: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        transform: 'rotate(-90deg)'
+      }
+    }, /*#__PURE__*/React.createElement("circle", {
+      cx: c,
+      cy: c,
+      r: r,
+      fill: "none",
+      stroke: T.bg3,
+      strokeWidth: sw
+    }), /*#__PURE__*/React.createElement("circle", {
+      cx: c,
+      cy: c,
+      r: r,
+      fill: "none",
+      stroke: ringColor,
+      strokeWidth: sw,
+      strokeDasharray: circ,
+      strokeDashoffset: circ * (1 - person.coverage),
+      strokeLinecap: "round",
+      style: {
+        transition: T.motion ? 'stroke-dashoffset 1s ease' : 'none'
+      }
+    })), /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: 'absolute',
+        inset: 8,
+        borderRadius: 999,
+        background: `linear-gradient(135deg, ${T.primary}, ${T.lavender})`,
+        color: 'white',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: T.serifFamily,
+        fontSize: 26,
+        fontWeight: 500
+      }
+    }, person.initial)), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 13,
+        color: T.text,
+        fontWeight: 600,
+        marginTop: 12,
+        lineHeight: 1.25,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        maxWidth: '100%',
+        textAlign: 'center'
+      }
+    }, person.name), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11,
+        color: T.text3,
+        marginTop: 4,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        maxWidth: '100%',
+        textAlign: 'center'
+      }
+    }, person.role), /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 10,
+        padding: '3px 9px',
+        borderRadius: 999,
+        background: `color-mix(in oklch, ${ringColor} 18%, transparent)`,
+        color: ringColor,
+        fontSize: 10.5,
+        fontWeight: 600
+      }
+    }, person.policies, " ", person.policies === 1 ? 'policy' : 'policies', " \xB7 ", Math.round(person.coverage * 100), "%"));
+  }))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: 16
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: T.bg2,
+      border: `1px solid ${T.border}`,
+      borderRadius: T.radiusLg,
+      padding: T.cardPad,
+      boxShadow: T.shadow
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'baseline',
+      justifyContent: 'space-between',
+      marginBottom: 4
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: T.serifFamily,
+      fontSize: 22,
+      color: T.text,
+      letterSpacing: '-0.015em'
+    }
+  }, "Protection coverage"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12.5,
+      color: T.text3,
+      marginTop: 4
+    }
+  }, "What you have vs. what we recommend")), /*#__PURE__*/React.createElement(PLPill, {
+    T: T,
+    tone: "soft",
+    size: "sm"
+  }, "As of today")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 22,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 16
+    }
+  }, protectionRows.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: T.text3,
+      fontStyle: 'italic'
+    }
+  }, "Add an income figure on the Profile tab to compute recommended coverage.") : protectionRows.map(row => {
+    const pct = Math.min(1, row.have / Math.max(row.need, 1));
+    const tone = pct >= 0.95 ? T.green : pct >= 0.7 ? T.warn : T.red;
+    return /*#__PURE__*/React.createElement("div", {
+      key: row.key
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'baseline',
+        justifyContent: 'space-between',
+        marginBottom: 8
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 13,
+        color: T.text,
+        fontWeight: 600
+      }
+    }, row.label), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 12,
+        color: T.text2
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontWeight: 600,
+        color: T.text,
+        fontVariantNumeric: 'tabular-nums'
+      }
+    }, "S$", (row.have / 1000).toFixed(0), "k"), /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: T.text4
+      }
+    }, " / S$", (row.need / 1000).toFixed(0), "k"), /*#__PURE__*/React.createElement("span", {
+      style: {
+        marginLeft: 10,
+        padding: '2px 8px',
+        borderRadius: 999,
+        background: `color-mix(in oklch, ${tone} 18%, transparent)`,
+        color: tone,
+        fontWeight: 600,
+        fontSize: 11
+      }
+    }, Math.round(pct * 100), "%"))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        height: 8,
+        background: T.bg3,
+        borderRadius: 999,
+        overflow: 'hidden'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        height: '100%',
+        width: `${pct * 100}%`,
+        background: `linear-gradient(90deg, ${tone}, color-mix(in oklch, ${tone} 70%, white))`,
+        borderRadius: 999,
+        transition: T.motion ? 'width 1.2s cubic-bezier(.2,.7,.3,1)' : 'none'
+      }
+    })));
+  }))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: T.bg2,
+      border: `1px solid ${T.border}`,
+      borderRadius: T.radiusLg,
+      padding: T.cardPad,
+      boxShadow: T.shadow
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'baseline',
+      justifyContent: 'space-between'
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: T.serifFamily,
+      fontSize: 22,
+      color: T.text,
+      letterSpacing: '-0.015em'
+    }
+  }, "Retirement at ", retAge), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12.5,
+      color: T.text3,
+      marginTop: 4
+    }
+  }, "Projected monthly income")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: 'right'
+    }
+  }, /*#__PURE__*/React.createElement(PLNumber, {
+    T: T,
+    value: totalAtRet,
+    prefix: "S$",
+    size: 32,
+    weight: 600,
+    serif: true
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11.5,
+      color: T.text3,
+      marginTop: 4
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: retCoverPct >= 80 ? T.green : retCoverPct >= 50 ? T.warn : T.red,
+      fontWeight: 600
+    }
+  }, retCoverPct, "%"), " of S$", desiredMonthly.toLocaleString(), " target"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 22,
+      height: 14,
+      background: T.bg3,
+      borderRadius: 999,
+      overflow: 'hidden',
+      display: 'flex',
+      position: 'relative'
+    }
+  }, retSegments.map((s, i) => /*#__PURE__*/React.createElement("div", {
+    key: s.key,
+    style: {
+      width: `${s.value / retBarMax * 100}%`,
+      background: s.color,
+      transition: T.motion ? `width 1s ${i * 0.08}s ease` : 'none'
+    }
+  }))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 18,
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: 10
+    }
+  }, retSegments.map(s => /*#__PURE__*/React.createElement("div", {
+    key: s.key,
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 10,
+      height: 10,
+      borderRadius: 999,
+      background: s.color,
+      flexShrink: 0
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 12,
+      color: T.text2,
+      flex: 1
+    }
+  }, s.label), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 12,
+      color: T.text,
+      fontWeight: 600,
+      fontVariantNumeric: 'tabular-nums'
+    }
+  }, "S$", s.value.toLocaleString()))), retSegments.length === 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: T.text3,
+      gridColumn: '1 / -1',
+      fontStyle: 'italic'
+    }
+  }, "Set up CPF + retirement income on the Profile tab to see the breakdown.")))), desiredMonthly > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: T.bg2,
+      border: `1px solid ${T.border}`,
+      borderRadius: T.radiusLg,
+      padding: T.cardPad,
+      boxShadow: T.shadow
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'baseline',
+      justifyContent: 'space-between',
+      marginBottom: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: T.serifFamily,
+      fontSize: 18,
+      color: T.text,
+      letterSpacing: '-0.015em'
+    }
+  }, "What if ", clientFirst, " wanted ", /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: T.primary
+    }
+  }, "S$", whatIfDesired.toLocaleString()), " / month at ", retAge, "?"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: T.text3,
+      marginTop: 3
+    }
+  }, "Drag to adjust the target as a percentage of S$", desiredMonthly.toLocaleString(), ".")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: '6px 12px',
+      borderRadius: 999,
+      background: whatIfGap > 0 ? `color-mix(in oklch, ${T.warn} 18%, transparent)` : `color-mix(in oklch, ${T.green} 18%, transparent)`,
+      color: whatIfGap > 0 ? 'oklch(0.55 0.16 65)' : T.green,
+      fontSize: 12,
+      fontWeight: 600
+    }
+  }, whatIfGap > 0 ? `Gap S$${whatIfGap.toLocaleString()}/mo` : 'Fully covered')), /*#__PURE__*/React.createElement("input", {
+    type: "range",
+    min: "20",
+    max: "150",
+    step: "5",
+    value: whatIfPct,
+    onChange: e => setWhatIfPct(parseInt(e.target.value)),
+    style: {
+      width: '100%',
+      accentColor: T.primary
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      fontSize: 11,
+      color: T.text3,
+      marginTop: 4
+    }
+  }, /*#__PURE__*/React.createElement("span", null, "20%"), /*#__PURE__*/React.createElement("span", null, whatIfPct, "%"), /*#__PURE__*/React.createElement("span", null, "150%"))), totalPremium.annual > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: T.bg2,
+      border: `1px solid ${T.border}`,
+      borderRadius: T.radiusLg,
+      padding: T.cardPad,
+      boxShadow: T.shadow
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'baseline',
+      justifyContent: 'space-between',
+      marginBottom: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: T.serifFamily,
+      fontSize: 18,
+      color: T.text,
+      letterSpacing: '-0.015em'
+    }
+  }, "Monthly cashflow"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: T.text3,
+      marginTop: 3
+    }
+  }, "Average S$", Math.round(totalPremium.annual / 12).toLocaleString(), "/mo across ", Object.entries(premiumBreakdown).filter(([k, v]) => v && (v.annual > 0 || v.single > 0) && k !== 'totalAnnual' && k !== 'totalSingle' && k !== 'total').length, " payment modes."))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'flex-end',
+      gap: 4,
+      height: 60,
+      marginTop: 10
+    }
+  }, Array.from({
+    length: 12
+  }, (_, m) => {
+    // simple flat distribution — premiums are mostly annual so flatten across months
+    const v = totalPremium.annual / 12;
+    const max = totalPremium.annual / 12 * 1.1;
+    const h = Math.max(8, v / max * 60);
+    const monthName = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'][m];
+    return /*#__PURE__*/React.createElement("div", {
+      key: m,
+      style: {
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 4
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: '100%',
+        height: h,
+        background: `linear-gradient(180deg, ${T.primary}, color-mix(in oklch, ${T.primary} 70%, ${T.bg2}))`,
+        borderRadius: 4,
+        transition: T.motion ? `height 1s ${m * 0.04}s ease` : 'none'
+      }
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 9,
+        color: T.text4
+      }
+    }, monthName));
+  }))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: T.bg2,
+      border: `1px solid ${T.border}`,
+      borderRadius: T.radiusLg,
+      boxShadow: T.shadow,
+      overflow: 'hidden'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: '20px 24px 0',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'baseline'
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: T.serifFamily,
+      fontSize: 22,
+      color: T.text,
+      letterSpacing: '-0.015em'
+    }
+  }, "All policies"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12.5,
+      color: T.text3,
+      marginTop: 4
+    }
+  }, activePols.length, " contract", activePols.length === 1 ? '' : 's', " \xB7 grouped by category")), /*#__PURE__*/React.createElement(PLPill, {
+    T: T,
+    tone: "ghost",
+    size: "sm",
+    onClick: () => setTab('policies')
+  }, "View full list \u2192")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 18
+    }
+  }, catOrder.map(catKey => {
+    const items = (byCategory[catKey] || []).filter(p => p && p.status !== 'matured' && p.status !== 'surrendered' && p.status !== 'lapsed');
+    if (!items.length) return null;
+    const tone = catTone[catKey];
+    const totalForCat = items.reduce((s, x) => s + (parseFloat(x.annualPremium) || 0), 0);
+    return /*#__PURE__*/React.createElement("div", {
+      key: catKey
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        padding: '10px 24px',
+        background: `color-mix(in oklch, ${tone} 8%, ${T.bg2})`,
+        borderTop: `1px solid ${T.hair}`,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        width: 8,
+        height: 8,
+        borderRadius: 999,
+        background: tone
+      }
+    }), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 12,
+        fontWeight: 600,
+        color: T.text
+      }
+    }, catLabel[catKey]), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 11.5,
+        color: T.text3
+      }
+    }, items.length, " polic", items.length === 1 ? 'y' : 'ies'), /*#__PURE__*/React.createElement("span", {
+      style: {
+        marginLeft: 'auto',
+        fontSize: 11.5,
+        color: T.text2,
+        fontWeight: 500,
+        fontVariantNumeric: 'tabular-nums'
+      }
+    }, "S$", Math.round(totalForCat).toLocaleString(), " / yr")), items.map(pol => {
+      const sa = parseFloat(pol.sumAssured) || 0;
+      const prem = parseFloat(pol.annualPremium) || 0;
+      const riderChips = (pol.riders || []).map(r => r.type || r.riderName || '').filter(Boolean).slice(0, 3);
+      return /*#__PURE__*/React.createElement("div", {
+        key: pol.id,
+        style: {
+          display: 'grid',
+          gridTemplateColumns: '1.4fr 1.6fr 1fr 1fr 0.9fr',
+          alignItems: 'center',
+          padding: '14px 24px',
+          borderTop: `1px solid ${T.hair}`,
+          fontSize: 13
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          color: T.text,
+          fontWeight: 600,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }
+      }, pol.insurer || '—'), /*#__PURE__*/React.createElement("span", {
+        style: {
+          color: T.text2,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }
+      }, pol.productName || pol.policyName || '—'), /*#__PURE__*/React.createElement("span", {
+        style: {
+          color: T.text2,
+          fontVariantNumeric: 'tabular-nums'
+        }
+      }, sa > 0 ? `S$${sa.toLocaleString()}` : /*#__PURE__*/React.createElement("span", {
+        style: {
+          color: T.text4
+        }
+      }, "\u2014")), /*#__PURE__*/React.createElement("span", {
+        style: {
+          color: T.text2,
+          fontVariantNumeric: 'tabular-nums'
+        }
+      }, prem > 0 ? `S$${prem.toLocaleString()}/yr` : /*#__PURE__*/React.createElement("span", {
+        style: {
+          color: T.text4
+        }
+      }, "\u2014")), /*#__PURE__*/React.createElement("span", {
+        style: {
+          display: 'flex',
+          gap: 4,
+          justifyContent: 'flex-end',
+          flexWrap: 'wrap'
+        }
+      }, riderChips.map((r, i) => /*#__PURE__*/React.createElement("span", {
+        key: i,
+        style: {
+          fontSize: 10,
+          padding: '2px 7px',
+          background: T.primaryDim,
+          color: T.primary,
+          borderRadius: 999,
+          fontWeight: 600,
+          textTransform: 'uppercase',
+          letterSpacing: '0.04em'
+        }
+      }, r))));
+    }));
+  }), activePols.length === 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: '40px 24px',
+      textAlign: 'center',
+      color: T.text3,
+      fontSize: 13
+    }
+  }, "No active policies yet. Drop a document above to extract one, or open Policies to add manually."))), /*#__PURE__*/React.createElement(DerivedValuesPanel, {
+    policies: policies
+  }));
+
+  // ═══════════════════════════════════════════════════════════════
+  // LEGACY DASHBOARD JSX — unreachable as of v2.4.0-rc1.3
+  // Kept inline as a one-batch revert escape hatch. Removed in rc1.4.
+  // ═══════════════════════════════════════════════════════════════
+  // eslint-disable-next-line no-unreachable
   return /*#__PURE__*/React.createElement("div", {
     className: "fade-in"
   }, /*#__PURE__*/React.createElement(GettingStartedChecklist, {
