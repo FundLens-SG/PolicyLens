@@ -609,9 +609,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.29';
+const APP_VERSION = 'v2.4.0-rc1.30';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Retirement chart status pill empty-state aware';
+const APP_VERSION_NAME = 'Design v2 — Cream-theme sweep across Clients & BulkVerify diagnostics';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -25469,7 +25469,7 @@ function ClientsTab() {
           padding: isMobile ? '10px 8px' : '10px 10px',
           cursor: 'pointer',
           background: isActive ? 'color-mix(in oklch, var(--gold) 8%, transparent)' : 'transparent',
-          borderBottom: memberIndex < memberCount - 1 ? '1px solid rgba(255,255,255,.055)' : 'none',
+          borderBottom: memberIndex < memberCount - 1 ? '1px solid var(--border)' : 'none',
           transition: 'background .15s'
         }
       }, /*#__PURE__*/React.createElement("input", {
@@ -25549,8 +25549,8 @@ function ClientsTab() {
         style: {
           fontSize: 9,
           color: 'var(--text3)',
-          background: 'rgba(255,255,255,.035)',
-          border: '1px solid rgba(255,255,255,.06)',
+          background: 'var(--bg3)',
+          border: '1px solid var(--border)',
           borderRadius: 999,
           padding: '2px 6px'
         }
@@ -25597,8 +25597,8 @@ function ClientsTab() {
             minWidth: 0,
             fontSize: 10,
             color: 'var(--text2)',
-            background: 'rgba(255,255,255,.03)',
-            border: '1px solid rgba(255,255,255,.07)',
+            background: 'var(--bg3)',
+            border: '1px solid var(--border)',
             borderRadius: 999,
             padding: '4px 8px'
           }
@@ -25620,7 +25620,7 @@ function ClientsTab() {
         style: {
           fontSize: 10,
           color: 'var(--text3)',
-          border: '1px solid rgba(255,255,255,.06)',
+          border: '1px solid var(--border)',
           borderRadius: 999,
           padding: '4px 8px'
         }
@@ -25818,8 +25818,8 @@ function ClientsTab() {
         alignItems: 'center',
         padding: '6px 8px',
         borderRadius: 7,
-        background: 'rgba(255,255,255,.025)',
-        border: '1px solid rgba(255,255,255,.055)'
+        background: 'var(--bg3)',
+        border: '1px solid var(--border)'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -25903,7 +25903,7 @@ function ClientsTab() {
     return /*#__PURE__*/React.createElement("div", {
       key: group.name,
       style: {
-        background: 'rgba(255,255,255,.018)',
+        background: 'var(--bg2)',
         border: '1px solid var(--border)',
         borderRadius: 10,
         overflow: 'hidden'
@@ -25915,8 +25915,8 @@ function ClientsTab() {
         gap: 10,
         alignItems: 'center',
         padding: '12px 14px',
-        background: 'rgba(255,255,255,.025)',
-        borderBottom: '1px solid rgba(255,255,255,.06)'
+        background: 'var(--bg3)',
+        borderBottom: '1px solid var(--border)'
       }
     }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
       style: {
@@ -25963,7 +25963,7 @@ function ClientsTab() {
       style: {
         fontSize: 10,
         color: 'var(--text2)',
-        border: '1px solid rgba(255,255,255,.08)',
+        border: '1px solid var(--border)',
         borderRadius: 999,
         padding: '4px 8px'
       }
@@ -25971,7 +25971,7 @@ function ClientsTab() {
       style: {
         fontSize: 10,
         color: 'var(--text2)',
-        border: '1px solid rgba(255,255,255,.08)',
+        border: '1px solid var(--border)',
         borderRadius: 999,
         padding: '4px 8px'
       }
@@ -25979,7 +25979,7 @@ function ClientsTab() {
       style: {
         fontSize: 10,
         color: group.totalPrem > 0 ? 'var(--gold)' : 'var(--text3)',
-        border: '1px solid rgba(255,255,255,.08)',
+        border: '1px solid var(--border)',
         borderRadius: 999,
         padding: '4px 8px'
       }
@@ -26035,7 +26035,7 @@ function ClientsTab() {
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
         border: '1px solid color-mix(in oklch, var(--gold) 22%, transparent)',
-        background: 'rgba(0,0,0,.12)',
+        background: 'var(--bg3)',
         borderRadius: 999,
         padding: '4px 8px'
       }
@@ -26043,7 +26043,7 @@ function ClientsTab() {
       style: {
         fontSize: 10,
         color: 'var(--text3)',
-        border: '1px solid rgba(255,255,255,.06)',
+        border: '1px solid var(--border)',
         borderRadius: 999,
         padding: '4px 8px'
       }
@@ -26108,7 +26108,7 @@ function ClientsTab() {
       style: {
         fontSize: 9,
         color: row.tone,
-        border: '1px solid rgba(255,255,255,.08)',
+        border: '1px solid var(--border)',
         borderRadius: 999,
         padding: '2px 6px',
         whiteSpace: 'nowrap'
@@ -26472,7 +26472,7 @@ function ClientsTab() {
     style: {
       fontSize: 10,
       color: 'var(--text3)',
-      border: '1px solid rgba(255,255,255,.06)',
+      border: '1px solid var(--border)',
       borderRadius: 999,
       padding: '4px 8px'
     }
@@ -46100,8 +46100,8 @@ function BulkVerifyModal({
       style: {
         fontSize: 9,
         color: meta.tone,
-        border: '1px solid rgba(255,255,255,.08)',
-        background: 'rgba(0,0,0,.12)',
+        border: '1px solid var(--border)',
+        background: 'var(--bg3)',
         borderRadius: 6,
         padding: '3px 6px',
         fontWeight: 700
@@ -46110,7 +46110,7 @@ function BulkVerifyModal({
   }))), /*#__PURE__*/React.createElement("div", {
     style: {
       overflowX: 'auto',
-      border: '1px solid rgba(255,255,255,.06)',
+      border: '1px solid var(--border)',
       borderRadius: 8
     }
   }, /*#__PURE__*/React.createElement("table", {
@@ -46122,7 +46122,7 @@ function BulkVerifyModal({
     }
   }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
     style: {
-      background: 'rgba(0,0,0,.18)',
+      background: 'var(--bg3)',
       color: 'var(--text3)',
       textTransform: 'uppercase',
       letterSpacing: '.35px'
@@ -46169,8 +46169,8 @@ function BulkVerifyModal({
     return /*#__PURE__*/React.createElement("tr", {
       key: (it.id || it._idx || i) + ':found',
       style: {
-        borderTop: i > 0 ? '1px solid rgba(255,255,255,.055)' : 'none',
-        background: it._selected ? 'transparent' : 'rgba(0,0,0,.16)',
+        borderTop: i > 0 ? '1px solid var(--border)' : 'none',
+        background: it._selected ? 'transparent' : 'var(--bg3)',
         opacity: it._selected ? 1 : .58
       }
     }, /*#__PURE__*/React.createElement("td", {
@@ -46238,8 +46238,8 @@ function BulkVerifyModal({
       style: {
         fontSize: 9,
         color: 'var(--text2)',
-        background: 'rgba(255,255,255,.035)',
-        border: '1px solid rgba(255,255,255,.06)',
+        background: 'var(--bg3)',
+        border: '1px solid var(--border)',
         borderRadius: 5,
         padding: '2px 5px'
       }
@@ -46280,8 +46280,8 @@ function BulkVerifyModal({
         fontSize: 10,
         padding: '4px 8px',
         borderRadius: 6,
-        border: '1px solid rgba(255,255,255,.10)',
-        background: 'rgba(255,255,255,.035)',
+        border: '1px solid var(--border)',
+        background: 'var(--bg3)',
         color: 'var(--text3)',
         fontWeight: 800,
         cursor: 'pointer'
@@ -46309,8 +46309,8 @@ function BulkVerifyModal({
         fontSize: 10,
         padding: '4px 8px',
         borderRadius: 6,
-        border: '1px solid rgba(255,255,255,.10)',
-        background: 'rgba(255,255,255,.035)',
+        border: '1px solid var(--border)',
+        background: 'var(--bg3)',
         color: 'var(--text3)',
         fontWeight: 800,
         cursor: 'pointer'
@@ -46461,7 +46461,7 @@ function BulkVerifyModal({
         color: 'var(--text2)',
         padding: '5px 6px',
         borderRadius: 6,
-        background: 'rgba(0,0,0,.12)'
+        background: 'var(--bg3)'
       }
     }, /*#__PURE__*/React.createElement("span", {
       style: {
@@ -46848,8 +46848,8 @@ function BulkVerifyModal({
         style: {
           fontSize: 9,
           color: 'var(--text3)',
-          background: 'rgba(255,255,255,.025)',
-          border: '1px solid rgba(255,255,255,.055)',
+          background: 'var(--bg3)',
+          border: '1px solid var(--border)',
           borderRadius: 5,
           padding: '4px 6px'
         }
@@ -46861,8 +46861,8 @@ function BulkVerifyModal({
         style: {
           fontSize: 9,
           color: 'var(--text3)',
-          background: 'rgba(255,255,255,.025)',
-          border: '1px solid rgba(255,255,255,.055)',
+          background: 'var(--bg3)',
+          border: '1px solid var(--border)',
           borderRadius: 5,
           padding: '4px 6px'
         }
@@ -46874,8 +46874,8 @@ function BulkVerifyModal({
         style: {
           fontSize: 9,
           color: 'var(--text3)',
-          background: 'rgba(255,255,255,.025)',
-          border: '1px solid rgba(255,255,255,.055)',
+          background: 'var(--bg3)',
+          border: '1px solid var(--border)',
           borderRadius: 5,
           padding: '4px 6px'
         }

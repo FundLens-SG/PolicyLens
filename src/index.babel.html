@@ -599,9 +599,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.29';
+const APP_VERSION = 'v2.4.0-rc1.30';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Retirement chart status pill empty-state aware';
+const APP_VERSION_NAME = 'Design v2 — Cream-theme sweep across Clients & BulkVerify diagnostics';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -22949,7 +22949,7 @@ function ClientsTab() {
       const reviewLabel = ds.lastReviewedAt ? 'reviewed ' + fmtRelativeTime(ds.lastReviewedAt) : 'not reviewed';
       return (
         <div key={ds.clientId} onClick={() => openClientView(ds.clientId, 'profile')}
-          style={{display:'grid',gridTemplateColumns:'18px 22px minmax(0,1fr) auto',gap:10,alignItems:'stretch',padding:isMobile?'10px 8px':'10px 10px',cursor:'pointer',background:isActive?'color-mix(in oklch, var(--gold) 8%, transparent)':'transparent',borderBottom:memberIndex < memberCount - 1?'1px solid rgba(255,255,255,.055)':'none',transition:'background .15s'}}>
+          style={{display:'grid',gridTemplateColumns:'18px 22px minmax(0,1fr) auto',gap:10,alignItems:'stretch',padding:isMobile?'10px 8px':'10px 10px',cursor:'pointer',background:isActive?'color-mix(in oklch, var(--gold) 8%, transparent)':'transparent',borderBottom:memberIndex < memberCount - 1?'1px solid var(--border)':'none',transition:'background .15s'}}>
           <input type="checkbox" checked={selectedSet.has(ds.clientId)}
             title={'Select ' + (ds.clientName || 'client')}
             onClick={e => e.stopPropagation()}
@@ -22963,7 +22963,7 @@ function ClientsTab() {
             <div style={{display:'flex',alignItems:'center',gap:7,flexWrap:'wrap'}}>
               <span style={{fontSize:13,fontWeight:800,color:'var(--text)',minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:isMobile?'100%':340}}>{ds.clientName || 'Untitled'}</span>
               {isActive && <span style={{fontSize:9,fontWeight:800,color:'var(--gold)',background:'var(--gold-dim)',border:'1px solid color-mix(in oklch, var(--gold) 31%, transparent)',borderRadius:999,padding:'2px 6px'}}>Viewing</span>}
-              <span style={{fontSize:9,color:'var(--text3)',background:'rgba(255,255,255,.035)',border:'1px solid rgba(255,255,255,.06)',borderRadius:999,padding:'2px 6px'}}>{tierLabel}</span>
+              <span style={{fontSize:9,color:'var(--text3)',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:999,padding:'2px 6px'}}>{tierLabel}</span>
               {syncLabel && <span style={{fontSize:9,color:syncColor,background:syncState.bg,border:'1px solid rgba(255,255,255,.05)',borderRadius:999,padding:'2px 6px'}}>{syncLabel}</span>}
             </div>
             <div style={{fontSize:10,color:'var(--text3)',marginTop:3}}>
@@ -22975,13 +22975,13 @@ function ClientsTab() {
                 const amount = compactMoney(annualizedPremium(pol)) || compactMoney(getPolicyAnnualPayout(pol)) || compactMoney(pol.sumAssured);
                 return (
                   <span key={pol.id || pol.policyNumber || policyMiniTitle(pol)} title={(pol.insurer || 'Insurer unclear') + ' · Owner: ' + policyOwnerDisplay(pol)}
-                    style={{display:'inline-flex',alignItems:'center',gap:5,maxWidth:isMobile?'100%':260,minWidth:0,fontSize:10,color:'var(--text2)',background:'rgba(255,255,255,.03)',border:'1px solid rgba(255,255,255,.07)',borderRadius:999,padding:'4px 8px'}}>
+                    style={{display:'inline-flex',alignItems:'center',gap:5,maxWidth:isMobile?'100%':260,minWidth:0,fontSize:10,color:'var(--text2)',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:999,padding:'4px 8px'}}>
                     <span style={{minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{policyMiniTitle(pol)}</span>
                     {amount && <strong style={{color:'var(--gold)',fontWeight:800,whiteSpace:'nowrap'}}>{amount}</strong>}
                   </span>
                 );
               })}
-              {clientPols.length > 3 && <span style={{fontSize:10,color:'var(--text3)',border:'1px solid rgba(255,255,255,.06)',borderRadius:999,padding:'4px 8px'}}>+{clientPols.length - 3} more</span>}
+              {clientPols.length > 3 && <span style={{fontSize:10,color:'var(--text3)',border:'1px solid var(--border)',borderRadius:999,padding:'4px 8px'}}>+{clientPols.length - 3} more</span>}
             </div>
           </div>
           <div style={{display:'flex',alignItems:'center',gap:8,alignSelf:'center'}}>
@@ -23050,7 +23050,7 @@ function ClientsTab() {
         {compactFamily && clientPols.length > 0 && (
           <div style={{display:'grid',gap:5,marginTop:8}}>
             {clientPols.slice(0, 3).map(pol => (
-              <div key={pol.id || pol.policyNumber || policyMiniTitle(pol)} style={{display:'grid',gridTemplateColumns:'minmax(0,1fr) auto',gap:8,alignItems:'center',padding:'6px 8px',borderRadius:7,background:'rgba(255,255,255,.025)',border:'1px solid rgba(255,255,255,.055)'}}>
+              <div key={pol.id || pol.policyNumber || policyMiniTitle(pol)} style={{display:'grid',gridTemplateColumns:'minmax(0,1fr) auto',gap:8,alignItems:'center',padding:'6px 8px',borderRadius:7,background:'var(--bg3)',border:'1px solid var(--border)'}}>
                 <div style={{minWidth:0}}>
                   <div style={{fontSize:10,fontWeight:700,color:'var(--text2)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{policyMiniTitle(pol)}</div>
                   <div style={{fontSize:9,color:'var(--text3)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{pol.insurer || 'Insurer unclear'} · Owner: {policyOwnerDisplay(pol)}</div>
@@ -23105,8 +23105,8 @@ function ClientsTab() {
     const questions = groupPolicyQuestions(group);
     const relationRows = householdRelationsForGroup(group);
     return (
-      <div key={group.name} style={{background:'rgba(255,255,255,.018)',border:'1px solid var(--border)',borderRadius:10,overflow:'hidden'}}>
-        <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'minmax(240px,420px) minmax(0,1fr) auto',gap:10,alignItems:'center',padding:'12px 14px',background:'rgba(255,255,255,.025)',borderBottom:'1px solid rgba(255,255,255,.06)'}}>
+      <div key={group.name} style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:10,overflow:'hidden'}}>
+        <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'minmax(240px,420px) minmax(0,1fr) auto',gap:10,alignItems:'center',padding:'12px 14px',background:'var(--bg3)',borderBottom:'1px solid var(--border)'}}>
           <div>
             <label style={{display:'block',fontSize:9,fontWeight:800,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:4}}>Family name</label>
             <input
@@ -23119,9 +23119,9 @@ function ClientsTab() {
             />
           </div>
           <div style={{display:'flex',gap:6,flexWrap:'wrap',minWidth:0}}>
-            <span style={{fontSize:10,color:'var(--text2)',border:'1px solid rgba(255,255,255,.08)',borderRadius:999,padding:'4px 8px'}}>{group.clients.length} {group.clients.length===1?'member':'members'}</span>
-            <span style={{fontSize:10,color:'var(--text2)',border:'1px solid rgba(255,255,255,.08)',borderRadius:999,padding:'4px 8px'}}>{group.policyCount} {group.policyCount===1?'policy':'policies'}</span>
-            <span style={{fontSize:10,color:group.totalPrem > 0?'var(--gold)':'var(--text3)',border:'1px solid rgba(255,255,255,.08)',borderRadius:999,padding:'4px 8px'}}>{group.totalPrem > 0 ? '$' + Math.round(group.totalPrem).toLocaleString() + '/yr' : 'No premiums'}</span>
+            <span style={{fontSize:10,color:'var(--text2)',border:'1px solid var(--border)',borderRadius:999,padding:'4px 8px'}}>{group.clients.length} {group.clients.length===1?'member':'members'}</span>
+            <span style={{fontSize:10,color:'var(--text2)',border:'1px solid var(--border)',borderRadius:999,padding:'4px 8px'}}>{group.policyCount} {group.policyCount===1?'policy':'policies'}</span>
+            <span style={{fontSize:10,color:group.totalPrem > 0?'var(--gold)':'var(--text3)',border:'1px solid var(--border)',borderRadius:999,padding:'4px 8px'}}>{group.totalPrem > 0 ? '$' + Math.round(group.totalPrem).toLocaleString() + '/yr' : 'No premiums'}</span>
             {questions.length > 0 && <span style={{fontSize:10,color:'var(--gold)',border:'1px solid color-mix(in oklch, var(--gold) 28%, transparent)',background:'color-mix(in oklch, var(--gold) 12%, transparent)',borderRadius:999,padding:'4px 8px'}}>{questions.length} owner check{questions.length===1?'':'s'}</span>}
           </div>
           <button onClick={() => { const first = group.clients[0]; if (first) openClientView(first.clientId, 'dashboard'); }}
@@ -23134,11 +23134,11 @@ function ClientsTab() {
             <span style={{fontSize:10,fontWeight:800,color:'var(--gold)',marginRight:2}}>Owner checks</span>
             {questions.slice(0, 3).map((q, qi) => (
               <span key={qi} title={q.title + ' · ' + q.owner + (q.life ? ' · ' + q.life : '')}
-                style={{fontSize:10,color:'var(--text2)',maxWidth:isMobile?'100%':300,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',border:'1px solid color-mix(in oklch, var(--gold) 22%, transparent)',background:'rgba(0,0,0,.12)',borderRadius:999,padding:'4px 8px'}}>
+                style={{fontSize:10,color:'var(--text2)',maxWidth:isMobile?'100%':300,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',border:'1px solid color-mix(in oklch, var(--gold) 22%, transparent)',background:'var(--bg3)',borderRadius:999,padding:'4px 8px'}}>
                 {q.clientName}: {q.title} · {q.owner}
               </span>
             ))}
-            {questions.length > 3 && <span style={{fontSize:10,color:'var(--text3)',border:'1px solid rgba(255,255,255,.06)',borderRadius:999,padding:'4px 8px'}}>+{questions.length - 3}</span>}
+            {questions.length > 3 && <span style={{fontSize:10,color:'var(--text3)',border:'1px solid var(--border)',borderRadius:999,padding:'4px 8px'}}>+{questions.length - 3}</span>}
           </div>
         )}
         <div style={{padding:'10px 14px',borderBottom:'1px solid rgba(255,255,255,.055)',background:'rgba(0,0,0,.08)'}}>
@@ -23152,7 +23152,7 @@ function ClientsTab() {
                 <div key={row.key} title={row.detail}
                   style={{display:'grid',gridTemplateColumns:'minmax(0,1fr) auto minmax(0,1fr)',alignItems:'center',gap:6,fontSize:10,color:'var(--text2)',border:'1px solid rgba(255,255,255,.07)',background:'rgba(255,255,255,.025)',borderRadius:8,padding:'6px 8px',minWidth:0}}>
                   <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontWeight:700}}>{row.from}</span>
-                  <span style={{fontSize:9,color:row.tone,border:'1px solid rgba(255,255,255,.08)',borderRadius:999,padding:'2px 6px',whiteSpace:'nowrap'}}>{row.relation}</span>
+                  <span style={{fontSize:9,color:row.tone,border:'1px solid var(--border)',borderRadius:999,padding:'2px 6px',whiteSpace:'nowrap'}}>{row.relation}</span>
                   <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{row.to}</span>
                 </div>
               ))}
@@ -23297,7 +23297,7 @@ function ClientsTab() {
                     {group.name} · {group.clients.length}
                   </span>
                 ))}
-                {familyGroups.length > 3 && <span style={{fontSize:10,color:'var(--text3)',border:'1px solid rgba(255,255,255,.06)',borderRadius:999,padding:'4px 8px'}}>+{familyGroups.length - 3}</span>}
+                {familyGroups.length > 3 && <span style={{fontSize:10,color:'var(--text3)',border:'1px solid var(--border)',borderRadius:999,padding:'4px 8px'}}>+{familyGroups.length - 3}</span>}
               </div>
             </div>
           </div>
@@ -33848,17 +33848,17 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
                 {Object.entries(triageCounts).map(([type,count]) => {
                   const meta = DOCUMENT_TRIAGE_META[type] || DOCUMENT_TRIAGE_META.unknown;
                   return (
-                    <span key={type} style={{fontSize:9,color:meta.tone,border:'1px solid rgba(255,255,255,.08)',background:'rgba(0,0,0,.12)',borderRadius:6,padding:'3px 6px',fontWeight:700}}>
+                    <span key={type} style={{fontSize:9,color:meta.tone,border:'1px solid var(--border)',background:'var(--bg3)',borderRadius:6,padding:'3px 6px',fontWeight:700}}>
                       {meta.label}: {count}
                     </span>
                   );
                 })}
               </div>
             </div>
-            <div style={{overflowX:'auto',border:'1px solid rgba(255,255,255,.06)',borderRadius:8}}>
+            <div style={{overflowX:'auto',border:'1px solid var(--border)',borderRadius:8}}>
               <table style={{width:'100%',borderCollapse:'collapse',fontSize:10,minWidth:720}}>
                 <thead>
-                  <tr style={{background:'rgba(0,0,0,.18)',color:'var(--text3)',textTransform:'uppercase',letterSpacing:'.35px'}}>
+                  <tr style={{background:'var(--bg3)',color:'var(--text3)',textTransform:'uppercase',letterSpacing:'.35px'}}>
                     <th style={{padding:'7px 8px',textAlign:'left',width:42}}>Use</th>
                     <th style={{padding:'7px 8px',textAlign:'left'}}>Document</th>
                     <th style={{padding:'7px 8px',textAlign:'left'}}>Policy</th>
@@ -33883,7 +33883,7 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
                     const hasMatch = !!it._knownPolicyMatch || triage.type === 'duplicate';
                     const needsReview = needsDecisionForItem(it);
                     return (
-                      <tr key={(it.id || it._idx || i) + ':found'} style={{borderTop:i>0?'1px solid rgba(255,255,255,.055)':'none',background:it._selected?'transparent':'rgba(0,0,0,.16)',opacity:it._selected?1:.58}}>
+                      <tr key={(it.id || it._idx || i) + ':found'} style={{borderTop:i>0?'1px solid var(--border)':'none',background:it._selected?'transparent':'var(--bg3)',opacity:it._selected?1:.58}}>
                         <td style={{padding:'7px 8px'}}>
                           <input type="checkbox" checked={it._selected} onChange={()=>toggleSelect(it._idx)} style={{accentColor:'var(--gold)'}} />
                         </td>
@@ -33898,7 +33898,7 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
                         <td style={{padding:'7px 8px',minWidth:240}}>
                           <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>
                             {(anchors.length ? anchors : ['Weak fingerprint']).map(a => (
-                              <span key={a} style={{fontSize:9,color:'var(--text2)',background:'rgba(255,255,255,.035)',border:'1px solid rgba(255,255,255,.06)',borderRadius:5,padding:'2px 5px'}}>{a}</span>
+                              <span key={a} style={{fontSize:9,color:'var(--text2)',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:5,padding:'2px 5px'}}>{a}</span>
                             ))}
                           </div>
                           {triage.reasons?.[0] && <div style={{color:'var(--text3)',marginTop:3,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:300}}>{triage.reasons[0]}</div>}
@@ -33910,7 +33910,7 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
                         <td style={{padding:'7px 8px',textAlign:'right',whiteSpace:'nowrap'}}>
                           {!it._selected ? (
                             <button onClick={()=>toggleSelect(it._idx)}
-                              style={{fontSize:10,padding:'4px 8px',borderRadius:6,border:'1px solid rgba(255,255,255,.10)',background:'rgba(255,255,255,.035)',color:'var(--text3)',fontWeight:800,cursor:'pointer'}}>
+                              style={{fontSize:10,padding:'4px 8px',borderRadius:6,border:'1px solid var(--border)',background:'var(--bg3)',color:'var(--text3)',fontWeight:800,cursor:'pointer'}}>
                               Ignored
                             </button>
                           ) : hasMatch ? (
@@ -33920,7 +33920,7 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
                                 {it._mergeIntoExisting ? 'Will merge' : 'Merge'}
                               </button>
                               <button onClick={()=>toggleSelect(it._idx)}
-                                style={{fontSize:10,padding:'4px 8px',borderRadius:6,border:'1px solid rgba(255,255,255,.10)',background:'rgba(255,255,255,.035)',color:'var(--text3)',fontWeight:800,cursor:'pointer'}}>
+                                style={{fontSize:10,padding:'4px 8px',borderRadius:6,border:'1px solid var(--border)',background:'var(--bg3)',color:'var(--text3)',fontWeight:800,cursor:'pointer'}}>
                                 Ignore duplicate
                               </button>
                             </div>
@@ -33971,7 +33971,7 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
                       const gate = passesConfidenceGate(it);
                       const reason = getVerifiableFields(it)[0]?.reason || (gate.reasons || [])[0] || (it._reviewReasons || [])[0] || (it._ownerRouteQuestion ? 'Owner/life assured routing needs confirmation' : 'Needs review');
                       return (
-                        <div key={(it.id || it.policyNumber || it.productName || i) + ':queue'} style={{display:'grid',gridTemplateColumns:'minmax(0,1fr) auto',gap:8,alignItems:'center',fontSize:10,color:'var(--text2)',padding:'5px 6px',borderRadius:6,background:'rgba(0,0,0,.12)'}}>
+                        <div key={(it.id || it.policyNumber || it.productName || i) + ':queue'} style={{display:'grid',gridTemplateColumns:'minmax(0,1fr) auto',gap:8,alignItems:'center',fontSize:10,color:'var(--text2)',padding:'5px 6px',borderRadius:6,background:'var(--bg3)'}}>
                           <span style={{minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{it.productName || it.policyName || it.insurer || 'Policy'} - {reason}</span>
                           <span style={{color:'var(--gold)',fontWeight:800,whiteSpace:'nowrap'}}>{it._extractConfidence ? 'check' : 'route'}</span>
                         </div>
@@ -34163,9 +34163,9 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
                           Suppresses the "Owner -" / "Policy -" placeholder noise. */}
                       {(policyOwnerDisplay(item) || item.policyNumber || getPolicyAnnualPayout(item) > 0) && (
                         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(118px,1fr))',gap:5,marginTop:7}}>
-                          {policyOwnerDisplay(item) && <div style={{fontSize:9,color:'var(--text3)',background:'rgba(255,255,255,.025)',border:'1px solid rgba(255,255,255,.055)',borderRadius:5,padding:'4px 6px'}}>Owner <strong style={{color:'var(--text2)'}}>{policyOwnerDisplay(item)}</strong></div>}
-                          {item.policyNumber && <div style={{fontSize:9,color:'var(--text3)',background:'rgba(255,255,255,.025)',border:'1px solid rgba(255,255,255,.055)',borderRadius:5,padding:'4px 6px'}}>Policy <strong style={{color:'var(--text2)'}}>{item.policyNumber}</strong></div>}
-                          {getPolicyAnnualPayout(item) > 0 && <div style={{fontSize:9,color:'var(--text3)',background:'rgba(255,255,255,.025)',border:'1px solid rgba(255,255,255,.055)',borderRadius:5,padding:'4px 6px'}}>Payout <strong style={{color:'var(--text2)'}}>${Math.round(getPolicyAnnualPayout(item)).toLocaleString()}/yr</strong></div>}
+                          {policyOwnerDisplay(item) && <div style={{fontSize:9,color:'var(--text3)',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:5,padding:'4px 6px'}}>Owner <strong style={{color:'var(--text2)'}}>{policyOwnerDisplay(item)}</strong></div>}
+                          {item.policyNumber && <div style={{fontSize:9,color:'var(--text3)',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:5,padding:'4px 6px'}}>Policy <strong style={{color:'var(--text2)'}}>{item.policyNumber}</strong></div>}
+                          {getPolicyAnnualPayout(item) > 0 && <div style={{fontSize:9,color:'var(--text3)',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:5,padding:'4px 6px'}}>Payout <strong style={{color:'var(--text2)'}}>${Math.round(getPolicyAnnualPayout(item)).toLocaleString()}/yr</strong></div>}
                         </div>
                       )}
                     </div>
