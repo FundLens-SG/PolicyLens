@@ -599,9 +599,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.19';
+const APP_VERSION = 'v2.4.0-rc1.20';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Getting Started checklist quieter eyebrow + hint';
+const APP_VERSION_NAME = 'Design v2 — sweep loud subsection labels app-wide';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -18231,7 +18231,7 @@ function ReconcileSyncModal({ data, onChoose, onClose }) {
         {/* Side-by-side comparison */}
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:18}}>
           <div style={{background:'var(--bg3)',borderRadius:10,padding:14,border:'1px solid var(--border)'}}>
-            <div style={{fontSize:10,fontWeight:700,color:'var(--gold)',textTransform:'uppercase',letterSpacing:'.5px',marginBottom:8}}>📱 This Device</div>
+            <div style={{fontSize:11,fontWeight:600,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.04em',marginBottom:8}}>📱 This Device</div>
             <div style={{fontSize:12,color:'var(--text2)',marginBottom:4}}>
               <strong style={{color:'var(--text)'}}>Profile:</strong> {localHasProfile ? localProfileName : <em style={{color:'var(--text3)'}}>none</em>}
             </div>
@@ -29145,7 +29145,7 @@ ${cpfEligible?`{label:'CPF LIFE',data:${JSON.stringify(waterfallData.map(r=>r.cp
           <div style={{fontSize:8,color:'var(--text3)'}}>{cpfScheme!=='none'?cpfScheme+' from '+cpfStartAge:'Not set'}</div>
         </div>}
         <div style={{background:'var(--bg3)',borderRadius:8,padding:'8px 10px',textAlign:'center'}}>
-          <div style={{fontSize:8,color:'var(--gold)',textTransform:'uppercase',fontWeight:600}}>Policy Income</div>
+          <div style={{fontSize:9,color:'var(--text3)',textTransform:'uppercase',fontWeight:600,letterSpacing:'0.04em'}}>Policy Income</div>
           <div style={{fontSize:16,fontWeight:700,color:'var(--gold)'}}>${(policyMonthlyIncome+policyDividends).toLocaleString()}</div>
           <div style={{fontSize:8,color:'var(--text3)'}}>annuity + div</div>
         </div>
@@ -31121,7 +31121,7 @@ function Dashboard() {
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
           <div style={{background:'var(--bg3)',borderRadius:8,padding:'10px 10px',gridColumn:'1/-1'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline'}}>
-              <div><div style={{fontSize:9,color:'var(--gold)',textTransform:'uppercase',fontWeight:700,letterSpacing:'.5px'}}>Annual Recurring</div>
+              <div><div style={{fontSize:10,color:'var(--text3)',textTransform:'uppercase',fontWeight:600,letterSpacing:'0.04em'}}>Annual Recurring</div>
               <div style={{fontSize:20,fontWeight:700,color:'var(--gold)',marginTop:2}}>{fmt(premiumBreakdown.totalAnnual)}<span style={{fontSize:11,color:'var(--text3)',fontWeight:400}}>/yr</span></div></div>
               <div style={{fontSize:12,color:'var(--text3)',textAlign:'right'}}>{fmt(Math.round(premiumBreakdown.totalAnnual/12))}/mth</div>
             </div>
@@ -31143,7 +31143,7 @@ function Dashboard() {
             <div style={{fontSize:15,fontWeight:600,color:'#5b8fd9',marginTop:2}}>{fmt(premiumBreakdown.modes.cpfsa.annual)}<span style={{fontSize:9,color:'var(--text3)'}}>/yr</span></div>
           </div>}
           {premiumBreakdown.totalSingle > 0 && <div style={{background:'var(--bg3)',borderRadius:8,padding:'8px 10px',borderLeft:'3px solid var(--gold)',gridColumn:premiumBreakdown.modes.medisave.annual>0||premiumBreakdown.modes.srs.annual>0?'auto':'1/-1'}}>
-            <div style={{fontSize:8,color:'var(--gold)',textTransform:'uppercase',fontWeight:700}}>Single Premiums</div>
+            <div style={{fontSize:10,color:'var(--text3)',textTransform:'uppercase',fontWeight:600,letterSpacing:'0.04em'}}>Single Premiums</div>
             <div style={{fontSize:15,fontWeight:600,color:'var(--gold)',marginTop:2}}>{fmt(premiumBreakdown.totalSingle)}</div>
             <div style={{fontSize:8,color:'var(--text3)'}}>One-time</div>
           </div>}
@@ -41389,7 +41389,7 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
               return (
                 <>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12,flexWrap:'wrap',gap:8}}>
-                    <div style={{fontSize:10,fontWeight:700,color:'var(--gold)',textTransform:'uppercase',letterSpacing:'.5px'}}>💰 Retirement / Annuity — Income Progress</div>
+                    <div style={{fontSize:11,fontWeight:600,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.04em'}}>💰 Retirement / Annuity — Income Progress</div>
                     <span style={{fontSize:10,padding:'3px 10px',borderRadius:4,background:'var(--gold-dim)',color:phaseColor,fontWeight:700,textTransform:'uppercase',border:'1px solid '+phaseColor+'33'}}>
                       Phase: {phaseLabel}
                       {phase === 'accum' && yearsToStart > 0 && <span style={{opacity:.7,marginLeft:6}}>· income starts in {yearsToStart}yr</span>}
@@ -41863,7 +41863,7 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
         {/* ═══ PERSONAL ACCIDENT COVERAGE ═══ */}
         {isPA && (
           <div style={{marginTop:8,padding:14,background:'var(--bg3)',borderRadius:10,border:'1px solid rgba(245,158,11,.25)'}}>
-            <div style={{fontSize:10,fontWeight:700,color:'var(--orange)',textTransform:'uppercase',letterSpacing:'.5px',marginBottom:12}}>Accident Coverage</div>
+            <div style={{fontSize:11,fontWeight:600,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.04em',marginBottom:12}}>Accident Coverage</div>
             <div className="grid-3">
               <div className="field"><label>ADD Sum Assured ($)</label><input type="number" value={form.addSA||''} onChange={e=>set('addSA',e.target.value)} /></div>
               <div className="field"><label>Accidental Medical ($)</label><input type="number" value={form.accMedical||''} onChange={e=>set('accMedical',e.target.value)} /></div>
