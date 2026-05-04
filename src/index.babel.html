@@ -599,9 +599,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.28';
+const APP_VERSION = 'v2.4.0-rc1.29';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Policies action menu + Retirement income projection chart';
+const APP_VERSION_NAME = 'Design v2 — Retirement chart status pill empty-state aware';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -30949,6 +30949,11 @@ function Dashboard() {
         const filtered = tl.filter(r => r.age >= Math.max(50, retAge - 5) && r.age <= 90);
         if (filtered.length < 2) return null;
         const inflPct = retirementLite.inflationRate || 0;
+        // v2.4.0-rc1.29: distinguish empty-state cases for the status pill.
+        // When desired is 0 (target not set) we shouldn't claim "on track" —
+        // we don't know what the target is. Same for "no income" case.
+        const hasTarget = filtered.some(r => r.desired > 0);
+        const hasIncome = filtered.some(r => r.total > 0);
         const w = 760, h = 240, padL = 50, padR = 16, padT = 30, padB = 32;
         const innerW = w - padL - padR;
         const innerH = h - padT - padB;
@@ -30973,7 +30978,28 @@ function Dashboard() {
         const retRow = filtered.find(r => r.age === retAge) || filtered[0];
         const peakYear = filtered.reduce((m, r) => (r.total > m.total ? r : m), filtered[0]);
         const gapAtRet = Math.max(0, (retRow.desired || 0) - (retRow.total || 0));
-        const summaryTone = gapAtRet === 0 ? T.green : gapAtRet < (retRow.desired || 1) * 0.2 ? T.warn : T.red;
+        // Status pill tone + label depend on whether target & income exist.
+        let summaryTone = T.text3;
+        let summaryLabel = '';
+        if (!hasTarget && !hasIncome) {
+          summaryTone = T.text3;
+          summaryLabel = 'Set income & target on Profile';
+        } else if (!hasTarget) {
+          summaryTone = T.warn;
+          summaryLabel = 'No retirement target set';
+        } else if (!hasIncome) {
+          summaryTone = T.red;
+          summaryLabel = 'No retirement income on file';
+        } else if (gapAtRet === 0) {
+          summaryTone = T.green;
+          summaryLabel = '✓ On track at age ' + retAge;
+        } else if (gapAtRet < (retRow.desired || 1) * 0.2) {
+          summaryTone = T.warn;
+          summaryLabel = 'Gap at ' + retAge + ': S$' + gapAtRet.toLocaleString() + '/mo';
+        } else {
+          summaryTone = T.red;
+          summaryLabel = 'Gap at ' + retAge + ': S$' + gapAtRet.toLocaleString() + '/mo';
+        }
 
         return (
         <div style={{ background: T.bg2, border: `1px solid ${T.border}`, borderRadius: T.radiusLg, padding: T.cardPad, boxShadow: T.shadow }}>
@@ -30990,7 +31016,7 @@ function Dashboard() {
               color: summaryTone, fontSize: 12, fontWeight: 600,
               fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap',
             }}>
-              {gapAtRet === 0 ? '✓ On track at age ' + retAge : 'Gap at ' + retAge + ': S$' + gapAtRet.toLocaleString() + '/mo'}
+              {summaryLabel}
             </div>
           </div>
 
