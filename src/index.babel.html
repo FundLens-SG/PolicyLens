@@ -599,9 +599,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.12';
+const APP_VERSION = 'v2.4.0-rc1.13';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Dashboard scan ribbon + KPI sparklines';
+const APP_VERSION_NAME = 'Design v2 — Profile cards (emoji icons + Identity rename + visual lift)';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -28269,9 +28269,17 @@ function ProfileTab() {
       {/* Drop / Paste zone */}
       <DropZone active={true} onFiles={scanProfile} label="📎 Drop or paste client documents here (NRIC, FNA, KYC) — AI will extract profile details" />
 
-      {/* Client Details */}
-      <div className="card" style={{marginBottom:16}}>
-        <h3 style={{fontFamily:T_V2.serifFamily,fontSize:22,fontWeight:400,letterSpacing:'-0.015em',color:'var(--text)',marginBottom:14,marginTop:0,lineHeight:1.2}}>Client Details</h3>
+      {/* v2.4.0-rc1.13: Profile cards now use Fraunces titles with emoji
+          icons matching the prototype's Identity / Income & Retirement /
+          CPF balances / Family pattern. Edit-form fields preserved
+          (Option B per user's choice — they didn't want a separate
+          read-only/edit-modal split). Card visual polish: 24px padding,
+          softer shadow, hairline border, emoji icon in title. */}
+      <div className="card" style={{marginBottom:T_V2.sectionGap||28,padding:24,boxShadow:T_V2.shadow,border:`1px solid ${T_V2.border}`,borderRadius:T_V2.radiusLg}}>
+        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:18}}>
+          <span style={{fontSize:22}}>👤</span>
+          <h3 style={{fontFamily:T_V2.serifFamily,fontSize:22,fontWeight:400,letterSpacing:'-0.015em',color:'var(--text)',margin:0,lineHeight:1.2}}>Identity</h3>
+        </div>
         <div className="grid-3">
           <div className="field"><label>Full Name</label><input value={p.name||''} onChange={e=>set('name',e.target.value)} placeholder="Client full name" /></div>
           <div className="field"><label>NRIC / Passport</label><input value={p.nric||''} onChange={e=>set('nric',e.target.value)} placeholder="S1234567X" /></div>
@@ -28390,19 +28398,28 @@ function ProfileTab() {
         </div>
       </div>
 
-      {/* Financial Profile */}
-      <div className="card" style={{marginBottom:16}}>
-        <h3 style={{fontFamily:T_V2.serifFamily,fontSize:22,fontWeight:400,letterSpacing:'-0.015em',color:'var(--text)',marginBottom:4,marginTop:0,lineHeight:1.2}}>Financial Profile</h3>
-        <div style={{fontSize:12,color:'var(--text3)',marginBottom:14}}>Used for protection gap analysis, retirement projections, and cashflow timeline</div>
+      {/* Financial Profile — Income & Retirement / Outgoings / CPF / Other */}
+      <div className="card" style={{marginBottom:T_V2.sectionGap||28,padding:24,boxShadow:T_V2.shadow,border:`1px solid ${T_V2.border}`,borderRadius:T_V2.radiusLg}}>
+        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:4}}>
+          <span style={{fontSize:22}}>💰</span>
+          <h3 style={{fontFamily:T_V2.serifFamily,fontSize:22,fontWeight:400,letterSpacing:'-0.015em',color:'var(--text)',margin:0,lineHeight:1.2}}>Financial Profile</h3>
+        </div>
+        <div style={{fontSize:12,color:'var(--text3)',marginBottom:18,marginLeft:32}}>Used for protection gap analysis, retirement projections, and cashflow timeline</div>
         <div className="resp-2col" style={{gap:16}}>
-          <div style={{background:'var(--bg3)',borderRadius:8,padding:12,border:'1px solid var(--border)'}}>
-            <div style={{fontSize:11,fontWeight:600,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.04em',marginBottom:8}}>Income &amp; Retirement</div>
+          <div style={{background:'var(--bg3)',borderRadius:T_V2.radius||14,padding:14,border:`1px solid ${T_V2.border}`}}>
+            <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:10}}>
+              <span style={{fontSize:14}}>🌅</span>
+              <span style={{fontSize:11,fontWeight:600,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.04em'}}>Income &amp; Retirement</span>
+            </div>
             <div className="field"><label>Gross Annual Income ($)</label><input type="number" value={p.annualIncome||''} onChange={e=>set('annualIncome',e.target.value)} placeholder="e.g. 120000" /><div style={{fontSize:10,color:'var(--text3)'}}>{p.annualIncome ? '$'+(Math.round(p.annualIncome/12)).toLocaleString()+'/mth' : ''}</div></div>
             <div className="field"><label>Desired Monthly Income in Retirement</label><input type="number" value={p.desiredRetIncome||''} onChange={e=>set('desiredRetIncome',e.target.value)} placeholder="e.g. 5000" /><div style={{fontSize:10,color:'var(--text3)'}}>Target lifestyle expense in today's dollars</div></div>
             <div style={{fontSize:9,color:'var(--text3)',fontStyle:'italic',marginTop:6}}>Retirement age and inflation rate are now set in the <strong>Assumptions</strong> card below.</div>
           </div>
-          <div style={{background:'var(--bg3)',borderRadius:8,padding:12,border:'1px solid var(--border)'}}>
-            <div style={{fontSize:10,fontWeight:700,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'.5px',marginBottom:8}}>Monthly Outgoings</div>
+          <div style={{background:'var(--bg3)',borderRadius:T_V2.radius||14,padding:14,border:`1px solid ${T_V2.border}`}}>
+            <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:10}}>
+              <span style={{fontSize:14}}>💸</span>
+              <span style={{fontSize:11,fontWeight:600,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.04em'}}>Monthly Outgoings</span>
+            </div>
             <div className="grid-2">
               <div className="field"><label>Living Expenses ($)</label><input type="number" value={p.monthlyExpenses||''} onChange={e=>set('monthlyExpenses',e.target.value)} placeholder="e.g. 4000" /></div>
               <div className="field"><label>Mortgage ($/mth)</label><input type="number" value={p.mortgagePayment||''} onChange={e=>set('mortgagePayment',e.target.value)} placeholder="0" /></div>
@@ -28417,8 +28434,11 @@ function ProfileTab() {
         {/* CPF LIFE & Retirement Income */}
         <div className="resp-2col" style={{marginTop:12,gap:16}}>
           {cpfEligible && (
-          <div style={{background:'var(--bg3)',borderRadius:8,padding:12,border:'1px solid rgba(91,168,160,.2)'}}>
-            <div style={{fontSize:11,fontWeight:600,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.04em',marginBottom:8}}>CPF LIFE Projection</div>
+          <div style={{background:'var(--bg3)',borderRadius:T_V2.radius||14,padding:14,border:`1px solid ${T_V2.border}`}}>
+            <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:10}}>
+              <span style={{fontSize:14}}>🏦</span>
+              <span style={{fontSize:11,fontWeight:600,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.04em'}}>CPF LIFE Projection</span>
+            </div>
 
             {/* Toggle: Use scheme target vs actual balances */}
             <div style={{marginBottom:8}}>
@@ -28621,10 +28641,13 @@ function ProfileTab() {
             </>)}
           </div>
           )}
-          <div style={{background:'var(--bg3)',borderRadius:8,padding:12,border:'1px solid rgba(157,138,191,.2)',gridColumn:cpfEligible?'auto':'1 / -1'}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
-              <div style={{fontSize:11,fontWeight:600,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.04em'}}>Other Retirement Income</div>
-              <button className="btn-secondary btn-sm" onClick={()=>set('otherRetIncome',[...(p.otherRetIncome||[]),{id:'ori_'+Date.now(),source:'',amount:'',appreciation:'2',fromAge:'65',toAge:'85'}])} style={{fontSize:9,padding:'2px 8px'}}>+ Add</button>
+          <div style={{background:'var(--bg3)',borderRadius:T_V2.radius||14,padding:14,border:`1px solid ${T_V2.border}`,gridColumn:cpfEligible?'auto':'1 / -1'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
+              <div style={{display:'flex',alignItems:'center',gap:6}}>
+                <span style={{fontSize:14}}>✨</span>
+                <span style={{fontSize:11,fontWeight:600,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.04em'}}>Other Retirement Income</span>
+              </div>
+              <button className="btn-secondary btn-sm" onClick={()=>set('otherRetIncome',[...(p.otherRetIncome||[]),{id:'ori_'+Date.now(),source:'',amount:'',appreciation:'2',fromAge:'65',toAge:'85'}])} style={{fontSize:10,padding:'4px 10px'}}>+ Add</button>
             </div>
             {(p.otherRetIncome||[]).length === 0 && <div style={{fontSize:10,color:'var(--text3)',textAlign:'center',padding:8}}>Rental, dividends, part-time work, spousal support…</div>}
             {(p.otherRetIncome||[]).map((inc,i) => (
@@ -28669,10 +28692,13 @@ function ProfileTab() {
       <AssumptionsCard p={p} set={set} houseDefaults={houseDefaults} />
 
       {/* Dependants */}
-      <div className="card">
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+      <div className="card" style={{padding:24,boxShadow:T_V2.shadow,border:`1px solid ${T_V2.border}`,borderRadius:T_V2.radiusLg,marginBottom:T_V2.sectionGap||28}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
           <div>
-            <h3 style={{fontFamily:T_V2.serifFamily,fontSize:22,fontWeight:400,letterSpacing:'-0.015em',color:'var(--text)',margin:0,lineHeight:1.2}}>Dependants</h3>
+            <div style={{display:'flex',alignItems:'center',gap:10}}>
+              <span style={{fontSize:22}}>👨‍👩‍👧‍👦</span>
+              <h3 style={{fontFamily:T_V2.serifFamily,fontSize:22,fontWeight:400,letterSpacing:'-0.015em',color:'var(--text)',margin:0,lineHeight:1.2}}>Dependants</h3>
+            </div>
             <p style={{fontSize:12,color:'var(--text3)'}}>Spouse, children, parents — any life insured under your client's policies</p>
           </div>
           <button className="btn-primary btn-sm" onClick={addDep}>+ Add Dependant</button>

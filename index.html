@@ -609,9 +609,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.12';
+const APP_VERSION = 'v2.4.0-rc1.13';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Dashboard scan ribbon + KPI sparklines';
+const APP_VERSION_NAME = 'Design v2 — Profile cards (emoji icons + Identity rename + visual lift)';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -34696,20 +34696,34 @@ function ProfileTab() {
   }), /*#__PURE__*/React.createElement("div", {
     className: "card",
     style: {
-      marginBottom: 16
+      marginBottom: T_V2.sectionGap || 28,
+      padding: 24,
+      boxShadow: T_V2.shadow,
+      border: `1px solid ${T_V2.border}`,
+      borderRadius: T_V2.radiusLg
     }
-  }, /*#__PURE__*/React.createElement("h3", {
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      marginBottom: 18
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 22
+    }
+  }, "\uD83D\uDC64"), /*#__PURE__*/React.createElement("h3", {
     style: {
       fontFamily: T_V2.serifFamily,
       fontSize: 22,
       fontWeight: 400,
       letterSpacing: '-0.015em',
       color: 'var(--text)',
-      marginBottom: 14,
-      marginTop: 0,
+      margin: 0,
       lineHeight: 1.2
     }
-  }, "Client Details"), /*#__PURE__*/React.createElement("div", {
+  }, "Identity")), /*#__PURE__*/React.createElement("div", {
     className: "grid-3"
   }, /*#__PURE__*/React.createElement("div", {
     className: "field"
@@ -34876,24 +34890,39 @@ function ProfileTab() {
   })))), /*#__PURE__*/React.createElement("div", {
     className: "card",
     style: {
-      marginBottom: 16
+      marginBottom: T_V2.sectionGap || 28,
+      padding: 24,
+      boxShadow: T_V2.shadow,
+      border: `1px solid ${T_V2.border}`,
+      borderRadius: T_V2.radiusLg
     }
-  }, /*#__PURE__*/React.createElement("h3", {
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      marginBottom: 4
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 22
+    }
+  }, "\uD83D\uDCB0"), /*#__PURE__*/React.createElement("h3", {
     style: {
       fontFamily: T_V2.serifFamily,
       fontSize: 22,
       fontWeight: 400,
       letterSpacing: '-0.015em',
       color: 'var(--text)',
-      marginBottom: 4,
-      marginTop: 0,
+      margin: 0,
       lineHeight: 1.2
     }
-  }, "Financial Profile"), /*#__PURE__*/React.createElement("div", {
+  }, "Financial Profile")), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 12,
       color: 'var(--text3)',
-      marginBottom: 14
+      marginBottom: 18,
+      marginLeft: 32
     }
   }, "Used for protection gap analysis, retirement projections, and cashflow timeline"), /*#__PURE__*/React.createElement("div", {
     className: "resp-2col",
@@ -34903,20 +34932,30 @@ function ProfileTab() {
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: 'var(--bg3)',
-      borderRadius: 8,
-      padding: 12,
-      border: '1px solid var(--border)'
+      borderRadius: T_V2.radius || 14,
+      padding: 14,
+      border: `1px solid ${T_V2.border}`
     }
   }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 6,
+      marginBottom: 10
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 14
+    }
+  }, "\uD83C\uDF05"), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 11,
       fontWeight: 600,
       color: 'var(--text3)',
       textTransform: 'uppercase',
-      letterSpacing: '0.04em',
-      marginBottom: 8
+      letterSpacing: '0.04em'
     }
-  }, "Income & Retirement"), /*#__PURE__*/React.createElement("div", {
+  }, "Income & Retirement")), /*#__PURE__*/React.createElement("div", {
     className: "field"
   }, /*#__PURE__*/React.createElement("label", null, "Gross Annual Income ($)"), /*#__PURE__*/React.createElement("input", {
     type: "number",
@@ -34950,20 +34989,30 @@ function ProfileTab() {
   }, "Retirement age and inflation rate are now set in the ", /*#__PURE__*/React.createElement("strong", null, "Assumptions"), " card below.")), /*#__PURE__*/React.createElement("div", {
     style: {
       background: 'var(--bg3)',
-      borderRadius: 8,
-      padding: 12,
-      border: '1px solid var(--border)'
+      borderRadius: T_V2.radius || 14,
+      padding: 14,
+      border: `1px solid ${T_V2.border}`
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 10,
-      fontWeight: 700,
+      display: 'flex',
+      alignItems: 'center',
+      gap: 6,
+      marginBottom: 10
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 14
+    }
+  }, "\uD83D\uDCB8"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 11,
+      fontWeight: 600,
       color: 'var(--text3)',
       textTransform: 'uppercase',
-      letterSpacing: '.5px',
-      marginBottom: 8
+      letterSpacing: '0.04em'
     }
-  }, "Monthly Outgoings"), /*#__PURE__*/React.createElement("div", {
+  }, "Monthly Outgoings")), /*#__PURE__*/React.createElement("div", {
     className: "grid-2"
   }, /*#__PURE__*/React.createElement("div", {
     className: "field"
@@ -35003,20 +35052,30 @@ function ProfileTab() {
   }, cpfEligible && /*#__PURE__*/React.createElement("div", {
     style: {
       background: 'var(--bg3)',
-      borderRadius: 8,
-      padding: 12,
-      border: '1px solid rgba(91,168,160,.2)'
+      borderRadius: T_V2.radius || 14,
+      padding: 14,
+      border: `1px solid ${T_V2.border}`
     }
   }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 6,
+      marginBottom: 10
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 14
+    }
+  }, "\uD83C\uDFE6"), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 11,
       fontWeight: 600,
       color: 'var(--text3)',
       textTransform: 'uppercase',
-      letterSpacing: '0.04em',
-      marginBottom: 8
+      letterSpacing: '0.04em'
     }
-  }, "CPF LIFE Projection"), /*#__PURE__*/React.createElement("div", {
+  }, "CPF LIFE Projection")), /*#__PURE__*/React.createElement("div", {
     style: {
       marginBottom: 8
     }
@@ -35510,9 +35569,9 @@ function ProfileTab() {
   }, "Enter monthly salary to see CPF projection"))), /*#__PURE__*/React.createElement("div", {
     style: {
       background: 'var(--bg3)',
-      borderRadius: 8,
-      padding: 12,
-      border: '1px solid rgba(157,138,191,.2)',
+      borderRadius: T_V2.radius || 14,
+      padding: 14,
+      border: `1px solid ${T_V2.border}`,
       gridColumn: cpfEligible ? 'auto' : '1 / -1'
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -35520,9 +35579,19 @@ function ProfileTab() {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: 8
+      marginBottom: 10
     }
   }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 6
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 14
+    }
+  }, "\u2728"), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 11,
       fontWeight: 600,
@@ -35530,7 +35599,7 @@ function ProfileTab() {
       textTransform: 'uppercase',
       letterSpacing: '0.04em'
     }
-  }, "Other Retirement Income"), /*#__PURE__*/React.createElement("button", {
+  }, "Other Retirement Income")), /*#__PURE__*/React.createElement("button", {
     className: "btn-secondary btn-sm",
     onClick: () => set('otherRetIncome', [...(p.otherRetIncome || []), {
       id: 'ori_' + Date.now(),
@@ -35541,8 +35610,8 @@ function ProfileTab() {
       toAge: '85'
     }]),
     style: {
-      fontSize: 9,
-      padding: '2px 8px'
+      fontSize: 10,
+      padding: '4px 10px'
     }
   }, "+ Add")), (p.otherRetIncome || []).length === 0 && /*#__PURE__*/React.createElement("div", {
     style: {
@@ -35716,15 +35785,32 @@ function ProfileTab() {
     set: set,
     houseDefaults: houseDefaults
   }), /*#__PURE__*/React.createElement("div", {
-    className: "card"
+    className: "card",
+    style: {
+      padding: 24,
+      boxShadow: T_V2.shadow,
+      border: `1px solid ${T_V2.border}`,
+      borderRadius: T_V2.radiusLg,
+      marginBottom: T_V2.sectionGap || 28
+    }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: 12
+      marginBottom: 14
     }
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", {
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 22
+    }
+  }, "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67\u200D\uD83D\uDC66"), /*#__PURE__*/React.createElement("h3", {
     style: {
       fontFamily: T_V2.serifFamily,
       fontSize: 22,
@@ -35734,7 +35820,7 @@ function ProfileTab() {
       margin: 0,
       lineHeight: 1.2
     }
-  }, "Dependants"), /*#__PURE__*/React.createElement("p", {
+  }, "Dependants")), /*#__PURE__*/React.createElement("p", {
     style: {
       fontSize: 12,
       color: 'var(--text3)'
