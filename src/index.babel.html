@@ -599,9 +599,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.22';
+const APP_VERSION = 'v2.4.0-rc1.23';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Bulk Verify modal harmonized (Fraunces title + sticky footer)';
+const APP_VERSION_NAME = 'Design v2 — Client View migrated from navy to cream theme + Fraunces hero';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -21424,59 +21424,57 @@ function PresentMode() {
     setPresentMode(false);
   };
 
-  // ── Styling: navy bg, gold accents, generous padding ──
-  const NAVY = '#0e1929';
-  const NAVY_LIGHT = '#1a2740';
-  const GOLD = 'var(--gold)';
-  const GOLD_DARK = 'var(--gold3)';
-  const CREAM = '#f4ead5';
-  const MUTED = '#8a9ab5';
+  // ── Styling: v2.4.0-rc1.23 — migrated from dark navy to cream theme.
+  //    Same constant names retained so the 200+ inline references below
+  //    don't need to change. They now resolve to design v2 tokens. ──
+  const NAVY = 'var(--bg)';            // outer background — cream paper
+  const NAVY_LIGHT = 'var(--bg2)';     // card surface — soft elevated cream
+  const GOLD = 'var(--gold)';          // accent — terracotta/coral
+  const GOLD_DARK = 'var(--gold3)';    // accent darker
+  const CREAM = 'var(--text)';         // primary text — deep walnut
+  const MUTED = 'var(--text3)';        // secondary text
 
   return (
     <div style={{
       position:'fixed', top:0, left:0, right:0, bottom:0,
-      background: `linear-gradient(180deg, ${NAVY} 0%, #0a1220 100%)`,
+      background: `linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%)`,
       color: CREAM,
       fontFamily: 'system-ui, -apple-system, sans-serif',
       overflowY: 'auto',
       WebkitOverflowScrolling: 'touch',
       zIndex: 9998,
     }}>
-      {/* ── TOP BAR ── */}
-      <div style={{
-        display:'flex', justifyContent:'space-between', alignItems:'center',
-        padding:'20px clamp(16px, 4vw, 40px) 16px',
-        borderBottom: `1px solid color-mix(in oklch, var(--gold) 25%, transparent)`,
-        position:'sticky', top:0, zIndex:2,
-        background: `linear-gradient(180deg, ${NAVY} 85%, transparent 100%)`,
-        backdropFilter:'blur(6px)',
-      }}>
-        <div>
-          <div style={{fontSize:11, fontWeight:600, color:GOLD, letterSpacing:'1.5px', textTransform:'uppercase', marginBottom:2}}>
-            Portfolio Summary
-          </div>
-          <div style={{fontSize:'clamp(20px, 4vw, 28px)', fontWeight:700, color:CREAM, letterSpacing:'-0.3px'}}>
-            {clientProfile?.name || clientName || 'Client Portfolio'}
-          </div>
-        </div>
-        <button onClick={handleExit} style={{
-          background:'color-mix(in oklch, var(--gold) 14%, transparent)',
-          color:GOLD,
-          border:`1px solid color-mix(in oklch, var(--gold) 56%, transparent)`,
-          padding:'10px 18px',
-          borderRadius:10,
-          fontSize:13,
-          fontWeight:600,
-          cursor:'pointer',
-          letterSpacing:'0.3px',
-          display:'flex', alignItems:'center', gap:6,
-        }}>
-          <span style={{fontSize:14}}>✕</span> Exit Present
-        </button>
-      </div>
+      {/* ── TOP BAR ──
+          v2.4.0-rc1.23: minimal floating exit button (matches prototype's
+          "Exit Client View" pill in the corner). The big "Portfolio
+          Summary / [client name]" header moved into the centered hero
+          below. */}
+      <button onClick={handleExit} style={{
+        position:'fixed', top:18, right:20, zIndex:60,
+        background:'var(--bg2)', color:'var(--text2)',
+        border:'1px solid var(--border)',
+        padding:'8px 14px', borderRadius:999,
+        fontSize:12, fontWeight:500, cursor:'pointer',
+        boxShadow:'0 1px 2px rgba(0,0,0,0.04), 0 4px 14px rgba(0,0,0,0.06)',
+        fontFamily:'inherit',
+      }}>✕ Exit Client View</button>
 
       {/* ── CONTENT ── */}
-      <div style={{padding:'clamp(20px, 4vw, 40px)', maxWidth:1100, margin:'0 auto'}}>
+      <div style={{padding:'clamp(20px, 4vw, 40px) clamp(16px, 4vw, 40px) clamp(40px, 6vw, 60px)', maxWidth:1100, margin:'0 auto'}}>
+
+        {/* HERO — Fraunces serif greeting like the prototype */}
+        <div style={{textAlign:'center', marginBottom:'clamp(24px, 4vw, 40px)', paddingTop:'clamp(20px, 4vw, 32px)'}}>
+          <div style={{fontSize:11, fontWeight:600, color:'var(--gold)', letterSpacing:'0.04em', textTransform:'uppercase', marginBottom:8}}>
+            Portfolio review
+          </div>
+          <div style={{fontFamily:T_V2.serifFamily, fontSize:'clamp(40px, 6vw, 56px)', color:'var(--text)', letterSpacing:'-0.02em', lineHeight:1.05, fontWeight:400}}>
+            Hello, <span style={{fontStyle:'italic', color:'var(--gold)'}}>{clientProfile?.name || clientName || 'there'}</span>
+          </div>
+          <div style={{fontFamily:T_V2.sansFamily, fontSize:14, color:'var(--text2)', marginTop:14, maxWidth:580, margin:'14px auto 0', lineHeight:1.6}}>
+            Here's a clean look at your protection, savings and retirement picture today —
+            everything across your {active.length} active polic{active.length === 1 ? 'y' : 'ies'}, in one place.
+          </div>
+        </div>
 
         {/* HERO ROW: 3 big cards */}
         <div style={{
@@ -21493,6 +21491,7 @@ function PresentMode() {
             padding:'28px 24px',
             position:'relative',
             overflow:'hidden',
+            boxShadow:'0 1px 2px rgba(60,40,20,0.04), 0 6px 20px rgba(60,40,20,0.06)',
           }}>
             <div style={{position:'absolute', top:0, left:0, right:0, height:3, background:`linear-gradient(90deg, ${GOLD}, ${GOLD_DARK})`}}></div>
             <div style={{fontSize:11, fontWeight:700, color:GOLD, letterSpacing:'1.5px', textTransform:'uppercase', marginBottom:10}}>
@@ -21514,6 +21513,7 @@ function PresentMode() {
             padding:'28px 24px',
             position:'relative',
             overflow:'hidden',
+            boxShadow:'0 1px 2px rgba(60,40,20,0.04), 0 6px 20px rgba(60,40,20,0.06)',
           }}>
             <div style={{position:'absolute', top:0, left:0, right:0, height:3, background:`linear-gradient(90deg, ${GOLD}, ${GOLD_DARK})`}}></div>
             <div style={{fontSize:11, fontWeight:700, color:GOLD, letterSpacing:'1.5px', textTransform:'uppercase', marginBottom:10}}>
@@ -21536,6 +21536,7 @@ function PresentMode() {
             padding:'28px 24px',
             position:'relative',
             overflow:'hidden',
+            boxShadow:'0 1px 2px rgba(60,40,20,0.04), 0 6px 20px rgba(60,40,20,0.06)',
           }}>
             <div style={{position:'absolute', top:0, left:0, right:0, height:3, background:scoreColor}}></div>
             <div style={{fontSize:11, fontWeight:700, color:scoreColor, letterSpacing:'1.5px', textTransform:'uppercase', marginBottom:10}}>
@@ -21566,7 +21567,7 @@ function PresentMode() {
           </div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))',gap:12}}>
             {meetingBrief.map(item => (
-              <div key={item.label} style={{background:'rgba(255,255,255,0.035)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:10,padding:'13px 14px'}}>
+              <div key={item.label} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:10,padding:'13px 14px'}}>
                 <div style={{fontSize:10,color:MUTED,textTransform:'uppercase',letterSpacing:'0.8px',marginBottom:6}}>{item.label}</div>
                 <div style={{fontSize:15,fontWeight:700,color:CREAM,lineHeight:1.2,marginBottom:5}}>{item.value}</div>
                 <div style={{fontSize:11,color:MUTED,lineHeight:1.35}}>{item.note}</div>
@@ -21608,7 +21609,7 @@ function PresentMode() {
                     )}
                   </div>
                 </div>
-                <div style={{height:6, background:'rgba(255,255,255,0.08)', borderRadius:3, overflow:'hidden'}}>
+                <div style={{height:6, background:'var(--bg3)', borderRadius:3, overflow:'hidden'}}>
                   <div style={{
                     height:'100%',
                     width: pct + '%',
@@ -21654,7 +21655,7 @@ function PresentMode() {
                 <span>ADEQUACY</span>
                 <span style={{color: retData.pct >= 80 ? '#5ba8a0' : retData.pct >= 50 ? GOLD : '#dc5a50', fontWeight:700}}>{retData.pct}%</span>
               </div>
-              <div style={{height:10, background:'rgba(255,255,255,0.08)', borderRadius:5, overflow:'hidden'}}>
+              <div style={{height:10, background:'var(--bg3)', borderRadius:5, overflow:'hidden'}}>
                 <div style={{
                   height:'100%',
                   width: retData.pct + '%',
@@ -21714,7 +21715,7 @@ function PresentMode() {
               </div>
 
               {/* Stacked bar: one segment per source, scaled to maxScale */}
-              <div style={{position:'relative', height:32, background:'rgba(255,255,255,0.04)', borderRadius:6, overflow:'hidden', marginBottom:10}}>
+              <div style={{position:'relative', height:32, background:'var(--bg3)', borderRadius:6, overflow:'hidden', marginBottom:10}}>
                 <div style={{display:'flex', height:'100%', width:'100%'}}>
                   {sources.map(src => (
                     <div key={src.key} title={`${src.label}: $${Math.round(src.amt).toLocaleString()}/mo`}
@@ -21750,7 +21751,7 @@ function PresentMode() {
                   justifyContent:'space-between',
                   alignItems:'center',
                   padding:'10px 0',
-                  borderTop: i > 0 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                  borderTop: i > 0 ? '1px solid var(--border)' : 'none',
                 }}>
                   <div style={{display:'flex', alignItems:'center', gap:10, minWidth:0, flex:1}}>
                     <span style={{width:10, height:10, background:src.color, borderRadius:2, flexShrink:0}}></span>
@@ -21873,7 +21874,7 @@ function PresentMode() {
               Where your annual commitment of ${Math.round(catTotal).toLocaleString()} is going
             </div>
             {/* Stacked bar */}
-            <div style={{display:'flex', height:12, borderRadius:6, overflow:'hidden', marginBottom:16, background:'rgba(255,255,255,0.05)'}}>
+            <div style={{display:'flex', height:12, borderRadius:6, overflow:'hidden', marginBottom:16, background:'var(--bg3)'}}>
               {categoryRows.map(cat => (
                 <div key={cat.key} title={`${cat.label}: ${cat.pct.toFixed(1)}%`}
                   style={{width: cat.pct + '%', background: cat.color, transition:'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)'}}></div>
@@ -21886,7 +21887,7 @@ function PresentMode() {
                 justifyContent:'space-between',
                 alignItems:'center',
                 padding:'8px 0',
-                borderTop:'1px solid rgba(255,255,255,0.04)',
+                borderTop:'1px solid var(--border)',
               }}>
                 <div style={{display:'flex', alignItems:'center', gap:10, minWidth:0, flex:1}}>
                   <span style={{width:10, height:10, background:cat.color, borderRadius:2, flexShrink:0}}></span>
