@@ -609,9 +609,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.20';
+const APP_VERSION = 'v2.4.0-rc1.21';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — sweep loud subsection labels app-wide';
+const APP_VERSION_NAME = 'Design v2 — Profile sub-cards promoted to top-level (2×2 grid)';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -35016,20 +35016,17 @@ function ProfileTab() {
     onChange: e => set('email', e.target.value),
     placeholder: "client@email.com"
   })))), /*#__PURE__*/React.createElement("div", {
-    className: "card",
     style: {
-      marginBottom: T_V2.sectionGap || 28,
-      padding: 24,
-      boxShadow: T_V2.shadow,
-      border: `1px solid ${T_V2.border}`,
-      borderRadius: T_V2.radiusLg
+      marginBottom: 14,
+      marginTop: 8
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 10,
-      marginBottom: 4
+      marginBottom: 4,
+      padding: '0 4px'
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
@@ -35049,19 +35046,24 @@ function ProfileTab() {
     style: {
       fontSize: 12,
       color: 'var(--text3)',
-      marginBottom: 18,
-      marginLeft: 32
+      marginBottom: 0,
+      marginLeft: 36
     }
-  }, "Used for protection gap analysis, retirement projections, and cashflow timeline"), /*#__PURE__*/React.createElement("div", {
+  }, "Used for protection gap analysis, retirement projections, and cashflow timeline")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginBottom: T_V2.sectionGap || 28
+    }
+  }, /*#__PURE__*/React.createElement("div", {
     className: "resp-2col",
     style: {
       gap: 16
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'var(--bg3)',
-      borderRadius: T_V2.radius || 14,
-      padding: 14,
+      background: 'var(--bg2)',
+      borderRadius: T_V2.radiusLg,
+      padding: 24,
+      boxShadow: T_V2.shadow,
       border: `1px solid ${T_V2.border}`
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -35116,9 +35118,10 @@ function ProfileTab() {
     }
   }, "Retirement age and inflation rate are now set in the ", /*#__PURE__*/React.createElement("strong", null, "Assumptions"), " card below.")), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'var(--bg3)',
-      borderRadius: T_V2.radius || 14,
-      padding: 14,
+      background: 'var(--bg2)',
+      borderRadius: T_V2.radiusLg,
+      padding: 24,
+      boxShadow: T_V2.shadow,
       border: `1px solid ${T_V2.border}`
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -35179,9 +35182,10 @@ function ProfileTab() {
     }
   }, cpfEligible && /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'var(--bg3)',
-      borderRadius: T_V2.radius || 14,
-      padding: 14,
+      background: 'var(--bg2)',
+      borderRadius: T_V2.radiusLg,
+      padding: 24,
+      boxShadow: T_V2.shadow,
       border: `1px solid ${T_V2.border}`
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -35696,9 +35700,10 @@ function ProfileTab() {
     }
   }, "Enter monthly salary to see CPF projection"))), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'var(--bg3)',
-      borderRadius: T_V2.radius || 14,
-      padding: 14,
+      background: 'var(--bg2)',
+      borderRadius: T_V2.radiusLg,
+      padding: 24,
+      boxShadow: T_V2.shadow,
       border: `1px solid ${T_V2.border}`,
       gridColumn: cpfEligible ? 'auto' : '1 / -1'
     }
