@@ -609,9 +609,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.36';
+const APP_VERSION = 'v2.4.0-rc1.39';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Chart hover, KPI rings, Protection gap fix, LIA inputs, PA tracker';
+const APP_VERSION_NAME = 'Design v2 — Report tab preview, Settings polish, About copy refresh';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -67193,12 +67193,106 @@ function ReportTab() {
     setGenerating(false);
   };
 
-  // v2.4.0-rc1.26: Report tab visual harmonization to match prototype's
-  // PLReport — Fraunces title + subtitle, polished card styling, and a
-  // preview tile that hints at the report aesthetics. The 3 PDF flavours
-  // (Visual / Family Visual / Classic) are kept and now render as a 3-up
-  // grid of design-system cards.
+  // v2.4.0-rc1.37: Report tab is now a multi-section live preview that
+  // mirrors the structure of the generated PDF. Each section is a
+  // "page card" rendered with the cream/serif aesthetic so the FC can
+  // see the report contents at a glance before downloading. The 3 PDF
+  // generation buttons sit above the preview as a slim action row.
   const clientHeadName = clientProfile?.name || clientName || 'this client';
+  const familyName = clientHeadName === 'this client' ? 'Your client' : clientHeadName.split(/\s+/).slice(-1)[0] + ' family';
+
+  // ── COMPUTED PREVIEW DATA — simplified versions of the dashboard's
+  //    coverage / gap / retirement summaries. Not as precise as the
+  //    Dashboard's logic, but enough for a faithful preview.
+  const activePols = policies.filter(p => p && p.status !== 'lapsed' && p.status !== 'surrendered' && p.status !== 'matured');
+  const insurerCount = new Set(activePols.map(p => p.insurer).filter(Boolean)).size;
+  const totalCoverage = activePols.reduce((s, pol) => {
+    const sa = parseFloat(pol.sumAssured) || 0;
+    const db = parseFloat(pol.deathBenefit) || 0;
+    return s + Math.max(sa, db);
+  }, 0);
+  const totalAnnualPremium = activePols.reduce((s, pol) => {
+    if (pol.premSingle || pol.premiumStructure === 'Single Premium' || pol.premFrequency === 'single') return s;
+    const raw = parseFloat(pol.annualPremium) || 0;
+    return s + (pol.premFrequency === 'monthly' ? raw * 12 : raw);
+  }, 0);
+  // Coverage by category (simplified)
+  let cvDeath = 0,
+    cvTPD = 0,
+    cvCI = 0,
+    cvDI = 0,
+    cvPA = 0,
+    hasISP = false,
+    ispRider = false;
+  activePols.forEach(pol => {
+    const sa = parseFloat(pol.sumAssured) || 0;
+    if (pol.category === 'protection' && !['Personal Accident', 'Critical Illness', 'Disability Income'].includes(pol.subType)) {
+      cvDeath += sa;
+      cvTPD += sa;
+    }
+    if (pol.subType === 'Critical Illness') cvCI += sa;
+    if (pol.subType === 'Disability Income') cvDI += parseFloat(pol.diMonthlyBenefit) || 0;
+    if (pol.subType === 'Personal Accident') cvPA += sa || parseFloat(pol.addSA) || 0;
+    if (pol.subType === 'Integrated Shield Plan') {
+      hasISP = true;
+      ispRider = !!pol.hasRider;
+    }
+    (pol.riders || []).forEach(rd => {
+      const rsa = parseFloat(rd.sa) || 0;
+      if (rd.type === 'death') cvDeath += rsa;
+      if (rd.type === 'tpd') cvTPD += rsa;
+      if (rd.type === 'ci') cvCI += rsa;
+      if (rd.type === 'di') cvDI += rsa;
+      if (rd.type === 'accidental') cvPA += rsa;
+    });
+  });
+  // Recommended (LIA-style — uses income only for simplicity)
+  const reqDeath = annualIncome > 0 ? annualIncome * LIA_MULTIPLIERS.deathYrs : 500000;
+  const reqTPD = annualIncome > 0 ? annualIncome * LIA_MULTIPLIERS.tpdYrs : 500000;
+  const reqCI = annualIncome > 0 ? annualIncome * LIA_MULTIPLIERS.ciYrs : 250000;
+  const reqDI = annualIncome > 0 ? Math.round(annualIncome / 12 * LIA_MULTIPLIERS.diPct / 100) : 3000;
+  const protectionRows = [{
+    label: 'Death & TI',
+    have: cvDeath,
+    need: reqDeath,
+    fmt: 'k'
+  }, {
+    label: 'TPD',
+    have: cvTPD,
+    need: reqTPD,
+    fmt: 'k'
+  }, {
+    label: 'Critical Illness',
+    have: cvCI,
+    need: reqCI,
+    fmt: 'k'
+  }, {
+    label: 'Disability income / mo',
+    have: cvDI,
+    need: reqDI,
+    fmt: 'mo'
+  }];
+  // Retirement summary from window cache (set by Dashboard); fallback to 0s
+  const retCache = typeof window !== 'undefined' && window.__retirementLiteCache || null;
+  const retIncome = retCache ? Math.round((retCache.cpfPayout?.mid || 0) + (retCache.policyMonthlyIncome || 0) + (retCache.policyDividends || 0) + (retCache.otherMonthly || 0)) : 0;
+  const retDesired = retCache ? Math.round(retCache.desiredMonthly || 0) : 0;
+  const retCoverPct = retDesired > 0 ? Math.min(100, Math.round(retIncome / retDesired * 100)) : 0;
+  // Top policies by premium
+  const topPolicies = [...activePols].map(pol => ({
+    pol,
+    prem: pol.premFrequency === 'monthly' ? (parseFloat(pol.annualPremium) || 0) * 12 : parseFloat(pol.annualPremium) || 0
+  })).sort((a, b) => b.prem - a.prem).slice(0, 5);
+
+  // Cream/serif palette inline so the preview reads as a print mock.
+  const PAPER = '#fefdf9',
+    INK = '#1a1408',
+    INK2 = '#3a2c20',
+    INK3 = '#7a6552',
+    INK4 = '#a89683',
+    RULE = '#e3d5bd',
+    ACCENT = 'oklch(0.66 0.16 35)',
+    ACCENT_SOFT = 'oklch(0.94 0.04 35)';
+  const fmtKHave = (v, mode) => mode === 'mo' ? 'S$' + Math.round(v).toLocaleString() + '/mo' : 'S$' + (v / 1000).toFixed(0) + 'k';
   return /*#__PURE__*/React.createElement("div", {
     className: "fade-in",
     style: {
@@ -67209,7 +67303,7 @@ function ReportTab() {
       display: 'flex',
       alignItems: 'flex-start',
       justifyContent: 'space-between',
-      marginBottom: T_V2.sectionGap || 28,
+      marginBottom: 18,
       flexWrap: 'wrap',
       gap: 14
     }
@@ -67236,186 +67330,96 @@ function ReportTab() {
       lineHeight: 1.5,
       margin: '6px 0 0'
     }
-  }, "A clean summary you can hand to ", clientHeadName))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-      gap: 14,
-      marginBottom: 24
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      background: 'var(--bg2)',
-      border: '1px solid var(--border)',
-      borderRadius: T_V2.radiusLg,
-      padding: 24,
-      boxShadow: T_V2.shadow,
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 12
-    }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, "A clean summary you can hand to ", clientHeadName, ". Preview below \u2014 download for the full PDF.")), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
-      alignItems: 'center',
-      gap: 10
+      gap: 8,
+      flexWrap: 'wrap',
+      alignItems: 'center'
     }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 22
-    }
-  }, "\u2728"), /*#__PURE__*/React.createElement("h3", {
-    style: {
-      fontFamily: T_V2.serifFamily,
-      fontSize: 20,
-      fontWeight: 400,
-      letterSpacing: '-0.015em',
-      color: 'var(--text)',
-      margin: 0,
-      lineHeight: 1.2
-    }
-  }, "Visual Premium"), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 9,
-      background: 'var(--gold)',
-      color: '#fff',
-      padding: '3px 8px',
-      borderRadius: 999,
-      fontWeight: 700,
-      letterSpacing: '0.04em',
-      textTransform: 'uppercase'
-    }
-  }, "New")), /*#__PURE__*/React.createElement("p", {
-    style: {
-      fontSize: 12.5,
-      color: 'var(--text2)',
-      lineHeight: 1.55,
-      margin: 0,
-      flex: 1
-    }
-  }, "Hero cover, dashboard snapshot with charts, protection gap detail, per-policy cards, prioritised recommendations. Best for client-facing presentations."), /*#__PURE__*/React.createElement("button", {
-    className: "btn-primary",
-    onClick: generateVisualReport,
-    disabled: generatingVisual || generating || policies.length === 0,
-    style: {
-      width: '100%'
-    }
-  }, generatingVisual ? '⏳ Rendering charts…' : '⬇ Download Visual PDF'), policies.length === 0 && /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 11,
-      color: 'var(--text3)'
-    }
-  }, "Add at least one policy to generate a report.")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      background: 'var(--bg2)',
-      border: '1px solid var(--border)',
-      borderRadius: T_V2.radiusLg,
-      padding: 24,
-      boxShadow: T_V2.shadow,
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 12
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: 10
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 22
-    }
-  }, "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67\u200D\uD83D\uDC66"), /*#__PURE__*/React.createElement("h3", {
-    style: {
-      fontFamily: T_V2.serifFamily,
-      fontSize: 20,
-      fontWeight: 400,
-      letterSpacing: '-0.015em',
-      color: 'var(--text)',
-      margin: 0,
-      lineHeight: 1.2
-    }
-  }, "Family Visual")), /*#__PURE__*/React.createElement("p", {
-    style: {
-      fontSize: 12.5,
-      color: 'var(--text2)',
-      lineHeight: 1.55,
-      margin: 0,
-      flex: 1
-    }
-  }, "Whole-household portfolio report \u2014 KPIs, member summaries, policy distribution, per-member cards using the same visual standard as the Visual Premium."), /*#__PURE__*/React.createElement("button", {
-    className: "btn-primary",
-    onClick: generateFamilyVisualReport,
-    disabled: generatingFamilyVisual || generatingVisual || generating || !activeClientId,
-    style: {
-      width: '100%'
-    }
-  }, generatingFamilyVisual ? '⏳ Rendering…' : '⬇ Download Family PDF'), !activeClientId && /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 11,
-      color: 'var(--text3)'
-    }
-  }, "Open a client first to anchor the family report.")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      background: 'var(--bg2)',
-      border: '1px solid var(--border)',
-      borderRadius: T_V2.radiusLg,
-      padding: 24,
-      boxShadow: T_V2.shadow,
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 12
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: 10
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 22
-    }
-  }, "\uD83D\uDCC4"), /*#__PURE__*/React.createElement("h3", {
-    style: {
-      fontFamily: T_V2.serifFamily,
-      fontSize: 20,
-      fontWeight: 400,
-      letterSpacing: '-0.015em',
-      color: 'var(--text)',
-      margin: 0,
-      lineHeight: 1.2
-    }
-  }, "Classic")), /*#__PURE__*/React.createElement("p", {
-    style: {
-      fontSize: 12.5,
-      color: 'var(--text2)',
-      lineHeight: 1.55,
-      margin: 0,
-      flex: 1
-    }
-  }, "Text-dense layout \u2014 executive summary, protection gap analysis, rider matrix, premium schedule, per-policy detail blocks, cash value timeline, next steps. Best for analytical deep-dives."), /*#__PURE__*/React.createElement("button", {
-    className: "btn-secondary",
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: generate,
     disabled: generating || generatingVisual || policies.length === 0,
     style: {
-      width: '100%'
+      height: 36,
+      padding: '0 16px',
+      fontSize: 12.5,
+      fontWeight: 600,
+      borderRadius: 999,
+      background: 'var(--bg2)',
+      color: 'var(--text2)',
+      border: `1px solid ${T_V2.border}`,
+      cursor: 'pointer',
+      whiteSpace: 'nowrap',
+      fontFamily: T_V2.sansFamily,
+      opacity: generating || generatingVisual || policies.length === 0 ? 0.5 : 1
     }
-  }, generating ? '⏳ Building…' : '⬇ Download Classic PDF'))), /*#__PURE__*/React.createElement("div", {
+  }, generating ? '⏳ Building…' : '📄 Classic PDF'), /*#__PURE__*/React.createElement("button", {
+    onClick: generateFamilyVisualReport,
+    disabled: generatingFamilyVisual || generatingVisual || generating || !activeClientId,
     style: {
-      background: '#fefdf9',
-      border: '1px solid var(--border)',
-      borderRadius: T_V2.radiusLg,
-      padding: '48px 60px',
-      boxShadow: T_V2.shadow,
-      color: '#2a2418',
-      position: 'relative'
+      height: 36,
+      padding: '0 16px',
+      fontSize: 12.5,
+      fontWeight: 600,
+      borderRadius: 999,
+      background: 'var(--bg2)',
+      color: 'var(--text2)',
+      border: `1px solid ${T_V2.border}`,
+      cursor: 'pointer',
+      whiteSpace: 'nowrap',
+      fontFamily: T_V2.sansFamily,
+      opacity: generatingFamilyVisual || generatingVisual || generating || !activeClientId ? 0.5 : 1
+    }
+  }, generatingFamilyVisual ? '⏳ Rendering…' : '👨‍👩‍👧‍👦 Family PDF'), /*#__PURE__*/React.createElement("button", {
+    onClick: generateVisualReport,
+    disabled: generatingVisual || generating || policies.length === 0,
+    style: {
+      height: 36,
+      padding: '0 18px',
+      fontSize: 12.5,
+      fontWeight: 600,
+      borderRadius: 999,
+      background: 'var(--gold)',
+      color: '#fff',
+      border: '1px solid var(--gold)',
+      cursor: 'pointer',
+      whiteSpace: 'nowrap',
+      fontFamily: T_V2.sansFamily,
+      opacity: generatingVisual || generating || policies.length === 0 ? 0.5 : 1,
+      boxShadow: '0 1px 2px rgba(60,40,20,0.06)'
+    }
+  }, generatingVisual ? '⏳ Rendering charts…' : '⬇ Download Visual PDF'))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 18
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
+      background: PAPER,
+      border: `1px solid ${RULE}`,
+      borderRadius: T_V2.radiusLg,
+      padding: '48px 60px',
+      boxShadow: T_V2.shadow,
+      color: INK,
+      position: 'relative',
+      minHeight: 340
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'absolute',
+      top: 18,
+      right: 24,
       fontSize: 10,
-      color: '#888',
+      color: INK4,
+      letterSpacing: '0.05em',
+      fontStyle: 'italic'
+    }
+  }, "Page 1 of 4 \xB7 cover"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: INK4,
       letterSpacing: '0.15em',
       textTransform: 'uppercase',
       fontWeight: 600
@@ -67423,94 +67427,588 @@ function ReportTab() {
   }, "Portfolio Review \xB7 prepared for"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: T_V2.serifFamily,
-      fontSize: 42,
+      fontSize: 48,
       marginTop: 8,
       letterSpacing: '-0.02em',
-      color: '#1a1408',
+      color: INK,
       fontWeight: 400,
-      lineHeight: 1.1
+      lineHeight: 1.05
     }
-  }, clientHeadName === 'this client' ? 'Your client' : clientHeadName.split(/\s+/).slice(-1)[0] + ' family'), /*#__PURE__*/React.createElement("div", {
+  }, "The ", familyName.replace(/^Your client$/, 'Tan Family')), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13,
-      color: '#666',
-      marginTop: 8
+      color: INK3,
+      marginTop: 10
     }
   }, "Prepared ", new Date().toLocaleDateString('en-SG', {
     day: 'numeric',
     month: 'long',
     year: 'numeric'
-  })), /*#__PURE__*/React.createElement("div", {
+  }), clientHeadName !== 'this client' && /*#__PURE__*/React.createElement(React.Fragment, null, " \xB7 for ", clientHeadName)), /*#__PURE__*/React.createElement("div", {
     style: {
       height: 1,
-      background: '#d8cfba',
-      margin: '28px 0'
+      background: RULE,
+      margin: '32px 0'
     }
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: 'repeat(3, 1fr)',
-      gap: 32
+      gap: 36
     }
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 10,
-      color: '#888',
+      color: INK4,
       letterSpacing: '0.1em',
       textTransform: 'uppercase',
       fontWeight: 600
     }
-  }, "Active policies"), /*#__PURE__*/React.createElement("div", {
+  }, "Insured value"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: T_V2.serifFamily,
-      fontSize: 32,
+      fontSize: 34,
       marginTop: 6,
-      color: '#1a1408',
-      fontWeight: 400
+      color: INK,
+      fontWeight: 400,
+      fontVariantNumeric: 'tabular-nums'
     }
-  }, policies.filter(pp => pp.status !== 'lapsed' && pp.status !== 'surrendered' && pp.status !== 'matured').length)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, totalCoverage > 0 ? 'S$ ' + (totalCoverage / 1000000).toFixed(2).replace(/\.00$/, '') + 'M' : '—')), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 10,
-      color: '#888',
+      color: INK4,
       letterSpacing: '0.1em',
       textTransform: 'uppercase',
       fontWeight: 600
     }
-  }, "Insurers"), /*#__PURE__*/React.createElement("div", {
+  }, "Annual premium"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: T_V2.serifFamily,
-      fontSize: 32,
+      fontSize: 34,
       marginTop: 6,
-      color: '#1a1408',
-      fontWeight: 400
+      color: INK,
+      fontWeight: 400,
+      fontVariantNumeric: 'tabular-nums'
     }
-  }, new Set(policies.map(pp => pp.insurer).filter(Boolean)).size)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, totalAnnualPremium > 0 ? 'S$ ' + Math.round(totalAnnualPremium).toLocaleString() : '—')), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 10,
-      color: '#888',
+      color: INK4,
       letterSpacing: '0.1em',
       textTransform: 'uppercase',
       fontWeight: 600
     }
-  }, "Annual income"), /*#__PURE__*/React.createElement("div", {
+  }, "Retirement coverage"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: T_V2.serifFamily,
-      fontSize: 32,
+      fontSize: 34,
       marginTop: 6,
-      color: '#1a1408',
-      fontWeight: 400
+      color: INK,
+      fontWeight: 400,
+      fontVariantNumeric: 'tabular-nums'
     }
-  }, annualIncome > 0 ? 'S$ ' + Math.round(annualIncome / 1000) + 'k' : '—'))), /*#__PURE__*/React.createElement("div", {
+  }, retCoverPct > 0 ? retCoverPct + '%' : '—'))), activePols.length > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 32,
+      fontSize: 13,
+      color: INK2,
+      lineHeight: 1.7,
+      maxWidth: 680
+    }
+  }, "You hold ", /*#__PURE__*/React.createElement("strong", null, activePols.length, " active polic", activePols.length === 1 ? 'y' : 'ies'), " across", ' ', /*#__PURE__*/React.createElement("strong", null, insurerCount, " insurer", insurerCount === 1 ? '' : 's'), retDesired > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, ". Your retirement projection of ", /*#__PURE__*/React.createElement("strong", null, "S$", retIncome.toLocaleString(), " monthly"), " at age ", retAge, " is ", retCoverPct >= 80 ? 'on track' : 'tracking', " to meet your ", /*#__PURE__*/React.createElement("strong", null, "S$", retDesired.toLocaleString()), " target"), ".", ' ', (() => {
+    const gaps = [];
+    if (cvDeath < reqDeath) gaps.push('Death cover');
+    if (cvCI < reqCI) gaps.push('critical illness');
+    if (cvDI < reqDI) gaps.push('disability income');
+    if (!hasISP) gaps.push('hospitalisation (no ISP held)');
+    if (cvPA <= 0) gaps.push('personal accident');
+    if (gaps.length === 0) return 'All LIA-recommended coverage areas are well met.';
+    return `${gaps.length} area${gaps.length === 1 ? '' : 's'} would benefit from a closer look this review: ${gaps.slice(0, 3).join(', ')}${gaps.length > 3 ? `, +${gaps.length - 3} more` : ''}.`;
+  })())), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: PAPER,
+      border: `1px solid ${RULE}`,
+      borderRadius: T_V2.radiusLg,
+      padding: '40px 60px',
+      boxShadow: T_V2.shadow,
+      color: INK,
+      position: 'relative'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'absolute',
       top: 18,
       right: 24,
       fontSize: 10,
-      color: '#888',
+      color: INK4,
       letterSpacing: '0.05em',
       fontStyle: 'italic'
     }
-  }, "preview only \xB7 generate above for the full PDF")));
+  }, "Page 2 of 4 \xB7 protection"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: INK4,
+      letterSpacing: '0.15em',
+      textTransform: 'uppercase',
+      fontWeight: 600
+    }
+  }, "Section 1"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: T_V2.serifFamily,
+      fontSize: 30,
+      marginTop: 6,
+      letterSpacing: '-0.02em',
+      color: INK,
+      fontWeight: 400
+    }
+  }, "Protection coverage"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12.5,
+      color: INK3,
+      marginTop: 6,
+      marginBottom: 24
+    }
+  }, "Held vs. LIA-recommended for ", p.name || 'the client'), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 16
+    }
+  }, protectionRows.map(row => {
+    const pct = Math.min(1, row.have / Math.max(row.need, 1));
+    const tone = pct >= 0.95 ? '#3a8a4f' : pct >= 0.7 ? '#c9821e' : '#b03a30';
+    return /*#__PURE__*/React.createElement("div", {
+      key: row.label
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'baseline',
+        marginBottom: 6
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 13,
+        color: INK,
+        fontWeight: 600
+      }
+    }, row.label), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 12,
+        color: INK3,
+        fontVariantNumeric: 'tabular-nums'
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: INK,
+        fontWeight: 600
+      }
+    }, fmtKHave(row.have, row.fmt)), /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: INK4
+      }
+    }, " / ", fmtKHave(row.need, row.fmt)), /*#__PURE__*/React.createElement("span", {
+      style: {
+        marginLeft: 10,
+        padding: '2px 8px',
+        borderRadius: 999,
+        background: '#fff',
+        color: tone,
+        fontWeight: 700,
+        fontSize: 11,
+        border: `1px solid ${tone}33`
+      }
+    }, Math.round(pct * 100), "%"))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        height: 6,
+        background: '#f0e7d3',
+        borderRadius: 999,
+        overflow: 'hidden'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        height: '100%',
+        width: `${pct * 100}%`,
+        background: tone,
+        borderRadius: 999
+      }
+    })));
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: 14,
+      marginTop: 22,
+      paddingTop: 18,
+      borderTop: `1px dashed ${RULE}`
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'baseline',
+      marginBottom: 4
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 13,
+      color: INK,
+      fontWeight: 600
+    }
+  }, "Hospitalisation"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      padding: '3px 10px',
+      borderRadius: 999,
+      background: '#fff',
+      color: hasISP ? '#3a8a4f' : '#b03a30',
+      fontWeight: 700,
+      fontSize: 11,
+      border: `1px solid ${hasISP ? '#3a8a4f' : '#b03a30'}33`
+    }
+  }, hasISP ? '✓ Held' : '○ Not held')), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: INK3,
+      fontStyle: hasISP ? 'normal' : 'italic',
+      lineHeight: 1.4
+    }
+  }, hasISP ? ispRider ? 'ISP + rider — full benefits' : 'ISP only — deductible & co-insurance apply' : 'No Integrated Shield Plan held')), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'baseline',
+      marginBottom: 4
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 13,
+      color: INK,
+      fontWeight: 600
+    }
+  }, "Personal Accident"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      padding: '3px 10px',
+      borderRadius: 999,
+      background: '#fff',
+      color: cvPA > 0 ? '#3a8a4f' : '#b03a30',
+      fontWeight: 700,
+      fontSize: 11,
+      border: `1px solid ${cvPA > 0 ? '#3a8a4f' : '#b03a30'}33`
+    }
+  }, cvPA > 0 ? '✓ Held' : '○ Not held')), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: INK3,
+      fontStyle: cvPA > 0 ? 'normal' : 'italic',
+      lineHeight: 1.4
+    }
+  }, cvPA > 0 ? `ADB S$${Math.round(cvPA).toLocaleString()}` : 'No personal accident cover')))), (retDesired > 0 || retIncome > 0) && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: PAPER,
+      border: `1px solid ${RULE}`,
+      borderRadius: T_V2.radiusLg,
+      padding: '40px 60px',
+      boxShadow: T_V2.shadow,
+      color: INK,
+      position: 'relative'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'absolute',
+      top: 18,
+      right: 24,
+      fontSize: 10,
+      color: INK4,
+      letterSpacing: '0.05em',
+      fontStyle: 'italic'
+    }
+  }, "Page 3 of 4 \xB7 retirement"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: INK4,
+      letterSpacing: '0.15em',
+      textTransform: 'uppercase',
+      fontWeight: 600
+    }
+  }, "Section 2"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: T_V2.serifFamily,
+      fontSize: 30,
+      marginTop: 6,
+      letterSpacing: '-0.02em',
+      color: INK,
+      fontWeight: 400
+    }
+  }, "Retirement at ", retAge), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12.5,
+      color: INK3,
+      marginTop: 6,
+      marginBottom: 22
+    }
+  }, "Projected monthly income vs your desired lifestyle"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: 32,
+      alignItems: 'baseline'
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: INK4,
+      letterSpacing: '0.1em',
+      textTransform: 'uppercase',
+      fontWeight: 600
+    }
+  }, "Projected at ", retAge), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: T_V2.serifFamily,
+      fontSize: 42,
+      marginTop: 6,
+      color: INK,
+      fontWeight: 400,
+      fontVariantNumeric: 'tabular-nums',
+      lineHeight: 1
+    }
+  }, "S$ ", retIncome.toLocaleString()), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: INK3,
+      marginTop: 6
+    }
+  }, "per month")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: INK4,
+      letterSpacing: '0.1em',
+      textTransform: 'uppercase',
+      fontWeight: 600
+    }
+  }, "Desired lifestyle"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: T_V2.serifFamily,
+      fontSize: 42,
+      marginTop: 6,
+      color: INK,
+      fontWeight: 400,
+      fontVariantNumeric: 'tabular-nums',
+      lineHeight: 1
+    }
+  }, "S$ ", retDesired.toLocaleString()), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: INK3,
+      marginTop: 6
+    }
+  }, "per month, today's dollars"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 28
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: 14,
+      background: '#f0e7d3',
+      borderRadius: 999,
+      overflow: 'hidden',
+      position: 'relative'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: '100%',
+      width: `${Math.min(100, retCoverPct)}%`,
+      background: retCoverPct >= 80 ? '#3a8a4f' : retCoverPct >= 50 ? '#c9821e' : '#b03a30',
+      borderRadius: 999
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'absolute',
+      right: 6,
+      top: 0,
+      bottom: 0,
+      display: 'flex',
+      alignItems: 'center',
+      fontSize: 11,
+      color: INK,
+      fontWeight: 700,
+      fontVariantNumeric: 'tabular-nums'
+    }
+  }, retCoverPct, "% covered"))), retCache && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 24,
+      paddingTop: 18,
+      borderTop: `1px dashed ${RULE}`,
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+      gap: 18
+    }
+  }, [['CPF LIFE', retCache.cpfPayout?.mid || 0], ['Policy income', retCache.policyMonthlyIncome || 0], ['Dividends', retCache.policyDividends || 0], ['Other', retCache.otherMonthly || 0]].filter(([_, v]) => v > 0).map(([label, value]) => /*#__PURE__*/React.createElement("div", {
+    key: label
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: INK4,
+      letterSpacing: '0.1em',
+      textTransform: 'uppercase',
+      fontWeight: 600
+    }
+  }, label), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: T_V2.serifFamily,
+      fontSize: 20,
+      marginTop: 4,
+      color: INK,
+      fontWeight: 400,
+      fontVariantNumeric: 'tabular-nums'
+    }
+  }, "S$ ", Math.round(value).toLocaleString()))))), topPolicies.length > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: PAPER,
+      border: `1px solid ${RULE}`,
+      borderRadius: T_V2.radiusLg,
+      padding: '40px 60px',
+      boxShadow: T_V2.shadow,
+      color: INK,
+      position: 'relative'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'absolute',
+      top: 18,
+      right: 24,
+      fontSize: 10,
+      color: INK4,
+      letterSpacing: '0.05em',
+      fontStyle: 'italic'
+    }
+  }, "Page ", retDesired > 0 || retIncome > 0 ? '4' : '3', " of 4 \xB7 policies"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: INK4,
+      letterSpacing: '0.15em',
+      textTransform: 'uppercase',
+      fontWeight: 600
+    }
+  }, "Section 3"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: T_V2.serifFamily,
+      fontSize: 30,
+      marginTop: 6,
+      letterSpacing: '-0.02em',
+      color: INK,
+      fontWeight: 400
+    }
+  }, "Top policies by premium"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12.5,
+      color: INK3,
+      marginTop: 6,
+      marginBottom: 22
+    }
+  }, activePols.length > 5 ? `Showing 5 of ${activePols.length} active policies — full list in the PDF` : `${activePols.length} active polic${activePols.length === 1 ? 'y' : 'ies'}`), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 0
+    }
+  }, topPolicies.map(({
+    pol,
+    prem
+  }, i) => /*#__PURE__*/React.createElement("div", {
+    key: pol.id || i,
+    style: {
+      display: 'grid',
+      gridTemplateColumns: '1.6fr 2fr 1fr 1fr',
+      alignItems: 'center',
+      padding: '14px 0',
+      borderTop: `1px solid ${RULE}`,
+      fontSize: 13
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: INK,
+      fontWeight: 600,
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis'
+    }
+  }, pol.insurer || '—'), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: INK2,
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis'
+    }
+  }, pol.productName || pol.policyName || '—'), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: INK2,
+      fontVariantNumeric: 'tabular-nums',
+      textAlign: 'right'
+    }
+  }, parseFloat(pol.sumAssured) > 0 ? 'S$ ' + parseFloat(pol.sumAssured).toLocaleString() : /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: INK4
+    }
+  }, "\u2014")), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: INK2,
+      fontVariantNumeric: 'tabular-nums',
+      textAlign: 'right',
+      fontWeight: 600
+    }
+  }, "S$ ", Math.round(prem).toLocaleString(), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: INK4,
+      fontWeight: 400
+    }
+  }, " /yr")))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: '1.6fr 2fr 1fr 1fr',
+      alignItems: 'center',
+      padding: '14px 0',
+      borderTop: `2px solid ${INK4}`,
+      fontSize: 13
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: INK4,
+      fontStyle: 'italic'
+    }
+  }, "Total"), /*#__PURE__*/React.createElement("span", null), /*#__PURE__*/React.createElement("span", null), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: INK,
+      fontVariantNumeric: 'tabular-nums',
+      textAlign: 'right',
+      fontWeight: 700,
+      fontFamily: T_V2.serifFamily,
+      fontSize: 16
+    }
+  }, "S$ ", Math.round(totalAnnualPremium).toLocaleString(), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: INK4,
+      fontSize: 11,
+      fontWeight: 400,
+      fontFamily: T_V2.sansFamily
+    }
+  }, " /yr"))))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: ACCENT_SOFT,
+      border: `1px solid ${RULE}`,
+      borderRadius: T_V2.radiusLg,
+      padding: '24px 32px',
+      color: INK2,
+      fontSize: 12.5,
+      lineHeight: 1.6
+    }
+  }, /*#__PURE__*/React.createElement("strong", {
+    style: {
+      color: INK,
+      fontFamily: T_V2.serifFamily,
+      fontSize: 15,
+      letterSpacing: '-0.01em'
+    }
+  }, "This is a live preview."), /*#__PURE__*/React.createElement("br", null), "The downloaded PDF will include this content plus per-policy cards, cash-value timelines, recommendations, and an insurer concentration breakdown.", policies.length === 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("em", null, "Add at least one policy on the Policies tab to enable PDF generation.")))));
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -69878,14 +70376,113 @@ function Settings() {
       lineHeight: 1.5,
       marginBottom: T_V2.sectionGap || 28
     }
-  }, "Advisor identity, AI keys, firm defaults, sync, and account."), /*#__PURE__*/React.createElement("div", {
+  }, "Your advisor identity, where data lives, and how clients are organised. Most FCs only touch this on first run."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8,
+      flexWrap: 'wrap',
+      alignItems: 'center',
+      padding: '12px 16px',
+      background: 'var(--bg2)',
+      border: `1px solid ${T_V2.border}`,
+      borderRadius: 999,
+      marginBottom: T_V2.sectionGap || 28
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 11,
+      color: 'var(--text3)',
+      fontWeight: 600,
+      letterSpacing: '0.04em',
+      textTransform: 'uppercase',
+      marginRight: 4
+    }
+  }, "Quick actions"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setCheckpointLoadOpen(true),
+    disabled: !activeClientId,
+    style: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 6,
+      padding: '6px 14px',
+      fontSize: 12,
+      fontWeight: 500,
+      borderRadius: 999,
+      background: 'var(--bg)',
+      color: 'var(--text2)',
+      border: `1px solid ${T_V2.border}`,
+      cursor: activeClientId ? 'pointer' : 'not-allowed',
+      opacity: activeClientId ? 1 : 0.5,
+      fontFamily: T_V2.sansFamily,
+      transition: T_V2.motion ? 'all 180ms ease' : 'none'
+    },
+    title: "Restore from snapshot history"
+  }, "\uD83D\uDCC2 Load checkpoint"), /*#__PURE__*/React.createElement("button", {
+    onClick: async () => {
+      if (!activeClientId || typeof restoreLastUndo !== 'function') return;
+      if (!confirm('Restore the last import/delete change for this client?')) return;
+      await restoreLastUndo();
+    },
+    disabled: !activeClientId,
+    style: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 6,
+      padding: '6px 14px',
+      fontSize: 12,
+      fontWeight: 500,
+      borderRadius: 999,
+      background: 'var(--bg)',
+      color: 'var(--text2)',
+      border: `1px solid ${T_V2.border}`,
+      cursor: activeClientId ? 'pointer' : 'not-allowed',
+      opacity: activeClientId ? 1 : 0.5,
+      fontFamily: T_V2.sansFamily,
+      transition: T_V2.motion ? 'all 180ms ease' : 'none'
+    },
+    title: "Reverts the last import or delete"
+  }, "\u21B6 Undo last change"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => window.dispatchEvent(new Event('policylens-open-guide')),
+    style: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 6,
+      padding: '6px 14px',
+      fontSize: 12,
+      fontWeight: 500,
+      borderRadius: 999,
+      background: 'var(--bg)',
+      color: 'var(--text2)',
+      border: `1px solid ${T_V2.border}`,
+      cursor: 'pointer',
+      fontFamily: T_V2.sansFamily,
+      transition: T_V2.motion ? 'all 180ms ease' : 'none'
+    },
+    title: "Open the user walkthrough"
+  }, "? Help & guide"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      marginLeft: 'auto',
+      fontSize: 10.5,
+      color: 'var(--text4)',
+      whiteSpace: 'nowrap'
+    }
+  }, "Save runs from the header (", /*#__PURE__*/React.createElement("kbd", {
+    style: {
+      padding: '1px 5px',
+      background: 'var(--bg3)',
+      border: `1px solid ${T_V2.border}`,
+      borderRadius: 4,
+      fontSize: 10,
+      fontFamily: T_V2.monoFamily
+    }
+  }, "\u2318S"), ")")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'none'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
     className: "card",
     style: {
-      marginBottom: T_V2.sectionGap || 28,
-      padding: 24,
-      boxShadow: T_V2.shadow,
-      border: `1px solid ${T_V2.border}`,
-      borderRadius: T_V2.radiusLg
+      padding: 24
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -70031,34 +70628,62 @@ function Settings() {
       color: 'var(--text3)',
       marginTop: 2
     }
-  }, "Open the user walkthrough")))), /*#__PURE__*/React.createElement(CheckpointLoadModal, {
+  }, "Open the user walkthrough")))))), /*#__PURE__*/React.createElement(CheckpointLoadModal, {
     open: checkpointLoadOpen,
     onClose: () => setCheckpointLoadOpen(false),
     clientId: activeClientId,
     switchClient: switchClient,
     setTab: setTab
-  })), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     className: "card",
     style: {
-      marginBottom: 16
+      marginBottom: 16,
+      padding: 24,
+      boxShadow: T_V2.shadow,
+      border: `1px solid ${T_V2.border}`,
+      borderRadius: T_V2.radiusLg
     }
-  }, /*#__PURE__*/React.createElement("h3", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 14,
-      fontWeight: 600,
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
       marginBottom: 4
     }
-  }, "Advisor Details"), /*#__PURE__*/React.createElement("p", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
-      fontSize: 11,
-      color: 'var(--text3)',
-      marginBottom: 8
+      fontSize: 20
     }
-  }, "Appears on PDF report headers, footers, and client share view"), /*#__PURE__*/React.createElement("div", {
+  }, "\uD83D\uDC64"), /*#__PURE__*/React.createElement("h3", {
+    style: {
+      fontFamily: T_V2.serifFamily,
+      fontSize: 20,
+      fontWeight: 400,
+      letterSpacing: '-0.015em',
+      color: 'var(--text)',
+      margin: 0,
+      lineHeight: 1.2
+    }
+  }, "Advisor identity")), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontSize: 12,
+      color: 'var(--text3)',
+      margin: '4px 0 14px 32px',
+      lineHeight: 1.5
+    }
+  }, "Appears on PDF report headers, footers, and the client share view."), /*#__PURE__*/React.createElement("div", {
     className: "grid-2"
   }, /*#__PURE__*/React.createElement("div", {
     className: "field"
-  }, /*#__PURE__*/React.createElement("label", null, "Advisor Name"), /*#__PURE__*/React.createElement("input", {
+  }, /*#__PURE__*/React.createElement("label", {
+    style: {
+      textTransform: 'none',
+      fontSize: 12,
+      letterSpacing: 0,
+      color: 'var(--text2)',
+      fontWeight: 500
+    }
+  }, "Your name"), /*#__PURE__*/React.createElement("input", {
     value: advisorName,
     onChange: e => setAdvisorName(e.target.value),
     onBlur: e => {
@@ -70071,7 +70696,15 @@ function Settings() {
     placeholder: "e.g. John Tan"
   })), /*#__PURE__*/React.createElement("div", {
     className: "field"
-  }, /*#__PURE__*/React.createElement("label", null, "Company"), /*#__PURE__*/React.createElement("input", {
+  }, /*#__PURE__*/React.createElement("label", {
+    style: {
+      textTransform: 'none',
+      fontSize: 12,
+      letterSpacing: 0,
+      color: 'var(--text2)',
+      fontWeight: 500
+    }
+  }, "Company"), /*#__PURE__*/React.createElement("input", {
     value: advisorCompany,
     onChange: e => setAdvisorCompany(e.target.value),
     onBlur: e => {
@@ -70367,65 +71000,111 @@ function Settings() {
       marginBottom: 10
     }
   }, "Run a smoke test on the full extraction pipeline: API keys, schema integrity, JSON repair, cache I/O, premium desync guard, CPF cohort sums, file hashing, and live API round-trips to Gemini and Claude. Finishes with an end-to-end structured extraction on a synthetic policy. Use this whenever extractions start behaving strangely \u2014 it tells you which layer is broken in 10 seconds."), /*#__PURE__*/React.createElement(ExtractDiagnostics, null)), /*#__PURE__*/React.createElement(CorrectionMemoryDiagnostics, null), /*#__PURE__*/React.createElement(LearnedPatternsDiagnostics, null), /*#__PURE__*/React.createElement(TelemetryDiagnostics, null))), /*#__PURE__*/React.createElement("div", {
-    className: "card"
-  }, /*#__PURE__*/React.createElement("h3", {
+    className: "card",
     style: {
-      fontSize: 14,
-      fontWeight: 600,
-      marginBottom: 8
-    }
-  }, "About PolicyLens ", APP_VERSION), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 10
+      padding: 24,
+      boxShadow: T_V2.shadow,
+      border: `1px solid ${T_V2.border}`,
+      borderRadius: T_V2.radiusLg
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
+      display: 'flex',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      gap: 14,
+      marginBottom: 14,
+      flexWrap: 'wrap'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: '1 1 240px',
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement("h3", {
+    style: {
+      fontFamily: T_V2.serifFamily,
+      fontSize: 22,
+      fontWeight: 400,
+      letterSpacing: '-0.015em',
+      color: 'var(--text)',
+      margin: 0,
+      lineHeight: 1.2
+    }
+  }, "About PolicyLens"), /*#__PURE__*/React.createElement("div", {
+    style: {
       fontSize: 12,
-      color: 'var(--text2)'
+      color: 'var(--text3)',
+      marginTop: 4
     }
   }, /*#__PURE__*/React.createElement("strong", {
     style: {
       color: 'var(--gold)'
     }
-  }, APP_VERSION), " \u2014 ", APP_VERSION_NAME, " ", /*#__PURE__*/React.createElement("span", {
+  }, APP_VERSION), " \xB7 ", APP_VERSION_NAME, " ", /*#__PURE__*/React.createElement("span", {
     style: {
-      color: 'var(--text3)',
-      fontSize: 10
+      color: 'var(--text4)'
     }
-  }, "(", APP_VERSION_DATE, ")")), /*#__PURE__*/React.createElement("button", {
+  }, "(", APP_VERSION_DATE, ")"))), /*#__PURE__*/React.createElement("button", {
     onClick: () => setShowChangelog(true),
     style: {
-      fontSize: 10,
-      padding: '4px 12px',
-      borderRadius: 6,
-      border: '1px solid color-mix(in oklch, var(--gold) 35%, transparent)',
+      fontSize: 11.5,
+      padding: '7px 14px',
+      borderRadius: 999,
+      border: '1px solid color-mix(in oklch, var(--gold) 30%, transparent)',
       background: 'var(--gold-dim)',
       color: 'var(--gold)',
       cursor: 'pointer',
-      fontWeight: 600
+      fontWeight: 600,
+      fontFamily: T_V2.sansFamily,
+      whiteSpace: 'nowrap',
+      transition: T_V2.motion ? 'all 180ms ease' : 'none',
+      flexShrink: 0
     }
-  }, "View changelog")), /*#__PURE__*/React.createElement("div", {
+  }, "View changelog")), /*#__PURE__*/React.createElement("p", {
     style: {
-      fontSize: 12,
+      fontSize: 13.5,
+      color: 'var(--text)',
+      lineHeight: 1.55,
+      margin: 0,
+      fontWeight: 500
+    }
+  }, "A portfolio review toolkit built for Singapore Financial Consultants."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 10,
+      marginTop: 14,
+      fontSize: 12.5,
       color: 'var(--text2)',
       lineHeight: 1.6
     }
-  }, /*#__PURE__*/React.createElement("p", null, "Institutional-grade policy review toolkit for Singapore Financial Consultants. AI-powered document capture with rider-level extraction, shared cloud repository with role-based editing, and comprehensive portfolio analysis."), /*#__PURE__*/React.createElement("p", {
+  }, /*#__PURE__*/React.createElement("p", {
     style: {
-      marginTop: 8
+      margin: 0
     }
-  }, "Coverage & Riders system with SA multipliers, multi-claim CI, ISP premium breakdown, ILP fund projections, and UL crediting structures. Gap analysis against LIA recommended coverage levels."), /*#__PURE__*/React.createElement("p", {
+  }, "Snap a policy schedule, BI, or statement \u2014 AI extracts riders, owners, and fund splits in seconds. The shared product repository keeps every FC in your firm on the same page with role-based editing."), /*#__PURE__*/React.createElement("p", {
     style: {
-      marginTop: 6
+      margin: 0
     }
-  }, "Fund risk lookup covers ", FUND_DB.length.toLocaleString(), " instruments from the iFAST/FundLens universe."), /*#__PURE__*/React.createElement("p", {
+  }, "Coverage analysis runs against LIA recommendations and handles the details that usually get glossed over: SA multipliers, multi-claim CI, ISP premium breakdowns, ILP fund projections, and UL crediting structures."), /*#__PURE__*/React.createElement("p", {
     style: {
-      marginTop: 6
+      margin: 0
     }
-  }, "Single-file HTML | React 18 | Chart.js | IndexedDB | jsPDF | Supabase Auth"))), /*#__PURE__*/React.createElement("div", {
+  }, "Fund risk lookup spans ", /*#__PURE__*/React.createElement("strong", {
+    style: {
+      color: 'var(--text)'
+    }
+  }, FUND_DB.length.toLocaleString()), " instruments from the iFAST and FundLens universes.")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 18,
+      paddingTop: 14,
+      borderTop: `1px dashed ${T_V2.border}`,
+      fontSize: 10.5,
+      color: 'var(--text4)',
+      letterSpacing: '0.04em'
+    }
+  }, "Single-file HTML \xB7 React 18 \xB7 Chart.js \xB7 IndexedDB \xB7 jsPDF \xB7 Supabase Auth")), /*#__PURE__*/React.createElement("div", {
     className: "card",
     style: {
       marginTop: 16,

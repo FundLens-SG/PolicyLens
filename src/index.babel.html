@@ -599,9 +599,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.36';
+const APP_VERSION = 'v2.4.0-rc1.39';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Chart hover, KPI rings, Protection gap fix, LIA inputs, PA tracker';
+const APP_VERSION_NAME = 'Design v2 — Report tab preview, Settings polish, About copy refresh';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -46167,119 +46167,381 @@ function ReportTab() {
     setGenerating(false);
   };
 
-  // v2.4.0-rc1.26: Report tab visual harmonization to match prototype's
-  // PLReport — Fraunces title + subtitle, polished card styling, and a
-  // preview tile that hints at the report aesthetics. The 3 PDF flavours
-  // (Visual / Family Visual / Classic) are kept and now render as a 3-up
-  // grid of design-system cards.
+  // v2.4.0-rc1.37: Report tab is now a multi-section live preview that
+  // mirrors the structure of the generated PDF. Each section is a
+  // "page card" rendered with the cream/serif aesthetic so the FC can
+  // see the report contents at a glance before downloading. The 3 PDF
+  // generation buttons sit above the preview as a slim action row.
   const clientHeadName = (clientProfile?.name || clientName || 'this client');
+  const familyName = clientHeadName === 'this client' ? 'Your client' : (clientHeadName.split(/\s+/).slice(-1)[0] + ' family');
+
+  // ── COMPUTED PREVIEW DATA — simplified versions of the dashboard's
+  //    coverage / gap / retirement summaries. Not as precise as the
+  //    Dashboard's logic, but enough for a faithful preview.
+  const activePols = policies.filter(p => p && p.status !== 'lapsed' && p.status !== 'surrendered' && p.status !== 'matured');
+  const insurerCount = new Set(activePols.map(p => p.insurer).filter(Boolean)).size;
+  const totalCoverage = activePols.reduce((s, pol) => {
+    const sa = parseFloat(pol.sumAssured) || 0;
+    const db = parseFloat(pol.deathBenefit) || 0;
+    return s + Math.max(sa, db);
+  }, 0);
+  const totalAnnualPremium = activePols.reduce((s, pol) => {
+    if (pol.premSingle || pol.premiumStructure === 'Single Premium' || pol.premFrequency === 'single') return s;
+    const raw = parseFloat(pol.annualPremium) || 0;
+    return s + (pol.premFrequency === 'monthly' ? raw * 12 : raw);
+  }, 0);
+  // Coverage by category (simplified)
+  let cvDeath = 0, cvTPD = 0, cvCI = 0, cvDI = 0, cvPA = 0, hasISP = false, ispRider = false;
+  activePols.forEach(pol => {
+    const sa = parseFloat(pol.sumAssured) || 0;
+    if (pol.category === 'protection' && !['Personal Accident','Critical Illness','Disability Income'].includes(pol.subType)) {
+      cvDeath += sa; cvTPD += sa;
+    }
+    if (pol.subType === 'Critical Illness') cvCI += sa;
+    if (pol.subType === 'Disability Income') cvDI += parseFloat(pol.diMonthlyBenefit) || 0;
+    if (pol.subType === 'Personal Accident') cvPA += sa || (parseFloat(pol.addSA)||0);
+    if (pol.subType === 'Integrated Shield Plan') { hasISP = true; ispRider = !!pol.hasRider; }
+    (pol.riders || []).forEach(rd => {
+      const rsa = parseFloat(rd.sa) || 0;
+      if (rd.type === 'death') cvDeath += rsa;
+      if (rd.type === 'tpd') cvTPD += rsa;
+      if (rd.type === 'ci') cvCI += rsa;
+      if (rd.type === 'di') cvDI += rsa;
+      if (rd.type === 'accidental') cvPA += rsa;
+    });
+  });
+  // Recommended (LIA-style — uses income only for simplicity)
+  const reqDeath = annualIncome > 0 ? annualIncome * LIA_MULTIPLIERS.deathYrs : 500000;
+  const reqTPD = annualIncome > 0 ? annualIncome * LIA_MULTIPLIERS.tpdYrs : 500000;
+  const reqCI = annualIncome > 0 ? annualIncome * LIA_MULTIPLIERS.ciYrs : 250000;
+  const reqDI = annualIncome > 0 ? Math.round(annualIncome / 12 * LIA_MULTIPLIERS.diPct / 100) : 3000;
+  const protectionRows = [
+    { label: 'Death & TI', have: cvDeath, need: reqDeath, fmt: 'k' },
+    { label: 'TPD',        have: cvTPD,   need: reqTPD,   fmt: 'k' },
+    { label: 'Critical Illness', have: cvCI, need: reqCI, fmt: 'k' },
+    { label: 'Disability income / mo', have: cvDI, need: reqDI, fmt: 'mo' },
+  ];
+  // Retirement summary from window cache (set by Dashboard); fallback to 0s
+  const retCache = (typeof window !== 'undefined' && window.__retirementLiteCache) || null;
+  const retIncome = retCache ? Math.round(((retCache.cpfPayout?.mid || 0) + (retCache.policyMonthlyIncome || 0) + (retCache.policyDividends || 0) + (retCache.otherMonthly || 0))) : 0;
+  const retDesired = retCache ? Math.round(retCache.desiredMonthly || 0) : 0;
+  const retCoverPct = retDesired > 0 ? Math.min(100, Math.round(retIncome / retDesired * 100)) : 0;
+  // Top policies by premium
+  const topPolicies = [...activePols]
+    .map(pol => ({
+      pol,
+      prem: pol.premFrequency === 'monthly' ? (parseFloat(pol.annualPremium)||0) * 12 : (parseFloat(pol.annualPremium)||0),
+    }))
+    .sort((a, b) => b.prem - a.prem)
+    .slice(0, 5);
+
+  // Cream/serif palette inline so the preview reads as a print mock.
+  const PAPER = '#fefdf9', INK = '#1a1408', INK2 = '#3a2c20', INK3 = '#7a6552', INK4 = '#a89683', RULE = '#e3d5bd', ACCENT = 'oklch(0.66 0.16 35)', ACCENT_SOFT = 'oklch(0.94 0.04 35)';
+  const fmtKHave = (v, mode) => mode === 'mo' ? 'S$' + Math.round(v).toLocaleString() + '/mo' : 'S$' + (v / 1000).toFixed(0) + 'k';
+
   return (
     <div className="fade-in" style={{padding:'4px 4px 60px'}}>
-      <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:T_V2.sectionGap||28,flexWrap:'wrap',gap:14}}>
+      <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:18,flexWrap:'wrap',gap:14}}>
         <div style={{minWidth:0,flex:'1 1 auto'}}>
           <h2 style={{fontFamily:T_V2.serifFamily,fontSize:32,fontWeight:400,letterSpacing:'-0.015em',color:'var(--text)',margin:0,lineHeight:1.1}}>Report</h2>
           <p style={{fontSize:13,color:'var(--text3)',marginTop:6,lineHeight:1.5,margin:'6px 0 0'}}>
-            A clean summary you can hand to {clientHeadName}
+            A clean summary you can hand to {clientHeadName}. Preview below — download for the full PDF.
           </p>
         </div>
-      </div>
-
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(300px, 1fr))',gap:14,marginBottom:24}}>
-        {/* Visual Premium Report */}
-        <div style={{
-          background:'var(--bg2)',border:'1px solid var(--border)',
-          borderRadius:T_V2.radiusLg,padding:24,boxShadow:T_V2.shadow,
-          display:'flex',flexDirection:'column',gap:12,
-        }}>
-          <div style={{display:'flex',alignItems:'center',gap:10}}>
-            <span style={{fontSize:22}}>✨</span>
-            <h3 style={{fontFamily:T_V2.serifFamily,fontSize:20,fontWeight:400,letterSpacing:'-0.015em',color:'var(--text)',margin:0,lineHeight:1.2}}>Visual Premium</h3>
-            <span style={{fontSize:9,background:'var(--gold)',color:'#fff',padding:'3px 8px',borderRadius:999,fontWeight:700,letterSpacing:'0.04em',textTransform:'uppercase'}}>New</span>
-          </div>
-          <p style={{fontSize:12.5,color:'var(--text2)',lineHeight:1.55,margin:0,flex:1}}>
-            Hero cover, dashboard snapshot with charts, protection gap detail, per-policy cards, prioritised recommendations. Best for client-facing presentations.
-          </p>
-          <button className="btn-primary" onClick={generateVisualReport} disabled={generatingVisual || generating || policies.length===0} style={{width:'100%'}}>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
+          <button onClick={generate} disabled={generating || generatingVisual || policies.length===0}
+            style={{
+              height:36,padding:'0 16px',fontSize:12.5,fontWeight:600,
+              borderRadius:999,background:'var(--bg2)',color:'var(--text2)',
+              border:`1px solid ${T_V2.border}`,cursor:'pointer',whiteSpace:'nowrap',
+              fontFamily:T_V2.sansFamily,opacity:(generating || generatingVisual || policies.length===0)?0.5:1,
+            }}>
+            {generating ? '⏳ Building…' : '📄 Classic PDF'}
+          </button>
+          <button onClick={generateFamilyVisualReport} disabled={generatingFamilyVisual || generatingVisual || generating || !activeClientId}
+            style={{
+              height:36,padding:'0 16px',fontSize:12.5,fontWeight:600,
+              borderRadius:999,background:'var(--bg2)',color:'var(--text2)',
+              border:`1px solid ${T_V2.border}`,cursor:'pointer',whiteSpace:'nowrap',
+              fontFamily:T_V2.sansFamily,opacity:(generatingFamilyVisual || generatingVisual || generating || !activeClientId)?0.5:1,
+            }}>
+            {generatingFamilyVisual ? '⏳ Rendering…' : '👨‍👩‍👧‍👦 Family PDF'}
+          </button>
+          <button onClick={generateVisualReport} disabled={generatingVisual || generating || policies.length===0}
+            style={{
+              height:36,padding:'0 18px',fontSize:12.5,fontWeight:600,
+              borderRadius:999,background:'var(--gold)',color:'#fff',
+              border:'1px solid var(--gold)',cursor:'pointer',whiteSpace:'nowrap',
+              fontFamily:T_V2.sansFamily,opacity:(generatingVisual || generating || policies.length===0)?0.5:1,
+              boxShadow:'0 1px 2px rgba(60,40,20,0.06)',
+            }}>
             {generatingVisual ? '⏳ Rendering charts…' : '⬇ Download Visual PDF'}
           </button>
-          {policies.length===0 && <div style={{fontSize:11,color:'var(--text3)'}}>Add at least one policy to generate a report.</div>}
-        </div>
-
-        {/* Family Visual Report */}
-        <div style={{
-          background:'var(--bg2)',border:'1px solid var(--border)',
-          borderRadius:T_V2.radiusLg,padding:24,boxShadow:T_V2.shadow,
-          display:'flex',flexDirection:'column',gap:12,
-        }}>
-          <div style={{display:'flex',alignItems:'center',gap:10}}>
-            <span style={{fontSize:22}}>👨‍👩‍👧‍👦</span>
-            <h3 style={{fontFamily:T_V2.serifFamily,fontSize:20,fontWeight:400,letterSpacing:'-0.015em',color:'var(--text)',margin:0,lineHeight:1.2}}>Family Visual</h3>
-          </div>
-          <p style={{fontSize:12.5,color:'var(--text2)',lineHeight:1.55,margin:0,flex:1}}>
-            Whole-household portfolio report — KPIs, member summaries, policy distribution, per-member cards using the same visual standard as the Visual Premium.
-          </p>
-          <button className="btn-primary" onClick={generateFamilyVisualReport} disabled={generatingFamilyVisual || generatingVisual || generating || !activeClientId} style={{width:'100%'}}>
-            {generatingFamilyVisual ? '⏳ Rendering…' : '⬇ Download Family PDF'}
-          </button>
-          {!activeClientId && <div style={{fontSize:11,color:'var(--text3)'}}>Open a client first to anchor the family report.</div>}
-        </div>
-
-        {/* Classic Report */}
-        <div style={{
-          background:'var(--bg2)',border:'1px solid var(--border)',
-          borderRadius:T_V2.radiusLg,padding:24,boxShadow:T_V2.shadow,
-          display:'flex',flexDirection:'column',gap:12,
-        }}>
-          <div style={{display:'flex',alignItems:'center',gap:10}}>
-            <span style={{fontSize:22}}>📄</span>
-            <h3 style={{fontFamily:T_V2.serifFamily,fontSize:20,fontWeight:400,letterSpacing:'-0.015em',color:'var(--text)',margin:0,lineHeight:1.2}}>Classic</h3>
-          </div>
-          <p style={{fontSize:12.5,color:'var(--text2)',lineHeight:1.55,margin:0,flex:1}}>
-            Text-dense layout — executive summary, protection gap analysis, rider matrix, premium schedule, per-policy detail blocks, cash value timeline, next steps. Best for analytical deep-dives.
-          </p>
-          <button className="btn-secondary" onClick={generate} disabled={generating || generatingVisual || policies.length===0} style={{width:'100%'}}>
-            {generating ? '⏳ Building…' : '⬇ Download Classic PDF'}
-          </button>
         </div>
       </div>
 
-      {/* Preview tile — visual hint of what the Visual Premium report looks like.
-          Static placeholder, not a live preview. Sets expectation for the
-          cream + serif aesthetic of the generated PDFs. */}
-      <div style={{
-        background:'#fefdf9',border:'1px solid var(--border)',
-        borderRadius:T_V2.radiusLg,padding:'48px 60px',
-        boxShadow:T_V2.shadow,
-        color:'#2a2418',
-        position:'relative',
-      }}>
-        <div style={{fontSize:10,color:'#888',letterSpacing:'0.15em',textTransform:'uppercase',fontWeight:600}}>
-          Portfolio Review · prepared for
-        </div>
-        <div style={{fontFamily:T_V2.serifFamily,fontSize:42,marginTop:8,letterSpacing:'-0.02em',color:'#1a1408',fontWeight:400,lineHeight:1.1}}>
-          {clientHeadName === 'this client' ? 'Your client' : (clientHeadName.split(/\s+/).slice(-1)[0] + ' family')}
-        </div>
-        <div style={{fontSize:13,color:'#666',marginTop:8}}>
-          Prepared {new Date().toLocaleDateString('en-SG', { day: 'numeric', month: 'long', year: 'numeric' })}
-        </div>
-        <div style={{height:1,background:'#d8cfba',margin:'28px 0'}} />
-        <div style={{display:'grid',gridTemplateColumns:'repeat(3, 1fr)',gap:32}}>
-          <div>
-            <div style={{fontSize:10,color:'#888',letterSpacing:'0.1em',textTransform:'uppercase',fontWeight:600}}>Active policies</div>
-            <div style={{fontFamily:T_V2.serifFamily,fontSize:32,marginTop:6,color:'#1a1408',fontWeight:400}}>{policies.filter(pp => pp.status !== 'lapsed' && pp.status !== 'surrendered' && pp.status !== 'matured').length}</div>
+      {/* MULTI-PAGE PREVIEW — each "page" is a cream paper card stacked
+          vertically. Reads as a flip-through of the report contents
+          before the FC commits to downloading. */}
+      <div style={{display:'flex',flexDirection:'column',gap:18}}>
+
+        {/* PAGE 1 — Cover */}
+        <div style={{
+          background:PAPER,border:`1px solid ${RULE}`,borderRadius:T_V2.radiusLg,
+          padding:'48px 60px',boxShadow:T_V2.shadow,color:INK,position:'relative',
+          minHeight:340,
+        }}>
+          <div style={{position:'absolute',top:18,right:24,fontSize:10,color:INK4,letterSpacing:'0.05em',fontStyle:'italic'}}>
+            Page 1 of 4 · cover
           </div>
-          <div>
-            <div style={{fontSize:10,color:'#888',letterSpacing:'0.1em',textTransform:'uppercase',fontWeight:600}}>Insurers</div>
-            <div style={{fontFamily:T_V2.serifFamily,fontSize:32,marginTop:6,color:'#1a1408',fontWeight:400}}>{new Set(policies.map(pp => pp.insurer).filter(Boolean)).size}</div>
+          <div style={{fontSize:10,color:INK4,letterSpacing:'0.15em',textTransform:'uppercase',fontWeight:600}}>
+            Portfolio Review · prepared for
           </div>
-          <div>
-            <div style={{fontSize:10,color:'#888',letterSpacing:'0.1em',textTransform:'uppercase',fontWeight:600}}>Annual income</div>
-            <div style={{fontFamily:T_V2.serifFamily,fontSize:32,marginTop:6,color:'#1a1408',fontWeight:400}}>{annualIncome > 0 ? 'S$ ' + Math.round(annualIncome/1000) + 'k' : '—'}</div>
+          <div style={{fontFamily:T_V2.serifFamily,fontSize:48,marginTop:8,letterSpacing:'-0.02em',color:INK,fontWeight:400,lineHeight:1.05}}>
+            The {familyName.replace(/^Your client$/, 'Tan Family')}
+          </div>
+          <div style={{fontSize:13,color:INK3,marginTop:10}}>
+            Prepared {new Date().toLocaleDateString('en-SG', { day: 'numeric', month: 'long', year: 'numeric' })}
+            {clientHeadName !== 'this client' && (<> · for {clientHeadName}</>)}
+          </div>
+          <div style={{height:1,background:RULE,margin:'32px 0'}} />
+          <div style={{display:'grid',gridTemplateColumns:'repeat(3, 1fr)',gap:36}}>
+            <div>
+              <div style={{fontSize:10,color:INK4,letterSpacing:'0.1em',textTransform:'uppercase',fontWeight:600}}>Insured value</div>
+              <div style={{fontFamily:T_V2.serifFamily,fontSize:34,marginTop:6,color:INK,fontWeight:400,fontVariantNumeric:'tabular-nums'}}>
+                {totalCoverage > 0 ? 'S$ ' + (totalCoverage/1000000).toFixed(2).replace(/\.00$/, '') + 'M' : '—'}
+              </div>
+            </div>
+            <div>
+              <div style={{fontSize:10,color:INK4,letterSpacing:'0.1em',textTransform:'uppercase',fontWeight:600}}>Annual premium</div>
+              <div style={{fontFamily:T_V2.serifFamily,fontSize:34,marginTop:6,color:INK,fontWeight:400,fontVariantNumeric:'tabular-nums'}}>
+                {totalAnnualPremium > 0 ? 'S$ ' + Math.round(totalAnnualPremium).toLocaleString() : '—'}
+              </div>
+            </div>
+            <div>
+              <div style={{fontSize:10,color:INK4,letterSpacing:'0.1em',textTransform:'uppercase',fontWeight:600}}>Retirement coverage</div>
+              <div style={{fontFamily:T_V2.serifFamily,fontSize:34,marginTop:6,color:INK,fontWeight:400,fontVariantNumeric:'tabular-nums'}}>
+                {retCoverPct > 0 ? retCoverPct + '%' : '—'}
+              </div>
+            </div>
+          </div>
+          {activePols.length > 0 && (
+            <div style={{marginTop:32,fontSize:13,color:INK2,lineHeight:1.7,maxWidth:680}}>
+              You hold <strong>{activePols.length} active polic{activePols.length===1?'y':'ies'}</strong> across{' '}
+              <strong>{insurerCount} insurer{insurerCount===1?'':'s'}</strong>
+              {retDesired > 0 && (<>. Your retirement projection of <strong>S${retIncome.toLocaleString()} monthly</strong> at age {retAge} is {retCoverPct >= 80 ? 'on track' : 'tracking'} to meet your <strong>S${retDesired.toLocaleString()}</strong> target</>)}
+              .{' '}
+              {(() => {
+                const gaps = [];
+                if (cvDeath < reqDeath) gaps.push('Death cover');
+                if (cvCI < reqCI) gaps.push('critical illness');
+                if (cvDI < reqDI) gaps.push('disability income');
+                if (!hasISP) gaps.push('hospitalisation (no ISP held)');
+                if (cvPA <= 0) gaps.push('personal accident');
+                if (gaps.length === 0) return 'All LIA-recommended coverage areas are well met.';
+                return `${gaps.length} area${gaps.length === 1 ? '' : 's'} would benefit from a closer look this review: ${gaps.slice(0, 3).join(', ')}${gaps.length > 3 ? `, +${gaps.length - 3} more` : ''}.`;
+              })()}
+            </div>
+          )}
+        </div>
+
+        {/* PAGE 2 — Protection coverage */}
+        <div style={{
+          background:PAPER,border:`1px solid ${RULE}`,borderRadius:T_V2.radiusLg,
+          padding:'40px 60px',boxShadow:T_V2.shadow,color:INK,position:'relative',
+        }}>
+          <div style={{position:'absolute',top:18,right:24,fontSize:10,color:INK4,letterSpacing:'0.05em',fontStyle:'italic'}}>
+            Page 2 of 4 · protection
+          </div>
+          <div style={{fontSize:10,color:INK4,letterSpacing:'0.15em',textTransform:'uppercase',fontWeight:600}}>
+            Section 1
+          </div>
+          <div style={{fontFamily:T_V2.serifFamily,fontSize:30,marginTop:6,letterSpacing:'-0.02em',color:INK,fontWeight:400}}>
+            Protection coverage
+          </div>
+          <div style={{fontSize:12.5,color:INK3,marginTop:6,marginBottom:24}}>
+            Held vs. LIA-recommended for {p.name || 'the client'}
+          </div>
+
+          <div style={{display:'flex',flexDirection:'column',gap:16}}>
+            {protectionRows.map(row => {
+              const pct = Math.min(1, row.have / Math.max(row.need, 1));
+              const tone = pct >= 0.95 ? '#3a8a4f' : pct >= 0.7 ? '#c9821e' : '#b03a30';
+              return (
+                <div key={row.label}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:6}}>
+                    <span style={{fontSize:13,color:INK,fontWeight:600}}>{row.label}</span>
+                    <span style={{fontSize:12,color:INK3,fontVariantNumeric:'tabular-nums'}}>
+                      <span style={{color:INK,fontWeight:600}}>{fmtKHave(row.have, row.fmt)}</span>
+                      <span style={{color:INK4}}> / {fmtKHave(row.need, row.fmt)}</span>
+                      <span style={{marginLeft:10,padding:'2px 8px',borderRadius:999,background:'#fff',color:tone,fontWeight:700,fontSize:11,border:`1px solid ${tone}33`}}>
+                        {Math.round(pct * 100)}%
+                      </span>
+                    </span>
+                  </div>
+                  <div style={{height:6,background:'#f0e7d3',borderRadius:999,overflow:'hidden'}}>
+                    <div style={{height:'100%',width:`${pct * 100}%`,background:tone,borderRadius:999}} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Flag-style: Hospitalisation + PA */}
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginTop:22,paddingTop:18,borderTop:`1px dashed ${RULE}`}}>
+            <div>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:4}}>
+                <span style={{fontSize:13,color:INK,fontWeight:600}}>Hospitalisation</span>
+                <span style={{padding:'3px 10px',borderRadius:999,background:'#fff',color:hasISP?'#3a8a4f':'#b03a30',fontWeight:700,fontSize:11,border:`1px solid ${hasISP?'#3a8a4f':'#b03a30'}33`}}>
+                  {hasISP ? '✓ Held' : '○ Not held'}
+                </span>
+              </div>
+              <div style={{fontSize:11,color:INK3,fontStyle:hasISP?'normal':'italic',lineHeight:1.4}}>
+                {hasISP ? (ispRider ? 'ISP + rider — full benefits' : 'ISP only — deductible & co-insurance apply') : 'No Integrated Shield Plan held'}
+              </div>
+            </div>
+            <div>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:4}}>
+                <span style={{fontSize:13,color:INK,fontWeight:600}}>Personal Accident</span>
+                <span style={{padding:'3px 10px',borderRadius:999,background:'#fff',color:cvPA>0?'#3a8a4f':'#b03a30',fontWeight:700,fontSize:11,border:`1px solid ${cvPA>0?'#3a8a4f':'#b03a30'}33`}}>
+                  {cvPA > 0 ? '✓ Held' : '○ Not held'}
+                </span>
+              </div>
+              <div style={{fontSize:11,color:INK3,fontStyle:cvPA>0?'normal':'italic',lineHeight:1.4}}>
+                {cvPA > 0 ? `ADB S$${Math.round(cvPA).toLocaleString()}` : 'No personal accident cover'}
+              </div>
+            </div>
           </div>
         </div>
-        <div style={{position:'absolute',top:18,right:24,fontSize:10,color:'#888',letterSpacing:'0.05em',fontStyle:'italic'}}>
-          preview only · generate above for the full PDF
+
+        {/* PAGE 3 — Retirement projection summary */}
+        {(retDesired > 0 || retIncome > 0) && (
+        <div style={{
+          background:PAPER,border:`1px solid ${RULE}`,borderRadius:T_V2.radiusLg,
+          padding:'40px 60px',boxShadow:T_V2.shadow,color:INK,position:'relative',
+        }}>
+          <div style={{position:'absolute',top:18,right:24,fontSize:10,color:INK4,letterSpacing:'0.05em',fontStyle:'italic'}}>
+            Page 3 of 4 · retirement
+          </div>
+          <div style={{fontSize:10,color:INK4,letterSpacing:'0.15em',textTransform:'uppercase',fontWeight:600}}>
+            Section 2
+          </div>
+          <div style={{fontFamily:T_V2.serifFamily,fontSize:30,marginTop:6,letterSpacing:'-0.02em',color:INK,fontWeight:400}}>
+            Retirement at {retAge}
+          </div>
+          <div style={{fontSize:12.5,color:INK3,marginTop:6,marginBottom:22}}>
+            Projected monthly income vs your desired lifestyle
+          </div>
+
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:32,alignItems:'baseline'}}>
+            <div>
+              <div style={{fontSize:10,color:INK4,letterSpacing:'0.1em',textTransform:'uppercase',fontWeight:600}}>Projected at {retAge}</div>
+              <div style={{fontFamily:T_V2.serifFamily,fontSize:42,marginTop:6,color:INK,fontWeight:400,fontVariantNumeric:'tabular-nums',lineHeight:1}}>
+                S$ {retIncome.toLocaleString()}
+              </div>
+              <div style={{fontSize:13,color:INK3,marginTop:6}}>per month</div>
+            </div>
+            <div>
+              <div style={{fontSize:10,color:INK4,letterSpacing:'0.1em',textTransform:'uppercase',fontWeight:600}}>Desired lifestyle</div>
+              <div style={{fontFamily:T_V2.serifFamily,fontSize:42,marginTop:6,color:INK,fontWeight:400,fontVariantNumeric:'tabular-nums',lineHeight:1}}>
+                S$ {retDesired.toLocaleString()}
+              </div>
+              <div style={{fontSize:13,color:INK3,marginTop:6}}>per month, today's dollars</div>
+            </div>
+          </div>
+
+          <div style={{marginTop:28}}>
+            <div style={{height:14,background:'#f0e7d3',borderRadius:999,overflow:'hidden',position:'relative'}}>
+              <div style={{height:'100%',width:`${Math.min(100, retCoverPct)}%`,background:retCoverPct>=80?'#3a8a4f':retCoverPct>=50?'#c9821e':'#b03a30',borderRadius:999}} />
+              <div style={{position:'absolute',right:6,top:0,bottom:0,display:'flex',alignItems:'center',fontSize:11,color:INK,fontWeight:700,fontVariantNumeric:'tabular-nums'}}>
+                {retCoverPct}% covered
+              </div>
+            </div>
+          </div>
+
+          {retCache && (
+            <div style={{marginTop:24,paddingTop:18,borderTop:`1px dashed ${RULE}`,display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(140px, 1fr))',gap:18}}>
+              {[
+                ['CPF LIFE', retCache.cpfPayout?.mid || 0],
+                ['Policy income', retCache.policyMonthlyIncome || 0],
+                ['Dividends', retCache.policyDividends || 0],
+                ['Other', retCache.otherMonthly || 0],
+              ].filter(([_, v]) => v > 0).map(([label, value]) => (
+                <div key={label}>
+                  <div style={{fontSize:10,color:INK4,letterSpacing:'0.1em',textTransform:'uppercase',fontWeight:600}}>{label}</div>
+                  <div style={{fontFamily:T_V2.serifFamily,fontSize:20,marginTop:4,color:INK,fontWeight:400,fontVariantNumeric:'tabular-nums'}}>
+                    S$ {Math.round(value).toLocaleString()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
+        )}
+
+        {/* PAGE 4 — Top policies snapshot */}
+        {topPolicies.length > 0 && (
+        <div style={{
+          background:PAPER,border:`1px solid ${RULE}`,borderRadius:T_V2.radiusLg,
+          padding:'40px 60px',boxShadow:T_V2.shadow,color:INK,position:'relative',
+        }}>
+          <div style={{position:'absolute',top:18,right:24,fontSize:10,color:INK4,letterSpacing:'0.05em',fontStyle:'italic'}}>
+            Page {(retDesired > 0 || retIncome > 0) ? '4' : '3'} of 4 · policies
+          </div>
+          <div style={{fontSize:10,color:INK4,letterSpacing:'0.15em',textTransform:'uppercase',fontWeight:600}}>
+            Section 3
+          </div>
+          <div style={{fontFamily:T_V2.serifFamily,fontSize:30,marginTop:6,letterSpacing:'-0.02em',color:INK,fontWeight:400}}>
+            Top policies by premium
+          </div>
+          <div style={{fontSize:12.5,color:INK3,marginTop:6,marginBottom:22}}>
+            {activePols.length > 5 ? `Showing 5 of ${activePols.length} active policies — full list in the PDF` : `${activePols.length} active polic${activePols.length===1?'y':'ies'}`}
+          </div>
+
+          <div style={{display:'flex',flexDirection:'column',gap:0}}>
+            {topPolicies.map(({pol, prem}, i) => (
+              <div key={pol.id || i} style={{
+                display:'grid',gridTemplateColumns:'1.6fr 2fr 1fr 1fr',
+                alignItems:'center',padding:'14px 0',
+                borderTop:`1px solid ${RULE}`,fontSize:13,
+              }}>
+                <span style={{color:INK,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{pol.insurer || '—'}</span>
+                <span style={{color:INK2,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{pol.productName || pol.policyName || '—'}</span>
+                <span style={{color:INK2,fontVariantNumeric:'tabular-nums',textAlign:'right'}}>
+                  {parseFloat(pol.sumAssured) > 0 ? 'S$ ' + parseFloat(pol.sumAssured).toLocaleString() : <span style={{color:INK4}}>—</span>}
+                </span>
+                <span style={{color:INK2,fontVariantNumeric:'tabular-nums',textAlign:'right',fontWeight:600}}>
+                  S$ {Math.round(prem).toLocaleString()}<span style={{color:INK4,fontWeight:400}}> /yr</span>
+                </span>
+              </div>
+            ))}
+            <div style={{
+              display:'grid',gridTemplateColumns:'1.6fr 2fr 1fr 1fr',
+              alignItems:'center',padding:'14px 0',
+              borderTop:`2px solid ${INK4}`,fontSize:13,
+            }}>
+              <span style={{color:INK4,fontStyle:'italic'}}>Total</span>
+              <span></span>
+              <span></span>
+              <span style={{color:INK,fontVariantNumeric:'tabular-nums',textAlign:'right',fontWeight:700,fontFamily:T_V2.serifFamily,fontSize:16}}>
+                S$ {Math.round(totalAnnualPremium).toLocaleString()}<span style={{color:INK4,fontSize:11,fontWeight:400,fontFamily:T_V2.sansFamily}}> /yr</span>
+              </span>
+            </div>
+          </div>
+        </div>
+        )}
+
+        {/* CLOSING NOTE */}
+        <div style={{
+          background:ACCENT_SOFT,border:`1px solid ${RULE}`,borderRadius:T_V2.radiusLg,
+          padding:'24px 32px',color:INK2,fontSize:12.5,lineHeight:1.6,
+        }}>
+          <strong style={{color:INK,fontFamily:T_V2.serifFamily,fontSize:15,letterSpacing:'-0.01em'}}>This is a live preview.</strong>
+          <br />
+          The downloaded PDF will include this content plus per-policy cards, cash-value timelines, recommendations, and an insurer concentration breakdown.
+          {policies.length === 0 && <><br /><br /><em>Add at least one policy on the Policies tab to enable PDF generation.</em></>}
+        </div>
+
       </div>
     </div>
   );
@@ -47532,15 +47794,77 @@ function Settings() {
 
   return (
     <div className="fade-in" style={{maxWidth:720}}>
-      {/* v2.4.0-rc1.14: Settings page header — Fraunces 32 + subtitle */}
+      {/* v2.4.0-rc1.38: Settings header softened — subtitle reads as a
+          friendly TL;DR rather than a comma-separated feature list. */}
       <h2 style={{fontFamily:T_V2.serifFamily,fontSize:32,fontWeight:400,letterSpacing:'-0.015em',color:'var(--text)',margin:0,lineHeight:1.1}}>Settings</h2>
-      <div style={{fontSize:13,color:'var(--text3)',marginTop:6,lineHeight:1.5,marginBottom:T_V2.sectionGap||28}}>Advisor identity, AI keys, firm defaults, sync, and account.</div>
+      <div style={{fontSize:13,color:'var(--text3)',marginTop:6,lineHeight:1.5,marginBottom:T_V2.sectionGap||28}}>
+        Your advisor identity, where data lives, and how clients are organised. Most FCs only touch this on first run.
+      </div>
 
-      {/* ═══ QUICK ACTIONS — re-exposes Load checkpoint / Undo / Help ═══ */}
-      {/* rc1.14: Header was slimmed to 3 pills (rc1.11). The Load
-          checkpoint / Undo / Help controls live here so users can still
-          reach them. Cmd+S still works app-wide for Save. */}
-      <div className="card" style={{marginBottom:T_V2.sectionGap||28,padding:24,boxShadow:T_V2.shadow,border:`1px solid ${T_V2.border}`,borderRadius:T_V2.radiusLg}}>
+      {/* ═══ QUICK ACTIONS — slim toolbar (rc1.38: was a card with helper
+          paragraph; now a tight 3-pill row that takes one line and reads
+          as "tools" rather than "settings"). Save lives in the header
+          (Cmd+S), so we don't repeat it here. */}
+      <div style={{
+        display:'flex',gap:8,flexWrap:'wrap',alignItems:'center',
+        padding:'12px 16px',background:'var(--bg2)',
+        border:`1px solid ${T_V2.border}`,borderRadius:999,
+        marginBottom:T_V2.sectionGap||28,
+      }}>
+        <span style={{fontSize:11,color:'var(--text3)',fontWeight:600,letterSpacing:'0.04em',textTransform:'uppercase',marginRight:4}}>
+          Quick actions
+        </span>
+        <button onClick={() => setCheckpointLoadOpen(true)} disabled={!activeClientId}
+          style={{
+            display:'inline-flex',alignItems:'center',gap:6,
+            padding:'6px 14px',fontSize:12,fontWeight:500,
+            borderRadius:999,background:'var(--bg)',color:'var(--text2)',
+            border:`1px solid ${T_V2.border}`,
+            cursor:activeClientId?'pointer':'not-allowed',
+            opacity:activeClientId?1:0.5,fontFamily:T_V2.sansFamily,
+            transition:T_V2.motion?'all 180ms ease':'none',
+          }}
+          title="Restore from snapshot history">
+          📂 Load checkpoint
+        </button>
+        <button onClick={async () => {
+            if (!activeClientId || typeof restoreLastUndo !== 'function') return;
+            if (!confirm('Restore the last import/delete change for this client?')) return;
+            await restoreLastUndo();
+          }} disabled={!activeClientId}
+          style={{
+            display:'inline-flex',alignItems:'center',gap:6,
+            padding:'6px 14px',fontSize:12,fontWeight:500,
+            borderRadius:999,background:'var(--bg)',color:'var(--text2)',
+            border:`1px solid ${T_V2.border}`,
+            cursor:activeClientId?'pointer':'not-allowed',
+            opacity:activeClientId?1:0.5,fontFamily:T_V2.sansFamily,
+            transition:T_V2.motion?'all 180ms ease':'none',
+          }}
+          title="Reverts the last import or delete">
+          ↶ Undo last change
+        </button>
+        <button onClick={() => window.dispatchEvent(new Event('policylens-open-guide'))}
+          style={{
+            display:'inline-flex',alignItems:'center',gap:6,
+            padding:'6px 14px',fontSize:12,fontWeight:500,
+            borderRadius:999,background:'var(--bg)',color:'var(--text2)',
+            border:`1px solid ${T_V2.border}`,cursor:'pointer',
+            fontFamily:T_V2.sansFamily,
+            transition:T_V2.motion?'all 180ms ease':'none',
+          }}
+          title="Open the user walkthrough">
+          ? Help &amp; guide
+        </button>
+        <span style={{marginLeft:'auto',fontSize:10.5,color:'var(--text4)',whiteSpace:'nowrap'}}>
+          Save runs from the header (<kbd style={{padding:'1px 5px',background:'var(--bg3)',border:`1px solid ${T_V2.border}`,borderRadius:4,fontSize:10,fontFamily:T_V2.monoFamily}}>⌘S</kbd>)
+        </span>
+      </div>
+
+      {/* Hidden block kept for the original card-style Quick actions —
+          render disabled via the conditional below so we don't double-render. */}
+      <div style={{display:'none'}}>
+        <div className="card" style={{padding:24}}>
         <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
           <span style={{fontSize:22}}>⚡</span>
           <h3 style={{fontFamily:T_V2.serifFamily,fontSize:22,fontWeight:400,letterSpacing:'-0.015em',color:'var(--text)',margin:0,lineHeight:1.2}}>Quick actions</h3>
@@ -47596,18 +47920,25 @@ function Settings() {
             </div>
           </button>
         </div>
-        {/* Modal — matches the same one previously in Header */}
-        <CheckpointLoadModal open={checkpointLoadOpen} onClose={() => setCheckpointLoadOpen(false)}
-          clientId={activeClientId} switchClient={switchClient} setTab={setTab} />
+        </div>
       </div>
+      {/* Modal — matches the same one previously in Header */}
+      <CheckpointLoadModal open={checkpointLoadOpen} onClose={() => setCheckpointLoadOpen(false)}
+        clientId={activeClientId} switchClient={switchClient} setTab={setTab} />
 
-      {/* ═══ ADVISOR DETAILS ═══ */}
-      <div className="card" style={{marginBottom:16}}>
-        <h3 style={{fontSize:14,fontWeight:600,marginBottom:4}}>Advisor Details</h3>
-        <p style={{fontSize:11,color:'var(--text3)',marginBottom:8}}>Appears on PDF report headers, footers, and client share view</p>
+      {/* v2.4.0-rc1.38: Advisor Details polished — Fraunces section title,
+          friendlier helper, sentence-case field labels (was loud uppercase). */}
+      <div className="card" style={{marginBottom:16,padding:24,boxShadow:T_V2.shadow,border:`1px solid ${T_V2.border}`,borderRadius:T_V2.radiusLg}}>
+        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:4}}>
+          <span style={{fontSize:20}}>👤</span>
+          <h3 style={{fontFamily:T_V2.serifFamily,fontSize:20,fontWeight:400,letterSpacing:'-0.015em',color:'var(--text)',margin:0,lineHeight:1.2}}>Advisor identity</h3>
+        </div>
+        <p style={{fontSize:12,color:'var(--text3)',margin:'4px 0 14px 32px',lineHeight:1.5}}>
+          Appears on PDF report headers, footers, and the client share view.
+        </p>
         <div className="grid-2">
-          <div className="field"><label>Advisor Name</label><input value={advisorName} onChange={e=>setAdvisorName(e.target.value)} onBlur={e=>{dbPut('settings',{key:'advisorName',value:e.target.value});if(window.saveKeyToSupabase)saveKeyToSupabase('advisorName',e.target.value)}} placeholder="e.g. John Tan" /></div>
-          <div className="field"><label>Company</label><input value={advisorCompany} onChange={e=>setAdvisorCompany(e.target.value)} onBlur={e=>{dbPut('settings',{key:'advisorCompany',value:e.target.value});if(window.saveKeyToSupabase)saveKeyToSupabase('advisorCompany',e.target.value)}} placeholder="e.g. ABC Advisory" /></div>
+          <div className="field"><label style={{textTransform:'none',fontSize:12,letterSpacing:0,color:'var(--text2)',fontWeight:500}}>Your name</label><input value={advisorName} onChange={e=>setAdvisorName(e.target.value)} onBlur={e=>{dbPut('settings',{key:'advisorName',value:e.target.value});if(window.saveKeyToSupabase)saveKeyToSupabase('advisorName',e.target.value)}} placeholder="e.g. John Tan" /></div>
+          <div className="field"><label style={{textTransform:'none',fontSize:12,letterSpacing:0,color:'var(--text2)',fontWeight:500}}>Company</label><input value={advisorCompany} onChange={e=>setAdvisorCompany(e.target.value)} onBlur={e=>{dbPut('settings',{key:'advisorCompany',value:e.target.value});if(window.saveKeyToSupabase)saveKeyToSupabase('advisorCompany',e.target.value)}} placeholder="e.g. ABC Advisory" /></div>
         </div>
       </div>
 
@@ -47765,22 +48096,50 @@ function Settings() {
       </details>
       {/* rc2e.50: end Advanced disclosure */}
 
-      <div className="card">
-        <h3 style={{fontSize:14,fontWeight:600,marginBottom:8}}>About PolicyLens {APP_VERSION}</h3>
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
-          <div style={{fontSize:12,color:'var(--text2)'}}>
-            <strong style={{color:'var(--gold)'}}>{APP_VERSION}</strong> — {APP_VERSION_NAME} <span style={{color:'var(--text3)',fontSize:10}}>({APP_VERSION_DATE})</span>
+      {/* v2.4.0-rc1.39: About copy rewritten for lower-friction reading.
+          Lead with a short positioning line, then 3 short paragraphs each
+          covering one capability area (capture+share, analyse, fund lookup).
+          Tech stack moved to a quiet footer so the marketing copy reads first. */}
+      <div className="card" style={{padding:24,boxShadow:T_V2.shadow,border:`1px solid ${T_V2.border}`,borderRadius:T_V2.radiusLg}}>
+        <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:14,marginBottom:14,flexWrap:'wrap'}}>
+          <div style={{flex:'1 1 240px',minWidth:0}}>
+            <h3 style={{fontFamily:T_V2.serifFamily,fontSize:22,fontWeight:400,letterSpacing:'-0.015em',color:'var(--text)',margin:0,lineHeight:1.2}}>
+              About PolicyLens
+            </h3>
+            <div style={{fontSize:12,color:'var(--text3)',marginTop:4}}>
+              <strong style={{color:'var(--gold)'}}>{APP_VERSION}</strong> · {APP_VERSION_NAME} <span style={{color:'var(--text4)'}}>({APP_VERSION_DATE})</span>
+            </div>
           </div>
           <button onClick={() => setShowChangelog(true)}
-            style={{fontSize:10,padding:'4px 12px',borderRadius:6,border:'1px solid color-mix(in oklch, var(--gold) 35%, transparent)',background:'var(--gold-dim)',color:'var(--gold)',cursor:'pointer',fontWeight:600}}>
+            style={{
+              fontSize:11.5,padding:'7px 14px',borderRadius:999,
+              border:'1px solid color-mix(in oklch, var(--gold) 30%, transparent)',
+              background:'var(--gold-dim)',color:'var(--gold)',cursor:'pointer',
+              fontWeight:600,fontFamily:T_V2.sansFamily,whiteSpace:'nowrap',
+              transition:T_V2.motion?'all 180ms ease':'none',flexShrink:0,
+            }}>
             View changelog
           </button>
         </div>
-        <div style={{fontSize:12,color:'var(--text2)',lineHeight:1.6}}>
-          <p>Institutional-grade policy review toolkit for Singapore Financial Consultants. AI-powered document capture with rider-level extraction, shared cloud repository with role-based editing, and comprehensive portfolio analysis.</p>
-          <p style={{marginTop:8}}>Coverage & Riders system with SA multipliers, multi-claim CI, ISP premium breakdown, ILP fund projections, and UL crediting structures. Gap analysis against LIA recommended coverage levels.</p>
-          <p style={{marginTop:6}}>Fund risk lookup covers {FUND_DB.length.toLocaleString()} instruments from the iFAST/FundLens universe.</p>
-          <p style={{marginTop:6}}>Single-file HTML | React 18 | Chart.js | IndexedDB | jsPDF | Supabase Auth</p>
+
+        <p style={{fontSize:13.5,color:'var(--text)',lineHeight:1.55,margin:0,fontWeight:500}}>
+          A portfolio review toolkit built for Singapore Financial Consultants.
+        </p>
+
+        <div style={{display:'flex',flexDirection:'column',gap:10,marginTop:14,fontSize:12.5,color:'var(--text2)',lineHeight:1.6}}>
+          <p style={{margin:0}}>
+            Snap a policy schedule, BI, or statement — AI extracts riders, owners, and fund splits in seconds. The shared product repository keeps every FC in your firm on the same page with role-based editing.
+          </p>
+          <p style={{margin:0}}>
+            Coverage analysis runs against LIA recommendations and handles the details that usually get glossed over: SA multipliers, multi-claim CI, ISP premium breakdowns, ILP fund projections, and UL crediting structures.
+          </p>
+          <p style={{margin:0}}>
+            Fund risk lookup spans <strong style={{color:'var(--text)'}}>{FUND_DB.length.toLocaleString()}</strong> instruments from the iFAST and FundLens universes.
+          </p>
+        </div>
+
+        <div style={{marginTop:18,paddingTop:14,borderTop:`1px dashed ${T_V2.border}`,fontSize:10.5,color:'var(--text4)',letterSpacing:'0.04em'}}>
+          Single-file HTML &middot; React 18 &middot; Chart.js &middot; IndexedDB &middot; jsPDF &middot; Supabase Auth
         </div>
       </div>
 
