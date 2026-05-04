@@ -599,9 +599,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.39';
+const APP_VERSION = 'v2.4.0-rc1.45';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Report tab preview, Settings polish, About copy refresh';
+const APP_VERSION_NAME = 'Design v2 — Settings 8-point friction reduction (Drive slim, groups, etc.)';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -47042,6 +47042,9 @@ function DriveConnectionCard() {
   const [discoverBusy, setDiscoverBusy] = useState(false);
   const [statusMsg, setStatusMsg] = useState(null);
   const [pingedEmail, setPingedEmail] = useState(null);
+  // v2.4.0-rc1.40: secondary actions overflow + heads-up tooltip
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [tipOpen, setTipOpen] = useState(false);
 
   // Subscribe to driveClient status changes
   useEffect(() => {
@@ -47156,34 +47159,139 @@ function DriveConnectionCard() {
     return {bg:'var(--bg3)',color:'var(--text3)',border:'var(--border)',text:'\u25CB Not connected'};
   })();
   const msgColor = !statusMsg ? null : statusMsg.kind==='success'?'var(--teal)':statusMsg.kind==='error'?'var(--red)':statusMsg.kind==='warn'?'var(--gold)':'var(--text2)';
+    // v2.4.0-rc1.40: slim Drive Sync card.
+  //   - Primary action only ("Sync now" when connected, "Connect" otherwise).
+  //   - Email + folder + last-sync condensed into one status row.
+  //   - "Heads up" 7-day token note becomes a hover tooltip on the pill.
+  //   - Pull / Push / Find clients / Disconnect tucked into a "More" overflow.
+  //   - Card has a subtle accent border when connected (extra visual weight).
+  const connected = status === 'connected';
+  const reconnectNeeded = status === 'reconnect-needed';
+  const accentBorder = connected
+    ? '1px solid color-mix(in oklch, var(--teal) 35%, var(--border))'
+    : reconnectNeeded
+    ? '1px solid color-mix(in oklch, var(--gold) 45%, var(--border))'
+    : '1px solid '+T_V2.border;
   return (
-    <div className="card" style={{marginBottom:16}}>
-      <h3 style={{fontSize:14,fontWeight:600,margin:'0 0 4px'}}>🗂 Google Drive Sync</h3>
-      <p style={{fontSize:11,color:'var(--text3)',marginBottom:10,lineHeight:1.5}}>
-        Your client data syncs to your Google Drive folder under <strong style={{color:'var(--text2)'}}>PolicyLens/</strong>. Only you can see it — even CKG can't.
-      </p>
-      {status==='connected' && <div style={{fontSize:10,color:'var(--text3)',background:'var(--bg3)',padding:'8px 10px',borderRadius:6,marginBottom:10,lineHeight:1.5,border:'1px solid var(--border)'}}><strong style={{color:'var(--text2)'}}>Heads up:</strong> Refresh tokens expire every 7 days while the app is in Google test mode. You'll see a "Reconnect" prompt periodically — usually one click.</div>}
-      <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:10,flexWrap:'wrap'}}>
-        <div style={{fontSize:11,padding:'4px 10px',borderRadius:6,background:statusPill.bg,color:statusPill.color,border:'1px solid '+statusPill.border}}>{statusPill.text}</div>
-        {status==='connected' && folderId && <a href={'https://drive.google.com/drive/folders/'+folderId} target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:'var(--gold)',textDecoration:'none'}}>Open folder in Drive \u2192</a>}
-        {status==='connected' && grantedRel && <span style={{fontSize:10,color:'var(--text3)'}}>Signed in {grantedRel}</span>}
-        {status==='connected' && <span style={{fontSize:10,color:'var(--text3)'}}>This device: {getPolicyLensDeviceName()}</span>}
+    <div className="card" style={{marginBottom:16,padding:24,boxShadow:T_V2.shadow,border:accentBorder,borderRadius:T_V2.radiusLg}}>
+      <div style={{display:'flex',alignItems:'flex-start',gap:14,flexWrap:'wrap'}}>
+        <span style={{fontSize:22,flexShrink:0}}>🗂</span>
+        <div style={{flex:'1 1 240px',minWidth:0}}>
+          <h3 style={{fontFamily:T_V2.serifFamily,fontSize:20,fontWeight:400,letterSpacing:'-0.015em',color:'var(--text)',margin:0,lineHeight:1.2}}>Google Drive sync</h3>
+          <div style={{display:'flex',alignItems:'center',gap:10,marginTop:8,flexWrap:'wrap'}}>
+            <span style={{
+              fontSize:11.5,padding:'4px 11px',borderRadius:999,
+              background:statusPill.bg,color:statusPill.color,
+              border:'1px solid '+statusPill.border,fontWeight:600,
+              display:'inline-flex',alignItems:'center',gap:6,
+            }}>{statusPill.text}</span>
+            {connected && grantedRel && <span style={{fontSize:11,color:'var(--text3)'}}>· synced {grantedRel}</span>}
+            {connected && folderId && <a href={'https://drive.google.com/drive/folders/'+folderId} target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:'var(--gold)',textDecoration:'none'}}>· Open folder ↗</a>}
+            {connected && (
+              <span style={{position:'relative',display:'inline-flex'}}
+                onMouseEnter={()=>setTipOpen(true)} onMouseLeave={()=>setTipOpen(false)}>
+                <span style={{fontSize:12,color:'var(--text4)',cursor:'help',padding:'0 4px'}} aria-label="Heads up">ⓘ</span>
+                {tipOpen && (
+                  <span style={{
+                    position:'absolute',top:'calc(100% + 6px)',left:-10,
+                    width:260,padding:'10px 12px',
+                    background:'var(--bg)',border:'1px solid '+T_V2.border,
+                    borderRadius:8,boxShadow:'0 8px 24px rgba(60,40,20,0.10)',
+                    fontSize:11,color:'var(--text2)',lineHeight:1.5,
+                    fontWeight:400,zIndex:30,
+                  }}>
+                    <strong style={{color:'var(--text)'}}>Heads up:</strong> Refresh tokens expire every 7 days while the app is in Google test mode. You'll see a "Reconnect" prompt periodically — usually one click.
+                  </span>
+                )}
+              </span>
+            )}
+          </div>
+          <p style={{fontSize:11.5,color:'var(--text3)',margin:'8px 0 0',lineHeight:1.5}}>
+            Client data syncs to your Drive folder under <strong style={{color:'var(--text2)'}}>PolicyLens/</strong>. Only you can see it — even CKG can't.
+          </p>
+        </div>
+        <div style={{display:'flex',gap:8,alignItems:'center',flexShrink:0,flexWrap:'wrap'}}>
+          {!connected && !reconnectNeeded && (
+            <button onClick={handleConnect} disabled={busy} style={{
+              padding:'8px 18px',background:'var(--teal)',color:'#fff',
+              border:'none',borderRadius:999,fontSize:12.5,fontWeight:700,
+              cursor:busy?'wait':'pointer',opacity:busy?.6:1,
+              fontFamily:T_V2.sansFamily,
+            }}>
+              {busy ? 'Redirecting…' : 'Connect Drive'}
+            </button>
+          )}
+          {reconnectNeeded && (
+            <button onClick={handleReconnect} disabled={busy} style={{
+              padding:'8px 18px',background:'var(--gold)',color:'#fff',
+              border:'none',borderRadius:999,fontSize:12.5,fontWeight:700,
+              cursor:busy?'wait':'pointer',opacity:busy?.6:1,
+              fontFamily:T_V2.sansFamily,
+            }}>
+              {busy ? 'Reconnecting…' : 'Reconnect'}
+            </button>
+          )}
+          {connected && (
+            <>
+              <button onClick={handleManualSync} style={{
+                padding:'8px 14px',background:'var(--gold)',color:'#fff',
+                border:'none',borderRadius:999,fontSize:12,fontWeight:600,
+                cursor:'pointer',fontFamily:T_V2.sansFamily,
+                display:'inline-flex',alignItems:'center',gap:6,
+              }}>
+                🔄 Sync now
+              </button>
+              <div style={{position:'relative'}}>
+                <button onClick={()=>setMoreOpen(o=>!o)} style={{
+                  padding:'8px 12px',background:'var(--bg2)',color:'var(--text2)',
+                  border:'1px solid '+T_V2.border,borderRadius:999,
+                  fontSize:14,fontWeight:600,cursor:'pointer',
+                  fontFamily:T_V2.sansFamily,lineHeight:1,
+                }} title="More actions">⋯</button>
+                {moreOpen && (
+                  <>
+                    <div onClick={()=>setMoreOpen(false)} style={{position:'fixed',inset:0,zIndex:50}} />
+                    <div style={{
+                      position:'absolute',top:'calc(100% + 6px)',right:0,zIndex:60,
+                      background:'var(--bg)',border:'1px solid '+T_V2.border,
+                      borderRadius:T_V2.radius||14,padding:6,minWidth:240,
+                      boxShadow:'0 10px 28px rgba(60,40,20,0.12)',
+                      fontFamily:T_V2.sansFamily,
+                    }}>
+                      {[
+                        ['⬇','Pull latest','Get the freshest version from Drive',()=>{setMoreOpen(false);handleForcePull();}],
+                        ['⬆','Push this device','Save this device\'s state to Drive',()=>{setMoreOpen(false);handleForcePush();}],
+                        ['🔍',discoverBusy?'Scanning Drive…':'Find clients in Drive','Discover saved clients not on this device',()=>{if(!discoverBusy){setMoreOpen(false);handleDiscover();}}],
+                        ['🚪','Disconnect','Sign out of Google Drive (data stays local)',()=>{setMoreOpen(false);handleDisconnect();}],
+                      ].map(([icon,title,sub,onClick],i,arr) => (
+                        <button key={title} onClick={onClick} disabled={(title==='Find clients in Drive')&&discoverBusy} style={{
+                          width:'100%',display:'flex',alignItems:'center',gap:12,
+                          padding:i===arr.length-1?'12px 12px 10px':'10px 12px',background:'transparent',border:'none',
+                          borderRadius:8,cursor:'pointer',textAlign:'left',
+                          color:title==='Disconnect'?'var(--red)':'var(--text)',
+                          opacity:((title==='Find clients in Drive')&&discoverBusy)?0.5:1,
+                          transition:T_V2.motion?'background 120ms ease':'none',
+                          borderTop:i===arr.length-1?'1px solid '+T_V2.border:'none',
+                          marginTop:i===arr.length-1?2:0,
+                        }}
+                        onMouseEnter={e=>e.currentTarget.style.background='var(--bg2)'}
+                        onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                          <span style={{fontSize:16,flexShrink:0}}>{icon}</span>
+                          <div style={{flex:1,minWidth:0}}>
+                            <div style={{fontSize:12.5,fontWeight:600}}>{title}</div>
+                            <div style={{fontSize:10.5,color:'var(--text3)',marginTop:1}}>{sub}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            </>
+          )}
+        </div>
       </div>
-      {statusMsg && <div style={{fontSize:11,color:msgColor,marginBottom:10}}>{statusMsg.text}</div>}
-      {/* rc2e.53: Disconnected state shows the only remaining escape hatch — Connect Drive primary CTA. */}
-      {status !== 'connected' && status !== 'reconnect-needed' && <div style={{marginBottom:10}}>
-        <button onClick={handleConnect} disabled={busy} style={{padding:'10px 18px',background:'var(--teal)',color:'#fff',border:'none',borderRadius:8,fontSize:12,fontWeight:700,cursor:busy?'wait':'pointer',opacity:busy?.6:1}}>
-          {busy ? 'Redirecting...' : 'Connect Google Drive'}
-        </button>
-      </div>}
-      {status==='reconnect-needed' && <div style={{marginBottom:10}}><button className="btn-primary btn-sm" onClick={handleReconnect} disabled={busy} style={{background:'var(--gold)',color:'var(--bg)'}}>{busy?'Reconnecting\u2026':'Reconnect'}</button></div>}
-      {status==='connected' && <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
-        <button className="btn-secondary btn-sm" onClick={handleManualSync}>🔄 Sync now</button>
-        <button className="btn-secondary btn-sm" onClick={handleForcePull}>Pull latest</button>
-        <button className="btn-secondary btn-sm" onClick={handleForcePush}>Push this device</button>
-        <button className="btn-secondary btn-sm" onClick={handleDisconnect} disabled={busy} style={{marginLeft:'auto',color:'var(--text3)'}}>Disconnect</button>
-        <button className="btn-secondary btn-sm" onClick={handleDiscover} disabled={discoverBusy}>{discoverBusy?'Scanning\u2026':'🔍 Find clients in Drive'}</button>
-      </div>}
+      {statusMsg && <div style={{fontSize:11,color:msgColor,marginTop:10,paddingLeft:36}}>{statusMsg.text}</div>}
     </div>
   );
 }
@@ -47239,21 +47347,41 @@ function DriveDiscoveryCard() {
 function LocalBackupCard() {
   const { policies, clientProfile, clientName, savePolicy, deletePolicy, saveProfile } = useContext(AppCtx);
   const loadRef = useRef(null);
+  // v2.4.0-rc1.41: demoted to a quiet inline strip — was a full card with
+  // helper paragraph competing with Drive sync for visual weight. Now sits
+  // as a tight one-line "Local backup · Download / Load" row right below
+  // the Drive card so it's adjacent but obviously secondary.
   return (
-    <div className="card" style={{marginBottom:16}}>
-      <h3 style={{fontSize:14,fontWeight:600,marginBottom:4}}>📥 Local Backup</h3>
-      <p style={{fontSize:11,color:'var(--text3)',marginBottom:10,lineHeight:1.5}}>
-        Download a local backup of this client's data, or restore from a previously-downloaded file.
-        Useful for archiving or transferring data manually. Will be removed in a future version once Drive sync is fully trusted.
-      </p>
-      <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-        <button className="btn-secondary btn-sm" onClick={() => doLocalSave(clientProfile, clientName, policies)}>
-          Download as JSON
+    <div style={{
+      display:'flex',alignItems:'center',gap:14,flexWrap:'wrap',
+      padding:'10px 18px',background:'var(--bg2)',
+      border:'1px solid '+T_V2.border,borderRadius:T_V2.radiusLg,
+      marginBottom:16,marginTop:-4,
+    }}>
+      <span style={{fontSize:11,color:'var(--text3)',fontWeight:600,letterSpacing:'0.04em',textTransform:'uppercase'}}>
+        Local backup
+      </span>
+      <span style={{fontSize:11,color:'var(--text3)'}}>
+        Manual JSON archive — useful for offline transfer.
+      </span>
+      <div style={{marginLeft:'auto',display:'flex',gap:6,flexWrap:'wrap'}}>
+        <button onClick={() => doLocalSave(clientProfile, clientName, policies)} style={{
+          padding:'5px 12px',fontSize:11.5,fontWeight:500,
+          borderRadius:999,background:'var(--bg)',color:'var(--text2)',
+          border:'1px solid '+T_V2.border,cursor:'pointer',whiteSpace:'nowrap',
+          fontFamily:T_V2.sansFamily,
+        }}>
+          ⬇ Download
         </button>
         <input ref={loadRef} type="file" accept=".json" style={{display:'none'}}
           onChange={e => { if(e.target.files[0]) doLocalLoad(e.target.files[0], policies, savePolicy, deletePolicy, saveProfile, clientProfile); e.target.value=''; }} />
-        <button className="btn-secondary btn-sm" onClick={() => loadRef.current?.click()}>
-          Load from JSON file
+        <button onClick={() => loadRef.current?.click()} style={{
+          padding:'5px 12px',fontSize:11.5,fontWeight:500,
+          borderRadius:999,background:'var(--bg)',color:'var(--text2)',
+          border:'1px solid '+T_V2.border,cursor:'pointer',whiteSpace:'nowrap',
+          fontFamily:T_V2.sansFamily,
+        }}>
+          ⬆ Restore
         </button>
       </div>
     </div>
@@ -47650,6 +47778,11 @@ function ClientTiersPanel({ tierDefinitions, saveTierDefinitions }) {
         {tiers.map((t, i) => {
           const count = clientCount(t);
           const isUnassigned = t === UNASSIGNED_TIER;
+          // v2.4.0-rc1.42: hide the "Unassigned" tier row entirely when no
+          // clients are unassigned — it was rendering as a 🔒 placeholder
+          // that looked like an unfinished error state to FCs with a clean
+          // book. Reserved status is preserved by the tier list itself.
+          if (isUnassigned && count === 0) return null;
           const canDelete = !isUnassigned && count === 0;
           const ts = tierStyle(t, tiers);
           const initialName = initialTiers[i];
@@ -47926,6 +48059,16 @@ function Settings() {
       <CheckpointLoadModal open={checkpointLoadOpen} onClose={() => setCheckpointLoadOpen(false)}
         clientId={activeClientId} switchClient={switchClient} setTab={setTab} />
 
+      {/* v2.4.0-rc1.45: Settings split into 3 logical groups with quiet
+          section headers — Identity / Data / Workspace. Each header is a
+          small uppercase eyebrow + one-line description, no card chrome,
+          so it reads as a divider rather than another box. */}
+
+      <div style={{marginBottom:14}}>
+        <div style={{fontSize:11,fontWeight:600,color:'var(--text3)',letterSpacing:'0.06em',textTransform:'uppercase'}}>Identity</div>
+        <div style={{fontSize:12,color:'var(--text4)',marginTop:2}}>How you appear on reports and to clients.</div>
+      </div>
+
       {/* v2.4.0-rc1.38: Advisor Details polished — Fraunces section title,
           friendlier helper, sentence-case field labels (was loud uppercase). */}
       <div className="card" style={{marginBottom:16,padding:24,boxShadow:T_V2.shadow,border:`1px solid ${T_V2.border}`,borderRadius:T_V2.radiusLg}}>
@@ -47940,6 +48083,11 @@ function Settings() {
           <div className="field"><label style={{textTransform:'none',fontSize:12,letterSpacing:0,color:'var(--text2)',fontWeight:500}}>Your name</label><input value={advisorName} onChange={e=>setAdvisorName(e.target.value)} onBlur={e=>{dbPut('settings',{key:'advisorName',value:e.target.value});if(window.saveKeyToSupabase)saveKeyToSupabase('advisorName',e.target.value)}} placeholder="e.g. John Tan" /></div>
           <div className="field"><label style={{textTransform:'none',fontSize:12,letterSpacing:0,color:'var(--text2)',fontWeight:500}}>Company</label><input value={advisorCompany} onChange={e=>setAdvisorCompany(e.target.value)} onBlur={e=>{dbPut('settings',{key:'advisorCompany',value:e.target.value});if(window.saveKeyToSupabase)saveKeyToSupabase('advisorCompany',e.target.value)}} placeholder="e.g. ABC Advisory" /></div>
         </div>
+      </div>
+
+      <div style={{marginTop:8,marginBottom:14}}>
+        <div style={{fontSize:11,fontWeight:600,color:'var(--text3)',letterSpacing:'0.06em',textTransform:'uppercase'}}>Data</div>
+        <div style={{fontSize:12,color:'var(--text4)',marginTop:2}}>Where your client portfolios live and how they back up.</div>
       </div>
 
       {/* ═══ v2.1.0 PHASE A: GOOGLE DRIVE ═══ */}
@@ -47957,80 +48105,110 @@ function Settings() {
 
       {/* v2.3.0-rc2c.5s: Firm Defaults panel removed (values become silent DEFAULT_HOUSE_VALUES seeds). Backend preserved for AssumptionsCard ghost-text. */}
 
+      <div style={{marginTop:8,marginBottom:14}}>
+        <div style={{fontSize:11,fontWeight:600,color:'var(--text3)',letterSpacing:'0.06em',textTransform:'uppercase'}}>Workspace</div>
+        <div style={{fontSize:12,color:'var(--text4)',marginTop:2}}>How clients are organised, AI extraction, and document unlock.</div>
+      </div>
+
       {/* ═══ CLIENT TIERS ═══ */}
       <ClientTiersPanel tierDefinitions={tierDefinitions} saveTierDefinitions={saveTierDefinitions} />
 
-      {/* ═══ AI KEYS ═══ */}
-      <div className="card" style={{marginBottom:16}}>
-        <h3 style={{fontSize:14,fontWeight:600,marginBottom:4}}>AI Document Extraction</h3>
-        <p style={{fontSize:11,color:'var(--text3)',marginBottom:12}}>AI inference (Gemini + Claude) is provided by CKG. No key entry needed — every signed-in user gets AI for free.</p>
-        {/* rc2e.49: Phase 8 retired per-user AI key entry. The Gemini /
-            Anthropic key inputs + sync-toggle that used to live here were
-            wrapped in `{false && ...}` and kept as dead code "for easy
-            revert" since rc2e.~. Removed in rc2e.49 — git history is the
-            revert path if Phase 8 ever needs to roll back. The fetch
-            interceptor at the top of the file routes all Gemini + Claude
-            calls through ckg-ai-proxy regardless. State vars geminiKey /
-            anthropicKey + syncKeysFromSupabase storage stay (per PLANS.md
-            "do not change persistence/storage format"). */}
-
-        {/* Google Document AI Proxy */}
-        <div style={{padding:10,background:'var(--bg3)',borderRadius:8,border:'1px solid var(--border)',marginTop:10}}>
-          <div className="field" style={{marginBottom:6}}>
-            <label style={{color:'#34a853',fontWeight:600}}>Google Document AI Proxy <span style={{fontWeight:400,color:'var(--text3)'}}>(built-in first-pass OCR/layout)</span></label>
-            <div style={{display:'flex',gap:6,alignItems:'center'}}>
-              <input type="url" value={documentAiEndpoint} onChange={e=>setDocumentAiEndpoint(e.target.value)} placeholder={DEFAULT_DOCUMENT_AI_PROXY_URL} style={{flex:1,fontFamily:'monospace',fontSize:11}} autoComplete="off" spellCheck="false" />
-              {documentAiEndpoint && <span style={{fontSize:10,color:'var(--text3)',flexShrink:0}}>{documentAiEndpoint.length}ch</span>}
+      {/* v2.4.0-rc1.43: AI Document Extraction simplified.
+          Was: full card with 4 lines of reassurance copy + always-visible
+          Document AI Proxy URL input + Save/Test/Reset row + paragraph
+          about service-account JSON + duplicate "Pipeline: ..." status.
+          Now: ✓ status line + collapsed "Custom endpoint" disclosure for
+          power users. */}
+      <div className="card" style={{marginBottom:16,padding:24,boxShadow:T_V2.shadow,border:'1px solid '+T_V2.border,borderRadius:T_V2.radiusLg}}>
+        <div style={{display:'flex',alignItems:'flex-start',gap:14}}>
+          <span style={{fontSize:22,flexShrink:0}}>🤖</span>
+          <div style={{flex:1,minWidth:0}}>
+            <h3 style={{fontFamily:T_V2.serifFamily,fontSize:20,fontWeight:400,letterSpacing:'-0.015em',color:'var(--text)',margin:0,lineHeight:1.2}}>AI document extraction</h3>
+            <div style={{display:'flex',alignItems:'center',gap:8,marginTop:8,flexWrap:'wrap'}}>
+              <span style={{
+                display:'inline-flex',alignItems:'center',gap:6,
+                fontSize:11.5,padding:'4px 11px',borderRadius:999,
+                background:'color-mix(in oklch, var(--green2) 14%, transparent)',
+                color:'var(--green2)',
+                border:'1px solid color-mix(in oklch, var(--green2) 30%, transparent)',
+                fontWeight:600,
+              }}>
+                <span style={{width:6,height:6,borderRadius:999,background:'var(--green2)'}} />
+                Inference provided by CKG
+              </span>
+              <span style={{fontSize:11,color:'var(--text3)'}}>· no key entry needed</span>
             </div>
+            <p style={{fontSize:11.5,color:'var(--text3)',margin:'8px 0 0',lineHeight:1.5}}>
+              Document AI <span style={{color:'var(--text4)'}}>→</span> Gemini structured extraction <span style={{color:'var(--text4)'}}>→</span> Claude fallback. All routed through CKG, no setup needed.
+            </p>
           </div>
-          <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
-            <button className="btn-primary btn-sm" onClick={async()=>{
-              const url=(documentAiEndpoint||'').trim().replace(/\/+$/,'');
-              if(url && !/^https:\/\/.+/i.test(url)){toast('Use the HTTPS Worker URL for Document AI','warning');return;}
-              const effectiveUrl=url||DEFAULT_DOCUMENT_AI_PROXY_URL;
-              const uid3=window._user?.id||'';
-              await dbPut('settings',{key:'documentAiEndpoint_'+uid3,value:url});
-              await dbPut('settings',{key:'documentAiEndpoint',value:url});
-              setDocumentAiEndpoint(effectiveUrl);
-              toast(url?'Document AI proxy override saved':'Document AI proxy reset to built-in default','success');
-            }}>Save</button>
-            <button className="btn-secondary btn-sm" onClick={async()=>{
-              const url=((documentAiEndpoint||'').trim().replace(/\/+$/,'')||DEFAULT_DOCUMENT_AI_PROXY_URL);
-              try{
-                const r=await fetchWithTimeout(url,{method:'GET'},15000);
-                const d=await r.json().catch(()=>({}));
-                if(!r.ok||d.ok===false) throw new Error(d.error||('HTTP '+r.status));
-                toast(d.configured?'Document AI proxy connected':'Proxy reachable but missing Worker env/secrets','info',4500);
-              }catch(e){toast('Document AI proxy test failed: '+e.message,'error',5000);}
-            }}>Test</button>
-            {documentAiEndpoint !== DEFAULT_DOCUMENT_AI_PROXY_URL && <button className="btn-secondary btn-sm" onClick={async()=>{
-              const uid4=window._user?.id||'';
-              await dbPut('settings',{key:'documentAiEndpoint_'+uid4,value:''});
-              await dbPut('settings',{key:'documentAiEndpoint',value:''});
-              setDocumentAiEndpoint(DEFAULT_DOCUMENT_AI_PROXY_URL);
-              toast('Document AI proxy reset to built-in default','info');
-            }}>Reset</button>}
+        </div>
+        <details style={{marginTop:14}}>
+          <summary style={{cursor:'pointer',padding:'8px 0',fontSize:11.5,color:'var(--text3)',userSelect:'none',listStyle:'none',display:'inline-flex',alignItems:'center',gap:6}}>
+            <span style={{fontSize:9,color:'var(--text4)'}}>▶</span>
+            Custom endpoint <span style={{color:'var(--text4)'}}>· for testing another Worker</span>
+          </summary>
+          <div style={{marginTop:8,padding:14,background:'var(--bg2)',borderRadius:T_V2.radius||14,border:'1px solid '+T_V2.border}}>
+            <div className="field" style={{marginBottom:8}}>
+              <label style={{textTransform:'none',fontSize:11.5,letterSpacing:0,color:'var(--text2)',fontWeight:500}}>Document AI proxy URL</label>
+              <div style={{display:'flex',gap:6,alignItems:'center'}}>
+                <input type="url" value={documentAiEndpoint} onChange={e=>setDocumentAiEndpoint(e.target.value)} placeholder={DEFAULT_DOCUMENT_AI_PROXY_URL} style={{flex:1,fontFamily:'monospace',fontSize:11}} autoComplete="off" spellCheck="false" />
+                {documentAiEndpoint && <span style={{fontSize:10,color:'var(--text3)',flexShrink:0}}>{documentAiEndpoint.length}ch</span>}
+              </div>
+            </div>
+            <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+              <button className="btn-primary btn-sm" onClick={async()=>{
+                const url=(documentAiEndpoint||'').trim().replace(/\/+$/,'');
+                if(url && !/^https:\/\/.+/i.test(url)){toast('Use the HTTPS Worker URL for Document AI','warning');return;}
+                const effectiveUrl=url||DEFAULT_DOCUMENT_AI_PROXY_URL;
+                const uid3=window._user?.id||'';
+                await dbPut('settings',{key:'documentAiEndpoint_'+uid3,value:url});
+                await dbPut('settings',{key:'documentAiEndpoint',value:url});
+                setDocumentAiEndpoint(effectiveUrl);
+                toast(url?'Document AI proxy override saved':'Document AI proxy reset to built-in default','success');
+              }}>Save</button>
+              <button className="btn-secondary btn-sm" onClick={async()=>{
+                const url=((documentAiEndpoint||'').trim().replace(/\/+$/,'')||DEFAULT_DOCUMENT_AI_PROXY_URL);
+                try{
+                  const r=await fetchWithTimeout(url,{method:'GET'},15000);
+                  const d=await r.json().catch(()=>({}));
+                  if(!r.ok||d.ok===false) throw new Error(d.error||('HTTP '+r.status));
+                  toast(d.configured?'Document AI proxy connected':'Proxy reachable but missing Worker env/secrets','info',4500);
+                }catch(e){toast('Document AI proxy test failed: '+e.message,'error',5000);}
+              }}>Test</button>
+              {documentAiEndpoint !== DEFAULT_DOCUMENT_AI_PROXY_URL && <button className="btn-secondary btn-sm" onClick={async()=>{
+                const uid4=window._user?.id||'';
+                await dbPut('settings',{key:'documentAiEndpoint_'+uid4,value:''});
+                await dbPut('settings',{key:'documentAiEndpoint',value:''});
+                setDocumentAiEndpoint(DEFAULT_DOCUMENT_AI_PROXY_URL);
+                toast('Document AI proxy reset to built-in default','info');
+              }}>Reset</button>}
+            </div>
+            <p style={{fontSize:10.5,color:'var(--text3)',marginTop:8,lineHeight:1.5,margin:'8px 0 0'}}>
+              Private service-account JSON stays in the Worker, never in the browser. Leave as the built-in URL unless you're testing another Worker.
+            </p>
           </div>
-          <p style={{fontSize:10,color:'var(--text3)',marginTop:4}}>Private service-account JSON stays in the Worker, never in this browser app. Leave this as the built-in URL unless you are testing another Worker. Supported path: Document AI Form Parser -> Gemini structured extraction -> Claude fallback.</p>
-        </div>
-
-        {/* rc2e.49: Pipeline status simplified to reflect ckg-ai-proxy reality.
-            Previous version conditionally read geminiKey / anthropicKey state
-            vars and showed misleading messages like "No keys — AI scanning
-            disabled" because Phase 8 stopped populating those from the UI. */}
-        <div style={{marginTop:10,padding:8,background:'var(--bg2)',borderRadius:6,fontSize:11}}>
-          <strong>Pipeline: </strong>
-          <span style={{color:'var(--green2)'}}>Document AI → Gemini structured extraction → Claude fallback</span>
-          <span style={{color:'var(--text3)'}}> · all routed through CKG, no key entry needed</span>
-        </div>
+        </details>
       </div>
 
-      {/* ═══ PDF PASSWORDS ═══ */}
-      <div className="card" style={{marginBottom:16}}>
-        <h3 style={{fontSize:14,fontWeight:600,marginBottom:4}}>🔓 PDF Unlock Passwords</h3>
-        <p style={{fontSize:11,color:'var(--text3)',marginBottom:10}}>Preset passwords to auto-unlock protected policy documents. Common: NRIC number, DOB (DDMMYYYY). Client NRIC and DOB from My Profile are tried automatically.</p>
-        <PdfPasswordEditor />
-      </div>
+      {/* v2.4.0-rc1.44: PDF Unlock Passwords collapsed by default.
+          Most FCs never touch this — client NRIC + DOB are tried
+          automatically from the profile. Hidden behind a disclosure
+          so the Settings page reads cleaner on first load. */}
+      <details style={{marginBottom:16,background:'var(--bg2)',border:'1px solid '+T_V2.border,borderRadius:T_V2.radiusLg}}>
+        <summary style={{cursor:'pointer',padding:'14px 18px',fontSize:13,color:'var(--text2)',userSelect:'none',listStyle:'none',display:'flex',alignItems:'center',gap:10}}>
+          <span style={{fontSize:18}}>🔓</span>
+          <span style={{fontFamily:T_V2.serifFamily,fontSize:18,fontWeight:400,letterSpacing:'-0.015em',color:'var(--text)',lineHeight:1.2}}>PDF unlock passwords</span>
+          <span style={{fontSize:11,color:'var(--text3)'}}>· optional, NRIC + DOB tried automatically</span>
+          <span style={{marginLeft:'auto',fontSize:11,color:'var(--text4)'}}>▼</span>
+        </summary>
+        <div style={{padding:'4px 18px 18px',borderTop:'1px solid '+T_V2.border,marginTop:0,paddingTop:14}}>
+          <p style={{fontSize:11.5,color:'var(--text3)',margin:'0 0 12px',lineHeight:1.5}}>
+            Preset passwords to auto-unlock protected policy PDFs. Common: NRIC, DOB in <code style={{fontFamily:T_V2.monoFamily,fontSize:10.5,padding:'1px 5px',background:'var(--bg3)',borderRadius:3}}>DDMMYYYY</code> format. Client NRIC and DOB from the profile are already tried automatically — only add custom passwords here.
+          </p>
+          <PdfPasswordEditor />
+        </div>
+      </details>
 
       {/* rc2e.50: Six debug/diagnostics cards (Scan Cache, Extraction Queue,
           Extraction Diagnostics, Correction Memory, Learned Patterns, Pipeline
