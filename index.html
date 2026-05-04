@@ -22,7 +22,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 })();
 </script>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0b0f1a">
+<meta name="theme-color" content="#fbf7ee">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -106,11 +106,9 @@ html,body{overflow-x:hidden;width:100%}
    in rc1.5. The legacy dark theme is preserved as a comment for one-batch
    revert + eventual restore via a future Settings → Dark mode toggle.
 
-   Legacy dark (pre-v2.4):
-     --bg:#0b0f1a;--bg2:#111827;--bg3:#171f2e;--bg4:#1f2a3d;
-     --text:#e8dcc8;--text2:#a39580;--text3:#6b6050;
-     --border:#1e2738;--border2:#2a3548;
-     --gold:#d4a96a;--gold2:#e8c992;--gold3:#b8935a;
+   Legacy dark theme (pre-v2.4) lives in git history at commit 79d668b
+   and earlier — not duplicated here so a future bulk color sweep
+   doesn't accidentally rewrite the historical reference.
 */
 :root{
 /* Surfaces — warm cream paper */
@@ -163,7 +161,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold)}
 input::placeholder{color:var(--text3)}
 select{cursor:pointer}
 button{font-family:inherit;cursor:pointer;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:500;transition:all .15s}
-.btn-primary{background:var(--gold);color:#0b0f1a;font-weight:600}.btn-primary:hover{background:var(--gold2)}
+.btn-primary{background:var(--gold);color:#fff;font-weight:600}.btn-primary:hover{background:var(--gold2)}
 .btn-secondary{background:var(--bg3);color:var(--text2);border:1px solid var(--border2)}.btn-secondary:hover{background:var(--bg4);border-color:var(--gold3)}
 .btn-danger{background:var(--red-dim);color:var(--red2)}.btn-danger:hover{background:rgba(239,83,80,.2)}
 .btn-sm{padding:5px 10px;font-size:12px}
@@ -193,13 +191,13 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
 .toast-success{background:rgba(91,168,160,.15);border:1px solid rgba(91,168,160,.3);color:var(--green2)}
 .toast-error{background:rgba(239,83,80,.12);border:1px solid rgba(239,83,80,.25);color:var(--red)}
 .toast-info{background:rgba(91,143,217,.12);border:1px solid rgba(91,143,217,.25);color:var(--blue2)}
-.toast-warning{background:rgba(212,169,106,.12);border:1px solid rgba(212,169,106,.25);color:var(--gold)}
+.toast-warning{background:var(--gold-dim);border:1px solid color-mix(in oklch, var(--gold) 35%, transparent);color:var(--gold)}
 
 /* ══════ SKELETON SHIMMER ══════ */
 @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
 .skeleton{border-radius:6px;background:linear-gradient(90deg,var(--bg3) 25%,var(--bg4) 50%,var(--bg3) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite ease-in-out}
-.fuzzy-alert{background:var(--gold-dim);border:1px solid rgba(212,169,106,.25);border-radius:10px;padding:14px;margin:12px 0}
+.fuzzy-alert{background:var(--gold-dim);border:1px solid color-mix(in oklch, var(--gold) 35%, transparent);border-radius:10px;padding:14px;margin:12px 0}
 .fuzzy-alert h4{color:var(--gold);font-size:13px;margin-bottom:6px}
 .gap-bar{height:8px;border-radius:4px;background:var(--bg4);overflow:hidden;position:relative}
 .gap-bar-fill{height:100%;border-radius:4px;transition:width .5s ease}
@@ -324,16 +322,16 @@ body { padding-top: var(--ckg-strip-h) !important; }
 <div id="auth-loading">
   <div style="text-align:center">
     <svg width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="50" cy="50" r="38" fill="none" stroke="#d4a96a" stroke-width="2.5"/>
-      <circle cx="50" cy="50" r="2" fill="#d4a96a"/>
-      <line x1="50" y1="32" x2="50" y2="42" stroke="#d4a96a" stroke-width="1.5" stroke-linecap="round"/>
-      <line x1="50" y1="58" x2="50" y2="68" stroke="#d4a96a" stroke-width="1.5" stroke-linecap="round"/>
-      <line x1="32" y1="50" x2="42" y2="50" stroke="#d4a96a" stroke-width="1.5" stroke-linecap="round"/>
-      <line x1="58" y1="50" x2="68" y2="50" stroke="#d4a96a" stroke-width="1.5" stroke-linecap="round"/>
-      <path d="M50 30 L51.5 32 L50 34 L48.5 32Z" fill="#d4a96a" opacity="0.8"/>
-      <path d="M50 66 L51.5 68 L50 70 L48.5 68Z" fill="#d4a96a" opacity="0.8"/>
-      <path d="M30 50 L32 51.5 L34 50 L32 48.5Z" fill="#d4a96a" opacity="0.8"/>
-      <path d="M66 50 L68 51.5 L70 50 L68 48.5Z" fill="#d4a96a" opacity="0.8"/>
+      <circle cx="50" cy="50" r="38" fill="none" stroke="var(--gold)" stroke-width="2.5"/>
+      <circle cx="50" cy="50" r="2" fill="var(--gold)"/>
+      <line x1="50" y1="32" x2="50" y2="42" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="50" y1="58" x2="50" y2="68" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="32" y1="50" x2="42" y2="50" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="58" y1="50" x2="68" y2="50" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M50 30 L51.5 32 L50 34 L48.5 32Z" fill="var(--gold)" opacity="0.8"/>
+      <path d="M50 66 L51.5 68 L50 70 L48.5 68Z" fill="var(--gold)" opacity="0.8"/>
+      <path d="M30 50 L32 51.5 L34 50 L32 48.5Z" fill="var(--gold)" opacity="0.8"/>
+      <path d="M66 50 L68 51.5 L70 50 L68 48.5Z" fill="var(--gold)" opacity="0.8"/>
     </svg>
     <div id="auth-loading-text" style="color:#a39580;font-size:14px;margin-top:8px;font-family:system-ui,sans-serif"><span>Loading PolicyLens…</span><span>Polishing the lenses…</span><span>Stretching before the work…</span><span>Warming up the engines…</span><span>Brewing your dashboard…</span><span>Tuning the instruments…</span><span>Sharpening the pencils…</span><span>Sweeping out the cobwebs…</span><span>Setting the table…</span></div>
   </div>
@@ -604,9 +602,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.4';
+const APP_VERSION = 'v2.4.0-rc1.5';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — global cream theme + dashboard data fixes';
+const APP_VERSION_NAME = 'Design v2 — color sweeps (brass → coral, navy → cream)';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -2498,7 +2496,7 @@ if (window.Chart) {
 // PolicyLens Logo — inline SVG, works everywhere
 const LogoSVG = ({
   size = 24,
-  color = '#d4a96a'
+  color = 'var(--gold)'
 }) => /*#__PURE__*/React.createElement("svg", {
   width: size,
   height: size,
@@ -17777,7 +17775,7 @@ function CameraModal() {
     onClick: () => finish(),
     style: {
       background: shots.length > 0 ? 'var(--gold)' : 'var(--bg3)',
-      color: shots.length > 0 ? '#0b0f1a' : 'var(--text3)',
+      color: shots.length > 0 ? '#fff' : 'var(--text3)',
       border: 'none',
       borderRadius: 8,
       padding: '6px 14px',
@@ -17947,7 +17945,7 @@ function CameraModal() {
     style: {
       fontSize: 14,
       fontWeight: 700,
-      color: '#0b0f1a',
+      color: '#fff',
       marginLeft: 8
     }
   }, "Extract ", shots.length, " Item", shots.length > 1 ? 's' : ''))));
@@ -18303,9 +18301,9 @@ function DriveMigrationModal({
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      background: '#1a2332',
+      background: 'var(--bg2)',
       borderRadius: 16,
-      border: '1px solid rgba(201,169,110,.2)',
+      border: '1px solid color-mix(in oklch, var(--gold) 28%, transparent)',
       maxWidth: 440,
       width: '100%',
       padding: '28px 24px',
@@ -18315,7 +18313,7 @@ function DriveMigrationModal({
     style: {
       fontSize: 18,
       fontWeight: 700,
-      color: '#e8e8e8',
+      color: 'var(--text)',
       margin: '0 0 12px'
     }
   }, "Enable Google Drive Sync?"), /*#__PURE__*/React.createElement("p", {
@@ -18469,7 +18467,7 @@ function ReconcileSyncModal({
     }
   }, /*#__PURE__*/React.createElement("strong", {
     style: {
-      color: 'var(--text1)'
+      color: 'var(--text)'
     }
   }, "Profile:"), " ", localHasProfile ? localProfileName : /*#__PURE__*/React.createElement("em", {
     style: {
@@ -18482,7 +18480,7 @@ function ReconcileSyncModal({
     }
   }, /*#__PURE__*/React.createElement("strong", {
     style: {
-      color: 'var(--text1)'
+      color: 'var(--text)'
     }
   }, "Policies:"), " ", localPolicyCount)), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -18508,7 +18506,7 @@ function ReconcileSyncModal({
     }
   }, /*#__PURE__*/React.createElement("strong", {
     style: {
-      color: 'var(--text1)'
+      color: 'var(--text)'
     }
   }, "Profile:"), " ", cloudHasProfile ? cloudProfileName : /*#__PURE__*/React.createElement("em", {
     style: {
@@ -18521,7 +18519,7 @@ function ReconcileSyncModal({
     }
   }, /*#__PURE__*/React.createElement("strong", {
     style: {
-      color: 'var(--text1)'
+      color: 'var(--text)'
     }
   }, "Policies:"), " ", cloudPolicyCount))), (bothCount > 0 || localOnly > 0 && cloudOnly > 0) && /*#__PURE__*/React.createElement("div", {
     style: {
@@ -18548,8 +18546,8 @@ function ReconcileSyncModal({
     style: {
       padding: '12px 16px',
       borderRadius: 10,
-      border: '1px solid rgba(212,169,106,.4)',
-      background: 'rgba(212,169,106,.08)',
+      border: '1px solid color-mix(in oklch, var(--gold) 56%, transparent)',
+      background: 'color-mix(in oklch, var(--gold) 12%, transparent)',
       color: 'var(--gold)',
       cursor: 'pointer',
       textAlign: 'left',
@@ -18597,8 +18595,8 @@ function ReconcileSyncModal({
       padding: '12px 16px',
       borderRadius: 10,
       border: '1px solid rgba(91,168,160,.5)',
-      background: 'linear-gradient(135deg, rgba(91,168,160,.15), rgba(212,169,106,.1))',
-      color: 'var(--text1)',
+      background: 'linear-gradient(135deg, rgba(91,168,160,.15), color-mix(in oklch, var(--gold) 14%, transparent))',
+      color: 'var(--text)',
       cursor: 'pointer',
       textAlign: 'left',
       fontSize: 13,
@@ -22231,9 +22229,9 @@ function App() {
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      background: '#1a2332',
+      background: 'var(--bg2)',
       borderRadius: 16,
-      border: '1px solid rgba(201,169,110,.2)',
+      border: '1px solid color-mix(in oklch, var(--gold) 28%, transparent)',
       maxWidth: 400,
       width: '100%',
       padding: '28px 24px',
@@ -22248,7 +22246,7 @@ function App() {
     style: {
       fontSize: 16,
       fontWeight: 700,
-      color: '#e8e8e8',
+      color: 'var(--text)',
       margin: '0 0 8px'
     }
   }, "Setting up multi-client structure"), /*#__PURE__*/React.createElement("p", {
@@ -22454,7 +22452,7 @@ function PresentMode() {
   // Protection score (simplified LIA framework)
   const coverPct = (have, need) => need === 0 ? 100 : Math.min(100, have / need * 100);
   const score = Math.round(coverPct(totalDeathSA, reqDeath) * 0.25 + coverPct(totalTPD, reqTPD) * 0.15 + coverPct(totalCI, reqCI) * 0.25 + coverPct(totalDI, reqDI) * 0.15 + (hasISP ? 20 : 0));
-  const scoreColor = score >= 80 ? '#5ba8a0' : score >= 50 ? '#d4a96a' : '#dc5a50';
+  const scoreColor = score >= 80 ? '#5ba8a0' : score >= 50 ? 'var(--gold)' : '#dc5a50';
   const scoreLabel = score >= 80 ? 'WELL PROTECTED' : score >= 50 ? 'PARTIALLY PROTECTED' : 'SIGNIFICANTLY UNDERPROTECTED';
 
   // Retirement adequacy from window cache (set by Dashboard)
@@ -22578,7 +22576,7 @@ function PresentMode() {
     health: '#c97b9a',
     savings: '#5ba8a0',
     investment: '#9d8abf',
-    retirement: '#d4a96a',
+    retirement: 'var(--gold)',
     maternity: '#e09168',
     cash_investments: '#6c8ab0',
     other_assets: '#7a7a8c',
@@ -22781,8 +22779,8 @@ function PresentMode() {
   // ── Styling: navy bg, gold accents, generous padding ──
   const NAVY = '#0e1929';
   const NAVY_LIGHT = '#1a2740';
-  const GOLD = '#d4a96a';
-  const GOLD_DARK = '#b8935a';
+  const GOLD = 'var(--gold)';
+  const GOLD_DARK = 'var(--gold3)';
   const CREAM = '#f4ead5';
   const MUTED = '#8a9ab5';
   return /*#__PURE__*/React.createElement("div", {
@@ -22805,7 +22803,7 @@ function PresentMode() {
       justifyContent: 'space-between',
       alignItems: 'center',
       padding: '20px clamp(16px, 4vw, 40px) 16px',
-      borderBottom: `1px solid rgba(212,169,106,0.18)`,
+      borderBottom: `1px solid color-mix(in oklch, var(--gold) 25%, transparent)`,
       position: 'sticky',
       top: 0,
       zIndex: 2,
@@ -22831,9 +22829,9 @@ function PresentMode() {
   }, clientProfile?.name || clientName || 'Client Portfolio')), /*#__PURE__*/React.createElement("button", {
     onClick: handleExit,
     style: {
-      background: 'rgba(212,169,106,0.1)',
+      background: 'color-mix(in oklch, var(--gold) 14%, transparent)',
       color: GOLD,
-      border: `1px solid rgba(212,169,106,0.4)`,
+      border: `1px solid color-mix(in oklch, var(--gold) 56%, transparent)`,
       padding: '10px 18px',
       borderRadius: 10,
       fontSize: 13,
@@ -22864,7 +22862,7 @@ function PresentMode() {
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: NAVY_LIGHT,
-      border: `1px solid rgba(212,169,106,0.25)`,
+      border: `1px solid color-mix(in oklch, var(--gold) 35%, transparent)`,
       borderRadius: 16,
       padding: '28px 24px',
       position: 'relative',
@@ -22905,7 +22903,7 @@ function PresentMode() {
   }, active.length, " active polic", active.length === 1 ? 'y' : 'ies')), /*#__PURE__*/React.createElement("div", {
     style: {
       background: NAVY_LIGHT,
-      border: `1px solid rgba(212,169,106,0.25)`,
+      border: `1px solid color-mix(in oklch, var(--gold) 35%, transparent)`,
       borderRadius: 16,
       padding: '28px 24px',
       position: 'relative',
@@ -23058,7 +23056,7 @@ function PresentMode() {
   }, item.note))))), /*#__PURE__*/React.createElement("div", {
     style: {
       background: NAVY_LIGHT,
-      border: `1px solid rgba(212,169,106,0.2)`,
+      border: `1px solid color-mix(in oklch, var(--gold) 28%, transparent)`,
       borderRadius: 16,
       padding: '24px 28px',
       marginBottom: 28
@@ -23074,7 +23072,7 @@ function PresentMode() {
     }
   }, "Coverage Breakdown"), coverageBars.map((row, i) => {
     const pct = row.isFlag ? row.ok ? 100 : 0 : coverPct(row.have, row.need);
-    const rowColor = pct >= 80 ? '#5ba8a0' : pct >= 50 ? '#d4a96a' : '#dc5a50';
+    const rowColor = pct >= 80 ? '#5ba8a0' : pct >= 50 ? 'var(--gold)' : '#dc5a50';
     return /*#__PURE__*/React.createElement("div", {
       key: row.label,
       style: {
@@ -23148,7 +23146,7 @@ function PresentMode() {
   })), retData && retData.desired > 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       background: NAVY_LIGHT,
-      border: `1px solid rgba(212,169,106,0.2)`,
+      border: `1px solid color-mix(in oklch, var(--gold) 28%, transparent)`,
       borderRadius: 16,
       padding: '24px 28px',
       marginBottom: 28
@@ -23299,7 +23297,7 @@ function PresentMode() {
     return /*#__PURE__*/React.createElement("div", {
       style: {
         background: NAVY_LIGHT,
-        border: `1px solid rgba(212,169,106,0.2)`,
+        border: `1px solid color-mix(in oklch, var(--gold) 28%, transparent)`,
         borderRadius: 16,
         padding: '24px 28px',
         marginBottom: 28
@@ -23546,7 +23544,7 @@ function PresentMode() {
   }, "+", bigFmt(row.shortfall))))))), categoryRows.length > 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       background: NAVY_LIGHT,
-      border: `1px solid rgba(212,169,106,0.2)`,
+      border: `1px solid color-mix(in oklch, var(--gold) 28%, transparent)`,
       borderRadius: 16,
       padding: '24px 28px',
       marginBottom: 28
@@ -23638,7 +23636,7 @@ function PresentMode() {
   }, cat.pct.toFixed(0), "%"))))), hasDependantsWithCoverage && /*#__PURE__*/React.createElement("div", {
     style: {
       background: NAVY_LIGHT,
-      border: `1px solid rgba(212,169,106,0.2)`,
+      border: `1px solid color-mix(in oklch, var(--gold) 28%, transparent)`,
       borderRadius: 16,
       padding: '24px 28px',
       marginBottom: 28
@@ -23667,7 +23665,7 @@ function PresentMode() {
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: '14px 0',
-        borderTop: i > 0 ? '1px solid rgba(212,169,106,0.1)' : 'none'
+        borderTop: i > 0 ? '1px solid color-mix(in oklch, var(--gold) 14%, transparent)' : 'none'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -23854,7 +23852,7 @@ function PresentMode() {
   })()), topEvents.length > 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       background: NAVY_LIGHT,
-      border: `1px solid rgba(212,169,106,0.2)`,
+      border: `1px solid color-mix(in oklch, var(--gold) 28%, transparent)`,
       borderRadius: 16,
       padding: '24px 28px',
       marginBottom: 28
@@ -23885,7 +23883,7 @@ function PresentMode() {
       top: 14,
       bottom: 14,
       width: 1,
-      background: 'rgba(212,169,106,0.2)'
+      background: 'color-mix(in oklch, var(--gold) 28%, transparent)'
     }
   }), topEvents.map((evt, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
@@ -24268,14 +24266,14 @@ function SyncStatusPill({
   } else if (deleteSyncStatus) {
     label = deleteSyncLabel;
     color = deleteSyncStatus.status === 'queued' || deleteSyncStatus.status === 'syncing' ? 'var(--gold)' : 'var(--teal)';
-    bg = deleteSyncStatus.status === 'synced' ? 'rgba(91,168,160,.10)' : 'rgba(212,169,106,.10)';
-    border = deleteSyncStatus.status === 'synced' ? 'rgba(91,168,160,.24)' : 'rgba(212,169,106,.24)';
+    bg = deleteSyncStatus.status === 'synced' ? 'rgba(91,168,160,.10)' : 'color-mix(in oklch, var(--gold) 14%, transparent)';
+    border = deleteSyncStatus.status === 'synced' ? 'rgba(91,168,160,.24)' : 'color-mix(in oklch, var(--gold) 34%, transparent)';
     title = (deleteSyncStatus.clientName || 'Client') + (deleteSyncStatus.status === 'queued' ? ' is queued for Drive Trash' : deleteSyncStatus.status === 'syncing' ? ' is being moved to Drive Trash' : ' was moved to Drive Trash') + ' at ' + new Date(deleteSyncStatus.at).toLocaleString();
   } else if (syncPhase === 'checking') {
     label = 'Saved locally · Checking Drive sync';
     color = 'var(--gold)';
-    bg = 'rgba(212,169,106,.10)';
-    border = 'rgba(212,169,106,.24)';
+    bg = 'color-mix(in oklch, var(--gold) 14%, transparent)';
+    border = 'color-mix(in oklch, var(--gold) 34%, transparent)';
     title = 'PolicyLens is reconnecting to Drive. Local data is already available.';
   } else if (syncPhase === 'pulling') {
     label = 'Saved locally - Pulling Drive updates';
@@ -24441,8 +24439,8 @@ function DriveReconnectBar() {
   if (!hasPriorDriveConnectionIntent()) return null;
   return /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'rgba(212,169,106,.08)',
-      borderBottom: '1px solid rgba(212,169,106,.2)',
+      background: 'color-mix(in oklch, var(--gold) 12%, transparent)',
+      borderBottom: '1px solid color-mix(in oklch, var(--gold) 28%, transparent)',
       padding: '8px 16px',
       display: 'flex',
       alignItems: 'center',
@@ -24473,7 +24471,7 @@ function DriveReconnectBar() {
     disabled: busy,
     style: {
       background: 'var(--gold)',
-      color: '#0b0f1a',
+      color: '#fff',
       border: 'none',
       borderRadius: 14,
       padding: '4px 14px',
@@ -24623,9 +24621,9 @@ function DriveConflictModal({
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      background: '#1a2332',
+      background: 'var(--bg2)',
       borderRadius: 16,
-      border: '1px solid rgba(201,169,110,.2)',
+      border: '1px solid color-mix(in oklch, var(--gold) 28%, transparent)',
       maxWidth: 480,
       width: '100%',
       padding: '28px 24px',
@@ -24635,7 +24633,7 @@ function DriveConflictModal({
     style: {
       fontSize: 18,
       fontWeight: 700,
-      color: '#e8e8e8',
+      color: 'var(--text)',
       margin: '0 0 12px'
     }
   }, "Drive sync conflict"), !retryFailed && /*#__PURE__*/React.createElement("p", {
@@ -24720,7 +24718,7 @@ function DriveConflictModal({
     disabled: !!busy,
     style: {
       background: 'var(--gold)',
-      color: '#0b0f1a',
+      color: '#fff',
       border: 'none',
       borderRadius: 8,
       padding: '8px 16px',
@@ -24776,8 +24774,8 @@ function DriveStatusChip() {
       icon: '⚠',
       label: 'Drive',
       color: 'var(--gold)',
-      bg: 'rgba(212,169,106,.12)',
-      border: 'rgba(212,169,106,.35)',
+      bg: 'var(--gold-dim)',
+      border: 'color-mix(in oklch, var(--gold) 49%, transparent)',
       title: 'Drive: session expired — click to reconnect in Settings'
     }
   };
@@ -24835,9 +24833,9 @@ function RepositoryTab() {
     key: t.id,
     onClick: () => setSubTab(t.id),
     style: {
-      background: sub === t.id ? 'rgba(212,169,106,.12)' : 'transparent',
+      background: sub === t.id ? 'var(--gold-dim)' : 'transparent',
       color: sub === t.id ? 'var(--gold)' : 'var(--text3)',
-      border: sub === t.id ? '1px solid rgba(212,169,106,.2)' : '1px solid var(--border)',
+      border: sub === t.id ? '1px solid color-mix(in oklch, var(--gold) 28%, transparent)' : '1px solid var(--border)',
       padding: '6px 14px',
       borderRadius: 8,
       fontSize: 11,
@@ -25065,7 +25063,7 @@ function ClientsTab() {
     if (ds?.pendingWrite) return {
       label: 'queued to Drive',
       color: 'var(--gold)',
-      bg: 'rgba(212,169,106,.08)'
+      bg: 'color-mix(in oklch, var(--gold) 12%, transparent)'
     };
     if (ds?.localOnly || !ds?.fileId && !ds?.folderId) return {
       label: 'local only',
@@ -25276,7 +25274,7 @@ function ClientsTab() {
           alignItems: 'stretch',
           padding: isMobile ? '10px 8px' : '10px 10px',
           cursor: 'pointer',
-          background: isActive ? 'rgba(212,169,106,.055)' : 'transparent',
+          background: isActive ? 'color-mix(in oklch, var(--gold) 8%, transparent)' : 'transparent',
           borderBottom: memberIndex < memberCount - 1 ? '1px solid rgba(255,255,255,.055)' : 'none',
           transition: 'background .15s'
         }
@@ -25305,7 +25303,7 @@ function ClientsTab() {
           top: memberIndex === 0 ? '50%' : 0,
           bottom: memberIndex === memberCount - 1 ? '50%' : 0,
           width: 1,
-          background: 'rgba(201,169,110,.25)'
+          background: 'color-mix(in oklch, var(--gold) 35%, transparent)'
         }
       }), /*#__PURE__*/React.createElement("div", {
         style: {
@@ -25317,8 +25315,8 @@ function ClientsTab() {
           height: 11,
           borderRadius: '50%',
           background: isActive ? 'var(--gold)' : 'var(--bg)',
-          border: isActive ? '2px solid var(--gold)' : '2px solid rgba(201,169,110,.45)',
-          boxShadow: isActive ? '0 0 0 3px rgba(212,169,106,.12)' : 'none'
+          border: isActive ? '2px solid var(--gold)' : '2px solid color-mix(in oklch, var(--gold) 63%, transparent)',
+          boxShadow: isActive ? '0 0 0 3px var(--gold-dim)' : 'none'
         }
       })), /*#__PURE__*/React.createElement("div", {
         style: {
@@ -25348,8 +25346,8 @@ function ClientsTab() {
           fontSize: 9,
           fontWeight: 800,
           color: 'var(--gold)',
-          background: 'rgba(212,169,106,.12)',
-          border: '1px solid rgba(212,169,106,.22)',
+          background: 'var(--gold-dim)',
+          border: '1px solid color-mix(in oklch, var(--gold) 31%, transparent)',
           borderRadius: 999,
           padding: '2px 6px'
         }
@@ -25457,8 +25455,8 @@ function ClientsTab() {
       key: ds.clientId,
       onClick: () => openClientView(ds.clientId, 'profile'),
       style: {
-        background: isActive ? 'rgba(212,169,106,.06)' : 'var(--bg2)',
-        border: isActive ? '1px solid rgba(212,169,106,.4)' : '1px solid var(--border)',
+        background: isActive ? 'color-mix(in oklch, var(--gold) 9%, transparent)' : 'var(--bg2)',
+        border: isActive ? '1px solid color-mix(in oklch, var(--gold) 56%, transparent)' : '1px solid var(--border)',
         borderRadius: 10,
         padding: compactFamily ? '10px 12px' : '12px 14px',
         cursor: 'pointer',
@@ -25795,8 +25793,8 @@ function ClientsTab() {
       style: {
         fontSize: 10,
         color: 'var(--gold)',
-        border: '1px solid rgba(212,169,106,.2)',
-        background: 'rgba(212,169,106,.08)',
+        border: '1px solid color-mix(in oklch, var(--gold) 28%, transparent)',
+        background: 'color-mix(in oklch, var(--gold) 12%, transparent)',
         borderRadius: 999,
         padding: '4px 8px'
       }
@@ -25812,7 +25810,7 @@ function ClientsTab() {
         borderRadius: 7,
         background: 'var(--gold-dim)',
         color: 'var(--gold)',
-        border: '1px solid rgba(212,169,106,.25)',
+        border: '1px solid color-mix(in oklch, var(--gold) 35%, transparent)',
         flexShrink: 0
       }
     }, "Open review")), questions.length > 0 && /*#__PURE__*/React.createElement("div", {
@@ -25822,8 +25820,8 @@ function ClientsTab() {
         gap: 6,
         flexWrap: 'wrap',
         padding: '8px 14px',
-        background: 'rgba(212,169,106,.045)',
-        borderBottom: '1px solid rgba(212,169,106,.12)'
+        background: 'color-mix(in oklch, var(--gold) 6%, transparent)',
+        borderBottom: '1px solid var(--gold-dim)'
       }
     }, /*#__PURE__*/React.createElement("span", {
       style: {
@@ -25842,7 +25840,7 @@ function ClientsTab() {
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
-        border: '1px solid rgba(212,169,106,.16)',
+        border: '1px solid color-mix(in oklch, var(--gold) 22%, transparent)',
         background: 'rgba(0,0,0,.12)',
         borderRadius: 999,
         padding: '4px 8px'
@@ -25959,8 +25957,8 @@ function ClientsTab() {
     const active = filter === c.id;
     const tc = c.id === 'all' ? {
       color: 'var(--gold)',
-      bg: 'rgba(212,169,106,.12)',
-      border: 'rgba(212,169,106,.2)'
+      bg: 'var(--gold-dim)',
+      border: 'color-mix(in oklch, var(--gold) 28%, transparent)'
     } : tierStyle(c.id, tierDefinitions);
     return /*#__PURE__*/React.createElement("button", {
       key: c.id,
@@ -26005,7 +26003,7 @@ function ClientsTab() {
       fontWeight: familyMode === mode ? 700 : 500,
       borderRadius: 6,
       border: 'none',
-      background: familyMode === mode ? 'rgba(212,169,106,.18)' : 'transparent',
+      background: familyMode === mode ? 'color-mix(in oklch, var(--gold) 25%, transparent)' : 'transparent',
       color: familyMode === mode ? 'var(--gold)' : 'var(--text3)',
       cursor: 'pointer'
     }
@@ -26013,9 +26011,9 @@ function ClientsTab() {
     onClick: () => activeClientId ? setClientsGuardOpen(true) : setShowNewClient(true),
     title: "New Client",
     style: {
-      background: 'rgba(212,169,106,.15)',
+      background: 'color-mix(in oklch, var(--gold) 21%, transparent)',
       color: 'var(--gold)',
-      border: '1px solid rgba(212,169,106,.4)',
+      border: '1px solid color-mix(in oklch, var(--gold) 56%, transparent)',
       borderRadius: isMobile ? '50%' : 8,
       width: isMobile ? 32 : 'auto',
       height: isMobile ? 32 : 'auto',
@@ -26186,9 +26184,9 @@ function ClientsTab() {
   }, "No clients yet. Create your first client to get started."), /*#__PURE__*/React.createElement("button", {
     onClick: () => activeClientId ? setClientsGuardOpen(true) : setShowNewClient(true),
     style: {
-      background: 'rgba(212,169,106,.15)',
+      background: 'color-mix(in oklch, var(--gold) 21%, transparent)',
       color: 'var(--gold)',
-      border: '1px solid rgba(212,169,106,.4)',
+      border: '1px solid color-mix(in oklch, var(--gold) 56%, transparent)',
       borderRadius: 8,
       padding: '8px 20px',
       fontSize: 13,
@@ -26307,7 +26305,7 @@ function ClientsTab() {
       borderRadius: 6,
       background: 'var(--gold-dim)',
       color: 'var(--gold)',
-      border: '1px solid rgba(212,169,106,.25)',
+      border: '1px solid color-mix(in oklch, var(--gold) 35%, transparent)',
       flexShrink: 0
     }
   }, "Open review")), (() => {
@@ -26315,8 +26313,8 @@ function ClientsTab() {
     if (questions.length === 0) return null;
     return /*#__PURE__*/React.createElement("div", {
       style: {
-        background: 'rgba(212,169,106,.06)',
-        border: '1px solid rgba(212,169,106,.16)',
+        background: 'color-mix(in oklch, var(--gold) 9%, transparent)',
+        border: '1px solid color-mix(in oklch, var(--gold) 22%, transparent)',
         borderRadius: 9,
         padding: 9,
         marginBottom: 10
@@ -26380,8 +26378,8 @@ function ClientsTab() {
       key: ds.clientId,
       onClick: () => openClientView(ds.clientId, 'profile'),
       style: {
-        background: isActive ? 'rgba(212,169,106,.06)' : 'var(--bg2)',
-        border: isActive ? '1px solid rgba(212,169,106,.4)' : '1px solid var(--border)',
+        background: isActive ? 'color-mix(in oklch, var(--gold) 9%, transparent)' : 'var(--bg2)',
+        border: isActive ? '1px solid color-mix(in oklch, var(--gold) 56%, transparent)' : '1px solid var(--border)',
         borderRadius: 10,
         padding: '12px 14px',
         cursor: 'pointer',
@@ -26553,9 +26551,9 @@ function MergeClientModal({
     padding: 16
   };
   const modalBox = {
-    background: '#1a2332',
+    background: 'var(--bg2)',
     borderRadius: 14,
-    border: '1px solid rgba(201,169,110,.24)',
+    border: '1px solid color-mix(in oklch, var(--gold) 34%, transparent)',
     maxWidth: 560,
     width: '100%',
     padding: 22,
@@ -26709,7 +26707,7 @@ function MergeClientModal({
         padding: '9px 10px',
         borderRadius: 8,
         border: selected ? '1px solid var(--gold)' : '1px solid var(--border)',
-        background: selected ? 'rgba(212,169,106,.12)' : 'var(--bg3)',
+        background: selected ? 'var(--gold-dim)' : 'var(--bg3)',
         color: 'var(--text)',
         cursor: 'pointer'
       }
@@ -26748,7 +26746,7 @@ function MergeClientModal({
     disabled: !targetId || busy,
     style: {
       background: 'var(--gold)',
-      color: '#0b0f1a',
+      color: '#fff',
       border: 'none',
       borderRadius: 8,
       padding: '8px 15px',
@@ -26949,9 +26947,9 @@ function NewClientModal({
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      background: '#1a2332',
+      background: 'var(--bg2)',
       borderRadius: 16,
-      border: '1px solid rgba(201,169,110,.2)',
+      border: '1px solid color-mix(in oklch, var(--gold) 28%, transparent)',
       maxWidth: 480,
       width: '100%',
       padding: '24px',
@@ -26961,7 +26959,7 @@ function NewClientModal({
     style: {
       fontSize: 16,
       fontWeight: 700,
-      color: '#e8e8e8',
+      color: 'var(--text)',
       margin: '0 0 12px'
     }
   }, "New Client"), /*#__PURE__*/React.createElement("input", {
@@ -27092,7 +27090,7 @@ function NewClientModal({
     disabled: !name.trim() || creating,
     style: {
       background: 'var(--gold)',
-      color: '#0b0f1a',
+      color: '#fff',
       border: 'none',
       borderRadius: 8,
       padding: '8px 16px',
@@ -31562,7 +31560,7 @@ function AssumptionsCard({
     className: "card",
     style: {
       marginBottom: 16,
-      borderLeft: '2px solid rgba(201,169,110,.3)'
+      borderLeft: '2px solid color-mix(in oklch, var(--gold) 42%, transparent)'
     }
   }, /*#__PURE__*/React.createElement("h3", {
     style: {
@@ -31657,8 +31655,8 @@ function CheckpointSavePopover({
     top: position.top,
     right: position.right,
     width: 280,
-    background: '#1a2332',
-    border: '1px solid rgba(201,169,110,.25)',
+    background: 'var(--bg2)',
+    border: '1px solid color-mix(in oklch, var(--gold) 35%, transparent)',
     borderRadius: 10,
     boxShadow: '0 8px 32px rgba(0,0,0,.5)',
     zIndex: 9999,
@@ -31723,9 +31721,9 @@ function CheckpointSavePopover({
       width: '100%',
       textAlign: 'left',
       padding: '8px 10px',
-      background: isDrive ? 'rgba(212,169,106,.08)' : 'transparent',
+      background: isDrive ? 'color-mix(in oklch, var(--gold) 12%, transparent)' : 'transparent',
       color: isDrive ? 'var(--gold)' : 'var(--text3)',
-      border: '1px solid ' + (isDrive ? 'rgba(212,169,106,.2)' : 'var(--border)'),
+      border: '1px solid ' + (isDrive ? 'color-mix(in oklch, var(--gold) 28%, transparent)' : 'var(--border)'),
       borderRadius: 6,
       cursor: isDrive ? 'pointer' : 'not-allowed',
       fontWeight: 600,
@@ -31834,9 +31832,9 @@ function NameDetectionReviewModal({
     padding: 16
   };
   const modalBox = {
-    background: '#1a2332',
+    background: 'var(--bg2)',
     borderRadius: 16,
-    border: '1px solid rgba(201,169,110,.2)',
+    border: '1px solid color-mix(in oklch, var(--gold) 28%, transparent)',
     maxWidth: 560,
     width: '100%',
     padding: 24,
@@ -31855,7 +31853,7 @@ function NameDetectionReviewModal({
     style: {
       fontSize: 16,
       fontWeight: 700,
-      color: '#e8e8e8',
+      color: 'var(--text)',
       margin: '0 0 4px'
     }
   }, "Review extracted names"), /*#__PURE__*/React.createElement("p", {
@@ -31948,7 +31946,7 @@ function NameDetectionReviewModal({
     onClick: () => onConfirm(routes),
     style: {
       background: 'var(--gold)',
-      color: '#0b0f1a',
+      color: '#fff',
       border: 'none',
       borderRadius: 6,
       padding: '8px 16px',
@@ -32005,9 +32003,9 @@ function PolicyOwnerRoutingModal({
     padding: 16
   };
   const modalBox = {
-    background: '#1a2332',
+    background: 'var(--bg2)',
     borderRadius: 16,
-    border: '1px solid rgba(201,169,110,.2)',
+    border: '1px solid color-mix(in oklch, var(--gold) 28%, transparent)',
     maxWidth: 760,
     width: '100%',
     padding: 24,
@@ -32127,7 +32125,7 @@ function PolicyOwnerRoutingModal({
     style: {
       fontSize: 16,
       fontWeight: 700,
-      color: '#e8e8e8',
+      color: 'var(--text)',
       margin: '0 0 4px'
     }
   }, "Family policy routing"), /*#__PURE__*/React.createElement("p", {
@@ -32190,8 +32188,8 @@ function PolicyOwnerRoutingModal({
       maxWidth: '100%',
       padding: '6px 12px',
       borderRadius: 8,
-      background: 'rgba(212,169,106,.12)',
-      border: '1px solid rgba(212,169,106,.35)',
+      background: 'var(--gold-dim)',
+      border: '1px solid color-mix(in oklch, var(--gold) 49%, transparent)',
       color: 'var(--gold)',
       fontSize: 12,
       fontWeight: 800,
@@ -32220,7 +32218,7 @@ function PolicyOwnerRoutingModal({
       position: 'relative',
       padding: '10px',
       background: 'var(--bg2)',
-      border: '1px solid ' + (node.route === 'new' ? 'rgba(212,169,106,.4)' : 'rgba(91,168,160,.22)'),
+      border: '1px solid ' + (node.route === 'new' ? 'color-mix(in oklch, var(--gold) 56%, transparent)' : 'rgba(91,168,160,.22)'),
       borderRadius: 8,
       minWidth: 0
     }
@@ -32367,7 +32365,7 @@ function PolicyOwnerRoutingModal({
         fontSize: 10,
         lineHeight: 1.45,
         color: 'var(--gold)',
-        background: 'rgba(212,169,106,.08)',
+        background: 'color-mix(in oklch, var(--gold) 12%, transparent)',
         borderLeft: '3px solid var(--gold)',
         borderRadius: 5,
         padding: '8px 10px',
@@ -32386,7 +32384,7 @@ function PolicyOwnerRoutingModal({
       style: {
         padding: '12px 14px',
         background: 'var(--bg3)',
-        border: '1px solid ' + (info.needsOwnerQuestion ? 'rgba(212,169,106,.35)' : 'var(--border)'),
+        border: '1px solid ' + (info.needsOwnerQuestion ? 'color-mix(in oklch, var(--gold) 49%, transparent)' : 'var(--border)'),
         borderRadius: 8,
         marginBottom: 10
       }
@@ -32428,7 +32426,7 @@ function PolicyOwnerRoutingModal({
         fontSize: 10,
         lineHeight: 1.4,
         color: 'var(--gold)',
-        background: 'rgba(212,169,106,.08)',
+        background: 'color-mix(in oklch, var(--gold) 12%, transparent)',
         borderLeft: '3px solid var(--gold)',
         borderRadius: 5,
         padding: '7px 9px',
@@ -32639,7 +32637,7 @@ function PolicyOwnerRoutingModal({
     disabled: busy,
     style: {
       background: 'var(--gold)',
-      color: '#0b0f1a',
+      color: '#fff',
       border: 'none',
       borderRadius: 6,
       padding: '8px 16px',
@@ -32683,7 +32681,7 @@ function DriveSyncPromptModal({
     padding: 16
   };
   const modalBox = {
-    background: '#1a2332',
+    background: 'var(--bg2)',
     borderRadius: 16,
     border: '1px solid rgba(91,168,160,.3)',
     maxWidth: 440,
@@ -32699,7 +32697,7 @@ function DriveSyncPromptModal({
     style: {
       fontSize: 16,
       fontWeight: 700,
-      color: '#e8e8e8',
+      color: 'var(--text)',
       margin: '0 0 8px',
       display: 'flex',
       alignItems: 'center',
@@ -32759,7 +32757,7 @@ function DriveSyncPromptModal({
     onClick: onConnect,
     style: {
       background: 'var(--teal)',
-      color: '#0b0f1a',
+      color: '#fff',
       border: 'none',
       borderRadius: 6,
       padding: '8px 16px',
@@ -32793,9 +32791,9 @@ function LocalOnlyMigrationModal({
     padding: 16
   };
   const modalBox = {
-    background: '#1a2332',
+    background: 'var(--bg2)',
     borderRadius: 16,
-    border: '1px solid rgba(212,169,106,.4)',
+    border: '1px solid color-mix(in oklch, var(--gold) 56%, transparent)',
     maxWidth: 480,
     width: '100%',
     padding: 24,
@@ -32809,7 +32807,7 @@ function LocalOnlyMigrationModal({
     style: {
       fontSize: 16,
       fontWeight: 700,
-      color: '#e8e8e8',
+      color: 'var(--text)',
       margin: '0 0 8px',
       display: 'flex',
       alignItems: 'center',
@@ -32847,7 +32845,7 @@ function LocalOnlyMigrationModal({
     onClick: onConnect,
     style: {
       background: 'var(--teal)',
-      color: '#0b0f1a',
+      color: '#fff',
       border: 'none',
       borderRadius: 8,
       padding: '12px 16px',
@@ -32931,9 +32929,9 @@ function FoundInDriveReviewModal({
     padding: 16
   };
   const modalBox = {
-    background: '#1a2332',
+    background: 'var(--bg2)',
     borderRadius: 16,
-    border: '1px solid rgba(201,169,110,.2)',
+    border: '1px solid color-mix(in oklch, var(--gold) 28%, transparent)',
     maxWidth: 640,
     width: '100%',
     padding: 24,
@@ -32952,7 +32950,7 @@ function FoundInDriveReviewModal({
     style: {
       fontSize: 16,
       fontWeight: 700,
-      color: '#e8e8e8',
+      color: 'var(--text)',
       margin: '0 0 4px'
     }
   }, "Found ", found.length, " client", found.length === 1 ? '' : 's', " in Drive"), /*#__PURE__*/React.createElement("p", {
@@ -33118,8 +33116,8 @@ function FoundInDriveReviewModal({
     },
     disabled: !canApply,
     style: {
-      background: canApply ? 'var(--gold)' : 'rgba(212,169,106,.3)',
-      color: '#0b0f1a',
+      background: canApply ? 'var(--gold)' : 'color-mix(in oklch, var(--gold) 42%, transparent)',
+      color: '#fff',
       border: 'none',
       borderRadius: 6,
       padding: '8px 16px',
@@ -33202,9 +33200,9 @@ function NewClientGuardModal({
     padding: 16
   };
   const modalBox = {
-    background: '#1a2332',
+    background: 'var(--bg2)',
     borderRadius: 16,
-    border: '1px solid rgba(201,169,110,.2)',
+    border: '1px solid color-mix(in oklch, var(--gold) 28%, transparent)',
     maxWidth: 440,
     width: '100%',
     padding: 24,
@@ -33213,8 +33211,8 @@ function NewClientGuardModal({
   const btnStyle = active => ({
     width: '100%',
     padding: '12px 14px',
-    background: active ? 'rgba(212,169,106,.1)' : 'transparent',
-    border: '1px solid ' + (active ? 'rgba(212,169,106,.3)' : 'var(--border)'),
+    background: active ? 'color-mix(in oklch, var(--gold) 14%, transparent)' : 'transparent',
+    border: '1px solid ' + (active ? 'color-mix(in oklch, var(--gold) 42%, transparent)' : 'var(--border)'),
     borderRadius: 8,
     cursor: 'pointer',
     marginBottom: 8,
@@ -33231,7 +33229,7 @@ function NewClientGuardModal({
     style: {
       fontSize: 16,
       fontWeight: 700,
-      color: '#e8e8e8',
+      color: 'var(--text)',
       margin: '0 0 4px'
     }
   }, "Create new client?"), /*#__PURE__*/React.createElement("p", {
@@ -33386,9 +33384,9 @@ function RestoreChoiceModal({
     padding: 16
   };
   const modalBox = {
-    background: '#1a2332',
+    background: 'var(--bg2)',
     borderRadius: 16,
-    border: '1px solid rgba(201,169,110,.2)',
+    border: '1px solid color-mix(in oklch, var(--gold) 28%, transparent)',
     maxWidth: 420,
     width: '100%',
     padding: 24,
@@ -33405,7 +33403,7 @@ function RestoreChoiceModal({
     style: {
       fontSize: 16,
       fontWeight: 700,
-      color: '#e8e8e8',
+      color: 'var(--text)',
       margin: '0 0 4px'
     }
   }, "Restore Checkpoint"), /*#__PURE__*/React.createElement("div", {
@@ -33420,8 +33418,8 @@ function RestoreChoiceModal({
     style: {
       width: '100%',
       padding: '12px 14px',
-      background: 'rgba(212,169,106,.1)',
-      border: '1px solid rgba(212,169,106,.3)',
+      background: 'color-mix(in oklch, var(--gold) 14%, transparent)',
+      border: '1px solid color-mix(in oklch, var(--gold) 42%, transparent)',
       borderRadius: 8,
       cursor: 'pointer',
       marginBottom: 8,
@@ -33516,7 +33514,7 @@ function RestoreChoiceModal({
     disabled: !copyName.trim() || !!busy,
     style: {
       background: 'var(--gold)',
-      color: '#0b0f1a',
+      color: '#fff',
       border: 'none',
       borderRadius: 6,
       padding: '6px 12px',
@@ -33606,9 +33604,9 @@ function CheckpointLoadModal({
     padding: 16
   };
   const modalBox = {
-    background: '#1a2332',
+    background: 'var(--bg2)',
     borderRadius: 16,
-    border: '1px solid rgba(201,169,110,.2)',
+    border: '1px solid color-mix(in oklch, var(--gold) 28%, transparent)',
     maxWidth: 480,
     width: '100%',
     padding: 24,
@@ -33628,7 +33626,7 @@ function CheckpointLoadModal({
     style: {
       fontSize: 16,
       fontWeight: 700,
-      color: '#e8e8e8',
+      color: 'var(--text)',
       margin: '0 0 16px'
     }
   }, "Load Checkpoint"), isDrive && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
@@ -33823,9 +33821,9 @@ function OtherClientCheckpointPicker({
     padding: 16
   };
   const modalBox = {
-    background: '#1a2332',
+    background: 'var(--bg2)',
     borderRadius: 16,
-    border: '1px solid rgba(201,169,110,.2)',
+    border: '1px solid color-mix(in oklch, var(--gold) 28%, transparent)',
     maxWidth: 480,
     width: '100%',
     padding: 24,
@@ -33853,7 +33851,7 @@ function OtherClientCheckpointPicker({
     style: {
       fontSize: 16,
       fontWeight: 700,
-      color: '#e8e8e8',
+      color: 'var(--text)',
       margin: '0 0 16px'
     }
   }, pickedClient ? 'Checkpoints for ' + (pickedClient.clientName || 'Client') : 'Choose a client'), !pickedClient ? loading ? /*#__PURE__*/React.createElement("div", {
@@ -34297,7 +34295,7 @@ function ProfileTab() {
       borderRadius: 6,
       background: 'var(--gold-dim)',
       color: 'var(--gold)',
-      border: '1px solid rgba(212,169,106,.25)',
+      border: '1px solid color-mix(in oklch, var(--gold) 35%, transparent)',
       cursor: 'pointer'
     }
   }, "\u2713 Mark Reviewed"), !isMobile && /*#__PURE__*/React.createElement("button", {
@@ -34307,9 +34305,9 @@ function ProfileTab() {
       fontWeight: 600,
       padding: '4px 10px',
       borderRadius: 6,
-      background: 'rgba(212,169,106,.15)',
+      background: 'color-mix(in oklch, var(--gold) 21%, transparent)',
       color: 'var(--gold)',
-      border: '1px solid rgba(212,169,106,.4)',
+      border: '1px solid color-mix(in oklch, var(--gold) 56%, transparent)',
       cursor: 'pointer',
       outline: 'none',
       whiteSpace: 'nowrap'
@@ -34369,7 +34367,7 @@ function ProfileTab() {
     style: {
       background: 'var(--gold-dim)',
       color: 'var(--gold)',
-      border: '1px solid rgba(212,169,106,.25)',
+      border: '1px solid color-mix(in oklch, var(--gold) 35%, transparent)',
       fontSize: 11,
       padding: '5px 10px',
       borderRadius: 8,
@@ -34385,7 +34383,7 @@ function ProfileTab() {
     style: {
       background: 'var(--gold-dim)',
       color: 'var(--gold)',
-      border: '1px solid rgba(212,169,106,.25)',
+      border: '1px solid color-mix(in oklch, var(--gold) 35%, transparent)',
       fontSize: 11,
       padding: '5px 10px',
       borderRadius: 8,
@@ -34407,7 +34405,7 @@ function ProfileTab() {
     style: {
       background: 'var(--gold-dim)',
       color: 'var(--gold)',
-      border: '1px solid rgba(212,169,106,.25)',
+      border: '1px solid color-mix(in oklch, var(--gold) 35%, transparent)',
       fontSize: 11,
       padding: '5px 10px',
       borderRadius: 8,
@@ -35707,7 +35705,7 @@ const RetirementLiteDashboard = memo(function RetirementLiteDashboard({
         }] : []), {
           label: 'Policy Income',
           data: filtered.map(r => r.policy),
-          backgroundColor: 'rgba(212,169,106,.7)',
+          backgroundColor: 'color-mix(in oklch, var(--gold) 98%, transparent)',
           borderRadius: 2,
           stack: 'income'
         }, {
@@ -35740,7 +35738,7 @@ const RetirementLiteDashboard = memo(function RetirementLiteDashboard({
           x: {
             stacked: true,
             grid: {
-              color: 'rgba(212,169,106,.06)'
+              color: 'color-mix(in oklch, var(--gold) 9%, transparent)'
             },
             ticks: {
               color: '#6b6050',
@@ -35752,7 +35750,7 @@ const RetirementLiteDashboard = memo(function RetirementLiteDashboard({
           y: {
             stacked: true,
             grid: {
-              color: 'rgba(212,169,106,.06)'
+              color: 'color-mix(in oklch, var(--gold) 9%, transparent)'
             },
             ticks: {
               color: '#6b6050',
@@ -35905,7 +35903,7 @@ const RetirementLiteDashboard = memo(function RetirementLiteDashboard({
       const isFI = g.id === 'fi';
       const showMain = g.main !== lastMain;
       lastMain = g.main;
-      const headerRow = showMain ? `<tr><td colspan="6" style="padding:12px 8px 4px;font-size:13px;font-weight:700;color:#d4a96a;border:none">${g.main}</td></tr>` : '';
+      const headerRow = showMain ? `<tr><td colspan="6" style="padding:12px 8px 4px;font-size:13px;font-weight:700;color:var(--gold);border:none">${g.main}</td></tr>` : '';
       const subRow = g.sub ? `<tr><td colspan="6" style="padding:2px 8px 6px;font-size:10px;font-weight:600;color:#a39580;text-transform:uppercase;letter-spacing:.5px;border:none">${g.sub} (${g.items.length})</td></tr>` : '';
       const sortedItems = [...g.items].sort((a, b) => (a.subType || '').localeCompare(b.subType || '') || (a.insurer || '').localeCompare(b.insurer || '') || annualizedPremium(b) - annualizedPremium(a));
       const rows = sortedItems.map(pol => {
@@ -35921,7 +35919,7 @@ const RetirementLiteDashboard = memo(function RetirementLiteDashboard({
         }
         const isSP = pol.premSingle || pol.premFrequency === 'single' || pol.premiumStructure === 'Single Premium';
         const annPrem = annualizedPremium(pol);
-        const premStr = isSP ? '$' + Math.round(prem).toLocaleString() + ' <span style="font-size:8px;color:#d4a96a">SP</span>' : annPrem ? '$' + Math.round(annPrem).toLocaleString() + '/yr' : '';
+        const premStr = isSP ? '$' + Math.round(prem).toLocaleString() + ' <span style="font-size:8px;color:var(--gold)">SP</span>' : annPrem ? '$' + Math.round(annPrem).toLocaleString() + '/yr' : '';
         const method = pol.paymentMethod || 'Cash';
         return `<tr>
           <td style="padding:4px 8px;font-size:10px">${pol.insurer || ''}</td>
@@ -35948,26 +35946,26 @@ const RetirementLiteDashboard = memo(function RetirementLiteDashboard({
 <script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0b0f1a;color:#e8e0d0;min-height:100vh;padding:16px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#fbf7ee;color:#2d2418;min-height:100vh;padding:16px}
 .container{max-width:780px;margin:0 auto}
-.header{text-align:center;padding:20px 0 16px;border-bottom:1px solid rgba(212,169,106,.2);margin-bottom:16px}
+.header{text-align:center;padding:20px 0 16px;border-bottom:1px solid color-mix(in oklch, var(--gold) 28%, transparent);margin-bottom:16px}
 .header h1{font-size:20px;font-weight:700;margin-bottom:4px}
 .header p{font-size:11px;color:#a39580}
-.logo{font-size:10px;color:#d4a96a;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
+.logo{font-size:10px;color:var(--gold);font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
 .grid{display:grid;gap:8px;margin-bottom:12px}
 .g5{grid-template-columns:repeat(5,1fr)}.g4{grid-template-columns:repeat(4,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:1fr 1fr}
-.card{background:#141926;border:1px solid rgba(212,169,106,.1);border-radius:10px;padding:12px}
+.card{background:#141926;border:1px solid color-mix(in oklch, var(--gold) 14%, transparent);border-radius:10px;padding:12px}
 .kl{font-size:8px;color:#a39580;text-transform:uppercase;font-weight:600;letter-spacing:.5px}
 .kv{font-size:18px;font-weight:700;margin-top:2px}
 .kv-sm{font-size:14px;font-weight:700;margin-top:2px}
-.g{color:#5ba8a0}.gd{color:#d4a96a}.r{color:#ef5350}.p{color:#9d8abf}.b{color:#5b8fd9}
-.section{font-size:12px;font-weight:600;margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid rgba(212,169,106,.1)}
-.row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(212,169,106,.04);font-size:11px}
+.g{color:#5ba8a0}.gd{color:var(--gold)}.r{color:#ef5350}.p{color:#9d8abf}.b{color:#5b8fd9}
+.section{font-size:12px;font-weight:600;margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid color-mix(in oklch, var(--gold) 14%, transparent)}
+.row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid color-mix(in oklch, var(--gold) 6%, transparent);font-size:11px}
 .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px}
-.footer{text-align:center;padding:16px 0;font-size:9px;color:#6b6050;border-top:1px solid rgba(212,169,106,.1);margin-top:16px}
+.footer{text-align:center;padding:16px 0;font-size:9px;color:#6b6050;border-top:1px solid color-mix(in oklch, var(--gold) 14%, transparent);margin-top:16px}
 table{width:100%;border-collapse:collapse}
-th{text-align:left;padding:5px 8px;font-size:8px;color:#a39580;text-transform:uppercase;font-weight:600;letter-spacing:.3px;border-bottom:1px solid rgba(212,169,106,.15)}
-td{border-bottom:1px solid rgba(212,169,106,.04)}
+th{text-align:left;padding:5px 8px;font-size:8px;color:#a39580;text-transform:uppercase;font-weight:600;letter-spacing:.3px;border-bottom:1px solid color-mix(in oklch, var(--gold) 21%, transparent)}
+td{border-bottom:1px solid color-mix(in oklch, var(--gold) 6%, transparent)}
 @media(max-width:600px){.g5,.g4{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:1fr}}
 </style></head><body>
 <div class="container">
@@ -35987,11 +35985,11 @@ td{border-bottom:1px solid rgba(212,169,106,.04)}
 <div class="card" style="text-align:center"><div class="kl">Policies</div><div class="kv">${activePols.length}</div></div>
 <div class="card" style="text-align:center"><div class="kl">Annual Premiums</div><div class="kv gd">$${Math.round(totalPrem).toLocaleString()}/yr</div>
 <div style="font-size:9px;color:#a39580;line-height:1.6;text-align:left;padding:4px 8px">
-${premByMode.cash > 0 ? 'Cash: $' + Math.round(premByMode.cash).toLocaleString() + '/yr<br>' : ''}${premByMode.medisave > 0 ? 'MediSave: $' + Math.round(premByMode.medisave).toLocaleString() + '/yr<br>' : ''}${premByMode.srs > 0 ? 'SRS: $' + Math.round(premByMode.srs).toLocaleString() + '/yr<br>' : ''}${premByMode.cpfoa > 0 ? 'CPF OA: $' + Math.round(premByMode.cpfoa).toLocaleString() + '/yr<br>' : ''}${totalSinglePrem > 0 ? '<span style="color:#d4a96a">Single premiums: $' + Math.round(totalSinglePrem).toLocaleString() + '</span>' : ''}
+${premByMode.cash > 0 ? 'Cash: $' + Math.round(premByMode.cash).toLocaleString() + '/yr<br>' : ''}${premByMode.medisave > 0 ? 'MediSave: $' + Math.round(premByMode.medisave).toLocaleString() + '/yr<br>' : ''}${premByMode.srs > 0 ? 'SRS: $' + Math.round(premByMode.srs).toLocaleString() + '/yr<br>' : ''}${premByMode.cpfoa > 0 ? 'CPF OA: $' + Math.round(premByMode.cpfoa).toLocaleString() + '/yr<br>' : ''}${totalSinglePrem > 0 ? '<span style="color:var(--gold)">Single premiums: $' + Math.round(totalSinglePrem).toLocaleString() + '</span>' : ''}
 </div></div>
 <div class="card" style="text-align:center"><div class="kl">Total Coverage</div><div class="kv b">$${cvDeath > 1e6 ? (cvDeath / 1e6).toFixed(1) + 'M' : Math.round(cvDeath).toLocaleString()}</div></div>
 <div class="card" style="text-align:center"><div class="kl">Retirement Income</div><div class="kv g">$${totalAtRet.toLocaleString()}/m</div></div>
-<div class="card" style="text-align:center;border-left:3px solid ${coveragePct >= 80 ? '#5ba8a0' : coveragePct >= 50 ? '#d4a96a' : '#ef5350'}"><div class="kl">vs Target</div><div class="kv ${coveragePct >= 80 ? 'g' : coveragePct >= 50 ? 'gd' : 'r'}">${coveragePct}%</div></div>
+<div class="card" style="text-align:center;border-left:3px solid ${coveragePct >= 80 ? '#5ba8a0' : coveragePct >= 50 ? 'var(--gold)' : '#ef5350'}"><div class="kl">vs Target</div><div class="kv ${coveragePct >= 80 ? 'g' : coveragePct >= 50 ? 'gd' : 'r'}">${coveragePct}%</div></div>
 </div>
 
 <!-- PROTECTION COVERAGE -->
@@ -36009,10 +36007,10 @@ ${premByMode.cash > 0 ? 'Cash: $' + Math.round(premByMode.cash).toLocaleString()
 <div class="card" style="margin-bottom:12px">
 <div style="font-size:10px;color:#a39580;margin-bottom:8px">Target: $${desiredMonthly.toLocaleString()}/mth (today's $${Math.round(data.baseDesired || desiredMonthly).toLocaleString()} + ${inflRate}% inflation × ${Math.max(0, retAge - (age || 35))}yr)</div>
 ${cpfEligible && cpfScheme !== 'none' ? `<div class="row"><div style="display:flex;align-items:center;gap:6px"><span class="dot" style="background:#5ba8a0"></span>CPF LIFE (${cpfScheme} ${p.cpfPlan || 'standard'})</div><div class="g" style="font-weight:600">$${cpfPayout.mid.toLocaleString()}</div></div>` : ''}
-${policyMonthlyIncome > 0 ? `<div class="row"><div style="display:flex;align-items:center;gap:6px"><span class="dot" style="background:#d4a96a"></span>Policy Income</div><div class="gd" style="font-weight:600">$${policyMonthlyIncome.toLocaleString()}</div></div>` : ''}
+${policyMonthlyIncome > 0 ? `<div class="row"><div style="display:flex;align-items:center;gap:6px"><span class="dot" style="background:var(--gold)"></span>Policy Income</div><div class="gd" style="font-weight:600">$${policyMonthlyIncome.toLocaleString()}</div></div>` : ''}
 ${policyDividends > 0 ? `<div class="row"><div style="display:flex;align-items:center;gap:6px"><span class="dot" style="background:#9d8abf"></span>Dividends</div><div class="p" style="font-weight:600">$${policyDividends.toLocaleString()}</div></div>` : ''}
 ${otherSources.filter(s => s.active).map(s => `<div class="row"><div style="display:flex;align-items:center;gap:6px"><span class="dot" style="background:#5b8fd9"></span>${s.source || 'Other'}</div><div class="b" style="font-weight:600">$${s.adjustedAmt.toLocaleString()}</div></div>`).join('')}
-<div style="display:flex;justify-content:space-between;padding:8px 0 2px;font-weight:700;border-top:2px solid rgba(212,169,106,.15);margin-top:4px"><div>Total</div><div class="${totalAtRet >= desiredMonthly ? 'g' : 'r'}">$${totalAtRet.toLocaleString()}/mth</div></div>
+<div style="display:flex;justify-content:space-between;padding:8px 0 2px;font-weight:700;border-top:2px solid color-mix(in oklch, var(--gold) 21%, transparent);margin-top:4px"><div>Total</div><div class="${totalAtRet >= desiredMonthly ? 'g' : 'r'}">$${totalAtRet.toLocaleString()}/mth</div></div>
 ${gap > 0 ? `<div style="margin-top:6px;padding:5px 8px;background:rgba(239,83,80,.06);border-radius:6px;font-size:10px;color:#ef5350">Shortfall: $${gap.toLocaleString()}/mth${lumpSum > 0 ? ' · Lump sum $' + Math.round(lumpSum).toLocaleString() + ' sustains ~' + yearsFromLump + 'yr' : ''}${gap > 0 && lumpSum > 0 ? ' · Total runway ~' + Math.round(lumpSum / (gap * 12) + (totalAtRet > 0 ? 90 - retAge : 0)) + 'yr' : ''}</div>` : `<div style="margin-top:6px;padding:5px 8px;background:rgba(91,168,160,.06);border-radius:6px;font-size:10px;color:#5ba8a0">✅ Fully funded — surplus $${(totalAtRet - desiredMonthly).toLocaleString()}/mth</div>`}
 </div>
 
@@ -36042,7 +36040,7 @@ ${topInsurers.length > 1 ? `<div class="section">🏢 Provider Concentration</di
 <div class="card" style="margin-bottom:12px">
 ${topInsurers.map(([name, count]) => {
       const pct = Math.round(count / activePols.length * 100);
-      return `<div style="margin-bottom:6px"><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:2px"><span>${name}</span><span style="color:#a39580">${count} (${pct}%)</span></div><div style="height:4px;background:rgba(212,169,106,.08);border-radius:2px"><div style="height:100%;width:${pct}%;background:#d4a96a;border-radius:2px"></div></div></div>`;
+      return `<div style="margin-bottom:6px"><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:2px"><span>${name}</span><span style="color:#a39580">${count} (${pct}%)</span></div><div style="height:4px;background:color-mix(in oklch, var(--gold) 12%, transparent);border-radius:2px"><div style="height:100%;width:${pct}%;background:var(--gold);border-radius:2px"></div></div></div>`;
     }).join('')}
 </div>` : ''}
 
@@ -36054,11 +36052,11 @@ ${p.name ? 'Prepared for ' + p.name + ' by their financial consultant' : ''}
 <script>
 new Chart(document.getElementById('retChart'),{type:'bar',data:{labels:${JSON.stringify(waterfallData.map(r => r.age))},datasets:[
 ${cpfEligible ? `{label:'CPF LIFE',data:${JSON.stringify(waterfallData.map(r => r.cpf))},backgroundColor:'rgba(91,168,160,.7)',stack:'s',borderRadius:1},` : ''}
-{label:'Policy',data:${JSON.stringify(waterfallData.map(r => r.policy))},backgroundColor:'rgba(212,169,106,.7)',stack:'s',borderRadius:1},
+{label:'Policy',data:${JSON.stringify(waterfallData.map(r => r.policy))},backgroundColor:'color-mix(in oklch, var(--gold) 98%, transparent)',stack:'s',borderRadius:1},
 {label:'Dividends',data:${JSON.stringify(waterfallData.map(r => r.dividends))},backgroundColor:'rgba(157,138,191,.7)',stack:'s',borderRadius:1},
 {label:'Other',data:${JSON.stringify(waterfallData.map(r => r.other))},backgroundColor:'rgba(91,143,217,.5)',stack:'s',borderRadius:1},
 {label:'Target',data:${JSON.stringify(waterfallData.map(r => r.desired))},type:'line',borderColor:'rgba(239,83,80,.6)',borderWidth:2,borderDash:[6,3],pointRadius:0,fill:false}
-]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true,grid:{display:false},ticks:{color:'#6b6050',font:{size:8}}},y:{stacked:true,grid:{color:'rgba(212,169,106,.04)'},ticks:{color:'#6b6050',font:{size:8},callback:v=>'$'+v.toLocaleString()}}},plugins:{legend:{labels:{color:'#a39580',font:{size:8},boxWidth:10}},tooltip:{callbacks:{footer:items=>{const t=items.filter(i=>i.dataset.stack==='s').reduce((s,i)=>s+i.raw,0);return'Total: $'+t.toLocaleString()+'/mth';}}}}}});
+]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true,grid:{display:false},ticks:{color:'#6b6050',font:{size:8}}},y:{stacked:true,grid:{color:'color-mix(in oklch, var(--gold) 6%, transparent)'},ticks:{color:'#6b6050',font:{size:8},callback:v=>'$'+v.toLocaleString()}}},plugins:{legend:{labels:{color:'#a39580',font:{size:8},boxWidth:10}},tooltip:{callbacks:{footer:items=>{const t=items.filter(i=>i.dataset.stack==='s').reduce((s,i)=>s+i.raw,0);return'Total: $'+t.toLocaleString()+'/mth';}}}}}});
 <\/script></body></html>`;
     return html;
   };
@@ -36078,8 +36076,8 @@ ${cpfEligible ? `{label:'CPF LIFE',data:${JSON.stringify(waterfallData.map(r => 
     className: "card",
     style: {
       marginBottom: 16,
-      background: 'linear-gradient(135deg,var(--bg2),rgba(212,169,106,.03))',
-      border: '1px solid rgba(212,169,106,.15)'
+      background: 'linear-gradient(135deg,var(--bg2),color-mix(in oklch, var(--gold) 4%, transparent))',
+      border: '1px solid color-mix(in oklch, var(--gold) 21%, transparent)'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -36325,7 +36323,7 @@ ${cpfEligible ? `{label:'CPF LIFE',data:${JSON.stringify(waterfallData.map(r => 
       width: 8,
       height: 8,
       borderRadius: '50%',
-      background: '#d4a96a'
+      background: 'var(--gold)'
     }
   }), " Annuity/Income"), /*#__PURE__*/React.createElement("span", {
     style: {
@@ -36518,7 +36516,7 @@ const PremiumCashflowChart = memo(function PremiumCashflowChart({
   useEffect(() => {
     if (!chartRef.current || data.length === 0) return;
     if (chartInst.current) chartInst.current.destroy();
-    const colors = ['#5b8fd9', '#5ba8a0', '#d4a96a', '#c97b9a', '#9d8abf', '#7ca87c', '#d98e5b', '#8fb8d9', '#b89d5b', '#a07cbd'];
+    const colors = ['#5b8fd9', '#5ba8a0', 'var(--gold)', '#c97b9a', '#9d8abf', '#7ca87c', '#d98e5b', '#8fb8d9', '#b89d5b', '#a07cbd'];
     chartInst.current = new Chart(chartRef.current, {
       type: 'bar',
       data: {
@@ -36539,7 +36537,7 @@ const PremiumCashflowChart = memo(function PremiumCashflowChart({
           x: {
             stacked: true,
             grid: {
-              color: 'rgba(212,169,106,.06)'
+              color: 'color-mix(in oklch, var(--gold) 9%, transparent)'
             },
             ticks: {
               color: '#6b6050',
@@ -36551,7 +36549,7 @@ const PremiumCashflowChart = memo(function PremiumCashflowChart({
           y: {
             stacked: true,
             grid: {
-              color: 'rgba(212,169,106,.06)'
+              color: 'color-mix(in oklch, var(--gold) 9%, transparent)'
             },
             ticks: {
               color: '#6b6050',
@@ -37028,7 +37026,7 @@ function ReviewSession({
     style: {
       marginTop: 10,
       padding: 10,
-      background: 'rgba(212,169,106,.06)',
+      background: 'color-mix(in oklch, var(--gold) 9%, transparent)',
       borderRadius: 8,
       fontSize: 11,
       color: 'var(--gold)'
@@ -37260,7 +37258,7 @@ function ReviewSession({
       marginBottom: 6,
       borderRadius: 8,
       borderLeft: '3px solid ' + (rec.pri === 'high' ? 'var(--red)' : rec.pri === 'medium' ? 'var(--gold)' : 'var(--teal)'),
-      background: rec.pri === 'high' ? 'rgba(239,83,80,.04)' : rec.pri === 'medium' ? 'rgba(212,169,106,.04)' : 'rgba(91,168,160,.04)'
+      background: rec.pri === 'high' ? 'rgba(239,83,80,.04)' : rec.pri === 'medium' ? 'color-mix(in oklch, var(--gold) 6%, transparent)' : 'rgba(91,168,160,.04)'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -37278,7 +37276,7 @@ function ReviewSession({
       fontSize: 8,
       padding: '1px 6px',
       borderRadius: 4,
-      background: rec.pri === 'high' ? 'rgba(239,83,80,.15)' : 'rgba(212,169,106,.1)',
+      background: rec.pri === 'high' ? 'rgba(239,83,80,.15)' : 'color-mix(in oklch, var(--gold) 14%, transparent)',
       color: rec.pri === 'high' ? 'var(--red)' : 'var(--gold)',
       fontWeight: 600,
       flexShrink: 0,
@@ -38067,8 +38065,8 @@ function Dashboard() {
         datasets: [{
           label: 'Surrender Value',
           data: cvTimeline.map(r => r.totalCV),
-          borderColor: '#d4a96a',
-          backgroundColor: 'rgba(212,169,106,.06)',
+          borderColor: 'var(--gold)',
+          backgroundColor: 'color-mix(in oklch, var(--gold) 9%, transparent)',
           fill: true,
           tension: .3,
           pointRadius: 0,
@@ -38077,7 +38075,7 @@ function Dashboard() {
         }, ...(cvTimeline.some(r => r.estimatedCV > 0) ? [{
           label: 'Estimated (no BI)',
           data: cvTimeline.map(r => r.estimatedCV > 0 ? r.estimatedCV : null),
-          borderColor: 'rgba(212,169,106,.4)',
+          borderColor: 'color-mix(in oklch, var(--gold) 56%, transparent)',
           backgroundColor: 'transparent',
           fill: false,
           tension: .3,
@@ -38130,7 +38128,7 @@ function Dashboard() {
         scales: {
           x: {
             grid: {
-              color: 'rgba(212,169,106,.06)'
+              color: 'color-mix(in oklch, var(--gold) 9%, transparent)'
             },
             ticks: {
               color: '#6b6050',
@@ -38141,10 +38139,10 @@ function Dashboard() {
           },
           y: {
             grid: {
-              color: 'rgba(212,169,106,.06)'
+              color: 'color-mix(in oklch, var(--gold) 9%, transparent)'
             },
             ticks: {
-              color: '#d4a96a',
+              color: 'var(--gold)',
               font: {
                 size: 10
               },
@@ -38190,7 +38188,7 @@ function Dashboard() {
         labels: cats.map(c => CATEGORIES[c].label),
         datasets: [{
           data,
-          backgroundColor: ['#5b8fd9', '#5ba8a0', '#c97b9a', '#9d8abf', '#d4a96a', '#c97b9a'],
+          backgroundColor: ['#5b8fd9', '#5ba8a0', '#c97b9a', '#9d8abf', 'var(--gold)', '#c97b9a'],
           borderWidth: 0,
           hoverOffset: 4
         }]
@@ -38432,7 +38430,7 @@ function Dashboard() {
     },
     style: {
       width: '100%',
-      background: 'linear-gradient(135deg,rgba(212,169,106,.15),rgba(212,169,106,.05))',
+      background: 'linear-gradient(135deg,color-mix(in oklch, var(--gold) 21%, transparent),color-mix(in oklch, var(--gold) 7%, transparent))',
       border: '2px dashed var(--gold3)',
       borderRadius: 16,
       padding: '24px 20px',
@@ -39742,7 +39740,7 @@ function Dashboard() {
     style: {
       background: 'var(--gold-dim)',
       color: 'var(--gold)',
-      border: '1px solid rgba(212,169,106,.25)',
+      border: '1px solid color-mix(in oklch, var(--gold) 35%, transparent)',
       fontSize: 11,
       padding: '5px 10px',
       borderRadius: 8,
@@ -39757,7 +39755,7 @@ function Dashboard() {
     style: {
       background: 'var(--gold-dim)',
       color: 'var(--gold)',
-      border: '1px solid rgba(212,169,106,.25)',
+      border: '1px solid color-mix(in oklch, var(--gold) 35%, transparent)',
       fontSize: 11,
       padding: '5px 10px',
       borderRadius: 8,
@@ -39778,7 +39776,7 @@ function Dashboard() {
     style: {
       background: 'var(--gold-dim)',
       color: 'var(--gold)',
-      border: '1px solid rgba(212,169,106,.25)',
+      border: '1px solid color-mix(in oklch, var(--gold) 35%, transparent)',
       fontSize: 11,
       padding: '5px 10px',
       borderRadius: 8,
@@ -39818,8 +39816,8 @@ function Dashboard() {
       marginBottom: 14,
       padding: 14,
       borderRadius: 8,
-      border: '1px solid rgba(212,169,106,.22)',
-      background: 'linear-gradient(180deg,rgba(212,169,106,.055),rgba(17,24,39,.94))'
+      border: '1px solid color-mix(in oklch, var(--gold) 31%, transparent)',
+      background: 'linear-gradient(180deg,color-mix(in oklch, var(--gold) 8%, transparent),rgba(17,24,39,.94))'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -40015,8 +40013,8 @@ function Dashboard() {
     }
   }, "Next: ", policySummary.retirement.next.label, " at age ", policySummary.retirement.next.age)), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'rgba(212,169,106,.055)',
-      border: '1px solid rgba(212,169,106,.16)',
+      background: 'color-mix(in oklch, var(--gold) 8%, transparent)',
+      border: '1px solid color-mix(in oklch, var(--gold) 22%, transparent)',
       borderRadius: 8,
       padding: 10
     }
@@ -40052,8 +40050,8 @@ function Dashboard() {
       display: 'inline-flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'rgba(212,169,106,.12)',
-      border: '1px solid rgba(212,169,106,.22)',
+      background: 'var(--gold-dim)',
+      border: '1px solid color-mix(in oklch, var(--gold) 31%, transparent)',
       color: 'var(--gold)',
       fontSize: 9,
       fontWeight: 900
@@ -40082,8 +40080,8 @@ function Dashboard() {
       },
       gold: {
         color: 'var(--gold)',
-        bg: 'rgba(212,169,106,.10)',
-        border: 'rgba(212,169,106,.28)'
+        bg: 'color-mix(in oklch, var(--gold) 14%, transparent)',
+        border: 'color-mix(in oklch, var(--gold) 39%, transparent)'
       }
     };
     const kindNames = {
@@ -40676,7 +40674,7 @@ function Dashboard() {
       }
     }, ccys.map(([ccy, d]) => {
       const premPct = totalSGDPrem > 0 ? Math.round(toSGD(d.premium, ccy) / totalSGDPrem * 100) : 0;
-      const ccyColor = ccy === 'SGD' ? '#5ba8a0' : ccy === 'USD' ? '#5b8fd9' : ccy === 'GBP' ? '#9d8abf' : '#d4a96a';
+      const ccyColor = ccy === 'SGD' ? '#5ba8a0' : ccy === 'USD' ? '#5b8fd9' : ccy === 'GBP' ? '#9d8abf' : 'var(--gold)';
       return /*#__PURE__*/React.createElement("div", {
         key: ccy,
         style: {
@@ -40841,7 +40839,7 @@ function Dashboard() {
       style: {
         marginTop: 8,
         padding: '6px 10px',
-        background: 'rgba(212,169,106,.06)',
+        background: 'color-mix(in oklch, var(--gold) 9%, transparent)',
         borderRadius: 6,
         fontSize: 10,
         color: 'var(--gold)'
@@ -41358,7 +41356,7 @@ function Dashboard() {
     key: r.age,
     style: {
       borderTop: '1px solid var(--border)',
-      background: r.age === retAge ? 'rgba(212,169,106,.08)' : ''
+      background: r.age === retAge ? 'color-mix(in oklch, var(--gold) 12%, transparent)' : ''
     }
   }, /*#__PURE__*/React.createElement("td", {
     style: {
@@ -41497,8 +41495,8 @@ function Dashboard() {
     }, {
       key: 'cv',
       label: 'Cash Value',
-      color: '#d4a96a',
-      bg: 'rgba(212,169,106,.06)'
+      color: 'var(--gold)',
+      bg: 'color-mix(in oklch, var(--gold) 9%, transparent)'
     }, {
       key: 'income',
       label: 'Passive Income / mo',
@@ -41515,8 +41513,8 @@ function Dashboard() {
       className: "card",
       style: {
         marginBottom: 16,
-        background: 'linear-gradient(135deg,var(--bg2),rgba(212,169,106,.05))',
-        border: '1px solid rgba(212,169,106,.25)'
+        background: 'linear-gradient(135deg,var(--bg2),color-mix(in oklch, var(--gold) 7%, transparent))',
+        border: '1px solid color-mix(in oklch, var(--gold) 35%, transparent)'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -41538,7 +41536,7 @@ function Dashboard() {
         fontSize: 10,
         padding: '3px 10px',
         borderRadius: 12,
-        background: 'rgba(212,169,106,.12)',
+        background: 'var(--gold-dim)',
         color: 'var(--gold)',
         fontWeight: 500
       }
@@ -41592,7 +41590,7 @@ function Dashboard() {
           fontSize: isNow ? 13 : 12,
           fontWeight: isNow ? 700 : 600,
           color: isNow ? 'var(--gold)' : 'var(--text2)',
-          background: isNow ? 'rgba(212,169,106,.12)' : 'var(--bg3)',
+          background: isNow ? 'var(--gold-dim)' : 'var(--bg3)',
           borderLeft: isNow ? '2px solid var(--gold)' : '1px solid var(--border)',
           whiteSpace: 'nowrap'
         }
@@ -41649,7 +41647,7 @@ function Dashboard() {
             fontSize: 12,
             fontWeight: isNow ? 700 : 500,
             color: val > 0 ? isNow ? 'var(--gold)' : 'var(--text2)' : 'var(--text3)',
-            background: isNow ? 'rgba(212,169,106,.08)' : 'transparent',
+            background: isNow ? 'color-mix(in oklch, var(--gold) 12%, transparent)' : 'transparent',
             borderLeft: isNow ? '2px solid var(--gold)' : '1px solid var(--border)',
             whiteSpace: 'nowrap'
           }
@@ -41676,8 +41674,8 @@ function Dashboard() {
       marginBottom: 16,
       padding: 14,
       borderRadius: 8,
-      border: '1px solid rgba(212,169,106,.22)',
-      background: 'linear-gradient(180deg,rgba(212,169,106,.05),rgba(17,24,39,.96))'
+      border: '1px solid color-mix(in oklch, var(--gold) 31%, transparent)',
+      background: 'linear-gradient(180deg,color-mix(in oklch, var(--gold) 7%, transparent),rgba(17,24,39,.96))'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -41720,7 +41718,7 @@ function Dashboard() {
       width: 22,
       height: 8,
       borderRadius: 4,
-      background: 'rgba(212,169,106,.75)',
+      background: 'color-mix(in oklch, var(--gold) 100%, transparent)',
       display: 'inline-block'
     }
   }), "Premium"), /*#__PURE__*/React.createElement("span", {
@@ -41736,7 +41734,7 @@ function Dashboard() {
       width: 22,
       height: 8,
       borderRadius: 4,
-      background: 'rgba(212,169,106,.18)',
+      background: 'color-mix(in oklch, var(--gold) 25%, transparent)',
       display: 'inline-block'
     }
   }), "Coverage"), /*#__PURE__*/React.createElement("span", {
@@ -41793,7 +41791,7 @@ function Dashboard() {
       savings: '#5ba8a0',
       health: '#c97b9a',
       investment: '#9d8abf',
-      retirement: '#d4a96a',
+      retirement: 'var(--gold)',
       maternity: '#c97b9a',
       cash_investments: '#5ba8a0',
       other_assets: '#9aa4b2'
@@ -41855,7 +41853,7 @@ function Dashboard() {
         top: 1,
         bottom: markerDepth,
         width: 1,
-        background: 'rgba(212,169,106,.45)',
+        background: 'color-mix(in oklch, var(--gold) 63%, transparent)',
         zIndex: 0
       }
     }), /*#__PURE__*/React.createElement("div", {
@@ -41870,7 +41868,7 @@ function Dashboard() {
         background: 'var(--bg2)',
         padding: '1px 4px',
         borderRadius: 4,
-        border: '1px solid rgba(212,169,106,.24)'
+        border: '1px solid color-mix(in oklch, var(--gold) 34%, transparent)'
       }
     }, "Ret ", retAge))), /*#__PURE__*/React.createElement("div", null, timelinePolicies.map((row, i) => {
       const pol = row.pol;
@@ -41945,7 +41943,7 @@ function Dashboard() {
           width: premWidth,
           height: 14,
           borderRadius: 7,
-          background: 'linear-gradient(90deg,' + color + ',rgba(212,169,106,.78))',
+          background: 'linear-gradient(90deg,' + color + ',color-mix(in oklch, var(--gold) 100%, transparent))',
           opacity: .82
         }
       }), age >= row.startAge && age <= row.policyEnd && /*#__PURE__*/React.createElement("div", {
@@ -42076,7 +42074,7 @@ function Dashboard() {
       savings: '#5ba8a0',
       health: '#c97b9a',
       investment: '#9d8abf',
-      retirement: '#d4a96a',
+      retirement: 'var(--gold)',
       maternity: '#c97b9a',
       cash_investments: '#5ba8a0'
     };
@@ -42113,7 +42111,7 @@ function Dashboard() {
         top: -4,
         bottom: -200,
         width: 1,
-        background: 'rgba(212,169,106,.3)',
+        background: 'color-mix(in oklch, var(--gold) 42%, transparent)',
         zIndex: 0
       }
     }), /*#__PURE__*/React.createElement("div", {
@@ -42379,9 +42377,9 @@ function DerivedValuesPanel({
     style: {
       cursor: 'pointer',
       padding: '10px 14px',
-      background: 'rgba(201,169,110,.05)',
-      border: '1px solid rgba(201,169,110,.18)',
-      borderLeft: '3px solid rgba(201,169,110,.5)',
+      background: 'color-mix(in oklch, var(--gold) 7%, transparent)',
+      border: '1px solid color-mix(in oklch, var(--gold) 25%, transparent)',
+      borderLeft: '3px solid color-mix(in oklch, var(--gold) 70%, transparent)',
       borderRadius: 8,
       display: 'flex',
       justifyContent: 'space-between',
@@ -42407,7 +42405,7 @@ function DerivedValuesPanel({
   }, open ? '▾' : '▸')), open && /*#__PURE__*/React.createElement("div", {
     className: "card",
     style: {
-      borderLeft: '2px solid rgba(201,169,110,.3)',
+      borderLeft: '2px solid color-mix(in oklch, var(--gold) 42%, transparent)',
       marginTop: 6
     }
   }, derivedSnapshot.map(d => /*#__PURE__*/React.createElement(DerivedPolicyRow, {
@@ -42664,8 +42662,8 @@ function KnownsAssumptions() {
         position: 'fixed',
         inset: 0,
         zIndex: 9999,
-        background: '#0b0f1a',
-        color: '#e8e8e8',
+        background: '#fff',
+        color: 'var(--text)',
         overflow: 'auto',
         padding: 20
       }
@@ -42710,7 +42708,7 @@ function KnownsAssumptions() {
         background: 'var(--bg2)',
         borderRadius: 12,
         padding: 20,
-        border: '1px solid rgba(201,169,110,.2)'
+        border: '1px solid color-mix(in oklch, var(--gold) 28%, transparent)'
       }
     }, /*#__PURE__*/React.createElement("h3", {
       style: {
@@ -42780,7 +42778,7 @@ function KnownsAssumptions() {
     style: {
       background: 'var(--bg2)',
       color: 'var(--gold)',
-      border: '1px solid rgba(201,169,110,.25)',
+      border: '1px solid color-mix(in oklch, var(--gold) 35%, transparent)',
       padding: '6px 14px',
       borderRadius: 6,
       fontSize: 11,
@@ -42796,7 +42794,7 @@ function KnownsAssumptions() {
   }, /*#__PURE__*/React.createElement("div", {
     className: "card",
     style: {
-      borderLeft: '2px solid rgba(201,169,110,.3)'
+      borderLeft: '2px solid color-mix(in oklch, var(--gold) 42%, transparent)'
     }
   }, /*#__PURE__*/React.createElement("h3", {
     style: {
@@ -42850,7 +42848,7 @@ function KnownsAssumptions() {
   }, "Saved automatically to this client's profile.")), /*#__PURE__*/React.createElement("div", {
     className: "card",
     style: {
-      borderLeft: '2px solid rgba(201,169,110,.3)'
+      borderLeft: '2px solid color-mix(in oklch, var(--gold) 42%, transparent)'
     }
   }, /*#__PURE__*/React.createElement("h3", {
     style: {
@@ -43059,7 +43057,7 @@ function DerivedPolicyRow({
       style: {
         fontSize: 10,
         color: 'var(--text3)',
-        background: 'rgba(201,169,110,.04)',
+        background: 'color-mix(in oklch, var(--gold) 6%, transparent)',
         padding: '4px 6px',
         borderRadius: 4,
         marginTop: 4
@@ -43295,7 +43293,7 @@ function SnapGoCapture({
     style: {
       position: 'absolute',
       inset: 0,
-      background: 'rgba(201,169,110,.3)',
+      background: 'color-mix(in oklch, var(--gold) 42%, transparent)',
       pointerEvents: 'none',
       transition: 'opacity 80ms'
     }
@@ -43365,7 +43363,7 @@ function SnapGoCapture({
       height: 64,
       borderRadius: '50%',
       border: '4px solid #fff',
-      background: 'rgba(201,169,110,.3)',
+      background: 'color-mix(in oklch, var(--gold) 42%, transparent)',
       cursor: 'pointer',
       flexShrink: 0,
       transition: 'transform .1s',
@@ -43552,7 +43550,7 @@ function GettingStartedChecklist({
 
   // First incomplete step is "active" — gets the prominent styling and CTA
   const activeStep = !hasProfile ? 1 : !hasPolicies ? 2 : 3;
-  const GOLD = '#d4a96a';
+  const GOLD = 'var(--gold)';
   const GREEN = '#5ba8a0';
 
   // Compute specific missing fields for step 1 so we can surface them as
@@ -43609,8 +43607,8 @@ function GettingStartedChecklist({
   }];
   return /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'linear-gradient(135deg, rgba(212,169,106,0.08), rgba(212,169,106,0.02))',
-      border: `1px solid rgba(212,169,106,0.28)`,
+      background: 'linear-gradient(135deg, color-mix(in oklch, var(--gold) 11%, transparent), color-mix(in oklch, var(--gold) 4%, transparent))',
+      border: `1px solid color-mix(in oklch, var(--gold) 39%, transparent)`,
       borderRadius: 14,
       padding: compact ? '14px 16px' : '18px 20px',
       marginBottom: compact ? 14 : 20,
@@ -43661,8 +43659,8 @@ function GettingStartedChecklist({
       style: {
         padding: '10px 12px',
         marginBottom: i < steps.length - 1 ? 6 : 0,
-        background: isActive ? 'rgba(212,169,106,0.08)' : 'transparent',
-        border: isActive ? `1px solid rgba(212,169,106,0.32)` : `1px solid transparent`,
+        background: isActive ? 'color-mix(in oklch, var(--gold) 11%, transparent)' : 'transparent',
+        border: isActive ? `1px solid color-mix(in oklch, var(--gold) 45%, transparent)` : `1px solid transparent`,
         borderRadius: 8,
         opacity: step.locked ? 0.5 : 1,
         transition: 'all 0.2s'
@@ -43682,7 +43680,7 @@ function GettingStartedChecklist({
         alignItems: 'center',
         justifyContent: 'center',
         background: step.done ? GREEN : isActive ? GOLD : 'var(--bg3)',
-        color: step.done || isActive ? '#0b0f1a' : 'var(--text3)',
+        color: step.done || isActive ? '#fff' : 'var(--text3)',
         fontSize: step.done ? 14 : 12,
         fontWeight: 700,
         flexShrink: 0,
@@ -43744,8 +43742,8 @@ function GettingStartedChecklist({
     }, step.action && /*#__PURE__*/React.createElement("button", {
       onClick: step.action,
       style: {
-        background: `linear-gradient(135deg, ${GOLD}, #b8935a)`,
-        color: '#0b0f1a',
+        background: `linear-gradient(135deg, ${GOLD}, var(--gold3))`,
+        color: '#fff',
         border: 'none',
         padding: '7px 14px',
         borderRadius: 8,
@@ -43940,12 +43938,12 @@ const DERIVED_FIELD_STYLE = {
     cursor: 'help',
     padding: '1px 5px',
     borderRadius: 4,
-    background: 'rgba(201,169,110,.08)'
+    background: 'color-mix(in oklch, var(--gold) 11%, transparent)'
   },
   caption: {
     fontSize: 9,
     fontStyle: 'italic',
-    color: 'rgba(201,169,110,.7)',
+    color: 'color-mix(in oklch, var(--gold) 98%, transparent)',
     marginTop: 2,
     lineHeight: 1.3
   },
@@ -43954,8 +43952,8 @@ const DERIVED_FIELD_STYLE = {
     zIndex: 999,
     bottom: '100%',
     left: 0,
-    background: '#1a2332',
-    border: '1px solid rgba(201,169,110,.3)',
+    background: 'var(--bg2)',
+    border: '1px solid color-mix(in oklch, var(--gold) 42%, transparent)',
     borderRadius: 6,
     padding: '8px 10px',
     fontSize: 10,
@@ -44016,7 +44014,7 @@ function DerivedFieldBadge({
   }, "Inputs: ", Object.entries(derivedMeta.inputs).map(([k, v]) => k + '=' + (typeof v === 'number' ? v.toLocaleString() : String(v))).join(', ')), derivedMeta.caption && /*#__PURE__*/React.createElement("div", {
     style: {
       fontStyle: 'italic',
-      color: 'rgba(201,169,110,.8)',
+      color: 'color-mix(in oklch, var(--gold) 100%, transparent)',
       marginTop: 4
     }
   }, derivedMeta.caption)));
@@ -44753,7 +44751,7 @@ function BulkVerifyModal({
   }, "\xD7"))), scanProgress && scanProgress.pctComplete < 100 && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '8px 16px',
-      background: 'rgba(212,169,106,.06)',
+      background: 'color-mix(in oklch, var(--gold) 9%, transparent)',
       borderBottom: '1px solid var(--border)'
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -44810,7 +44808,7 @@ function BulkVerifyModal({
       fontSize: 10,
       borderRadius: 6,
       border: '1px solid ' + (activeTab === 'all' ? 'var(--gold)' : 'var(--border)'),
-      background: activeTab === 'all' ? 'rgba(212,169,106,.12)' : 'var(--bg2)',
+      background: activeTab === 'all' ? 'var(--gold-dim)' : 'var(--bg2)',
       color: activeTab === 'all' ? 'var(--gold)' : 'var(--text3)',
       cursor: 'pointer',
       fontWeight: activeTab === 'all' ? 700 : 400,
@@ -45094,8 +45092,8 @@ function BulkVerifyModal({
         fontSize: 10,
         padding: '4px 8px',
         borderRadius: 6,
-        border: '1px solid rgba(212,169,106,.28)',
-        background: it._mergeIntoExisting ? 'rgba(91,168,160,.15)' : 'rgba(212,169,106,.10)',
+        border: '1px solid color-mix(in oklch, var(--gold) 39%, transparent)',
+        background: it._mergeIntoExisting ? 'rgba(91,168,160,.15)' : 'color-mix(in oklch, var(--gold) 14%, transparent)',
         color: it._mergeIntoExisting ? 'var(--teal)' : 'var(--gold)',
         fontWeight: 800,
         cursor: 'pointer'
@@ -45118,8 +45116,8 @@ function BulkVerifyModal({
         fontSize: 10,
         padding: '4px 8px',
         borderRadius: 6,
-        border: '1px solid rgba(212,169,106,.28)',
-        background: 'rgba(212,169,106,.10)',
+        border: '1px solid color-mix(in oklch, var(--gold) 39%, transparent)',
+        background: 'color-mix(in oklch, var(--gold) 14%, transparent)',
         color: 'var(--gold)',
         fontWeight: 800,
         cursor: 'pointer'
@@ -45146,8 +45144,8 @@ function BulkVerifyModal({
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'rgba(212,169,106,.07)',
-      border: '1px solid rgba(212,169,106,.18)',
+      background: 'color-mix(in oklch, var(--gold) 10%, transparent)',
+      border: '1px solid color-mix(in oklch, var(--gold) 25%, transparent)',
       borderRadius: 9,
       padding: 9
     }
@@ -45219,8 +45217,8 @@ function BulkVerifyModal({
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'rgba(212,169,106,.045)',
-      border: '1px solid rgba(212,169,106,.14)',
+      background: 'color-mix(in oklch, var(--gold) 6%, transparent)',
+      border: '1px solid color-mix(in oklch, var(--gold) 20%, transparent)',
       borderRadius: 9,
       padding: 9,
       minWidth: 0
@@ -45415,8 +45413,8 @@ function BulkVerifyModal({
     }, "\u2705 Core coverage types detected: Life, CI, ISP, DI"));
   })(), items.filter(it => it._dupOf).length > 0 && /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'rgba(212,169,106,.06)',
-      border: '1px solid rgba(212,169,106,.15)',
+      background: 'color-mix(in oklch, var(--gold) 9%, transparent)',
+      border: '1px solid color-mix(in oklch, var(--gold) 21%, transparent)',
       borderRadius: 8,
       padding: 8,
       marginBottom: 10
@@ -45583,8 +45581,8 @@ function BulkVerifyModal({
           fontSize: 10,
           fontWeight: 700,
           color: 'var(--gold)',
-          background: 'rgba(212,169,106,.08)',
-          border: '1px solid rgba(212,169,106,.18)',
+          background: 'color-mix(in oklch, var(--gold) 12%, transparent)',
+          border: '1px solid color-mix(in oklch, var(--gold) 25%, transparent)',
           borderRadius: 6,
           padding: '5px 8px',
           marginBottom: 8
@@ -45704,7 +45702,7 @@ function BulkVerifyModal({
           color: 'var(--gold)',
           padding: '2px 7px',
           borderRadius: 4,
-          background: 'rgba(212,169,106,.12)',
+          background: 'var(--gold-dim)',
           whiteSpace: 'nowrap'
         }
       }, verifiable.length, " TO CHECK"))), !allClean && (() => {
@@ -45758,9 +45756,9 @@ function BulkVerifyModal({
             fontWeight: 600,
             padding: '2px 7px',
             borderRadius: 4,
-            background: kind === 'gate' ? 'rgba(239,83,80,.10)' : kind === 'note' ? 'rgba(255,255,255,.04)' : 'rgba(212,169,106,.12)',
+            background: kind === 'gate' ? 'rgba(239,83,80,.10)' : kind === 'note' ? 'rgba(255,255,255,.04)' : 'var(--gold-dim)',
             color: c,
-            border: '1px solid ' + (kind === 'gate' ? 'rgba(239,83,80,.30)' : kind === 'note' ? 'rgba(255,255,255,.10)' : 'rgba(212,169,106,.30)'),
+            border: '1px solid ' + (kind === 'gate' ? 'rgba(239,83,80,.30)' : kind === 'note' ? 'rgba(255,255,255,.10)' : 'color-mix(in oklch, var(--gold) 42%, transparent)'),
             cursor: 'pointer',
             whiteSpace: 'nowrap',
             maxWidth: 240,
@@ -45888,9 +45886,9 @@ function BulkVerifyModal({
           style: {
             marginTop: 6,
             padding: '6px 8px',
-            background: 'rgba(201,169,110,.04)',
+            background: 'color-mix(in oklch, var(--gold) 6%, transparent)',
             borderRadius: 6,
-            borderLeft: '2px solid rgba(201,169,110,.25)'
+            borderLeft: '2px solid color-mix(in oklch, var(--gold) 35%, transparent)'
           }
         }, /*#__PURE__*/React.createElement("div", {
           style: {
@@ -45950,7 +45948,7 @@ function BulkVerifyModal({
             di: '#5ba8a022',
             acc_medical: '#5ba8a022',
             acc_tcm: '#5ba8a022',
-            acc_dismember: '#d4a96a22'
+            acc_dismember: 'var(--gold)22'
           }[rd.type] || 'var(--bg2)' : 'var(--bg)',
           color: rd._selected !== false ? {
             death: '#5b8fd9',
@@ -45959,7 +45957,7 @@ function BulkVerifyModal({
             di: '#5ba8a0',
             acc_medical: '#5ba8a0',
             acc_tcm: '#5ba8a0',
-            acc_dismember: '#d4a96a'
+            acc_dismember: 'var(--gold)'
           }[rd.type] || 'var(--text3)' : 'var(--text3)',
           textDecoration: rd._selected === false ? 'line-through' : 'none',
           whiteSpace: 'normal',
@@ -45993,7 +45991,7 @@ function BulkVerifyModal({
           fontWeight: 600,
           borderRadius: 6,
           background: 'var(--green2)',
-          color: '#0b0f1a',
+          color: '#fff',
           border: 'none',
           cursor: 'pointer'
         }
@@ -46099,8 +46097,8 @@ function BulkVerifyModal({
         fontSize: 10,
         fontWeight: 700,
         color: 'var(--gold)',
-        background: 'rgba(212,169,106,.08)',
-        border: '1px solid rgba(212,169,106,.18)',
+        background: 'color-mix(in oklch, var(--gold) 12%, transparent)',
+        border: '1px solid color-mix(in oklch, var(--gold) 25%, transparent)',
         borderRadius: 6,
         padding: '5px 8px',
         marginBottom: 8
@@ -46319,7 +46317,7 @@ function BulkVerifyModal({
           di: '#5ba8a022',
           acc_medical: '#5ba8a022',
           acc_tcm: '#5ba8a022',
-          acc_dismember: '#d4a96a22'
+          acc_dismember: 'var(--gold)22'
         }[rd.type] || 'var(--bg2)' : 'var(--bg)',
         color: rd._selected !== false ? {
           death: '#5b8fd9',
@@ -46328,7 +46326,7 @@ function BulkVerifyModal({
           di: '#5ba8a0',
           acc_medical: '#5ba8a0',
           acc_tcm: '#5ba8a0',
-          acc_dismember: '#d4a96a'
+          acc_dismember: 'var(--gold)'
         }[rd.type] || 'var(--text3)' : 'var(--text3)',
         textDecoration: rd._selected === false ? 'line-through' : 'none',
         whiteSpace: 'normal',
@@ -46384,7 +46382,7 @@ function BulkVerifyModal({
           fontSize: 8,
           borderRadius: 4,
           border: '1px solid ' + (dest === 'ilp_' + ilp.id ? 'var(--gold)' : 'var(--border)'),
-          background: dest === 'ilp_' + ilp.id ? 'rgba(212,169,106,.1)' : 'transparent',
+          background: dest === 'ilp_' + ilp.id ? 'color-mix(in oklch, var(--gold) 14%, transparent)' : 'transparent',
           color: dest === 'ilp_' + ilp.id ? 'var(--gold)' : 'var(--text3)',
           cursor: 'pointer'
         }
@@ -46402,7 +46400,7 @@ function BulkVerifyModal({
         fontSize: 8,
         padding: '1px 5px',
         borderRadius: 3,
-        background: 'rgba(212,169,106,.12)',
+        background: 'var(--gold-dim)',
         color: 'var(--gold)'
       }
     }, "\uD83D\uDD17 Same as: ", (item._knownPolicyMatch.existingName || 'existing').slice(0, 22), (item._knownPolicyMatch.existingName || '').length > 22 ? '…' : ''), /*#__PURE__*/React.createElement("span", {
@@ -46428,7 +46426,7 @@ function BulkVerifyModal({
         fontSize: 8,
         padding: '1px 5px',
         borderRadius: 3,
-        background: 'rgba(212,169,106,.1)',
+        background: 'color-mix(in oklch, var(--gold) 14%, transparent)',
         color: 'var(--gold)'
       }
     }, "\uD83D\uDD04 Duplicate"), Array.isArray(item._mergeConflicts) && item._mergeConflicts.length > 0 && /*#__PURE__*/React.createElement("span", {
@@ -46465,9 +46463,9 @@ function BulkVerifyModal({
         fontSize: 8,
         padding: '1px 5px',
         borderRadius: 3,
-        background: 'rgba(212,169,106,.08)',
+        background: 'color-mix(in oklch, var(--gold) 12%, transparent)',
         color: 'var(--gold)',
-        border: '1px dashed rgba(212,169,106,.3)'
+        border: '1px dashed color-mix(in oklch, var(--gold) 42%, transparent)'
       }
     }, "\u26A1 Check ", item._lowTrustFields.slice(0, 3).map(lt => lt.field).join(', '), item._lowTrustFields.length > 3 ? '…' : ''), item._batch > 1 && /*#__PURE__*/React.createElement("span", {
       style: {
@@ -46670,8 +46668,8 @@ function BulkVerifyModal({
         style: {
           flex: '1 1 200px',
           padding: '8px 10px',
-          background: 'rgba(212,169,106,0.08)',
-          border: '1px solid rgba(212,169,106,0.35)',
+          background: 'color-mix(in oklch, var(--gold) 11%, transparent)',
+          border: '1px solid color-mix(in oklch, var(--gold) 49%, transparent)',
           borderRadius: 6,
           fontSize: 11,
           color: 'var(--text)',
@@ -46811,7 +46809,7 @@ function Policies() {
     const isFlashed = flashedPolicyIds.has(pid);
     const isSelected = selected.has(pid);
     return {
-      background: isFlashed ? 'rgba(212,169,106,.22)' : isSelected ? 'rgba(212,169,106,.06)' : 'transparent',
+      background: isFlashed ? 'color-mix(in oklch, var(--gold) 31%, transparent)' : isSelected ? 'color-mix(in oklch, var(--gold) 9%, transparent)' : 'transparent',
       transition: 'background-color 0.6s ease-out',
       ...(isFlashed ? {
         boxShadow: 'inset 3px 0 0 0 var(--gold)'
@@ -51830,8 +51828,8 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
         minWidth: 0,
         padding: '6px 6px',
         borderRadius: 6,
-        border: '1px solid ' + (step.active ? 'rgba(212,169,106,.35)' : step.done ? 'rgba(91,168,160,.24)' : 'rgba(255,255,255,.06)'),
-        background: step.active ? 'rgba(212,169,106,.08)' : step.done ? 'rgba(91,168,160,.06)' : 'rgba(255,255,255,.025)'
+        border: '1px solid ' + (step.active ? 'color-mix(in oklch, var(--gold) 49%, transparent)' : step.done ? 'rgba(91,168,160,.24)' : 'rgba(255,255,255,.06)'),
+        background: step.active ? 'color-mix(in oklch, var(--gold) 12%, transparent)' : step.done ? 'rgba(91,168,160,.06)' : 'rgba(255,255,255,.025)'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -51904,8 +51902,8 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
     style: {
       marginTop: 8,
       padding: '6px 10px',
-      background: scanProgress.bgMode === 'active' ? 'rgba(91,168,160,0.08)' : 'rgba(212,169,106,0.08)',
-      border: '1px solid ' + (scanProgress.bgMode === 'active' ? 'rgba(91,168,160,0.3)' : 'rgba(212,169,106,0.3)'),
+      background: scanProgress.bgMode === 'active' ? 'rgba(91,168,160,0.08)' : 'color-mix(in oklch, var(--gold) 11%, transparent)',
+      border: '1px solid ' + (scanProgress.bgMode === 'active' ? 'rgba(91,168,160,0.3)' : 'color-mix(in oklch, var(--gold) 42%, transparent)'),
       borderRadius: 6,
       display: 'flex',
       alignItems: 'center',
@@ -52073,7 +52071,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
         border: 'none',
         cursor: 'pointer',
         background: hasProgress ? 'linear-gradient(135deg, var(--teal), #4a9088)' : 'var(--gold)',
-        color: hasProgress ? '#fff' : '#0b0f1a'
+        color: hasProgress ? '#fff' : '#fff'
       }
     }, hasProgress ? '▶ Resume Extraction' : '🔄 Retry Extraction'), /*#__PURE__*/React.createElement("button", {
       className: "btn-secondary btn-sm",
@@ -52347,7 +52345,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
           position: 'absolute',
           top: 2,
           left: 2,
-          background: 'rgba(212,169,106,.9)',
+          background: 'color-mix(in oklch, var(--gold) 100%, transparent)',
           color: '#000',
           fontSize: 8,
           padding: '1px 3px',
@@ -52410,7 +52408,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       color: 'var(--gold)',
       marginTop: 4,
       padding: '4px 8px',
-      background: 'rgba(212,169,106,.08)',
+      background: 'color-mix(in oklch, var(--gold) 12%, transparent)',
       borderRadius: 6
     }
   }, "Remark: \"", scanResult.userRemarks, "\"")), /*#__PURE__*/React.createElement("div", {
@@ -52562,7 +52560,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       label: 'Critical Illness'
     }, {
       code: 'ECI',
-      color: '#d4a96a',
+      color: 'var(--gold)',
       label: 'Early Critical Illness'
     }, {
       code: 'DI',
@@ -52578,7 +52576,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       label: 'Waiver of Premium'
     }, {
       code: 'CV',
-      color: '#d4a96a',
+      color: 'var(--gold)',
       label: 'Cash Value'
     }];
     // rc2e.45: Lifecycle status pills shown on each chip.
@@ -52591,7 +52589,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
     }, {
       code: 'matured',
       label: 'Matured',
-      color: '#d4a96a'
+      color: 'var(--gold)'
     }, {
       code: 'lapsed',
       label: 'Lapsed',
@@ -52619,7 +52617,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       });
       if (rds.some(r => r.type === 'eci' && parseFloat(r.sa) > 0)) bens.push({
         l: 'ECI',
-        c: '#d4a96a'
+        c: 'var(--gold)'
       });
       if (rds.some(r => r.type === 'di' && parseFloat(r.sa) > 0) || p.subType === 'Disability Income') bens.push({
         l: 'DI',
@@ -52635,7 +52633,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       });
       if (parseFloat(p.cashValue) > 0 || ['Whole Life', 'Universal Life (UL)', 'Indexed UL (IUL)', 'Variable UL (VUL)'].includes(p.subType) || p.category === 'savings' || p.category === 'investment' || p.category === 'retirement') bens.push({
         l: 'CV',
-        c: '#d4a96a'
+        c: 'var(--gold)'
       });
       return bens;
     };
@@ -52970,9 +52968,9 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
             fontWeight: 600,
             padding: '1px 5px',
             borderRadius: 3,
-            background: 'rgba(212,169,106,.12)',
+            background: 'var(--gold-dim)',
             color: 'var(--gold)',
-            border: '1px solid rgba(212,169,106,.25)',
+            border: '1px solid color-mix(in oklch, var(--gold) 35%, transparent)',
             maxWidth: 100,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -55497,7 +55495,7 @@ function PolicyFormModal({
       fontSize: 9,
       padding: '2px 8px',
       background: 'var(--green2)',
-      color: '#0b0f1a',
+      color: '#fff',
       border: 'none',
       borderRadius: 3,
       cursor: 'pointer',
@@ -55927,7 +55925,7 @@ function PolicyFormModal({
       style: {
         marginBottom: 8,
         padding: '6px 10px',
-        background: 'rgba(201,169,110,.06)',
+        background: 'color-mix(in oklch, var(--gold) 8%, transparent)',
         borderRadius: 6,
         display: 'flex',
         alignItems: 'center',
@@ -55980,9 +55978,9 @@ function PolicyFormModal({
         fontSize: 10,
         padding: '4px 10px',
         borderRadius: 5,
-        background: 'rgba(201,169,110,.15)',
+        background: 'color-mix(in oklch, var(--gold) 21%, transparent)',
         color: '#c9a96e',
-        border: '1px solid rgba(201,169,110,.3)',
+        border: '1px solid color-mix(in oklch, var(--gold) 42%, transparent)',
         cursor: 'pointer',
         fontWeight: 600,
         display: 'flex',
@@ -56054,7 +56052,7 @@ function PolicyFormModal({
         padding: '1px 6px',
         borderRadius: 4,
         background: 'var(--green2)',
-        color: '#0b0f1a',
+        color: '#fff',
         border: 'none',
         cursor: 'pointer',
         fontWeight: 600
@@ -56307,7 +56305,7 @@ function PolicyFormModal({
       padding: 10,
       background: 'var(--bg2)',
       borderRadius: 8,
-      border: '1px solid ' + (form.endHasCashBenefit ? 'rgba(201,169,110,.5)' : 'var(--border)')
+      border: '1px solid ' + (form.endHasCashBenefit ? 'color-mix(in oklch, var(--gold) 70%, transparent)' : 'var(--border)')
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -56437,9 +56435,9 @@ function PolicyFormModal({
       style: {
         marginBottom: 8,
         padding: 10,
-        background: 'rgba(201,169,110,.04)',
+        background: 'color-mix(in oklch, var(--gold) 6%, transparent)',
         borderRadius: 8,
-        border: '1px solid rgba(201,169,110,.15)'
+        border: '1px solid color-mix(in oklch, var(--gold) 21%, transparent)'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -56506,7 +56504,7 @@ function PolicyFormModal({
       style: {
         fontSize: 9,
         fontStyle: 'italic',
-        color: 'rgba(201,169,110,.7)',
+        color: 'color-mix(in oklch, var(--gold) 98%, transparent)',
         marginTop: 4
       }
     }, "Estimated at ", yieldPct, "% yield \xB7 not guaranteed \xB7 for planning only"), !canEstimate && /*#__PURE__*/React.createElement("div", {
@@ -56665,7 +56663,7 @@ function PolicyFormModal({
         padding: '2px 8px',
         borderRadius: 4,
         background: 'var(--green2)',
-        color: '#0b0f1a',
+        color: '#fff',
         border: 'none',
         cursor: 'pointer',
         fontWeight: 600
@@ -56677,7 +56675,7 @@ function PolicyFormModal({
       padding: 14,
       background: 'var(--bg3)',
       borderRadius: 10,
-      border: '1px solid rgba(212,169,106,.3)'
+      border: '1px solid color-mix(in oklch, var(--gold) 42%, transparent)'
     }
   }, (() => {
     const totalAnnual = getPolicyAnnualPayout(form);
@@ -56772,7 +56770,7 @@ function PolicyFormModal({
         fontSize: 10,
         padding: '3px 10px',
         borderRadius: 4,
-        background: 'rgba(212,169,106,.12)',
+        background: 'var(--gold-dim)',
         color: phaseColor,
         fontWeight: 700,
         textTransform: 'uppercase',
@@ -57159,7 +57157,7 @@ function PolicyFormModal({
       style: {
         marginTop: 8,
         padding: '6px 10px',
-        background: 'rgba(212,169,106,.06)',
+        background: 'color-mix(in oklch, var(--gold) 9%, transparent)',
         borderRadius: 6,
         fontSize: 10,
         color: 'var(--text3)',
@@ -57717,10 +57715,10 @@ function PolicyFormModal({
       }
     }, "$", cashPart.toLocaleString(), "/yr")), /*#__PURE__*/React.createElement("div", {
       style: {
-        background: 'rgba(212,169,106,.06)',
+        background: 'color-mix(in oklch, var(--gold) 9%, transparent)',
         borderRadius: 8,
         padding: 10,
-        border: '1px solid rgba(212,169,106,.25)',
+        border: '1px solid color-mix(in oklch, var(--gold) 35%, transparent)',
         textAlign: 'center'
       }
     }, /*#__PURE__*/React.createElement("div", {
@@ -58080,9 +58078,9 @@ function PolicyFormModal({
     style: {
       padding: '8px 10px',
       marginBottom: 8,
-      background: 'rgba(201,169,110,.06)',
+      background: 'color-mix(in oklch, var(--gold) 8%, transparent)',
       borderRadius: 6,
-      border: '1px solid rgba(201,169,110,.15)',
+      border: '1px solid color-mix(in oklch, var(--gold) 21%, transparent)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -60465,8 +60463,8 @@ function PolicyFormModal({
     style: {
       marginTop: 6,
       padding: '8px 10px',
-      background: 'rgba(212,169,106,.08)',
-      border: '1px solid rgba(212,169,106,.2)',
+      background: 'color-mix(in oklch, var(--gold) 12%, transparent)',
+      border: '1px solid color-mix(in oklch, var(--gold) 28%, transparent)',
       borderRadius: 8
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -60502,7 +60500,7 @@ function PolicyFormModal({
     style: {
       width: '100%',
       background: 'transparent',
-      border: '1px solid rgba(212,169,106,.2)',
+      border: '1px solid color-mix(in oklch, var(--gold) 28%, transparent)',
       borderRadius: 6,
       padding: '6px 8px',
       fontSize: 12,
@@ -61070,9 +61068,9 @@ function FundAllocationEditor({
     rel: "noopener",
     title: "Search Google for fund factsheet",
     style: {
-      background: 'rgba(201,169,110,.08)',
+      background: 'color-mix(in oklch, var(--gold) 11%, transparent)',
       color: 'var(--gold)',
-      border: '1px solid rgba(201,169,110,.2)',
+      border: '1px solid color-mix(in oklch, var(--gold) 28%, transparent)',
       borderRadius: 6,
       padding: '4px 8px',
       fontSize: 10,
@@ -61102,7 +61100,7 @@ function FundAllocationEditor({
       fontSize: 9,
       padding: '1px 6px',
       borderRadius: 3,
-      background: 'rgba(212,169,106,.12)',
+      background: 'var(--gold-dim)',
       color: 'var(--gold)',
       fontWeight: 600
     }
@@ -62813,7 +62811,7 @@ function ReportTab() {
           }] : []), {
             label: 'Policy',
             data: retPolicyData,
-            backgroundColor: 'rgba(212,169,106,0.85)',
+            backgroundColor: 'color-mix(in oklch, var(--gold) 100%, transparent)',
             borderRadius: 2,
             stack: 'income'
           }, {
@@ -62896,13 +62894,13 @@ function ReportTab() {
           datasets: [{
             label: 'Annual Premium',
             data: cashflowValues,
-            borderColor: '#b8935a',
-            backgroundColor: 'rgba(212,169,106,0.25)',
+            borderColor: 'var(--gold3)',
+            backgroundColor: 'color-mix(in oklch, var(--gold) 35%, transparent)',
             borderWidth: 2.5,
             fill: true,
             tension: 0.35,
             pointRadius: 2,
-            pointBackgroundColor: '#b8935a'
+            pointBackgroundColor: 'var(--gold3)'
           }]
         },
         options: {
@@ -65956,7 +65954,7 @@ function ExtractDiagnostics() {
       }
     }, icon), " ", /*#__PURE__*/React.createElement("strong", {
       style: {
-        color: 'var(--text1)'
+        color: 'var(--text)'
       }
     }, r.name)), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -66293,9 +66291,9 @@ function DriveConnectionCard() {
       text: '\u25CF Connected' + (pingedEmail || cachedEmail ? ' as ' + (pingedEmail || cachedEmail) : '')
     };
     if (status === 'reconnect-needed') return {
-      bg: 'rgba(212,169,106,.12)',
+      bg: 'var(--gold-dim)',
       color: 'var(--gold)',
-      border: 'rgba(212,169,106,.35)',
+      border: 'color-mix(in oklch, var(--gold) 49%, transparent)',
       text: '\u26A0 Reconnect needed'
     };
     return {
@@ -66395,7 +66393,7 @@ function DriveConnectionCard() {
     style: {
       padding: '10px 18px',
       background: 'var(--teal)',
-      color: '#0b0f1a',
+      color: '#fff',
       border: 'none',
       borderRadius: 8,
       fontSize: 12,
@@ -66508,9 +66506,9 @@ function DriveDiscoveryCard() {
     onClick: handleDiscover,
     disabled: !isDriveOn || busy,
     style: {
-      background: !isDriveOn || busy ? 'rgba(212,169,106,.08)' : 'rgba(212,169,106,.15)',
+      background: !isDriveOn || busy ? 'color-mix(in oklch, var(--gold) 12%, transparent)' : 'color-mix(in oklch, var(--gold) 21%, transparent)',
       color: 'var(--gold)',
-      border: '1px solid rgba(212,169,106,.4)',
+      border: '1px solid color-mix(in oklch, var(--gold) 56%, transparent)',
       borderRadius: 8,
       padding: '8px 16px',
       fontSize: 12,
@@ -66678,7 +66676,7 @@ function CloudSyncCard() {
       fontSize: 11,
       padding: '3px 8px',
       borderRadius: 4,
-      background: status.kind === 'success' ? 'rgba(91,168,160,.12)' : status.kind === 'error' ? 'rgba(239,83,80,.12)' : 'rgba(212,169,106,.1)',
+      background: status.kind === 'success' ? 'rgba(91,168,160,.12)' : status.kind === 'error' ? 'rgba(239,83,80,.12)' : 'color-mix(in oklch, var(--gold) 14%, transparent)',
       color: status.kind === 'success' ? 'var(--green2)' : status.kind === 'error' ? 'var(--red)' : 'var(--gold)'
     }
   }, status.text)), !userId && /*#__PURE__*/React.createElement("div", {
@@ -66898,9 +66896,9 @@ function ChangelogModal({
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      background: '#1a2332',
+      background: 'var(--bg2)',
       borderRadius: 16,
-      border: '1px solid rgba(201,169,110,.2)',
+      border: '1px solid color-mix(in oklch, var(--gold) 28%, transparent)',
       maxWidth: 600,
       width: '100%',
       maxHeight: '85vh',
@@ -66911,7 +66909,7 @@ function ChangelogModal({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '20px 24px 16px',
-      borderBottom: '1px solid rgba(201,169,110,.15)',
+      borderBottom: '1px solid color-mix(in oklch, var(--gold) 21%, transparent)',
       flexShrink: 0
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -66924,7 +66922,7 @@ function ChangelogModal({
     style: {
       fontSize: 18,
       fontWeight: 700,
-      color: '#e8e8e8',
+      color: 'var(--text)',
       margin: 0
     }
   }, "What's new in PolicyLens"), /*#__PURE__*/React.createElement("div", {
@@ -66962,7 +66960,7 @@ function ChangelogModal({
     style: {
       fontSize: 14,
       fontWeight: 700,
-      color: '#e8e8e8',
+      color: 'var(--text)',
       marginBottom: 4
     }
   }, entry.version, " \u2014 ", entry.name), ei > 0 && /*#__PURE__*/React.createElement("div", {
@@ -67001,7 +66999,7 @@ function ChangelogModal({
   }, "-"), item))))))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '12px 24px',
-      borderTop: '1px solid rgba(201,169,110,.1)',
+      borderTop: '1px solid color-mix(in oklch, var(--gold) 14%, transparent)',
       textAlign: 'center',
       flexShrink: 0
     }
@@ -67160,7 +67158,7 @@ function TierPicker({
         alignItems: 'center',
         gap: 8,
         cursor: 'pointer',
-        background: isFocused ? 'rgba(212,169,106,.08)' : 'transparent',
+        background: isFocused ? 'color-mix(in oklch, var(--gold) 12%, transparent)' : 'transparent',
         fontSize: 11,
         color: 'var(--text)',
         fontWeight: isCurrent ? 600 : 400
@@ -67265,7 +67263,7 @@ function ClientTiersPanel({
     className: "card",
     style: {
       marginBottom: 16,
-      borderColor: 'rgba(212,169,106,0.2)'
+      borderColor: 'color-mix(in oklch, var(--gold) 28%, transparent)'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -67298,7 +67296,7 @@ function ClientTiersPanel({
     disabled: saving,
     style: {
       background: 'var(--gold)',
-      color: '#0b0f1a',
+      color: '#fff',
       border: 'none',
       padding: '5px 14px',
       borderRadius: 6,
@@ -67466,7 +67464,7 @@ function ClientTiersPanel({
     onClick: addTier,
     style: {
       background: 'var(--gold)',
-      color: '#0b0f1a',
+      color: '#fff',
       border: 'none',
       borderRadius: 5,
       padding: '4px 12px',
@@ -67494,7 +67492,7 @@ function ClientTiersPanel({
       marginTop: 8,
       background: 'transparent',
       color: 'var(--gold)',
-      border: '1px solid rgba(212,169,106,.25)',
+      border: '1px solid color-mix(in oklch, var(--gold) 35%, transparent)',
       borderRadius: 6,
       padding: '5px 14px',
       fontSize: 11,
@@ -67997,7 +67995,7 @@ function Settings() {
       fontSize: 10,
       padding: '4px 12px',
       borderRadius: 6,
-      border: '1px solid rgba(201,169,110,.25)',
+      border: '1px solid color-mix(in oklch, var(--gold) 35%, transparent)',
       background: 'var(--gold-dim)',
       color: 'var(--gold)',
       cursor: 'pointer',

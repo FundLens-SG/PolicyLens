@@ -22,7 +22,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 })();
 </script>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0b0f1a">
+<meta name="theme-color" content="#fbf7ee">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -107,11 +107,9 @@ html,body{overflow-x:hidden;width:100%}
    in rc1.5. The legacy dark theme is preserved as a comment for one-batch
    revert + eventual restore via a future Settings → Dark mode toggle.
 
-   Legacy dark (pre-v2.4):
-     --bg:#0b0f1a;--bg2:#111827;--bg3:#171f2e;--bg4:#1f2a3d;
-     --text:#e8dcc8;--text2:#a39580;--text3:#6b6050;
-     --border:#1e2738;--border2:#2a3548;
-     --gold:#d4a96a;--gold2:#e8c992;--gold3:#b8935a;
+   Legacy dark theme (pre-v2.4) lives in git history at commit 79d668b
+   and earlier — not duplicated here so a future bulk color sweep
+   doesn't accidentally rewrite the historical reference.
 */
 :root{
 /* Surfaces — warm cream paper */
@@ -164,7 +162,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold)}
 input::placeholder{color:var(--text3)}
 select{cursor:pointer}
 button{font-family:inherit;cursor:pointer;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:500;transition:all .15s}
-.btn-primary{background:var(--gold);color:#0b0f1a;font-weight:600}.btn-primary:hover{background:var(--gold2)}
+.btn-primary{background:var(--gold);color:#fff;font-weight:600}.btn-primary:hover{background:var(--gold2)}
 .btn-secondary{background:var(--bg3);color:var(--text2);border:1px solid var(--border2)}.btn-secondary:hover{background:var(--bg4);border-color:var(--gold3)}
 .btn-danger{background:var(--red-dim);color:var(--red2)}.btn-danger:hover{background:rgba(239,83,80,.2)}
 .btn-sm{padding:5px 10px;font-size:12px}
@@ -194,13 +192,13 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
 .toast-success{background:rgba(91,168,160,.15);border:1px solid rgba(91,168,160,.3);color:var(--green2)}
 .toast-error{background:rgba(239,83,80,.12);border:1px solid rgba(239,83,80,.25);color:var(--red)}
 .toast-info{background:rgba(91,143,217,.12);border:1px solid rgba(91,143,217,.25);color:var(--blue2)}
-.toast-warning{background:rgba(212,169,106,.12);border:1px solid rgba(212,169,106,.25);color:var(--gold)}
+.toast-warning{background:var(--gold-dim);border:1px solid color-mix(in oklch, var(--gold) 35%, transparent);color:var(--gold)}
 
 /* ══════ SKELETON SHIMMER ══════ */
 @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
 .skeleton{border-radius:6px;background:linear-gradient(90deg,var(--bg3) 25%,var(--bg4) 50%,var(--bg3) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite ease-in-out}
-.fuzzy-alert{background:var(--gold-dim);border:1px solid rgba(212,169,106,.25);border-radius:10px;padding:14px;margin:12px 0}
+.fuzzy-alert{background:var(--gold-dim);border:1px solid color-mix(in oklch, var(--gold) 35%, transparent);border-radius:10px;padding:14px;margin:12px 0}
 .fuzzy-alert h4{color:var(--gold);font-size:13px;margin-bottom:6px}
 .gap-bar{height:8px;border-radius:4px;background:var(--bg4);overflow:hidden;position:relative}
 .gap-bar-fill{height:100%;border-radius:4px;transition:width .5s ease}
@@ -325,16 +323,16 @@ body { padding-top: var(--ckg-strip-h) !important; }
 <div id="auth-loading">
   <div style="text-align:center">
     <svg width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="50" cy="50" r="38" fill="none" stroke="#d4a96a" stroke-width="2.5"/>
-      <circle cx="50" cy="50" r="2" fill="#d4a96a"/>
-      <line x1="50" y1="32" x2="50" y2="42" stroke="#d4a96a" stroke-width="1.5" stroke-linecap="round"/>
-      <line x1="50" y1="58" x2="50" y2="68" stroke="#d4a96a" stroke-width="1.5" stroke-linecap="round"/>
-      <line x1="32" y1="50" x2="42" y2="50" stroke="#d4a96a" stroke-width="1.5" stroke-linecap="round"/>
-      <line x1="58" y1="50" x2="68" y2="50" stroke="#d4a96a" stroke-width="1.5" stroke-linecap="round"/>
-      <path d="M50 30 L51.5 32 L50 34 L48.5 32Z" fill="#d4a96a" opacity="0.8"/>
-      <path d="M50 66 L51.5 68 L50 70 L48.5 68Z" fill="#d4a96a" opacity="0.8"/>
-      <path d="M30 50 L32 51.5 L34 50 L32 48.5Z" fill="#d4a96a" opacity="0.8"/>
-      <path d="M66 50 L68 51.5 L70 50 L68 48.5Z" fill="#d4a96a" opacity="0.8"/>
+      <circle cx="50" cy="50" r="38" fill="none" stroke="var(--gold)" stroke-width="2.5"/>
+      <circle cx="50" cy="50" r="2" fill="var(--gold)"/>
+      <line x1="50" y1="32" x2="50" y2="42" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="50" y1="58" x2="50" y2="68" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="32" y1="50" x2="42" y2="50" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="58" y1="50" x2="68" y2="50" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M50 30 L51.5 32 L50 34 L48.5 32Z" fill="var(--gold)" opacity="0.8"/>
+      <path d="M50 66 L51.5 68 L50 70 L48.5 68Z" fill="var(--gold)" opacity="0.8"/>
+      <path d="M30 50 L32 51.5 L34 50 L32 48.5Z" fill="var(--gold)" opacity="0.8"/>
+      <path d="M66 50 L68 51.5 L70 50 L68 48.5Z" fill="var(--gold)" opacity="0.8"/>
     </svg>
     <div id="auth-loading-text" style="color:#a39580;font-size:14px;margin-top:8px;font-family:system-ui,sans-serif"><span>Loading PolicyLens…</span><span>Polishing the lenses…</span><span>Stretching before the work…</span><span>Warming up the engines…</span><span>Brewing your dashboard…</span><span>Tuning the instruments…</span><span>Sharpening the pencils…</span><span>Sweeping out the cobwebs…</span><span>Setting the table…</span></div>
   </div>
@@ -594,9 +592,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.4';
+const APP_VERSION = 'v2.4.0-rc1.5';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — global cream theme + dashboard data fixes';
+const APP_VERSION_NAME = 'Design v2 — color sweeps (brass → coral, navy → cream)';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -3469,7 +3467,7 @@ if(window.Chart) {
 }
 
 // PolicyLens Logo — inline SVG, works everywhere
-const LogoSVG = ({size=24,color='#d4a96a'}) => (
+const LogoSVG = ({size=24,color='var(--gold)'}) => (
   <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
     {/* Lens circle */}
     <circle cx="50" cy="50" r="38" fill="none" stroke={color} strokeWidth="2.5"/>
@@ -17861,7 +17859,7 @@ function CameraModal() {
         </div>
         <button onClick={() => finish()}
           style={{background:shots.length > 0 ? 'var(--gold)' : 'var(--bg3)',
-            color:shots.length > 0 ? '#0b0f1a' : 'var(--text3)',
+            color:shots.length > 0 ? '#fff' : 'var(--text3)',
             border:'none',borderRadius:8,padding:'6px 14px',fontSize:13,fontWeight:700,cursor:'pointer'}}>
           Done ✓
         </button>
@@ -17926,7 +17924,7 @@ function CameraModal() {
             style={{width:'100%',background:'var(--gold)',border:'none',borderRadius:12,
               padding:'14px',cursor:'pointer',textAlign:'center'}}>
             <span style={{fontSize:20}}>✨</span>
-            <span style={{fontSize:14,fontWeight:700,color:'#0b0f1a',marginLeft:8}}>
+            <span style={{fontSize:14,fontWeight:700,color:'#fff',marginLeft:8}}>
               Extract {shots.length} Item{shots.length > 1 ? 's' : ''}
             </span>
           </button>
@@ -18083,8 +18081,8 @@ function DriveMigrationModal({ onSync, onDismiss }) {
   return (
     <div onClick={e => { if (e.target === e.currentTarget && !busy) onDismiss(); }}
       style={{position:'fixed',inset:0,zIndex:10000,background:'rgba(0,0,0,.7)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}}>
-      <div style={{background:'#1a2332',borderRadius:16,border:'1px solid rgba(201,169,110,.2)',maxWidth:440,width:'100%',padding:'28px 24px',boxShadow:'0 20px 60px rgba(0,0,0,.5)'}}>
-        <h2 style={{fontSize:18,fontWeight:700,color:'#e8e8e8',margin:'0 0 12px'}}>Enable Google Drive Sync?</h2>
+      <div style={{background:'var(--bg2)',borderRadius:16,border:'1px solid color-mix(in oklch, var(--gold) 28%, transparent)',maxWidth:440,width:'100%',padding:'28px 24px',boxShadow:'0 20px 60px rgba(0,0,0,.5)'}}>
+        <h2 style={{fontSize:18,fontWeight:700,color:'var(--text)',margin:'0 0 12px'}}>Enable Google Drive Sync?</h2>
         <p style={{fontSize:14,color:'#aaa',lineHeight:1.6,margin:'0 0 20px'}}>
           PolicyLens can now sync your client data to your Google Drive.
           We'll create a file in a new "PolicyLens" folder in your Drive.
@@ -18148,19 +18146,19 @@ function ReconcileSyncModal({ data, onChoose, onClose }) {
           <div style={{background:'var(--bg3)',borderRadius:10,padding:14,border:'1px solid var(--border)'}}>
             <div style={{fontSize:10,fontWeight:700,color:'var(--gold)',textTransform:'uppercase',letterSpacing:'.5px',marginBottom:8}}>📱 This Device</div>
             <div style={{fontSize:12,color:'var(--text2)',marginBottom:4}}>
-              <strong style={{color:'var(--text1)'}}>Profile:</strong> {localHasProfile ? localProfileName : <em style={{color:'var(--text3)'}}>none</em>}
+              <strong style={{color:'var(--text)'}}>Profile:</strong> {localHasProfile ? localProfileName : <em style={{color:'var(--text3)'}}>none</em>}
             </div>
             <div style={{fontSize:12,color:'var(--text2)'}}>
-              <strong style={{color:'var(--text1)'}}>Policies:</strong> {localPolicyCount}
+              <strong style={{color:'var(--text)'}}>Policies:</strong> {localPolicyCount}
             </div>
           </div>
           <div style={{background:'var(--bg3)',borderRadius:10,padding:14,border:'1px solid var(--border)'}}>
             <div style={{fontSize:10,fontWeight:700,color:'var(--teal)',textTransform:'uppercase',letterSpacing:'.5px',marginBottom:8}}>☁️ Cloud</div>
             <div style={{fontSize:12,color:'var(--text2)',marginBottom:4}}>
-              <strong style={{color:'var(--text1)'}}>Profile:</strong> {cloudHasProfile ? cloudProfileName : <em style={{color:'var(--text3)'}}>none</em>}
+              <strong style={{color:'var(--text)'}}>Profile:</strong> {cloudHasProfile ? cloudProfileName : <em style={{color:'var(--text3)'}}>none</em>}
             </div>
             <div style={{fontSize:12,color:'var(--text2)'}}>
-              <strong style={{color:'var(--text1)'}}>Policies:</strong> {cloudPolicyCount}
+              <strong style={{color:'var(--text)'}}>Policies:</strong> {cloudPolicyCount}
             </div>
           </div>
         </div>
@@ -18177,8 +18175,8 @@ function ReconcileSyncModal({ data, onChoose, onClose }) {
           <button
             onClick={() => onChoose('local')}
             style={{
-              padding:'12px 16px', borderRadius:10, border:'1px solid rgba(212,169,106,.4)',
-              background:'rgba(212,169,106,.08)', color:'var(--gold)', cursor:'pointer',
+              padding:'12px 16px', borderRadius:10, border:'1px solid color-mix(in oklch, var(--gold) 56%, transparent)',
+              background:'color-mix(in oklch, var(--gold) 12%, transparent)', color:'var(--gold)', cursor:'pointer',
               textAlign:'left', fontSize:13, fontWeight:500,
             }}
           >
@@ -18204,8 +18202,8 @@ function ReconcileSyncModal({ data, onChoose, onClose }) {
             onClick={() => onChoose('merge')}
             style={{
               padding:'12px 16px', borderRadius:10, border:'1px solid rgba(91,168,160,.5)',
-              background:'linear-gradient(135deg, rgba(91,168,160,.15), rgba(212,169,106,.1))',
-              color:'var(--text1)', cursor:'pointer',
+              background:'linear-gradient(135deg, rgba(91,168,160,.15), color-mix(in oklch, var(--gold) 14%, transparent))',
+              color:'var(--text)', cursor:'pointer',
               textAlign:'left', fontSize:13, fontWeight:500,
             }}
           >
@@ -20886,9 +20884,9 @@ function App() {
       />}
       {/* v2.3.0-rc2c.5r: DriveConflictModal unmounted — _performDriveSync auto-retries on conflict. Component definition retained as safety net. */}
       {showV22Migration && <div style={{position:'fixed',inset:0,zIndex:10002,background:'rgba(0,0,0,.85)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}}>
-        <div style={{background:'#1a2332',borderRadius:16,border:'1px solid rgba(201,169,110,.2)',maxWidth:400,width:'100%',padding:'28px 24px',textAlign:'center'}}>
+        <div style={{background:'var(--bg2)',borderRadius:16,border:'1px solid color-mix(in oklch, var(--gold) 28%, transparent)',maxWidth:400,width:'100%',padding:'28px 24px',textAlign:'center'}}>
           <div style={{fontSize:28,marginBottom:12}}>📂</div>
-          <h2 style={{fontSize:16,fontWeight:700,color:'#e8e8e8',margin:'0 0 8px'}}>Setting up multi-client structure</h2>
+          <h2 style={{fontSize:16,fontWeight:700,color:'var(--text)',margin:'0 0 8px'}}>Setting up multi-client structure</h2>
           <p style={{fontSize:13,color:'#aaa'}}>{v22MigrationProgress ? v22MigrationProgress.current + ' of ' + v22MigrationProgress.total + ' clients…' : 'Preparing…'}</p>
         </div>
       </div>}
@@ -21056,7 +21054,7 @@ function PresentMode() {
     coverPct(totalDI, reqDI) * 0.15 +
     (hasISP ? 20 : 0)
   );
-  const scoreColor = score >= 80 ? '#5ba8a0' : score >= 50 ? '#d4a96a' : '#dc5a50';
+  const scoreColor = score >= 80 ? '#5ba8a0' : score >= 50 ? 'var(--gold)' : '#dc5a50';
   const scoreLabel = score >= 80 ? 'WELL PROTECTED' : score >= 50 ? 'PARTIALLY PROTECTED' : 'SIGNIFICANTLY UNDERPROTECTED';
 
   // Retirement adequacy from window cache (set by Dashboard)
@@ -21164,7 +21162,7 @@ function PresentMode() {
     health: '#c97b9a',
     savings: '#5ba8a0',
     investment: '#9d8abf',
-    retirement: '#d4a96a',
+    retirement: 'var(--gold)',
     maternity: '#e09168',
     cash_investments: '#6c8ab0',
     other_assets: '#7a7a8c',
@@ -21337,8 +21335,8 @@ function PresentMode() {
   // ── Styling: navy bg, gold accents, generous padding ──
   const NAVY = '#0e1929';
   const NAVY_LIGHT = '#1a2740';
-  const GOLD = '#d4a96a';
-  const GOLD_DARK = '#b8935a';
+  const GOLD = 'var(--gold)';
+  const GOLD_DARK = 'var(--gold3)';
   const CREAM = '#f4ead5';
   const MUTED = '#8a9ab5';
 
@@ -21356,7 +21354,7 @@ function PresentMode() {
       <div style={{
         display:'flex', justifyContent:'space-between', alignItems:'center',
         padding:'20px clamp(16px, 4vw, 40px) 16px',
-        borderBottom: `1px solid rgba(212,169,106,0.18)`,
+        borderBottom: `1px solid color-mix(in oklch, var(--gold) 25%, transparent)`,
         position:'sticky', top:0, zIndex:2,
         background: `linear-gradient(180deg, ${NAVY} 85%, transparent 100%)`,
         backdropFilter:'blur(6px)',
@@ -21370,9 +21368,9 @@ function PresentMode() {
           </div>
         </div>
         <button onClick={handleExit} style={{
-          background:'rgba(212,169,106,0.1)',
+          background:'color-mix(in oklch, var(--gold) 14%, transparent)',
           color:GOLD,
-          border:`1px solid rgba(212,169,106,0.4)`,
+          border:`1px solid color-mix(in oklch, var(--gold) 56%, transparent)`,
           padding:'10px 18px',
           borderRadius:10,
           fontSize:13,
@@ -21398,7 +21396,7 @@ function PresentMode() {
           {/* Card 1: Total Coverage */}
           <div style={{
             background:NAVY_LIGHT,
-            border:`1px solid rgba(212,169,106,0.25)`,
+            border:`1px solid color-mix(in oklch, var(--gold) 35%, transparent)`,
             borderRadius:16,
             padding:'28px 24px',
             position:'relative',
@@ -21419,7 +21417,7 @@ function PresentMode() {
           {/* Card 2: Annual Premium */}
           <div style={{
             background:NAVY_LIGHT,
-            border:`1px solid rgba(212,169,106,0.25)`,
+            border:`1px solid color-mix(in oklch, var(--gold) 35%, transparent)`,
             borderRadius:16,
             padding:'28px 24px',
             position:'relative',
@@ -21487,7 +21485,7 @@ function PresentMode() {
 
         <div style={{
           background:NAVY_LIGHT,
-          border:`1px solid rgba(212,169,106,0.2)`,
+          border:`1px solid color-mix(in oklch, var(--gold) 28%, transparent)`,
           borderRadius:16,
           padding:'24px 28px',
           marginBottom:28,
@@ -21497,7 +21495,7 @@ function PresentMode() {
           </div>
           {coverageBars.map((row, i) => {
             const pct = row.isFlag ? (row.ok ? 100 : 0) : coverPct(row.have, row.need);
-            const rowColor = pct >= 80 ? '#5ba8a0' : pct >= 50 ? '#d4a96a' : '#dc5a50';
+            const rowColor = pct >= 80 ? '#5ba8a0' : pct >= 50 ? 'var(--gold)' : '#dc5a50';
             return (
               <div key={row.label} style={{marginBottom: i < coverageBars.length - 1 ? 18 : 0}}>
                 <div style={{display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:6}}>
@@ -21536,7 +21534,7 @@ function PresentMode() {
         {retData && retData.desired > 0 && (
           <div style={{
             background:NAVY_LIGHT,
-            border:`1px solid rgba(212,169,106,0.2)`,
+            border:`1px solid color-mix(in oklch, var(--gold) 28%, transparent)`,
             borderRadius:16,
             padding:'24px 28px',
             marginBottom:28,
@@ -21611,7 +21609,7 @@ function PresentMode() {
           return (
             <div style={{
               background:NAVY_LIGHT,
-              border:`1px solid rgba(212,169,106,0.2)`,
+              border:`1px solid color-mix(in oklch, var(--gold) 28%, transparent)`,
               borderRadius:16,
               padding:'24px 28px',
               marginBottom:28,
@@ -21771,7 +21769,7 @@ function PresentMode() {
         {categoryRows.length > 0 && (
           <div style={{
             background:NAVY_LIGHT,
-            border:`1px solid rgba(212,169,106,0.2)`,
+            border:`1px solid color-mix(in oklch, var(--gold) 28%, transparent)`,
             borderRadius:16,
             padding:'24px 28px',
             marginBottom:28,
@@ -21826,7 +21824,7 @@ function PresentMode() {
         {hasDependantsWithCoverage && (
           <div style={{
             background:NAVY_LIGHT,
-            border:`1px solid rgba(212,169,106,0.2)`,
+            border:`1px solid color-mix(in oklch, var(--gold) 28%, transparent)`,
             borderRadius:16,
             padding:'24px 28px',
             marginBottom:28,
@@ -21845,7 +21843,7 @@ function PresentMode() {
                   justifyContent:'space-between',
                   alignItems:'center',
                   padding:'14px 0',
-                  borderTop: i > 0 ? '1px solid rgba(212,169,106,0.1)' : 'none',
+                  borderTop: i > 0 ? '1px solid color-mix(in oklch, var(--gold) 14%, transparent)' : 'none',
                 }}>
                   <div style={{flex:1, minWidth:0, marginRight:12}}>
                     <div style={{fontSize:15, fontWeight:600, color:CREAM, marginBottom:3}}>
@@ -21981,7 +21979,7 @@ function PresentMode() {
         {topEvents.length > 0 && (
           <div style={{
             background:NAVY_LIGHT,
-            border:`1px solid rgba(212,169,106,0.2)`,
+            border:`1px solid color-mix(in oklch, var(--gold) 28%, transparent)`,
             borderRadius:16,
             padding:'24px 28px',
             marginBottom:28,
@@ -22002,7 +22000,7 @@ function PresentMode() {
                 top:14,
                 bottom:14,
                 width:1,
-                background:'rgba(212,169,106,0.2)',
+                background:'color-mix(in oklch, var(--gold) 28%, transparent)',
               }}></div>
               {topEvents.map((evt, i) => (
                 <div key={i} style={{
@@ -22287,14 +22285,14 @@ function SyncStatusPill({ driveState }) {
   } else if (deleteSyncStatus) {
     label = deleteSyncLabel;
     color = deleteSyncStatus.status === 'queued' || deleteSyncStatus.status === 'syncing' ? 'var(--gold)' : 'var(--teal)';
-    bg = deleteSyncStatus.status === 'synced' ? 'rgba(91,168,160,.10)' : 'rgba(212,169,106,.10)';
-    border = deleteSyncStatus.status === 'synced' ? 'rgba(91,168,160,.24)' : 'rgba(212,169,106,.24)';
+    bg = deleteSyncStatus.status === 'synced' ? 'rgba(91,168,160,.10)' : 'color-mix(in oklch, var(--gold) 14%, transparent)';
+    border = deleteSyncStatus.status === 'synced' ? 'rgba(91,168,160,.24)' : 'color-mix(in oklch, var(--gold) 34%, transparent)';
     title = (deleteSyncStatus.clientName || 'Client') + (deleteSyncStatus.status === 'queued' ? ' is queued for Drive Trash' : deleteSyncStatus.status === 'syncing' ? ' is being moved to Drive Trash' : ' was moved to Drive Trash') + ' at ' + new Date(deleteSyncStatus.at).toLocaleString();
   } else if (syncPhase === 'checking') {
     label = 'Saved locally · Checking Drive sync';
     color = 'var(--gold)';
-    bg = 'rgba(212,169,106,.10)';
-    border = 'rgba(212,169,106,.24)';
+    bg = 'color-mix(in oklch, var(--gold) 14%, transparent)';
+    border = 'color-mix(in oklch, var(--gold) 34%, transparent)';
     title = 'PolicyLens is reconnecting to Drive. Local data is already available.';
   } else if (syncPhase === 'pulling') {
     label = 'Saved locally - Pulling Drive updates';
@@ -22371,7 +22369,7 @@ function DriveReconnectBar() {
   if (isDriveLocalOnly()) return null;
   if (!hasPriorDriveConnectionIntent()) return null;
   return (
-    <div style={{background:'rgba(212,169,106,.08)',borderBottom:'1px solid rgba(212,169,106,.2)',padding:'8px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,flexShrink:0,fontSize:12,color:'var(--text2)'}}>
+    <div style={{background:'color-mix(in oklch, var(--gold) 12%, transparent)',borderBottom:'1px solid color-mix(in oklch, var(--gold) 28%, transparent)',padding:'8px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,flexShrink:0,fontSize:12,color:'var(--text2)'}}>
       <span>{checking ? 'Checking Google Drive sync - your data is saved locally while PolicyLens reconnects.' : 'Google Drive disconnected - your changes are saving locally only.'}</span>
       {checking ? (
         <span style={{color:'var(--gold)',fontSize:11,fontWeight:700,whiteSpace:'nowrap'}}>Syncing...</span>
@@ -22380,7 +22378,7 @@ function DriveReconnectBar() {
           setBusy(true);
           try { await driveClient.signInInteractive({ returnTab: tab }); } catch(e) { setBusy(false); }
         }} disabled={busy}
-          style={{background:'var(--gold)',color:'#0b0f1a',border:'none',borderRadius:14,padding:'4px 14px',fontSize:11,fontWeight:600,cursor:busy?'not-allowed':'pointer',flexShrink:0,opacity:busy?.6:1}}>
+          style={{background:'var(--gold)',color:'#fff',border:'none',borderRadius:14,padding:'4px 14px',fontSize:11,fontWeight:600,cursor:busy?'not-allowed':'pointer',flexShrink:0,opacity:busy?.6:1}}>
           {busy ? 'Reconnecting...' : 'Reconnect'}
         </button>
       )}
@@ -22472,8 +22470,8 @@ function DriveConflictModal({ conflictData, onResolve, clientProfile, clientName
 
   return (
     <div style={{position:'fixed',inset:0,zIndex:10001,background:'rgba(0,0,0,.7)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}}>
-      <div style={{background:'#1a2332',borderRadius:16,border:'1px solid rgba(201,169,110,.2)',maxWidth:480,width:'100%',padding:'28px 24px',boxShadow:'0 20px 60px rgba(0,0,0,.5)'}}>
-        <h2 style={{fontSize:18,fontWeight:700,color:'#e8e8e8',margin:'0 0 12px'}}>Drive sync conflict</h2>
+      <div style={{background:'var(--bg2)',borderRadius:16,border:'1px solid color-mix(in oklch, var(--gold) 28%, transparent)',maxWidth:480,width:'100%',padding:'28px 24px',boxShadow:'0 20px 60px rgba(0,0,0,.5)'}}>
+        <h2 style={{fontSize:18,fontWeight:700,color:'var(--text)',margin:'0 0 12px'}}>Drive sync conflict</h2>
         {!retryFailed && <p style={{fontSize:13,color:'#aaa',lineHeight:1.6,margin:'0 0 20px'}}>
           This client was edited on another device since your last sync. Choose which version to keep:
           <br/><br/>
@@ -22499,7 +22497,7 @@ function DriveConflictModal({ conflictData, onResolve, clientProfile, clientName
             {busy==='theirs' ? 'Pulling\u2026' : 'Keep theirs'}
           </button>
           <button onClick={handleKeepMine} disabled={!!busy}
-            style={{background:'var(--gold)',color:'#0b0f1a',border:'none',borderRadius:8,padding:'8px 16px',fontSize:13,fontWeight:600,cursor:busy?'not-allowed':'pointer',opacity:busy?0.5:1}}>
+            style={{background:'var(--gold)',color:'#fff',border:'none',borderRadius:8,padding:'8px 16px',fontSize:13,fontWeight:600,cursor:busy?'not-allowed':'pointer',opacity:busy?0.5:1}}>
             {busy==='mine' ? 'Syncing\u2026' : retryFailed ? 'Retry "Keep mine"' : 'Keep mine'}
           </button>
         </div>
@@ -22532,7 +22530,7 @@ function DriveStatusChip() {
   const map = {
     'disconnected':     { icon: '○', label: 'Drive', color: 'var(--text3)', bg: 'var(--bg3)',           border: 'var(--border)',          title: 'Drive: not connected — click to set up in Settings' },
     'connected':        { icon: '●', label: 'Drive', color: 'var(--teal)',  bg: 'rgba(91,168,160,.1)',  border: 'rgba(91,168,160,.3)',    title: 'Drive: connected (Phase A is dormant — sync wires in v2.1.0-beta)' },
-    'reconnect-needed': { icon: '⚠', label: 'Drive', color: 'var(--gold)',  bg: 'rgba(212,169,106,.12)', border: 'rgba(212,169,106,.35)', title: 'Drive: session expired — click to reconnect in Settings' },
+    'reconnect-needed': { icon: '⚠', label: 'Drive', color: 'var(--gold)',  bg: 'var(--gold-dim)', border: 'color-mix(in oklch, var(--gold) 49%, transparent)', title: 'Drive: session expired — click to reconnect in Settings' },
   };
   const m = map[status] || map['disconnected'];
   return React.createElement('span', {
@@ -22553,7 +22551,7 @@ function RepositoryTab() {
       <div style={{display:'flex',gap:6,marginBottom:12}}>
         {[{id:'policy',label:'Policy Repository'},{id:'fund',label:'Fund Repository'}].map(t => (
           <button key={t.id} onClick={() => setSubTab(t.id)}
-            style={{background:sub===t.id?'rgba(212,169,106,.12)':'transparent',color:sub===t.id?'var(--gold)':'var(--text3)',border:sub===t.id?'1px solid rgba(212,169,106,.2)':'1px solid var(--border)',padding:'6px 14px',borderRadius:8,fontSize:11,fontWeight:sub===t.id?600:400,cursor:'pointer'}}>
+            style={{background:sub===t.id?'var(--gold-dim)':'transparent',color:sub===t.id?'var(--gold)':'var(--text3)',border:sub===t.id?'1px solid color-mix(in oklch, var(--gold) 28%, transparent)':'1px solid var(--border)',padding:'6px 14px',borderRadius:8,fontSize:11,fontWeight:sub===t.id?600:400,cursor:'pointer'}}>
             {t.label}
           </button>
         ))}
@@ -22700,7 +22698,7 @@ function ClientsTab() {
   };
   const syncStateFor = (ds) => {
     if (ds?.pendingError) return { label:'conflict/queued', color:'var(--red)', bg:'rgba(239,83,80,.08)' };
-    if (ds?.pendingWrite) return { label:'queued to Drive', color:'var(--gold)', bg:'rgba(212,169,106,.08)' };
+    if (ds?.pendingWrite) return { label:'queued to Drive', color:'var(--gold)', bg:'color-mix(in oklch, var(--gold) 12%, transparent)' };
     if (ds?.localOnly || (!ds?.fileId && !ds?.folderId)) return { label:'local only', color:'var(--text3)', bg:'rgba(255,255,255,.035)' };
     if (ds?.lastSyncedAt || ds?.headRevisionId) return { label:'synced to Drive', color:'var(--teal)', bg:'rgba(91,168,160,.07)' };
     return { label:'sync unknown', color:'var(--text3)', bg:'rgba(255,255,255,.025)' };
@@ -22848,20 +22846,20 @@ function ClientsTab() {
       const reviewLabel = ds.lastReviewedAt ? 'reviewed ' + fmtRelativeTime(ds.lastReviewedAt) : 'not reviewed';
       return (
         <div key={ds.clientId} onClick={() => openClientView(ds.clientId, 'profile')}
-          style={{display:'grid',gridTemplateColumns:'18px 22px minmax(0,1fr) auto',gap:10,alignItems:'stretch',padding:isMobile?'10px 8px':'10px 10px',cursor:'pointer',background:isActive?'rgba(212,169,106,.055)':'transparent',borderBottom:memberIndex < memberCount - 1?'1px solid rgba(255,255,255,.055)':'none',transition:'background .15s'}}>
+          style={{display:'grid',gridTemplateColumns:'18px 22px minmax(0,1fr) auto',gap:10,alignItems:'stretch',padding:isMobile?'10px 8px':'10px 10px',cursor:'pointer',background:isActive?'color-mix(in oklch, var(--gold) 8%, transparent)':'transparent',borderBottom:memberIndex < memberCount - 1?'1px solid rgba(255,255,255,.055)':'none',transition:'background .15s'}}>
           <input type="checkbox" checked={selectedSet.has(ds.clientId)}
             title={'Select ' + (ds.clientName || 'client')}
             onClick={e => e.stopPropagation()}
             onChange={e => { e.stopPropagation(); toggleClientSelection(ds.clientId); }}
             style={{...selectionCheckboxStyle,alignSelf:'center'}} />
           <div style={{position:'relative',width:22}}>
-            <div style={{position:'absolute',left:10,top:memberIndex===0?'50%':0,bottom:memberIndex===memberCount-1?'50%':0,width:1,background:'rgba(201,169,110,.25)'}} />
-            <div style={{position:'absolute',left:5,top:'50%',transform:'translateY(-50%)',width:11,height:11,borderRadius:'50%',background:isActive?'var(--gold)':'var(--bg)',border:isActive?'2px solid var(--gold)':'2px solid rgba(201,169,110,.45)',boxShadow:isActive?'0 0 0 3px rgba(212,169,106,.12)':'none'}} />
+            <div style={{position:'absolute',left:10,top:memberIndex===0?'50%':0,bottom:memberIndex===memberCount-1?'50%':0,width:1,background:'color-mix(in oklch, var(--gold) 35%, transparent)'}} />
+            <div style={{position:'absolute',left:5,top:'50%',transform:'translateY(-50%)',width:11,height:11,borderRadius:'50%',background:isActive?'var(--gold)':'var(--bg)',border:isActive?'2px solid var(--gold)':'2px solid color-mix(in oklch, var(--gold) 63%, transparent)',boxShadow:isActive?'0 0 0 3px var(--gold-dim)':'none'}} />
           </div>
           <div style={{minWidth:0,alignSelf:'center'}}>
             <div style={{display:'flex',alignItems:'center',gap:7,flexWrap:'wrap'}}>
               <span style={{fontSize:13,fontWeight:800,color:'var(--text)',minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:isMobile?'100%':340}}>{ds.clientName || 'Untitled'}</span>
-              {isActive && <span style={{fontSize:9,fontWeight:800,color:'var(--gold)',background:'rgba(212,169,106,.12)',border:'1px solid rgba(212,169,106,.22)',borderRadius:999,padding:'2px 6px'}}>Viewing</span>}
+              {isActive && <span style={{fontSize:9,fontWeight:800,color:'var(--gold)',background:'var(--gold-dim)',border:'1px solid color-mix(in oklch, var(--gold) 31%, transparent)',borderRadius:999,padding:'2px 6px'}}>Viewing</span>}
               <span style={{fontSize:9,color:'var(--text3)',background:'rgba(255,255,255,.035)',border:'1px solid rgba(255,255,255,.06)',borderRadius:999,padding:'2px 6px'}}>{tierLabel}</span>
               {syncLabel && <span style={{fontSize:9,color:syncColor,background:syncState.bg,border:'1px solid rgba(255,255,255,.05)',borderRadius:999,padding:'2px 6px'}}>{syncLabel}</span>}
             </div>
@@ -22892,7 +22890,7 @@ function ClientsTab() {
     }
     return (
       <div key={ds.clientId} onClick={() => openClientView(ds.clientId, 'profile')}
-        style={{background:isActive?'rgba(212,169,106,.06)':'var(--bg2)',border:isActive?'1px solid rgba(212,169,106,.4)':'1px solid var(--border)',borderRadius:10,padding:compactFamily?'10px 12px':'12px 14px',cursor:'pointer',transition:'border-color .15s'}}>
+        style={{background:isActive?'color-mix(in oklch, var(--gold) 9%, transparent)':'var(--bg2)',border:isActive?'1px solid color-mix(in oklch, var(--gold) 56%, transparent)':'1px solid var(--border)',borderRadius:10,padding:compactFamily?'10px 12px':'12px 14px',cursor:'pointer',transition:'border-color .15s'}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
           <input type="checkbox" checked={selectedSet.has(ds.clientId)}
             title={'Select ' + (ds.clientName || 'client')}
@@ -23021,19 +23019,19 @@ function ClientsTab() {
             <span style={{fontSize:10,color:'var(--text2)',border:'1px solid rgba(255,255,255,.08)',borderRadius:999,padding:'4px 8px'}}>{group.clients.length} {group.clients.length===1?'member':'members'}</span>
             <span style={{fontSize:10,color:'var(--text2)',border:'1px solid rgba(255,255,255,.08)',borderRadius:999,padding:'4px 8px'}}>{group.policyCount} {group.policyCount===1?'policy':'policies'}</span>
             <span style={{fontSize:10,color:group.totalPrem > 0?'var(--gold)':'var(--text3)',border:'1px solid rgba(255,255,255,.08)',borderRadius:999,padding:'4px 8px'}}>{group.totalPrem > 0 ? '$' + Math.round(group.totalPrem).toLocaleString() + '/yr' : 'No premiums'}</span>
-            {questions.length > 0 && <span style={{fontSize:10,color:'var(--gold)',border:'1px solid rgba(212,169,106,.2)',background:'rgba(212,169,106,.08)',borderRadius:999,padding:'4px 8px'}}>{questions.length} owner check{questions.length===1?'':'s'}</span>}
+            {questions.length > 0 && <span style={{fontSize:10,color:'var(--gold)',border:'1px solid color-mix(in oklch, var(--gold) 28%, transparent)',background:'color-mix(in oklch, var(--gold) 12%, transparent)',borderRadius:999,padding:'4px 8px'}}>{questions.length} owner check{questions.length===1?'':'s'}</span>}
           </div>
           <button onClick={() => { const first = group.clients[0]; if (first) openClientView(first.clientId, 'dashboard'); }}
-            style={{padding:'6px 10px',fontSize:10,fontWeight:800,borderRadius:7,background:'var(--gold-dim)',color:'var(--gold)',border:'1px solid rgba(212,169,106,.25)',flexShrink:0}}>
+            style={{padding:'6px 10px',fontSize:10,fontWeight:800,borderRadius:7,background:'var(--gold-dim)',color:'var(--gold)',border:'1px solid color-mix(in oklch, var(--gold) 35%, transparent)',flexShrink:0}}>
             Open review
           </button>
         </div>
         {questions.length > 0 && (
-          <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap',padding:'8px 14px',background:'rgba(212,169,106,.045)',borderBottom:'1px solid rgba(212,169,106,.12)'}}>
+          <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap',padding:'8px 14px',background:'color-mix(in oklch, var(--gold) 6%, transparent)',borderBottom:'1px solid var(--gold-dim)'}}>
             <span style={{fontSize:10,fontWeight:800,color:'var(--gold)',marginRight:2}}>Owner checks</span>
             {questions.slice(0, 3).map((q, qi) => (
               <span key={qi} title={q.title + ' · ' + q.owner + (q.life ? ' · ' + q.life : '')}
-                style={{fontSize:10,color:'var(--text2)',maxWidth:isMobile?'100%':300,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',border:'1px solid rgba(212,169,106,.16)',background:'rgba(0,0,0,.12)',borderRadius:999,padding:'4px 8px'}}>
+                style={{fontSize:10,color:'var(--text2)',maxWidth:isMobile?'100%':300,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',border:'1px solid color-mix(in oklch, var(--gold) 22%, transparent)',background:'rgba(0,0,0,.12)',borderRadius:999,padding:'4px 8px'}}>
                 {q.clientName}: {q.title} · {q.owner}
               </span>
             ))}
@@ -23072,7 +23070,7 @@ function ClientsTab() {
         <div style={{display:'flex',gap:4}}>
           {chips.map(c => {
             const active = filter === c.id;
-            const tc = c.id === 'all' ? {color:'var(--gold)',bg:'rgba(212,169,106,.12)',border:'rgba(212,169,106,.2)'} : tierStyle(c.id, tierDefinitions);
+            const tc = c.id === 'all' ? {color:'var(--gold)',bg:'var(--gold-dim)',border:'color-mix(in oklch, var(--gold) 28%, transparent)'} : tierStyle(c.id, tierDefinitions);
             return (
               <button key={c.id} onClick={() => setFilter(c.id)}
                 style={{background:active?tc.bg:'transparent',color:active?tc.color:'var(--text3)',border:active?'1px solid '+tc.border:'1px solid var(--border)',padding:'4px 10px',borderRadius:6,fontSize:10,fontWeight:active?600:400,cursor:'pointer'}}>
@@ -23085,14 +23083,14 @@ function ClientsTab() {
           <div style={{display:'flex',padding:2,background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:8}}>
             {['list','family'].map(mode => (
               <button key={mode} onClick={() => { setFamilyMode(mode); try { localStorage.setItem('policylens_clients_family_mode', mode); } catch(_) {} }}
-                style={{padding:isMobile?'4px 7px':'4px 10px',fontSize:10,fontWeight:familyMode===mode?700:500,borderRadius:6,border:'none',background:familyMode===mode?'rgba(212,169,106,.18)':'transparent',color:familyMode===mode?'var(--gold)':'var(--text3)',cursor:'pointer'}}>
+                style={{padding:isMobile?'4px 7px':'4px 10px',fontSize:10,fontWeight:familyMode===mode?700:500,borderRadius:6,border:'none',background:familyMode===mode?'color-mix(in oklch, var(--gold) 25%, transparent)':'transparent',color:familyMode===mode?'var(--gold)':'var(--text3)',cursor:'pointer'}}>
                 {mode === 'list' ? 'List' : 'Family'}
               </button>
             ))}
           </div>
           <button onClick={() => activeClientId ? setClientsGuardOpen(true) : setShowNewClient(true)}
             title="New Client"
-            style={{background:'rgba(212,169,106,.15)',color:'var(--gold)',border:'1px solid rgba(212,169,106,.4)',borderRadius:isMobile?'50%':8,width:isMobile?32:'auto',height:isMobile?32:'auto',padding:isMobile?0:'6px 14px',fontSize:isMobile?18:11,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,lineHeight:1}}>
+            style={{background:'color-mix(in oklch, var(--gold) 21%, transparent)',color:'var(--gold)',border:'1px solid color-mix(in oklch, var(--gold) 56%, transparent)',borderRadius:isMobile?'50%':8,width:isMobile?32:'auto',height:isMobile?32:'auto',padding:isMobile?0:'6px 14px',fontSize:isMobile?18:11,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,lineHeight:1}}>
             {isMobile ? '+' : '+ New Client'}
           </button>
         </div>
@@ -23152,7 +23150,7 @@ function ClientsTab() {
           <div style={{fontSize:40,marginBottom:12}}>👥</div>
           <p style={{fontSize:14,marginBottom:16}}>No clients yet. Create your first client to get started.</p>
           <button onClick={() => activeClientId ? setClientsGuardOpen(true) : setShowNewClient(true)}
-            style={{background:'rgba(212,169,106,.15)',color:'var(--gold)',border:'1px solid rgba(212,169,106,.4)',borderRadius:8,padding:'8px 20px',fontSize:13,fontWeight:600,cursor:'pointer'}}>
+            style={{background:'color-mix(in oklch, var(--gold) 21%, transparent)',color:'var(--gold)',border:'1px solid color-mix(in oklch, var(--gold) 56%, transparent)',borderRadius:8,padding:'8px 20px',fontSize:13,fontWeight:600,cursor:'pointer'}}>
             + New Client
           </button>
         </div>
@@ -23194,7 +23192,7 @@ function ClientsTab() {
                   const first = group.clients[0];
                   if (first) openClientView(first.clientId, 'dashboard');
                 }}
-                  style={{padding:'5px 10px',fontSize:10,fontWeight:700,borderRadius:6,background:'var(--gold-dim)',color:'var(--gold)',border:'1px solid rgba(212,169,106,.25)',flexShrink:0}}>
+                  style={{padding:'5px 10px',fontSize:10,fontWeight:700,borderRadius:6,background:'var(--gold-dim)',color:'var(--gold)',border:'1px solid color-mix(in oklch, var(--gold) 35%, transparent)',flexShrink:0}}>
                   Open review
                 </button>
               </div>
@@ -23202,7 +23200,7 @@ function ClientsTab() {
                 const questions = groupPolicyQuestions(group);
                 if (questions.length === 0) return null;
                 return (
-                  <div style={{background:'rgba(212,169,106,.06)',border:'1px solid rgba(212,169,106,.16)',borderRadius:9,padding:9,marginBottom:10}}>
+                  <div style={{background:'color-mix(in oklch, var(--gold) 9%, transparent)',border:'1px solid color-mix(in oklch, var(--gold) 22%, transparent)',borderRadius:9,padding:9,marginBottom:10}}>
                     <div style={{fontSize:10,fontWeight:800,color:'var(--gold)',marginBottom:6}}>Owner questions to resolve</div>
                     <div style={{display:'grid',gap:5}}>
                       {questions.map((q, qi) => (
@@ -23234,7 +23232,7 @@ function ClientsTab() {
           const syncColor = syncState.color;
           return (
             <div key={ds.clientId} onClick={() => openClientView(ds.clientId, 'profile')}
-              style={{background:isActive?'rgba(212,169,106,.06)':'var(--bg2)',border:isActive?'1px solid rgba(212,169,106,.4)':'1px solid var(--border)',borderRadius:10,padding:'12px 14px',cursor:'pointer',transition:'border-color .15s'}}>
+              style={{background:isActive?'color-mix(in oklch, var(--gold) 9%, transparent)':'var(--bg2)',border:isActive?'1px solid color-mix(in oklch, var(--gold) 56%, transparent)':'1px solid var(--border)',borderRadius:10,padding:'12px 14px',cursor:'pointer',transition:'border-color .15s'}}>
               <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
                 <input type="checkbox" checked={selectedSet.has(ds.clientId)}
                   title={'Select ' + (ds.clientName || 'client')}
@@ -23317,7 +23315,7 @@ function MergeClientModal({ open, sourceClientId, sourceName, onClose }) {
   const target = states.find(ds => ds.clientId === targetId) || null;
   const targetPolicies = target ? policiesAll.filter(p => p.clientId === target.clientId) : [];
   const modalBg = {position:'fixed',inset:0,zIndex:10002,background:'rgba(0,0,0,.72)',display:'flex',alignItems:'center',justifyContent:'center',padding:16};
-  const modalBox = {background:'#1a2332',borderRadius:14,border:'1px solid rgba(201,169,110,.24)',maxWidth:560,width:'100%',padding:22,boxShadow:'0 20px 60px rgba(0,0,0,.5)',maxHeight:'84vh',overflowY:'auto'};
+  const modalBox = {background:'var(--bg2)',borderRadius:14,border:'1px solid color-mix(in oklch, var(--gold) 34%, transparent)',maxWidth:560,width:'100%',padding:22,boxShadow:'0 20px 60px rgba(0,0,0,.5)',maxHeight:'84vh',overflowY:'auto'};
   const runMerge = async () => {
     if (!targetId || busy) return;
     const label = (sourceName || 'this client') + ' into ' + (target?.clientName || 'selected client');
@@ -23361,7 +23359,7 @@ function MergeClientModal({ open, sourceClientId, sourceName, onClose }) {
             const polCount = policiesAll.filter(p => p.clientId === ds.clientId).length;
             return (
               <button key={ds.clientId} onClick={() => setTargetId(ds.clientId)}
-                style={{textAlign:'left',padding:'9px 10px',borderRadius:8,border:selected?'1px solid var(--gold)':'1px solid var(--border)',background:selected?'rgba(212,169,106,.12)':'var(--bg3)',color:'var(--text)',cursor:'pointer'}}>
+                style={{textAlign:'left',padding:'9px 10px',borderRadius:8,border:selected?'1px solid var(--gold)':'1px solid var(--border)',background:selected?'var(--gold-dim)':'var(--bg3)',color:'var(--text)',cursor:'pointer'}}>
                 <div style={{fontSize:12,fontWeight:800}}>{selected ? 'Selected: ' : ''}{ds.clientName || 'Untitled'}</div>
                 <div style={{fontSize:10,color:'var(--text3)',marginTop:2}}>{polCount} polic{polCount===1?'y':'ies'} - {ds.familyGroup || 'No family group'}</div>
               </button>
@@ -23370,7 +23368,7 @@ function MergeClientModal({ open, sourceClientId, sourceName, onClose }) {
         </div>
         <div style={{display:'flex',gap:8,justifyContent:'flex-end'}}>
           <button onClick={() => onClose(false)} disabled={busy} style={{background:'transparent',color:'var(--text3)',border:'1px solid var(--border2)',borderRadius:8,padding:'8px 14px',fontSize:11,cursor:'pointer'}}>Cancel</button>
-          <button onClick={runMerge} disabled={!targetId || busy} style={{background:'var(--gold)',color:'#0b0f1a',border:'none',borderRadius:8,padding:'8px 15px',fontSize:11,fontWeight:800,cursor:targetId&&!busy?'pointer':'not-allowed',opacity:targetId&&!busy?1:.55}}>
+          <button onClick={runMerge} disabled={!targetId || busy} style={{background:'var(--gold)',color:'#fff',border:'none',borderRadius:8,padding:'8px 15px',fontSize:11,fontWeight:800,cursor:targetId&&!busy?'pointer':'not-allowed',opacity:targetId&&!busy?1:.55}}>
             {busy ? 'Merging...' : 'Merge into selected client'}
           </button>
         </div>
@@ -23481,8 +23479,8 @@ function NewClientModal({ allStates, allPolicies, onClose, initialName, initialF
   return (
     <div onClick={e => { if (e.target === e.currentTarget) onClose(); }}
       style={{position:'fixed',inset:0,zIndex:10000,background:'rgba(0,0,0,.7)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}}>
-      <div style={{background:'#1a2332',borderRadius:16,border:'1px solid rgba(201,169,110,.2)',maxWidth:480,width:'100%',padding:'24px',boxShadow:'0 20px 60px rgba(0,0,0,.5)'}}>
-        <h2 style={{fontSize:16,fontWeight:700,color:'#e8e8e8',margin:'0 0 12px'}}>New Client</h2>
+      <div style={{background:'var(--bg2)',borderRadius:16,border:'1px solid color-mix(in oklch, var(--gold) 28%, transparent)',maxWidth:480,width:'100%',padding:'24px',boxShadow:'0 20px 60px rgba(0,0,0,.5)'}}>
+        <h2 style={{fontSize:16,fontWeight:700,color:'var(--text)',margin:'0 0 12px'}}>New Client</h2>
         <input value={name} onChange={e => setName(e.target.value)} placeholder="Client name"
           autoFocus style={{width:'100%',padding:'10px 12px',background:'var(--bg3)',border:'1px solid var(--border2)',borderRadius:8,color:'var(--text)',fontSize:14,outline:'none',boxSizing:'border-box'}} />
         {matches.length > 0 && (
@@ -23533,7 +23531,7 @@ function NewClientModal({ allStates, allPolicies, onClose, initialName, initialF
         <div style={{display:'flex',gap:8,marginTop:12,justifyContent:'flex-end'}}>
           <button onClick={onClose} style={{background:'var(--bg3)',color:'var(--text2)',border:'1px solid var(--border2)',borderRadius:8,padding:'8px 16px',fontSize:12,cursor:'pointer'}}>Cancel</button>
           <button onClick={handleCreate} disabled={!name.trim() || creating}
-            style={{background:'var(--gold)',color:'#0b0f1a',border:'none',borderRadius:8,padding:'8px 16px',fontSize:12,fontWeight:600,cursor:creating||!name.trim()?'not-allowed':'pointer',opacity:creating||!name.trim()?.5:1}}>
+            style={{background:'var(--gold)',color:'#fff',border:'none',borderRadius:8,padding:'8px 16px',fontSize:12,fontWeight:600,cursor:creating||!name.trim()?'not-allowed':'pointer',opacity:creating||!name.trim()?.5:1}}>
             {creating ? 'Creating…' : matches.length > 0 ? 'None of these — create new' : 'Create client'}
           </button>
         </div>
@@ -26802,7 +26800,7 @@ function AssumptionsCard({ p, set, houseDefaults }) {
     </div>
   );};
   return (
-    <div className="card" style={{marginBottom:16,borderLeft:'2px solid rgba(201,169,110,.3)'}}>
+    <div className="card" style={{marginBottom:16,borderLeft:'2px solid color-mix(in oklch, var(--gold) 42%, transparent)'}}>
       <h3 style={{fontSize:14,fontWeight:600,marginBottom:4}}>🧮 Assumptions</h3>
       <div style={{fontSize:11,color:'var(--text3)',marginBottom:12}}>Single source of truth for global planning assumptions. Powers the gap analysis, retirement readiness meter, cashflow chart, and PDF report.</div>
       {/* v2.0.5: Fixed 2-column grid on desktop (via .resp-2col — exactly
@@ -26863,7 +26861,7 @@ function CheckpointSavePopover({ open, onClose, clientId, anchorRef }) {
   }, [open, anchorRef]);
 
   if (!open) return null;
-  const popStyle = {position:'fixed',top:position.top,right:position.right,width:280,background:'#1a2332',border:'1px solid rgba(201,169,110,.25)',borderRadius:10,boxShadow:'0 8px 32px rgba(0,0,0,.5)',zIndex:9999,padding:8,fontSize:11};
+  const popStyle = {position:'fixed',top:position.top,right:position.right,width:280,background:'var(--bg2)',border:'1px solid color-mix(in oklch, var(--gold) 35%, transparent)',borderRadius:10,boxShadow:'0 8px 32px rgba(0,0,0,.5)',zIndex:9999,padding:8,fontSize:11};
 
   const handleNew = async () => {
     const label = window.prompt('Checkpoint label (leave blank for auto-date):', '');
@@ -26912,7 +26910,7 @@ function CheckpointSavePopover({ open, onClose, clientId, anchorRef }) {
     <div ref={ref} style={popStyle}>
       <button onClick={handleNew} disabled={!isDrive || busy === 'new'}
         title={isDrive ? '' : 'Connect Drive to save here'}
-        style={{width:'100%',textAlign:'left',padding:'8px 10px',background:isDrive?'rgba(212,169,106,.08)':'transparent',color:isDrive?'var(--gold)':'var(--text3)',border:'1px solid '+(isDrive?'rgba(212,169,106,.2)':'var(--border)'),borderRadius:6,cursor:isDrive?'pointer':'not-allowed',fontWeight:600,fontSize:11,marginBottom:4,opacity:isDrive?1:.5}}>
+        style={{width:'100%',textAlign:'left',padding:'8px 10px',background:isDrive?'color-mix(in oklch, var(--gold) 12%, transparent)':'transparent',color:isDrive?'var(--gold)':'var(--text3)',border:'1px solid '+(isDrive?'color-mix(in oklch, var(--gold) 28%, transparent)':'var(--border)'),borderRadius:6,cursor:isDrive?'pointer':'not-allowed',fontWeight:600,fontSize:11,marginBottom:4,opacity:isDrive?1:.5}}>
         {busy === 'new' ? 'Saving\u2026' : '+ New checkpoint to Drive'}
       </button>
       <button onClick={handleSaveAsFile} disabled={!!busy}
@@ -26952,11 +26950,11 @@ function NameDetectionReviewModal({ open, detected, currentClientName, onClose, 
   }, [open, detected]);
   if (!open||!detected||detected.size===0) return null;
   const modalBg = {position:'fixed',inset:0,zIndex:10001,background:'rgba(0,0,0,.7)',display:'flex',alignItems:'center',justifyContent:'center',padding:16};
-  const modalBox = {background:'#1a2332',borderRadius:16,border:'1px solid rgba(201,169,110,.2)',maxWidth:560,width:'100%',padding:24,boxShadow:'0 20px 60px rgba(0,0,0,.5)',maxHeight:'80vh',overflowY:'auto'};
+  const modalBox = {background:'var(--bg2)',borderRadius:16,border:'1px solid color-mix(in oklch, var(--gold) 28%, transparent)',maxWidth:560,width:'100%',padding:24,boxShadow:'0 20px 60px rgba(0,0,0,.5)',maxHeight:'80vh',overflowY:'auto'};
   return (
     <div onClick={e => { if (e.target===e.currentTarget) onClose(); }} style={modalBg}>
       <div style={modalBox}>
-        <h2 style={{fontSize:16,fontWeight:700,color:'#e8e8e8',margin:'0 0 4px'}}>Review extracted names</h2>
+        <h2 style={{fontSize:16,fontWeight:700,color:'var(--text)',margin:'0 0 4px'}}>Review extracted names</h2>
         <p style={{fontSize:11,color:'var(--text3)',marginBottom:16}}>
           Found {detected.size} name{detected.size>1?'s':''} that don't match <strong style={{color:'var(--text2)'}}>{currentClientName}</strong>. Choose how to route each:
         </p>
@@ -26983,7 +26981,7 @@ function NameDetectionReviewModal({ open, detected, currentClientName, onClose, 
         ))}
         <div style={{display:'flex',gap:8,justifyContent:'flex-end',marginTop:16}}>
           <button onClick={onClose} style={{background:'transparent',color:'var(--text3)',border:'1px solid var(--border2)',borderRadius:6,padding:'8px 14px',fontSize:11,cursor:'pointer'}}>Cancel</button>
-          <button onClick={() => onConfirm(routes)} style={{background:'var(--gold)',color:'#0b0f1a',border:'none',borderRadius:6,padding:'8px 16px',fontSize:11,fontWeight:700,cursor:'pointer'}}>Apply routing →</button>
+          <button onClick={() => onConfirm(routes)} style={{background:'var(--gold)',color:'#fff',border:'none',borderRadius:6,padding:'8px 16px',fontSize:11,fontWeight:700,cursor:'pointer'}}>Apply routing →</button>
         </div>
       </div>
     </div>
@@ -27018,7 +27016,7 @@ function PolicyOwnerRoutingModal({ open, detected, currentClientName, allDriveSt
   }, [open, detected, currentClientName]);
   if (!open || !detected || detected.size === 0) return null;
   const modalBg = {position:'fixed',inset:0,zIndex:10001,background:'rgba(0,0,0,.7)',display:'flex',alignItems:'center',justifyContent:'center',padding:16};
-  const modalBox = {background:'#1a2332',borderRadius:16,border:'1px solid rgba(201,169,110,.2)',maxWidth:760,width:'100%',padding:24,boxShadow:'0 20px 60px rgba(0,0,0,.5)',maxHeight:'88vh',overflowY:'auto'};
+  const modalBox = {background:'var(--bg2)',borderRadius:16,border:'1px solid color-mix(in oklch, var(--gold) 28%, transparent)',maxWidth:760,width:'100%',padding:24,boxShadow:'0 20px 60px rgba(0,0,0,.5)',maxHeight:'88vh',overflowY:'auto'};
   const allClients = (allDriveStates || []).filter(ds => ds?.clientId && ds.clientName);
   const entries = Array.from(detected.entries());
   const itemsForInfo = (info) => (
@@ -27132,7 +27130,7 @@ function PolicyOwnerRoutingModal({ open, detected, currentClientName, allDriveSt
   return (
     <div onClick={e => { if (e.target === e.currentTarget && !busy) onClose(); }} style={modalBg}>
       <div style={modalBox}>
-        <h2 style={{fontSize:16,fontWeight:700,color:'#e8e8e8',margin:'0 0 4px'}}>Family policy routing</h2>
+        <h2 style={{fontSize:16,fontWeight:700,color:'var(--text)',margin:'0 0 4px'}}>Family policy routing</h2>
         <p style={{fontSize:11,color:'var(--text3)',marginBottom:14,lineHeight:1.5}}>
           PolicyLens found {detected.size} name group{detected.size>1?'s':''} that may belong to another owner or dependant. Confirm the owner before import so the Clients, Policies and Reports tabs stay aligned.
         </p>
@@ -27146,13 +27144,13 @@ function PolicyOwnerRoutingModal({ open, detected, currentClientName, allDriveSt
           <div style={{padding:'10px 12px',background:'rgba(91,168,160,.06)',border:'1px solid rgba(91,168,160,.18)',borderRadius:8}}>
             <div style={{fontSize:10,fontWeight:700,color:'var(--teal)',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:8}}>Live family tree</div>
             <div style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
-              <div style={{maxWidth:'100%',padding:'6px 12px',borderRadius:8,background:'rgba(212,169,106,.12)',border:'1px solid rgba(212,169,106,.35)',color:'var(--gold)',fontSize:12,fontWeight:800,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
+              <div style={{maxWidth:'100%',padding:'6px 12px',borderRadius:8,background:'var(--gold-dim)',border:'1px solid color-mix(in oklch, var(--gold) 49%, transparent)',color:'var(--gold)',fontSize:12,fontWeight:800,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
                 {familyGroupName || 'Family Review'}
               </div>
               <div style={{width:1,height:14,background:'rgba(91,168,160,.45)'}} />
               <div style={{width:'100%',borderTop:'1px solid rgba(91,168,160,.28)',paddingTop:12,display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(145px,1fr))',gap:10}}>
                 {routedNodes.map(node => (
-                  <div key={node.route + node.label} style={{position:'relative',padding:'10px',background:'var(--bg2)',border:'1px solid '+(node.route==='new'?'rgba(212,169,106,.4)':'rgba(91,168,160,.22)'),borderRadius:8,minWidth:0}}>
+                  <div key={node.route + node.label} style={{position:'relative',padding:'10px',background:'var(--bg2)',border:'1px solid '+(node.route==='new'?'color-mix(in oklch, var(--gold) 56%, transparent)':'rgba(91,168,160,.22)'),borderRadius:8,minWidth:0}}>
                     <div style={{position:'absolute',top:-13,left:'50%',height:13,width:1,background:'rgba(91,168,160,.35)'}} />
                     <div style={{fontSize:11,fontWeight:800,color:'var(--text)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{node.label}</div>
                     <div style={{fontSize:9,color:'var(--text3)',marginTop:2}}>{node.kind} - {node.count} polic{node.count===1?'y':'ies'}</div>
@@ -27198,7 +27196,7 @@ function PolicyOwnerRoutingModal({ open, detected, currentClientName, allDriveSt
           const lifeAssuredOnlyCount = entries.filter(([_k, info]) => info.needsOwnerQuestion).length;
           if (lifeAssuredOnlyCount < 2) return null;
           return (
-            <div style={{fontSize:10,lineHeight:1.45,color:'var(--gold)',background:'rgba(212,169,106,.08)',borderLeft:'3px solid var(--gold)',borderRadius:5,padding:'8px 10px',marginBottom:10}}>
+            <div style={{fontSize:10,lineHeight:1.45,color:'var(--gold)',background:'color-mix(in oklch, var(--gold) 12%, transparent)',borderLeft:'3px solid var(--gold)',borderRadius:5,padding:'8px 10px',marginBottom:10}}>
               <strong>{lifeAssuredOnlyCount} names</strong> appear only as Life Assured (no clear policy owner). They default to dependants of the current client below — change the dropdown if any of them is actually the owner.
             </div>
           );
@@ -27214,7 +27212,7 @@ function PolicyOwnerRoutingModal({ open, detected, currentClientName, allDriveSt
           const sourceFields = new Set(items.map(item => item.sourceField || info.sourceField).filter(Boolean));
           const showPolicyLevelRoutes = items.length > 1 || sourceFields.size > 1;
           return (
-            <div key={key} style={{padding:'12px 14px',background:'var(--bg3)',border:'1px solid '+(info.needsOwnerQuestion?'rgba(212,169,106,.35)':'var(--border)'),borderRadius:8,marginBottom:10}}>
+            <div key={key} style={{padding:'12px 14px',background:'var(--bg3)',border:'1px solid '+(info.needsOwnerQuestion?'color-mix(in oklch, var(--gold) 49%, transparent)':'var(--border)'),borderRadius:8,marginBottom:10}}>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:10,marginBottom:8}}>
                 <div style={{minWidth:0}}>
                   <div style={{fontWeight:700,fontSize:13,color:'var(--text)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{info.displayName}</div>
@@ -27226,7 +27224,7 @@ function PolicyOwnerRoutingModal({ open, detected, currentClientName, allDriveSt
               </div>
               {/* rc2e.56: Per-card warning suppressed when consolidated warning above is rendering (≥2 needsOwnerQuestion entries). */}
               {info.needsOwnerQuestion && entries.filter(([_k2, i2]) => i2.needsOwnerQuestion).length < 2 && (
-                <div style={{fontSize:10,lineHeight:1.4,color:'var(--gold)',background:'rgba(212,169,106,.08)',borderLeft:'3px solid var(--gold)',borderRadius:5,padding:'7px 9px',marginBottom:8}}>
+                <div style={{fontSize:10,lineHeight:1.4,color:'var(--gold)',background:'color-mix(in oklch, var(--gold) 12%, transparent)',borderLeft:'3px solid var(--gold)',borderRadius:5,padding:'7px 9px',marginBottom:8}}>
                   Question: the document names <strong>{info.displayName}</strong> as life assured, but does not clearly prove they are the policy owner. Keep under the current client if this is a dependant policy; create or choose a client only if this person is truly the owner.
                 </div>
               )}
@@ -27322,7 +27320,7 @@ function PolicyOwnerRoutingModal({ open, detected, currentClientName, allDriveSt
             Review all on current client
           </button>
           <button onClick={async () => { if (busy) return; setBusy(true); try { await onConfirm({routes, policyRoutes, familyGroupName}); } finally { setBusy(false); } }} disabled={busy}
-            style={{background:'var(--gold)',color:'#0b0f1a',border:'none',borderRadius:6,padding:'8px 16px',fontSize:11,fontWeight:700,cursor:busy?'wait':'pointer'}}>
+            style={{background:'var(--gold)',color:'#fff',border:'none',borderRadius:6,padding:'8px 16px',fontSize:11,fontWeight:700,cursor:busy?'wait':'pointer'}}>
             {busy ? 'Routing...' : 'Apply family routing ->'}
           </button>
         </div>
@@ -27350,11 +27348,11 @@ function DriveSyncPromptModal({ open, onSkip, onConnect }) {
   const [showWhy, setShowWhy] = useState(false);
   if (!open) return null;
   const modalBg = {position:'fixed',inset:0,zIndex:10001,background:'rgba(0,0,0,.7)',display:'flex',alignItems:'center',justifyContent:'center',padding:16};
-  const modalBox = {background:'#1a2332',borderRadius:16,border:'1px solid rgba(91,168,160,.3)',maxWidth:440,width:'100%',padding:24,boxShadow:'0 20px 60px rgba(0,0,0,.5)'};
+  const modalBox = {background:'var(--bg2)',borderRadius:16,border:'1px solid rgba(91,168,160,.3)',maxWidth:440,width:'100%',padding:24,boxShadow:'0 20px 60px rgba(0,0,0,.5)'};
   return (
     <div style={modalBg}>
       <div style={modalBox}>
-        <h2 style={{fontSize:16,fontWeight:700,color:'#e8e8e8',margin:'0 0 8px',display:'flex',alignItems:'center',gap:8}}>
+        <h2 style={{fontSize:16,fontWeight:700,color:'var(--text)',margin:'0 0 8px',display:'flex',alignItems:'center',gap:8}}>
           <span style={{fontSize:20}}>☁️</span>
           Connect Google Drive to continue
         </h2>
@@ -27371,7 +27369,7 @@ function DriveSyncPromptModal({ open, onSkip, onConnect }) {
           <button onClick={() => setShowWhy(v => !v)} style={{background:'transparent',color:'var(--text3)',border:'none',padding:'8px 4px',fontSize:11,cursor:'pointer',textDecoration:'underline'}}>
             {showWhy ? 'Hide details' : 'Why is this required?'}
           </button>
-          <button onClick={onConnect} style={{background:'var(--teal)',color:'#0b0f1a',border:'none',borderRadius:6,padding:'8px 16px',fontSize:11,fontWeight:700,cursor:'pointer'}}>
+          <button onClick={onConnect} style={{background:'var(--teal)',color:'#fff',border:'none',borderRadius:6,padding:'8px 16px',fontSize:11,fontWeight:700,cursor:'pointer'}}>
             Connect Google Drive →
           </button>
         </div>
@@ -27388,11 +27386,11 @@ const LOCAL_MIGRATION_DONE_KEY = 'policylens_local_migration_done';
 function LocalOnlyMigrationModal({ open, onConnect, onExport, hasExported }) {
   if (!open) return null;
   const modalBg = {position:'fixed',inset:0,zIndex:10001,background:'rgba(0,0,0,.78)',display:'flex',alignItems:'center',justifyContent:'center',padding:16};
-  const modalBox = {background:'#1a2332',borderRadius:16,border:'1px solid rgba(212,169,106,.4)',maxWidth:480,width:'100%',padding:24,boxShadow:'0 20px 60px rgba(0,0,0,.5)'};
+  const modalBox = {background:'var(--bg2)',borderRadius:16,border:'1px solid color-mix(in oklch, var(--gold) 56%, transparent)',maxWidth:480,width:'100%',padding:24,boxShadow:'0 20px 60px rgba(0,0,0,.5)'};
   return (
     <div style={modalBg}>
       <div style={modalBox}>
-        <h2 style={{fontSize:16,fontWeight:700,color:'#e8e8e8',margin:'0 0 8px',display:'flex',alignItems:'center',gap:8}}>
+        <h2 style={{fontSize:16,fontWeight:700,color:'var(--text)',margin:'0 0 8px',display:'flex',alignItems:'center',gap:8}}>
           <span style={{fontSize:20}}>🔒</span>
           Drive sync is now required
         </h2>
@@ -27405,7 +27403,7 @@ function LocalOnlyMigrationModal({ open, onConnect, onExport, hasExported }) {
           </div>
         )}
         <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:8}}>
-          <button onClick={onConnect} style={{background:'var(--teal)',color:'#0b0f1a',border:'none',borderRadius:8,padding:'12px 16px',fontSize:13,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+          <button onClick={onConnect} style={{background:'var(--teal)',color:'#fff',border:'none',borderRadius:8,padding:'12px 16px',fontSize:13,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
             → Connect Google Drive
             <span style={{fontSize:9,fontWeight:500,opacity:.75}}>recommended</span>
           </button>
@@ -27438,11 +27436,11 @@ function FoundInDriveReviewModal({ open, found, onClose, onApply }) {
   const canApply = invalidDeletes.length === 0 && !busy;
   const fmtTime = (iso) => { if (!iso) return '\u2014'; try { return new Date(iso).toLocaleString('en-SG', {dateStyle:'medium',timeStyle:'short'}); } catch(_) { return iso; } };
   const modalBg = {position:'fixed',inset:0,zIndex:10001,background:'rgba(0,0,0,.7)',display:'flex',alignItems:'center',justifyContent:'center',padding:16};
-  const modalBox = {background:'#1a2332',borderRadius:16,border:'1px solid rgba(201,169,110,.2)',maxWidth:640,width:'100%',padding:24,boxShadow:'0 20px 60px rgba(0,0,0,.5)',maxHeight:'85vh',overflowY:'auto'};
+  const modalBox = {background:'var(--bg2)',borderRadius:16,border:'1px solid color-mix(in oklch, var(--gold) 28%, transparent)',maxWidth:640,width:'100%',padding:24,boxShadow:'0 20px 60px rgba(0,0,0,.5)',maxHeight:'85vh',overflowY:'auto'};
   return (
     <div onClick={e => { if (e.target === e.currentTarget && !busy) onClose(); }} style={modalBg}>
       <div style={modalBox}>
-        <h2 style={{fontSize:16,fontWeight:700,color:'#e8e8e8',margin:'0 0 4px'}}>
+        <h2 style={{fontSize:16,fontWeight:700,color:'var(--text)',margin:'0 0 4px'}}>
           Found {found.length} client{found.length===1?'':'s'} in Drive
         </h2>
         <p style={{fontSize:11,color:'var(--text3)',margin:'0 0 16px',lineHeight:1.5}}>
@@ -27490,7 +27488,7 @@ function FoundInDriveReviewModal({ open, found, onClose, onApply }) {
             Cancel (skip for now)
           </button>
           <button onClick={async () => { if (!canApply) return; setBusy(true); try { await onApply(choices); } finally { setBusy(false); } }} disabled={!canApply}
-            style={{background:canApply?'var(--gold)':'rgba(212,169,106,.3)',color:'#0b0f1a',border:'none',borderRadius:6,padding:'8px 16px',fontSize:11,fontWeight:700,cursor:canApply?'pointer':'not-allowed'}}>
+            style={{background:canApply?'var(--gold)':'color-mix(in oklch, var(--gold) 42%, transparent)',color:'#fff',border:'none',borderRadius:6,padding:'8px 16px',fontSize:11,fontWeight:700,cursor:canApply?'pointer':'not-allowed'}}>
             {busy ? 'Applying\u2026' : 'Apply choices \u2192'}
           </button>
         </div>
@@ -27548,12 +27546,12 @@ function NewClientGuardModal({ open, onClose, onProceed, currentClientName }) {
     } catch(e) { toast('\u26A0 Save failed: '+(e.message||'unknown'), 'warning', 5000); setBusy(null); }
   };
   const modalBg = {position:'fixed',inset:0,zIndex:10001,background:'rgba(0,0,0,.7)',display:'flex',alignItems:'center',justifyContent:'center',padding:16};
-  const modalBox = {background:'#1a2332',borderRadius:16,border:'1px solid rgba(201,169,110,.2)',maxWidth:440,width:'100%',padding:24,boxShadow:'0 20px 60px rgba(0,0,0,.5)'};
-  const btnStyle = (active) => ({width:'100%',padding:'12px 14px',background:active?'rgba(212,169,106,.1)':'transparent',border:'1px solid '+(active?'rgba(212,169,106,.3)':'var(--border)'),borderRadius:8,cursor:'pointer',marginBottom:8,textAlign:'left'});
+  const modalBox = {background:'var(--bg2)',borderRadius:16,border:'1px solid color-mix(in oklch, var(--gold) 28%, transparent)',maxWidth:440,width:'100%',padding:24,boxShadow:'0 20px 60px rgba(0,0,0,.5)'};
+  const btnStyle = (active) => ({width:'100%',padding:'12px 14px',background:active?'color-mix(in oklch, var(--gold) 14%, transparent)':'transparent',border:'1px solid '+(active?'color-mix(in oklch, var(--gold) 42%, transparent)':'var(--border)'),borderRadius:8,cursor:'pointer',marginBottom:8,textAlign:'left'});
   return (
     <div onClick={e => { if (e.target === e.currentTarget && !busy) onClose(); }} style={modalBg}>
       <div style={modalBox}>
-        <h2 style={{fontSize:16,fontWeight:700,color:'#e8e8e8',margin:'0 0 4px'}}>Create new client?</h2>
+        <h2 style={{fontSize:16,fontWeight:700,color:'var(--text)',margin:'0 0 4px'}}>Create new client?</h2>
         <p style={{fontSize:11,color:'var(--text3)',marginBottom:16}}>
           {currentClientName ? <>Your current client (<strong style={{color:'var(--text2)'}}>{currentClientName}</strong>) won't be lost. Save first?</> : 'Save current state before creating new client?'}
         </p>
@@ -27641,15 +27639,15 @@ function RestoreChoiceModal({ checkpoint, onClose, switchClient, setTab, isDrive
   };
 
   const modalBg = {position:'fixed',inset:0,zIndex:10002,background:'rgba(0,0,0,.7)',display:'flex',alignItems:'center',justifyContent:'center',padding:16};
-  const modalBox = {background:'#1a2332',borderRadius:16,border:'1px solid rgba(201,169,110,.2)',maxWidth:420,width:'100%',padding:24,boxShadow:'0 20px 60px rgba(0,0,0,.5)'};
+  const modalBox = {background:'var(--bg2)',borderRadius:16,border:'1px solid color-mix(in oklch, var(--gold) 28%, transparent)',maxWidth:420,width:'100%',padding:24,boxShadow:'0 20px 60px rgba(0,0,0,.5)'};
 
   return (
     <div onClick={e => { if (e.target === e.currentTarget) onClose(); }} style={modalBg}>
       <div style={modalBox}>
-        <h2 style={{fontSize:16,fontWeight:700,color:'#e8e8e8',margin:'0 0 4px'}}>Restore Checkpoint</h2>
+        <h2 style={{fontSize:16,fontWeight:700,color:'var(--text)',margin:'0 0 4px'}}>Restore Checkpoint</h2>
         <div style={{fontSize:11,color:'var(--text3)',marginBottom:16}}>{checkpoint.label || 'Checkpoint'}</div>
         <button onClick={handleReplace} disabled={!!busy}
-          style={{width:'100%',padding:'12px 14px',background:'rgba(212,169,106,.1)',border:'1px solid rgba(212,169,106,.3)',borderRadius:8,cursor:'pointer',marginBottom:8,textAlign:'left'}}>
+          style={{width:'100%',padding:'12px 14px',background:'color-mix(in oklch, var(--gold) 14%, transparent)',border:'1px solid color-mix(in oklch, var(--gold) 42%, transparent)',borderRadius:8,cursor:'pointer',marginBottom:8,textAlign:'left'}}>
           <div style={{fontWeight:700,fontSize:13,color:'var(--gold)'}}>
             {busy === 'replace' ? 'Replacing\u2026' : 'Replace current client'}
           </div>
@@ -27674,7 +27672,7 @@ function RestoreChoiceModal({ checkpoint, onClose, switchClient, setTab, isDrive
             <div style={{display:'flex',gap:8,justifyContent:'flex-end'}}>
               <button onClick={() => setShowCopyInput(false)} style={{background:'var(--bg3)',color:'var(--text2)',border:'1px solid var(--border2)',borderRadius:6,padding:'6px 12px',fontSize:11,cursor:'pointer'}}>Back</button>
               <button onClick={handleCopy} disabled={!copyName.trim() || !!busy}
-                style={{background:'var(--gold)',color:'#0b0f1a',border:'none',borderRadius:6,padding:'6px 12px',fontSize:11,fontWeight:600,cursor:'pointer'}}>
+                style={{background:'var(--gold)',color:'#fff',border:'none',borderRadius:6,padding:'6px 12px',fontSize:11,fontWeight:600,cursor:'pointer'}}>
                 {busy === 'copy' ? 'Creating\u2026' : 'Create copy'}
               </button>
             </div>
@@ -27728,13 +27726,13 @@ function CheckpointLoadModal({ open, onClose, clientId, switchClient, setTab }) 
   );
 
   const modalBg = {position:'fixed',inset:0,zIndex:10001,background:'rgba(0,0,0,.7)',display:'flex',alignItems:'center',justifyContent:'center',padding:16};
-  const modalBox = {background:'#1a2332',borderRadius:16,border:'1px solid rgba(201,169,110,.2)',maxWidth:480,width:'100%',padding:24,boxShadow:'0 20px 60px rgba(0,0,0,.5)',maxHeight:'80vh',overflowY:'auto'};
+  const modalBox = {background:'var(--bg2)',borderRadius:16,border:'1px solid color-mix(in oklch, var(--gold) 28%, transparent)',maxWidth:480,width:'100%',padding:24,boxShadow:'0 20px 60px rgba(0,0,0,.5)',maxHeight:'80vh',overflowY:'auto'};
   const isAuto = (label) => /^Auto-backup/i.test(label);
 
   return (
     <div onClick={e => { if (e.target === e.currentTarget) onClose(); }} style={modalBg}>
       <div style={modalBox}>
-        <h2 style={{fontSize:16,fontWeight:700,color:'#e8e8e8',margin:'0 0 16px'}}>Load Checkpoint</h2>
+        <h2 style={{fontSize:16,fontWeight:700,color:'var(--text)',margin:'0 0 16px'}}>Load Checkpoint</h2>
 
         {/* Section: For this client (Drive checkpoints) */}
         {isDrive && (
@@ -27833,7 +27831,7 @@ function OtherClientCheckpointPicker({ onClose, onCloseAll, switchClient, setTab
 
   const isAuto = (label) => /^Auto-backup/i.test(label) || /^auto backup/i.test(label);
   const modalBg = {position:'fixed',inset:0,zIndex:10002,background:'rgba(0,0,0,.7)',display:'flex',alignItems:'center',justifyContent:'center',padding:16};
-  const modalBox = {background:'#1a2332',borderRadius:16,border:'1px solid rgba(201,169,110,.2)',maxWidth:480,width:'100%',padding:24,boxShadow:'0 20px 60px rgba(0,0,0,.5)',maxHeight:'80vh',overflowY:'auto'};
+  const modalBox = {background:'var(--bg2)',borderRadius:16,border:'1px solid color-mix(in oklch, var(--gold) 28%, transparent)',maxWidth:480,width:'100%',padding:24,boxShadow:'0 20px 60px rgba(0,0,0,.5)',maxHeight:'80vh',overflowY:'auto'};
 
   if (restoreTarget) return (
     <RestoreChoiceModal checkpoint={restoreTarget}
@@ -27844,7 +27842,7 @@ function OtherClientCheckpointPicker({ onClose, onCloseAll, switchClient, setTab
   return (
     <div onClick={e => { if (e.target === e.currentTarget) onClose(); }} style={modalBg}>
       <div style={modalBox}>
-        <h2 style={{fontSize:16,fontWeight:700,color:'#e8e8e8',margin:'0 0 16px'}}>
+        <h2 style={{fontSize:16,fontWeight:700,color:'var(--text)',margin:'0 0 16px'}}>
           {pickedClient ? 'Checkpoints for ' + (pickedClient.clientName || 'Client') : 'Choose a client'}
         </h2>
         {!pickedClient ? (
@@ -28087,12 +28085,12 @@ function ProfileTab() {
                 }
                 try { toast('✓ Marked as reviewed','success',2000); } catch(_){}
               }}
-              style={{fontSize:10,fontWeight:600,padding:'4px 10px',borderRadius:6,background:'var(--gold-dim)',color:'var(--gold)',border:'1px solid rgba(212,169,106,.25)',cursor:'pointer'}}>
+              style={{fontSize:10,fontWeight:600,padding:'4px 10px',borderRadius:6,background:'var(--gold-dim)',color:'var(--gold)',border:'1px solid color-mix(in oklch, var(--gold) 35%, transparent)',cursor:'pointer'}}>
               ✓ Mark Reviewed
             </button>
             {/* v2.3.0-rc2c.3a: + New Client button on Profile tab (desktop only — mobile uses header + button) */}
             {!isMobile && <button onClick={() => setNewClientGuardOpen(true)}
-              style={{fontSize:10,fontWeight:600,padding:'4px 10px',borderRadius:6,background:'rgba(212,169,106,.15)',color:'var(--gold)',border:'1px solid rgba(212,169,106,.4)',cursor:'pointer',outline:'none',whiteSpace:'nowrap'}}>
+              style={{fontSize:10,fontWeight:600,padding:'4px 10px',borderRadius:6,background:'color-mix(in oklch, var(--gold) 21%, transparent)',color:'var(--gold)',border:'1px solid color-mix(in oklch, var(--gold) 56%, transparent)',cursor:'pointer',outline:'none',whiteSpace:'nowrap'}}>
               + New Client
             </button>}
             {!isMobile && activeClientId && <button onClick={() => setMergeClientOpen(true)}
@@ -28105,9 +28103,9 @@ function ProfileTab() {
         <div style={{display:'flex',gap:6,alignItems:'center'}}>
           <input ref={camRef} type="file" accept="image/*" capture="environment" multiple style={{display:'none'}} onChange={e=>{scanProfile(e.target.files);e.target.value='';}} />
           <input ref={uploadRef} type="file" accept="image/*,.pdf,.xlsx,.xls,.doc,.docx" multiple style={{display:'none'}} onChange={e=>{scanProfile(e.target.files);e.target.value='';}} />
-          <button style={{background:'var(--gold-dim)',color:'var(--gold)',border:'1px solid rgba(212,169,106,.25)',fontSize:11,padding:'5px 10px',borderRadius:8,cursor:'pointer',fontWeight:500}} onClick={async()=>{const files=await openCameraModal();if(files&&files.length) scanProfile(files);}} disabled={scanning}>{scanning?'Scanning…':'📷 Camera'}</button>
-          <button style={{background:'var(--gold-dim)',color:'var(--gold)',border:'1px solid rgba(212,169,106,.25)',fontSize:11,padding:'5px 10px',borderRadius:8,cursor:'pointer',fontWeight:500}} onClick={()=>{const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.multiple=true;inp.onchange=e=>{if(e.target.files.length) scanProfile(e.target.files);};inp.click();}} disabled={scanning}>🖼 Gallery</button>
-          <button style={{background:'var(--gold-dim)',color:'var(--gold)',border:'1px solid rgba(212,169,106,.25)',fontSize:11,padding:'5px 10px',borderRadius:8,cursor:'pointer',fontWeight:500}} onClick={()=>uploadRef.current?.click()} disabled={scanning}>{scanning?'…':'📄 Upload'}</button>
+          <button style={{background:'var(--gold-dim)',color:'var(--gold)',border:'1px solid color-mix(in oklch, var(--gold) 35%, transparent)',fontSize:11,padding:'5px 10px',borderRadius:8,cursor:'pointer',fontWeight:500}} onClick={async()=>{const files=await openCameraModal();if(files&&files.length) scanProfile(files);}} disabled={scanning}>{scanning?'Scanning…':'📷 Camera'}</button>
+          <button style={{background:'var(--gold-dim)',color:'var(--gold)',border:'1px solid color-mix(in oklch, var(--gold) 35%, transparent)',fontSize:11,padding:'5px 10px',borderRadius:8,cursor:'pointer',fontWeight:500}} onClick={()=>{const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.multiple=true;inp.onchange=e=>{if(e.target.files.length) scanProfile(e.target.files);};inp.click();}} disabled={scanning}>🖼 Gallery</button>
+          <button style={{background:'var(--gold-dim)',color:'var(--gold)',border:'1px solid color-mix(in oklch, var(--gold) 35%, transparent)',fontSize:11,padding:'5px 10px',borderRadius:8,cursor:'pointer',fontWeight:500}} onClick={()=>uploadRef.current?.click()} disabled={scanning}>{scanning?'…':'📄 Upload'}</button>
           <button className="btn-sm" style={{background:'rgba(239,83,80,.08)',color:'var(--red)',border:'1px solid rgba(239,83,80,.15)',fontSize:10,padding:'5px 10px',borderRadius:8,cursor:'pointer'}} onClick={async()=>{
             if(!confirm('Reset all data for '+(p.name||'this client')+'?\n\nPolicies, profile fields, and assumptions will be cleared. The client record stays.')) return;
             // Delete policies for this client
@@ -28632,7 +28630,7 @@ const RetirementLiteDashboard = memo(function RetirementLiteDashboard({data,age,
         labels:filtered.map(r=>r.age),
         datasets:[
           ...(cpfEligible ? [{label:'CPF LIFE',data:filtered.map(r=>r.cpf),backgroundColor:'rgba(91,168,160,.7)',borderRadius:2,stack:'income'}] : []),
-          {label:'Policy Income',data:filtered.map(r=>r.policy),backgroundColor:'rgba(212,169,106,.7)',borderRadius:2,stack:'income'},
+          {label:'Policy Income',data:filtered.map(r=>r.policy),backgroundColor:'color-mix(in oklch, var(--gold) 98%, transparent)',borderRadius:2,stack:'income'},
           {label:'Dividends',data:filtered.map(r=>r.dividends),backgroundColor:'rgba(157,138,191,.7)',borderRadius:2,stack:'income'},
           {label:'Other Income',data:filtered.map(r=>r.other),backgroundColor:'rgba(91,143,217,.5)',borderRadius:2,stack:'income'},
           {label:'Desired',data:filtered.map(r=>r.desired),type:'line',borderColor:'rgba(239,83,80,.6)',borderWidth:2,borderDash:[6,3],pointRadius:0,fill:false},
@@ -28641,8 +28639,8 @@ const RetirementLiteDashboard = memo(function RetirementLiteDashboard({data,age,
       options:{
         responsive:true,maintainAspectRatio:false,
         scales:{
-          x:{stacked:true,grid:{color:'rgba(212,169,106,.06)'},ticks:{color:'#6b6050',font:{size:9}}},
-          y:{stacked:true,grid:{color:'rgba(212,169,106,.06)'},ticks:{color:'#6b6050',callback:v=>'$'+v.toLocaleString()},beginAtZero:true}
+          x:{stacked:true,grid:{color:'color-mix(in oklch, var(--gold) 9%, transparent)'},ticks:{color:'#6b6050',font:{size:9}}},
+          y:{stacked:true,grid:{color:'color-mix(in oklch, var(--gold) 9%, transparent)'},ticks:{color:'#6b6050',callback:v=>'$'+v.toLocaleString()},beginAtZero:true}
         },
         plugins:{legend:{labels:{color:'#a39580',font:{size:9},boxWidth:12}},tooltip:{callbacks:{footer:items=>{const total=items.filter(i=>i.dataset.stack==='income').reduce((s,i)=>s+i.raw,0);return'Total: $'+total.toLocaleString()+'/mth';}}}}
       }
@@ -28712,7 +28710,7 @@ const RetirementLiteDashboard = memo(function RetirementLiteDashboard({data,age,
       const isFI = g.id === 'fi';
       const showMain = g.main !== lastMain;
       lastMain = g.main;
-      const headerRow = showMain ? `<tr><td colspan="6" style="padding:12px 8px 4px;font-size:13px;font-weight:700;color:#d4a96a;border:none">${g.main}</td></tr>` : '';
+      const headerRow = showMain ? `<tr><td colspan="6" style="padding:12px 8px 4px;font-size:13px;font-weight:700;color:var(--gold);border:none">${g.main}</td></tr>` : '';
       const subRow = g.sub ? `<tr><td colspan="6" style="padding:2px 8px 6px;font-size:10px;font-weight:600;color:#a39580;text-transform:uppercase;letter-spacing:.5px;border:none">${g.sub} (${g.items.length})</td></tr>` : '';
       const sortedItems = [...g.items].sort((a,b) => (a.subType||'').localeCompare(b.subType||'') || (a.insurer||'').localeCompare(b.insurer||'') || annualizedPremium(b)-annualizedPremium(a));
       const rows = sortedItems.map(pol => {
@@ -28728,7 +28726,7 @@ const RetirementLiteDashboard = memo(function RetirementLiteDashboard({data,age,
         }
         const isSP = pol.premSingle||pol.premFrequency==='single'||pol.premiumStructure==='Single Premium';
         const annPrem = annualizedPremium(pol);
-        const premStr = isSP ? '$'+Math.round(prem).toLocaleString()+' <span style="font-size:8px;color:#d4a96a">SP</span>' : annPrem ? '$'+Math.round(annPrem).toLocaleString()+'/yr' : '';
+        const premStr = isSP ? '$'+Math.round(prem).toLocaleString()+' <span style="font-size:8px;color:var(--gold)">SP</span>' : annPrem ? '$'+Math.round(annPrem).toLocaleString()+'/yr' : '';
         const method = pol.paymentMethod || 'Cash';
         return `<tr>
           <td style="padding:4px 8px;font-size:10px">${pol.insurer||''}</td>
@@ -28757,26 +28755,26 @@ const RetirementLiteDashboard = memo(function RetirementLiteDashboard({data,age,
 <script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0b0f1a;color:#e8e0d0;min-height:100vh;padding:16px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#fbf7ee;color:#2d2418;min-height:100vh;padding:16px}
 .container{max-width:780px;margin:0 auto}
-.header{text-align:center;padding:20px 0 16px;border-bottom:1px solid rgba(212,169,106,.2);margin-bottom:16px}
+.header{text-align:center;padding:20px 0 16px;border-bottom:1px solid color-mix(in oklch, var(--gold) 28%, transparent);margin-bottom:16px}
 .header h1{font-size:20px;font-weight:700;margin-bottom:4px}
 .header p{font-size:11px;color:#a39580}
-.logo{font-size:10px;color:#d4a96a;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
+.logo{font-size:10px;color:var(--gold);font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
 .grid{display:grid;gap:8px;margin-bottom:12px}
 .g5{grid-template-columns:repeat(5,1fr)}.g4{grid-template-columns:repeat(4,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:1fr 1fr}
-.card{background:#141926;border:1px solid rgba(212,169,106,.1);border-radius:10px;padding:12px}
+.card{background:#141926;border:1px solid color-mix(in oklch, var(--gold) 14%, transparent);border-radius:10px;padding:12px}
 .kl{font-size:8px;color:#a39580;text-transform:uppercase;font-weight:600;letter-spacing:.5px}
 .kv{font-size:18px;font-weight:700;margin-top:2px}
 .kv-sm{font-size:14px;font-weight:700;margin-top:2px}
-.g{color:#5ba8a0}.gd{color:#d4a96a}.r{color:#ef5350}.p{color:#9d8abf}.b{color:#5b8fd9}
-.section{font-size:12px;font-weight:600;margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid rgba(212,169,106,.1)}
-.row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(212,169,106,.04);font-size:11px}
+.g{color:#5ba8a0}.gd{color:var(--gold)}.r{color:#ef5350}.p{color:#9d8abf}.b{color:#5b8fd9}
+.section{font-size:12px;font-weight:600;margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid color-mix(in oklch, var(--gold) 14%, transparent)}
+.row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid color-mix(in oklch, var(--gold) 6%, transparent);font-size:11px}
 .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px}
-.footer{text-align:center;padding:16px 0;font-size:9px;color:#6b6050;border-top:1px solid rgba(212,169,106,.1);margin-top:16px}
+.footer{text-align:center;padding:16px 0;font-size:9px;color:#6b6050;border-top:1px solid color-mix(in oklch, var(--gold) 14%, transparent);margin-top:16px}
 table{width:100%;border-collapse:collapse}
-th{text-align:left;padding:5px 8px;font-size:8px;color:#a39580;text-transform:uppercase;font-weight:600;letter-spacing:.3px;border-bottom:1px solid rgba(212,169,106,.15)}
-td{border-bottom:1px solid rgba(212,169,106,.04)}
+th{text-align:left;padding:5px 8px;font-size:8px;color:#a39580;text-transform:uppercase;font-weight:600;letter-spacing:.3px;border-bottom:1px solid color-mix(in oklch, var(--gold) 21%, transparent)}
+td{border-bottom:1px solid color-mix(in oklch, var(--gold) 6%, transparent)}
 @media(max-width:600px){.g5,.g4{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:1fr}}
 </style></head><body>
 <div class="container">
@@ -28792,11 +28790,11 @@ td{border-bottom:1px solid rgba(212,169,106,.04)}
 <div class="card" style="text-align:center"><div class="kl">Policies</div><div class="kv">${activePols.length}</div></div>
 <div class="card" style="text-align:center"><div class="kl">Annual Premiums</div><div class="kv gd">$${Math.round(totalPrem).toLocaleString()}/yr</div>
 <div style="font-size:9px;color:#a39580;line-height:1.6;text-align:left;padding:4px 8px">
-${premByMode.cash>0?'Cash: $'+Math.round(premByMode.cash).toLocaleString()+'/yr<br>':''}${premByMode.medisave>0?'MediSave: $'+Math.round(premByMode.medisave).toLocaleString()+'/yr<br>':''}${premByMode.srs>0?'SRS: $'+Math.round(premByMode.srs).toLocaleString()+'/yr<br>':''}${premByMode.cpfoa>0?'CPF OA: $'+Math.round(premByMode.cpfoa).toLocaleString()+'/yr<br>':''}${totalSinglePrem>0?'<span style="color:#d4a96a">Single premiums: $'+Math.round(totalSinglePrem).toLocaleString()+'</span>':''}
+${premByMode.cash>0?'Cash: $'+Math.round(premByMode.cash).toLocaleString()+'/yr<br>':''}${premByMode.medisave>0?'MediSave: $'+Math.round(premByMode.medisave).toLocaleString()+'/yr<br>':''}${premByMode.srs>0?'SRS: $'+Math.round(premByMode.srs).toLocaleString()+'/yr<br>':''}${premByMode.cpfoa>0?'CPF OA: $'+Math.round(premByMode.cpfoa).toLocaleString()+'/yr<br>':''}${totalSinglePrem>0?'<span style="color:var(--gold)">Single premiums: $'+Math.round(totalSinglePrem).toLocaleString()+'</span>':''}
 </div></div>
 <div class="card" style="text-align:center"><div class="kl">Total Coverage</div><div class="kv b">$${cvDeath>1e6?(cvDeath/1e6).toFixed(1)+'M':Math.round(cvDeath).toLocaleString()}</div></div>
 <div class="card" style="text-align:center"><div class="kl">Retirement Income</div><div class="kv g">$${totalAtRet.toLocaleString()}/m</div></div>
-<div class="card" style="text-align:center;border-left:3px solid ${coveragePct>=80?'#5ba8a0':coveragePct>=50?'#d4a96a':'#ef5350'}"><div class="kl">vs Target</div><div class="kv ${coveragePct>=80?'g':coveragePct>=50?'gd':'r'}">${coveragePct}%</div></div>
+<div class="card" style="text-align:center;border-left:3px solid ${coveragePct>=80?'#5ba8a0':coveragePct>=50?'var(--gold)':'#ef5350'}"><div class="kl">vs Target</div><div class="kv ${coveragePct>=80?'g':coveragePct>=50?'gd':'r'}">${coveragePct}%</div></div>
 </div>
 
 <!-- PROTECTION COVERAGE -->
@@ -28814,10 +28812,10 @@ ${premByMode.cash>0?'Cash: $'+Math.round(premByMode.cash).toLocaleString()+'/yr<
 <div class="card" style="margin-bottom:12px">
 <div style="font-size:10px;color:#a39580;margin-bottom:8px">Target: $${desiredMonthly.toLocaleString()}/mth (today's $${Math.round(data.baseDesired||desiredMonthly).toLocaleString()} + ${inflRate}% inflation × ${Math.max(0,retAge-(age||35))}yr)</div>
 ${cpfEligible&&cpfScheme!=='none'?`<div class="row"><div style="display:flex;align-items:center;gap:6px"><span class="dot" style="background:#5ba8a0"></span>CPF LIFE (${cpfScheme} ${p.cpfPlan||'standard'})</div><div class="g" style="font-weight:600">$${cpfPayout.mid.toLocaleString()}</div></div>`:''}
-${policyMonthlyIncome>0?`<div class="row"><div style="display:flex;align-items:center;gap:6px"><span class="dot" style="background:#d4a96a"></span>Policy Income</div><div class="gd" style="font-weight:600">$${policyMonthlyIncome.toLocaleString()}</div></div>`:''}
+${policyMonthlyIncome>0?`<div class="row"><div style="display:flex;align-items:center;gap:6px"><span class="dot" style="background:var(--gold)"></span>Policy Income</div><div class="gd" style="font-weight:600">$${policyMonthlyIncome.toLocaleString()}</div></div>`:''}
 ${policyDividends>0?`<div class="row"><div style="display:flex;align-items:center;gap:6px"><span class="dot" style="background:#9d8abf"></span>Dividends</div><div class="p" style="font-weight:600">$${policyDividends.toLocaleString()}</div></div>`:''}
 ${otherSources.filter(s=>s.active).map(s=>`<div class="row"><div style="display:flex;align-items:center;gap:6px"><span class="dot" style="background:#5b8fd9"></span>${s.source||'Other'}</div><div class="b" style="font-weight:600">$${s.adjustedAmt.toLocaleString()}</div></div>`).join('')}
-<div style="display:flex;justify-content:space-between;padding:8px 0 2px;font-weight:700;border-top:2px solid rgba(212,169,106,.15);margin-top:4px"><div>Total</div><div class="${totalAtRet>=desiredMonthly?'g':'r'}">$${totalAtRet.toLocaleString()}/mth</div></div>
+<div style="display:flex;justify-content:space-between;padding:8px 0 2px;font-weight:700;border-top:2px solid color-mix(in oklch, var(--gold) 21%, transparent);margin-top:4px"><div>Total</div><div class="${totalAtRet>=desiredMonthly?'g':'r'}">$${totalAtRet.toLocaleString()}/mth</div></div>
 ${gap>0?`<div style="margin-top:6px;padding:5px 8px;background:rgba(239,83,80,.06);border-radius:6px;font-size:10px;color:#ef5350">Shortfall: $${gap.toLocaleString()}/mth${lumpSum>0?' · Lump sum $'+Math.round(lumpSum).toLocaleString()+' sustains ~'+yearsFromLump+'yr':''}${gap>0&&lumpSum>0?' · Total runway ~'+Math.round(lumpSum/(gap*12)+(totalAtRet>0?(90-retAge):0))+'yr':''}</div>`:`<div style="margin-top:6px;padding:5px 8px;background:rgba(91,168,160,.06);border-radius:6px;font-size:10px;color:#5ba8a0">✅ Fully funded — surplus $${(totalAtRet-desiredMonthly).toLocaleString()}/mth</div>`}
 </div>
 
@@ -28847,7 +28845,7 @@ ${topInsurers.length > 1 ? `<div class="section">🏢 Provider Concentration</di
 <div class="card" style="margin-bottom:12px">
 ${topInsurers.map(([name,count]) => {
   const pct = Math.round(count/activePols.length*100);
-  return `<div style="margin-bottom:6px"><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:2px"><span>${name}</span><span style="color:#a39580">${count} (${pct}%)</span></div><div style="height:4px;background:rgba(212,169,106,.08);border-radius:2px"><div style="height:100%;width:${pct}%;background:#d4a96a;border-radius:2px"></div></div></div>`;
+  return `<div style="margin-bottom:6px"><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:2px"><span>${name}</span><span style="color:#a39580">${count} (${pct}%)</span></div><div style="height:4px;background:color-mix(in oklch, var(--gold) 12%, transparent);border-radius:2px"><div style="height:100%;width:${pct}%;background:var(--gold);border-radius:2px"></div></div></div>`;
 }).join('')}
 </div>` : ''}
 
@@ -28859,11 +28857,11 @@ ${p.name?'Prepared for '+p.name+' by their financial consultant':''}
 <script>
 new Chart(document.getElementById('retChart'),{type:'bar',data:{labels:${JSON.stringify(waterfallData.map(r=>r.age))},datasets:[
 ${cpfEligible?`{label:'CPF LIFE',data:${JSON.stringify(waterfallData.map(r=>r.cpf))},backgroundColor:'rgba(91,168,160,.7)',stack:'s',borderRadius:1},`:''}
-{label:'Policy',data:${JSON.stringify(waterfallData.map(r=>r.policy))},backgroundColor:'rgba(212,169,106,.7)',stack:'s',borderRadius:1},
+{label:'Policy',data:${JSON.stringify(waterfallData.map(r=>r.policy))},backgroundColor:'color-mix(in oklch, var(--gold) 98%, transparent)',stack:'s',borderRadius:1},
 {label:'Dividends',data:${JSON.stringify(waterfallData.map(r=>r.dividends))},backgroundColor:'rgba(157,138,191,.7)',stack:'s',borderRadius:1},
 {label:'Other',data:${JSON.stringify(waterfallData.map(r=>r.other))},backgroundColor:'rgba(91,143,217,.5)',stack:'s',borderRadius:1},
 {label:'Target',data:${JSON.stringify(waterfallData.map(r=>r.desired))},type:'line',borderColor:'rgba(239,83,80,.6)',borderWidth:2,borderDash:[6,3],pointRadius:0,fill:false}
-]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true,grid:{display:false},ticks:{color:'#6b6050',font:{size:8}}},y:{stacked:true,grid:{color:'rgba(212,169,106,.04)'},ticks:{color:'#6b6050',font:{size:8},callback:v=>'$'+v.toLocaleString()}}},plugins:{legend:{labels:{color:'#a39580',font:{size:8},boxWidth:10}},tooltip:{callbacks:{footer:items=>{const t=items.filter(i=>i.dataset.stack==='s').reduce((s,i)=>s+i.raw,0);return'Total: $'+t.toLocaleString()+'/mth';}}}}}});
+]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true,grid:{display:false},ticks:{color:'#6b6050',font:{size:8}}},y:{stacked:true,grid:{color:'color-mix(in oklch, var(--gold) 6%, transparent)'},ticks:{color:'#6b6050',font:{size:8},callback:v=>'$'+v.toLocaleString()}}},plugins:{legend:{labels:{color:'#a39580',font:{size:8},boxWidth:10}},tooltip:{callbacks:{footer:items=>{const t=items.filter(i=>i.dataset.stack==='s').reduce((s,i)=>s+i.raw,0);return'Total: $'+t.toLocaleString()+'/mth';}}}}}});
 <\/script></body></html>`;
     return html;
   };
@@ -28880,7 +28878,7 @@ ${cpfEligible?`{label:'CPF LIFE',data:${JSON.stringify(waterfallData.map(r=>r.cp
   };
 
   return (
-    <div className="card" style={{marginBottom:16,background:'linear-gradient(135deg,var(--bg2),rgba(212,169,106,.03))',border:'1px solid rgba(212,169,106,.15)'}}>
+    <div className="card" style={{marginBottom:16,background:'linear-gradient(135deg,var(--bg2),color-mix(in oklch, var(--gold) 4%, transparent))',border:'1px solid color-mix(in oklch, var(--gold) 21%, transparent)'}}>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:12,flexWrap:'wrap',gap:6}}>
         <div>
           <h3 style={{fontSize:14,fontWeight:600}}>Retirement Income Dashboard</h3>
@@ -28939,7 +28937,7 @@ ${cpfEligible?`{label:'CPF LIFE',data:${JSON.stringify(waterfallData.map(r=>r.cp
           )}
           {policyMonthlyIncome > 0 && (
             <div style={{display:'flex',justifyContent:'space-between',padding:'5px 0',borderBottom:'1px solid var(--border)',fontSize:11}}>
-              <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:8,height:8,borderRadius:'50%',background:'#d4a96a'}}></span> Annuity/Income</span>
+              <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:8,height:8,borderRadius:'50%',background:'var(--gold)'}}></span> Annuity/Income</span>
               <span style={{fontWeight:600,color:'var(--gold)'}}>${policyMonthlyIncome.toLocaleString()}</span>
             </div>
           )}
@@ -29036,7 +29034,7 @@ const PremiumCashflowChart = memo(function PremiumCashflowChart({policies,age,re
   useEffect(() => {
     if(!chartRef.current || data.length === 0) return;
     if(chartInst.current) chartInst.current.destroy();
-    const colors = ['#5b8fd9','#5ba8a0','#d4a96a','#c97b9a','#9d8abf','#7ca87c','#d98e5b','#8fb8d9','#b89d5b','#a07cbd'];
+    const colors = ['#5b8fd9','#5ba8a0','var(--gold)','#c97b9a','#9d8abf','#7ca87c','#d98e5b','#8fb8d9','#b89d5b','#a07cbd'];
     chartInst.current = new Chart(chartRef.current, {
       type:'bar',
       data:{
@@ -29053,8 +29051,8 @@ const PremiumCashflowChart = memo(function PremiumCashflowChart({policies,age,re
       options:{
         responsive:true,maintainAspectRatio:false,
         scales:{
-          x:{stacked:true,grid:{color:'rgba(212,169,106,.06)'},ticks:{color:'#6b6050',font:{size:9}}},
-          y:{stacked:true,grid:{color:'rgba(212,169,106,.06)'},ticks:{color:'#6b6050',callback:v=>v>=1e3?'$'+(v/1e3).toFixed(0)+'K':'$'+v}}
+          x:{stacked:true,grid:{color:'color-mix(in oklch, var(--gold) 9%, transparent)'},ticks:{color:'#6b6050',font:{size:9}}},
+          y:{stacked:true,grid:{color:'color-mix(in oklch, var(--gold) 9%, transparent)'},ticks:{color:'#6b6050',callback:v=>v>=1e3?'$'+(v/1e3).toFixed(0)+'K':'$'+v}}
         },
         plugins:{
           legend:{labels:{color:'#a39580',font:{size:9},boxWidth:12}},
@@ -29231,7 +29229,7 @@ function ReviewSession({onClose}) {
                 <div style={{fontWeight:600,color:'var(--gold)'}}>{fmt(annualizedPremium(pol))}/yr</div>
               </div>
             ))}
-            {premRatio > 15 && <div style={{marginTop:10,padding:10,background:'rgba(212,169,106,.06)',borderRadius:8,fontSize:11,color:'var(--gold)'}}>
+            {premRatio > 15 && <div style={{marginTop:10,padding:10,background:'color-mix(in oklch, var(--gold) 9%, transparent)',borderRadius:8,fontSize:11,color:'var(--gold)'}}>
               📊 Premium-to-income ratio: {premRatio}%. Industry guideline: 10-15%.
             </div>}
           </div>)}
@@ -29308,10 +29306,10 @@ function ReviewSession({onClose}) {
               retIncome===0 && retAge-age<20 && {pri:'medium',text:'No retirement income policies. Consider annuity or income plan',cat:'Retirement'},
               totalCV>100000 && {pri:'low',text:'Portfolio has '+fmt(totalCV)+' in surrender value. Review if any underperforming policies should be restructured',cat:'Value'},
             ].filter(Boolean).map((rec,i) => (
-              <div key={i} style={{padding:10,marginBottom:6,borderRadius:8,borderLeft:'3px solid '+(rec.pri==='high'?'var(--red)':rec.pri==='medium'?'var(--gold)':'var(--teal)'),background:rec.pri==='high'?'rgba(239,83,80,.04)':rec.pri==='medium'?'rgba(212,169,106,.04)':'rgba(91,168,160,.04)'}}>
+              <div key={i} style={{padding:10,marginBottom:6,borderRadius:8,borderLeft:'3px solid '+(rec.pri==='high'?'var(--red)':rec.pri==='medium'?'var(--gold)':'var(--teal)'),background:rec.pri==='high'?'rgba(239,83,80,.04)':rec.pri==='medium'?'color-mix(in oklch, var(--gold) 6%, transparent)':'rgba(91,168,160,.04)'}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                   <span style={{fontSize:12,fontWeight:500}}>{rec.text}</span>
-                  <span style={{fontSize:8,padding:'1px 6px',borderRadius:4,background:rec.pri==='high'?'rgba(239,83,80,.15)':'rgba(212,169,106,.1)',color:rec.pri==='high'?'var(--red)':'var(--gold)',fontWeight:600,flexShrink:0,marginLeft:8}}>{rec.cat}</span>
+                  <span style={{fontSize:8,padding:'1px 6px',borderRadius:4,background:rec.pri==='high'?'rgba(239,83,80,.15)':'color-mix(in oklch, var(--gold) 14%, transparent)',color:rec.pri==='high'?'var(--red)':'var(--gold)',fontWeight:600,flexShrink:0,marginLeft:8}}>{rec.cat}</span>
                 </div>
               </div>
             ))}
@@ -29838,8 +29836,8 @@ function Dashboard() {
     chartInst2.current = new Chart(chartRef2.current, {
       type:'line',
       data:{labels:cvTimeline.map(r=>r.age),datasets:[
-        {label:'Surrender Value',data:cvTimeline.map(r=>r.totalCV),borderColor:'#d4a96a',backgroundColor:'rgba(212,169,106,.06)',fill:true,tension:.3,pointRadius:0,borderWidth:2,pointStyle:'rect'},
-        ...(cvTimeline.some(r=>r.estimatedCV>0)?[{label:'Estimated (no BI)',data:cvTimeline.map(r=>r.estimatedCV>0?r.estimatedCV:null),borderColor:'rgba(212,169,106,.4)',backgroundColor:'transparent',fill:false,tension:.3,pointRadius:0,borderWidth:1.5,borderDash:[6,4],pointStyle:'line',spanGaps:true}]:[]),
+        {label:'Surrender Value',data:cvTimeline.map(r=>r.totalCV),borderColor:'var(--gold)',backgroundColor:'color-mix(in oklch, var(--gold) 9%, transparent)',fill:true,tension:.3,pointRadius:0,borderWidth:2,pointStyle:'rect'},
+        ...(cvTimeline.some(r=>r.estimatedCV>0)?[{label:'Estimated (no BI)',data:cvTimeline.map(r=>r.estimatedCV>0?r.estimatedCV:null),borderColor:'color-mix(in oklch, var(--gold) 56%, transparent)',backgroundColor:'transparent',fill:false,tension:.3,pointRadius:0,borderWidth:1.5,borderDash:[6,4],pointStyle:'line',spanGaps:true}]:[]),
         {label:'Cumulative Premiums Paid',data:cvTimeline.map(r=>{
           let cumPrem=0;
           policies.forEach(pol=>{
@@ -29858,8 +29856,8 @@ function Dashboard() {
       ]},
       options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
         scales:{
-          x:{grid:{color:'rgba(212,169,106,.06)'},ticks:{color:'#6b6050',font:{size:10}}},
-          y:{grid:{color:'rgba(212,169,106,.06)'},ticks:{color:'#d4a96a',font:{size:10},callback:v=>v>=1e6?'$'+(v/1e6).toFixed(1)+'M':v>=1e3?'$'+(v/1e3).toFixed(0)+'K':'$'+v}}
+          x:{grid:{color:'color-mix(in oklch, var(--gold) 9%, transparent)'},ticks:{color:'#6b6050',font:{size:10}}},
+          y:{grid:{color:'color-mix(in oklch, var(--gold) 9%, transparent)'},ticks:{color:'var(--gold)',font:{size:10},callback:v=>v>=1e6?'$'+(v/1e6).toFixed(1)+'M':v>=1e3?'$'+(v/1e3).toFixed(0)+'K':'$'+v}}
         },
         plugins:{legend:{labels:{color:'#a39580',font:{size:10},usePointStyle:true,pointStyleWidth:8}},
           tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': $'+Math.round(ctx.raw).toLocaleString()}}}
@@ -29878,7 +29876,7 @@ function Dashboard() {
     const data = cats.map(c => (byCategory[c]||[]).reduce((s,p) => s + annualizedPremium(p), 0));
     chartInst.current = new Chart(chartRef.current, {
       type:'doughnut',
-      data:{labels:cats.map(c=>CATEGORIES[c].label),datasets:[{data,backgroundColor:['#5b8fd9','#5ba8a0','#c97b9a','#9d8abf','#d4a96a','#c97b9a'],borderWidth:0,hoverOffset:4}]},
+      data:{labels:cats.map(c=>CATEGORIES[c].label),datasets:[{data,backgroundColor:['#5b8fd9','#5ba8a0','#c97b9a','#9d8abf','var(--gold)','#c97b9a'],borderWidth:0,hoverOffset:4}]},
       options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#a39580',font:{size:11},padding:10}}}},
     });
     return () => {if(chartInst.current)chartInst.current.destroy()};
@@ -30041,7 +30039,7 @@ function Dashboard() {
       {/* ── Camera CTA ── */}
       <div style={{maxWidth:420,margin:'0 auto 20px'}}>
         <button onClick={async()=>{const files=await openCameraModal();if(files&&files.length){const newStaged=files.map(f=>({file:f,preview:stagedPreviewUrl(f)}));setWelcomeStaged(prev=>[...prev,...newStaged].slice(0,200));}}}
-          style={{width:'100%',background:'linear-gradient(135deg,rgba(212,169,106,.15),rgba(212,169,106,.05))',border:'2px dashed var(--gold3)',borderRadius:16,padding:'24px 20px',cursor:'pointer',transition:'all .2s'}}>
+          style={{width:'100%',background:'linear-gradient(135deg,color-mix(in oklch, var(--gold) 21%, transparent),color-mix(in oklch, var(--gold) 7%, transparent))',border:'2px dashed var(--gold3)',borderRadius:16,padding:'24px 20px',cursor:'pointer',transition:'all .2s'}}>
           <div style={{fontSize:40,marginBottom:6}}>📷</div>
           <div style={{fontSize:15,fontWeight:600,color:'var(--gold2)',marginBottom:4}}>Scan first policy</div>
           <div style={{fontSize:11,color:'var(--text2)'}}>Snap a photo of any policy contract, benefit illustration, or CRM screen</div>
@@ -30587,9 +30585,9 @@ function Dashboard() {
           Preview & Share was removed: its retirement HTML export duplicated
           what Present mode and the PDF report both do better. */}
       <div style={{display:'flex',gap:6,marginBottom:12,flexWrap:'wrap',alignItems:'center'}}>
-        <button style={{background:'var(--gold-dim)',color:'var(--gold)',border:'1px solid rgba(212,169,106,.25)',fontSize:11,padding:'5px 10px',borderRadius:8,cursor:'pointer',fontWeight:500}} onClick={async()=>{const files=await openCameraModal();if(files&&files.length) handleDashDrop(files);}}>📷 Camera</button>
-        <button style={{background:'var(--gold-dim)',color:'var(--gold)',border:'1px solid rgba(212,169,106,.25)',fontSize:11,padding:'5px 10px',borderRadius:8,cursor:'pointer',fontWeight:500}} onClick={()=>{const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.multiple=true;inp.onchange=e=>{if(e.target.files.length)handleDashDrop(e.target.files);};inp.click();}}>🖼 Gallery</button>
-        <button style={{background:'var(--gold-dim)',color:'var(--gold)',border:'1px solid rgba(212,169,106,.25)',fontSize:11,padding:'5px 10px',borderRadius:8,cursor:'pointer',fontWeight:500}} onClick={()=>{const inp=document.createElement('input');inp.type='file';inp.accept='image/*,.pdf,.xlsx,.xls,.csv,.doc,.docx';inp.multiple=true;inp.onchange=e=>{if(e.target.files.length)handleDashDrop(e.target.files);};inp.click();}}>📄 Upload</button>
+        <button style={{background:'var(--gold-dim)',color:'var(--gold)',border:'1px solid color-mix(in oklch, var(--gold) 35%, transparent)',fontSize:11,padding:'5px 10px',borderRadius:8,cursor:'pointer',fontWeight:500}} onClick={async()=>{const files=await openCameraModal();if(files&&files.length) handleDashDrop(files);}}>📷 Camera</button>
+        <button style={{background:'var(--gold-dim)',color:'var(--gold)',border:'1px solid color-mix(in oklch, var(--gold) 35%, transparent)',fontSize:11,padding:'5px 10px',borderRadius:8,cursor:'pointer',fontWeight:500}} onClick={()=>{const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.multiple=true;inp.onchange=e=>{if(e.target.files.length)handleDashDrop(e.target.files);};inp.click();}}>🖼 Gallery</button>
+        <button style={{background:'var(--gold-dim)',color:'var(--gold)',border:'1px solid color-mix(in oklch, var(--gold) 35%, transparent)',fontSize:11,padding:'5px 10px',borderRadius:8,cursor:'pointer',fontWeight:500}} onClick={()=>{const inp=document.createElement('input');inp.type='file';inp.accept='image/*,.pdf,.xlsx,.xls,.csv,.doc,.docx';inp.multiple=true;inp.onchange=e=>{if(e.target.files.length)handleDashDrop(e.target.files);};inp.click();}}>📄 Upload</button>
         <div style={{flex:1}} />
         {policies.length >= 2 && (
           <button onClick={()=>setShowReview(true)}
@@ -30601,7 +30599,7 @@ function Dashboard() {
       </div>
 
       {/* Compact policy summary for advisor scan. */}
-      <div className="card" style={{marginBottom:14,padding:14,borderRadius:8,border:'1px solid rgba(212,169,106,.22)',background:'linear-gradient(180deg,rgba(212,169,106,.055),rgba(17,24,39,.94))'}}>
+      <div className="card" style={{marginBottom:14,padding:14,borderRadius:8,border:'1px solid color-mix(in oklch, var(--gold) 31%, transparent)',background:'linear-gradient(180deg,color-mix(in oklch, var(--gold) 8%, transparent),rgba(17,24,39,.94))'}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:12,flexWrap:'wrap',marginBottom:12}}>
           <div>
             <h3 style={{fontSize:14,fontWeight:900,margin:0,color:'var(--text)'}}>Policy Summary</h3>
@@ -30658,12 +30656,12 @@ function Dashboard() {
               </div>
             )}
           </div>
-          <div style={{background:'rgba(212,169,106,.055)',border:'1px solid rgba(212,169,106,.16)',borderRadius:8,padding:10}}>
+          <div style={{background:'color-mix(in oklch, var(--gold) 8%, transparent)',border:'1px solid color-mix(in oklch, var(--gold) 22%, transparent)',borderRadius:8,padding:10}}>
             <div style={{fontSize:9,color:'var(--gold)',fontWeight:900,textTransform:'uppercase',letterSpacing:'.45px',marginBottom:7}}>3 advisor actions</div>
             <div style={{display:'grid',gap:6}}>
               {policySummary.actions.map((action, i) => (
                 <div key={action} style={{display:'grid',gridTemplateColumns:'20px 1fr',gap:7,alignItems:'start',fontSize:11,color:'var(--text2)'}}>
-                  <span style={{width:18,height:18,borderRadius:'50%',display:'inline-flex',alignItems:'center',justifyContent:'center',background:'rgba(212,169,106,.12)',border:'1px solid rgba(212,169,106,.22)',color:'var(--gold)',fontSize:9,fontWeight:900}}>{i+1}</span>
+                  <span style={{width:18,height:18,borderRadius:'50%',display:'inline-flex',alignItems:'center',justifyContent:'center',background:'var(--gold-dim)',border:'1px solid color-mix(in oklch, var(--gold) 31%, transparent)',color:'var(--gold)',fontSize:9,fontWeight:900}}>{i+1}</span>
                   <span style={{lineHeight:1.35}}>{action}</span>
                 </div>
               ))}
@@ -30678,7 +30676,7 @@ function Dashboard() {
           red: { color:'var(--red)', bg:'rgba(239,83,80,.10)', border:'rgba(239,83,80,.28)' },
           blue: { color:'var(--blue2)', bg:'rgba(91,143,217,.10)', border:'rgba(91,143,217,.28)' },
           teal: { color:'var(--teal)', bg:'rgba(91,168,160,.10)', border:'rgba(91,168,160,.28)' },
-          gold: { color:'var(--gold)', bg:'rgba(212,169,106,.10)', border:'rgba(212,169,106,.28)' },
+          gold: { color:'var(--gold)', bg:'color-mix(in oklch, var(--gold) 14%, transparent)', border:'color-mix(in oklch, var(--gold) 39%, transparent)' },
         };
         const kindNames = {
           premium_end:'Premium ends',
@@ -30913,7 +30911,7 @@ function Dashboard() {
                 <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))',gap:8,marginBottom:10}}>
                   {ccys.map(([ccy,d]) => {
                     const premPct = totalSGDPrem > 0 ? Math.round(toSGD(d.premium,ccy)/totalSGDPrem*100) : 0;
-                    const ccyColor = ccy==='SGD'?'#5ba8a0':ccy==='USD'?'#5b8fd9':ccy==='GBP'?'#9d8abf':'#d4a96a';
+                    const ccyColor = ccy==='SGD'?'#5ba8a0':ccy==='USD'?'#5b8fd9':ccy==='GBP'?'#9d8abf':'var(--gold)';
                     return (
                       <div key={ccy} style={{background:'var(--bg3)',borderRadius:8,padding:10,borderTop:`3px solid ${ccyColor}`}}>
                         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
@@ -30948,7 +30946,7 @@ function Dashboard() {
                     )}
                   </div>
                 </div>
-                {usdPct > 60 && <div style={{marginTop:8,padding:'6px 10px',background:'rgba(212,169,106,.06)',borderRadius:6,fontSize:10,color:'var(--gold)'}}>⚠ {usdPct}% of premiums are USD-denominated but income is earned in SGD — consider FX hedging or rebalancing</div>}
+                {usdPct > 60 && <div style={{marginTop:8,padding:'6px 10px',background:'color-mix(in oklch, var(--gold) 9%, transparent)',borderRadius:6,fontSize:10,color:'var(--gold)'}}>⚠ {usdPct}% of premiums are USD-denominated but income is earned in SGD — consider FX hedging or rebalancing</div>}
                 {weightedYield !== null && Object.keys(yieldBreakdown).length > 0 && (
                   <div style={{marginTop:6,fontSize:9,color:'var(--text3)',paddingLeft:12}}>
                     Breakdown: {Object.entries(yieldBreakdown).map(([k,v]) => k+' '+(v.sum/v.wt).toFixed(2)+'%').join(' · ')}
@@ -31090,7 +31088,7 @@ function Dashboard() {
                 </tr></thead>
                 <tbody>
                   {cvTimeline.filter(r => r.totalCV > 0 || r.income > 0 || r.maturities > 0).map(r => (
-                    <tr key={r.age} style={{borderTop:'1px solid var(--border)',background:r.age===retAge?'rgba(212,169,106,.08)':''}}>
+                    <tr key={r.age} style={{borderTop:'1px solid var(--border)',background:r.age===retAge?'color-mix(in oklch, var(--gold) 12%, transparent)':''}}>
                       <td style={{padding:'4px 8px',fontWeight:r.age===retAge?700:400}}>{r.age}{r.age===retAge?' ★':''}</td>
                       <td style={{padding:'4px 8px',textAlign:'right'}}>{r.totalCV>0?fmt(r.totalCV):'-'}</td>
                       <td style={{padding:'4px 8px',textAlign:'right',color:r.income>0?'var(--green2)':'var(--text3)'}}>{r.income>0?fmt(r.income):'-'}</td>
@@ -31187,7 +31185,7 @@ function Dashboard() {
         const metricRows = [
           { key:'death', label:'Death / TPD SA', color:'#5b8fd9', bg:'rgba(91,143,217,.06)' },
           { key:'ci', label:'Critical Illness SA', color:'#b91c1c', bg:'rgba(185,28,28,.06)' },
-          { key:'cv', label:'Cash Value', color:'#d4a96a', bg:'rgba(212,169,106,.06)' },
+          { key:'cv', label:'Cash Value', color:'var(--gold)', bg:'color-mix(in oklch, var(--gold) 9%, transparent)' },
           { key:'income', label:'Passive Income / mo', color:'#5ba8a0', bg:'rgba(91,168,160,.06)' },
         ];
 
@@ -31198,10 +31196,10 @@ function Dashboard() {
         });
 
         return (
-          <div className="card" style={{marginBottom:16,background:'linear-gradient(135deg,var(--bg2),rgba(212,169,106,.05))',border:'1px solid rgba(212,169,106,.25)'}}>
+          <div className="card" style={{marginBottom:16,background:'linear-gradient(135deg,var(--bg2),color-mix(in oklch, var(--gold) 7%, transparent))',border:'1px solid color-mix(in oklch, var(--gold) 35%, transparent)'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4,flexWrap:'wrap',gap:6}}>
               <h3 style={{fontSize:13,fontWeight:600,color:'var(--gold)'}}>📈 Life-Stage Projection</h3>
-              <span style={{fontSize:10,padding:'3px 10px',borderRadius:12,background:'rgba(212,169,106,.12)',color:'var(--gold)',fontWeight:500}}>Age {currentAge} → {maxAge}</span>
+              <span style={{fontSize:10,padding:'3px 10px',borderRadius:12,background:'var(--gold-dim)',color:'var(--gold)',fontWeight:500}}>Age {currentAge} → {maxAge}</span>
             </div>
             <div style={{fontSize:10,color:'var(--text3)',marginBottom:10,lineHeight:1.5}}>
               How your portfolio evolves with you. Each column is your total coverage / cash value / passive income at that age, aggregated across all in-force policies. Current age highlighted.
@@ -31220,7 +31218,7 @@ function Dashboard() {
                           fontSize:isNow?13:12,
                           fontWeight:isNow?700:600,
                           color:isNow?'var(--gold)':'var(--text2)',
-                          background:isNow?'rgba(212,169,106,.12)':'var(--bg3)',
+                          background:isNow?'var(--gold-dim)':'var(--bg3)',
                           borderLeft:isNow?'2px solid var(--gold)':'1px solid var(--border)',
                           whiteSpace:'nowrap'
                         }}>
@@ -31254,7 +31252,7 @@ function Dashboard() {
                               fontSize:12,
                               fontWeight:isNow?700:500,
                               color:val > 0 ? (isNow?'var(--gold)':'var(--text2)') : 'var(--text3)',
-                              background:isNow?'rgba(212,169,106,.08)':'transparent',
+                              background:isNow?'color-mix(in oklch, var(--gold) 12%, transparent)':'transparent',
                               borderLeft:isNow?'2px solid var(--gold)':'1px solid var(--border)',
                               whiteSpace:'nowrap'
                             }}>
@@ -31282,15 +31280,15 @@ function Dashboard() {
       <PremiumCashflowChart policies={policies} age={age} retAge={retAge} />
 
       {policies.length > 0 && (
-        <div className="card" style={{marginBottom:16,padding:14,borderRadius:8,border:'1px solid rgba(212,169,106,.22)',background:'linear-gradient(180deg,rgba(212,169,106,.05),rgba(17,24,39,.96))'}}>
+        <div className="card" style={{marginBottom:16,padding:14,borderRadius:8,border:'1px solid color-mix(in oklch, var(--gold) 31%, transparent)',background:'linear-gradient(180deg,color-mix(in oklch, var(--gold) 7%, transparent),rgba(17,24,39,.96))'}}>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:10,marginBottom:12,flexWrap:'wrap'}}>
             <div>
               <h3 style={{fontSize:13,fontWeight:800,margin:0}}>Policy Swimlane</h3>
               <div style={{fontSize:10,color:'var(--text3)',marginTop:3}}>Aligned by client age: coverage duration, premium-paying years, maturity, and payout windows.</div>
             </div>
             <div style={{display:'flex',gap:8,flexWrap:'wrap',justifyContent:'flex-end'}}>
-              <span style={{display:'inline-flex',alignItems:'center',gap:5,fontSize:9,color:'var(--text3)'}}><span style={{width:22,height:8,borderRadius:4,background:'rgba(212,169,106,.75)',display:'inline-block'}} />Premium</span>
-              <span style={{display:'inline-flex',alignItems:'center',gap:5,fontSize:9,color:'var(--text3)'}}><span style={{width:22,height:8,borderRadius:4,background:'rgba(212,169,106,.18)',display:'inline-block'}} />Coverage</span>
+              <span style={{display:'inline-flex',alignItems:'center',gap:5,fontSize:9,color:'var(--text3)'}}><span style={{width:22,height:8,borderRadius:4,background:'color-mix(in oklch, var(--gold) 100%, transparent)',display:'inline-block'}} />Premium</span>
+              <span style={{display:'inline-flex',alignItems:'center',gap:5,fontSize:9,color:'var(--text3)'}}><span style={{width:22,height:8,borderRadius:4,background:'color-mix(in oklch, var(--gold) 25%, transparent)',display:'inline-block'}} />Coverage</span>
               <span style={{display:'inline-flex',alignItems:'center',gap:5,fontSize:9,color:'var(--gold)'}}><span style={{width:2,height:10,background:'var(--gold)',display:'inline-block'}} />Retirement</span>
             </div>
           </div>
@@ -31334,7 +31332,7 @@ function Dashboard() {
               const gridTemplate = labelWidth + 'px ' + laneWidth + 'px';
               const markerDepth = -Math.max(80, timelinePolicies.length * 38 + 44);
               const axisAges = Array.from({ length: Math.floor(range / 5) + 2 }, (_, i) => minAge + i * 5).filter(a => a <= maxAge);
-              const catColors = {protection:'#5b8fd9',savings:'#5ba8a0',health:'#c97b9a',investment:'#9d8abf',retirement:'#d4a96a',maternity:'#c97b9a',cash_investments:'#5ba8a0',other_assets:'#9aa4b2'};
+              const catColors = {protection:'#5b8fd9',savings:'#5ba8a0',health:'#c97b9a',investment:'#9d8abf',retirement:'var(--gold)',maternity:'#c97b9a',cash_investments:'#5ba8a0',other_assets:'#9aa4b2'};
               const ageToPx = (targetAge) => Math.max(0, (targetAge - minAge) * pxPerYear);
               const guideLines = axisAges.map(a => (
                 <div key={'g'+a} style={{position:'absolute',left:ageToPx(a),top:0,bottom:0,width:1,background:a === age ? 'rgba(255,255,255,.42)' : 'rgba(255,255,255,.055)'}} />
@@ -31349,8 +31347,8 @@ function Dashboard() {
                           {a}{a === age ? ' now' : ''}
                         </div>
                       ))}
-                      <div style={{position:'absolute',left:ageToPx(retAge),top:1,bottom:markerDepth,width:1,background:'rgba(212,169,106,.45)',zIndex:0}} />
-                      <div style={{position:'absolute',left:ageToPx(retAge),top:0,transform:'translateX(-50%)',fontSize:8,color:'var(--gold)',fontWeight:800,background:'var(--bg2)',padding:'1px 4px',borderRadius:4,border:'1px solid rgba(212,169,106,.24)'}}>Ret {retAge}</div>
+                      <div style={{position:'absolute',left:ageToPx(retAge),top:1,bottom:markerDepth,width:1,background:'color-mix(in oklch, var(--gold) 63%, transparent)',zIndex:0}} />
+                      <div style={{position:'absolute',left:ageToPx(retAge),top:0,transform:'translateX(-50%)',fontSize:8,color:'var(--gold)',fontWeight:800,background:'var(--bg2)',padding:'1px 4px',borderRadius:4,border:'1px solid color-mix(in oklch, var(--gold) 34%, transparent)'}}>Ret {retAge}</div>
                     </div>
                   </div>
                   <div>
@@ -31376,7 +31374,7 @@ function Dashboard() {
                           <div style={{position:'relative',height:38}}>
                             {guideLines}
                             <div style={{position:'absolute',left:policyLeft,top:12,width:policyWidth,height:14,borderRadius:7,background:color,opacity:.18,border:'1px solid rgba(255,255,255,.08)'}} />
-                            {showPremiumOverlay && <div style={{position:'absolute',left:policyLeft,top:12,width:premWidth,height:14,borderRadius:7,background:'linear-gradient(90deg,' + color + ',rgba(212,169,106,.78))',opacity:.82}} />}
+                            {showPremiumOverlay && <div style={{position:'absolute',left:policyLeft,top:12,width:premWidth,height:14,borderRadius:7,background:'linear-gradient(90deg,' + color + ',color-mix(in oklch, var(--gold) 100%, transparent))',opacity:.82}} />}
                             {age >= row.startAge && age <= row.policyEnd && <div style={{position:'absolute',left:ageToPx(age),top:7,width:2,height:24,background:'rgba(255,255,255,.78)',borderRadius:2,boxShadow:'0 0 0 2px rgba(11,15,26,.7)'}} />}
                             {maturityPx !== null && <div title="Maturity / end" style={{position:'absolute',left:maturityPx-5,top:9,width:10,height:10,transform:'rotate(45deg)',background:'var(--gold)',border:'1px solid rgba(255,255,255,.45)',borderRadius:2}} />}
                             {payoutStart !== null && <div title="Payout starts" style={{position:'absolute',left:payoutStart-4,top:10,width:8,height:18,borderRadius:4,background:'var(--blue2)',boxShadow:'0 0 0 2px rgba(91,143,217,.18)'}} />}
@@ -31412,7 +31410,7 @@ function Dashboard() {
               }));
               const range = maxAge - minAge;
               const pxPerYear = Math.max(8, Math.min(16, 800/range));
-              const catColors = {protection:'#5b8fd9',savings:'#5ba8a0',health:'#c97b9a',investment:'#9d8abf',retirement:'#d4a96a',maternity:'#c97b9a',cash_investments:'#5ba8a0'};
+              const catColors = {protection:'#5b8fd9',savings:'#5ba8a0',health:'#c97b9a',investment:'#9d8abf',retirement:'var(--gold)',maternity:'#c97b9a',cash_investments:'#5ba8a0'};
               return (
                 <div style={{position:'relative',paddingTop:20,paddingBottom:8}}>
                   {/* Age axis */}
@@ -31423,7 +31421,7 @@ function Dashboard() {
                       </div>
                     ))}
                     {/* Retirement marker */}
-                    <div style={{position:'absolute',left:(retAge-minAge)*pxPerYear,top:-4,bottom:-200,width:1,background:'rgba(212,169,106,.3)',zIndex:0}} />
+                    <div style={{position:'absolute',left:(retAge-minAge)*pxPerYear,top:-4,bottom:-200,width:1,background:'color-mix(in oklch, var(--gold) 42%, transparent)',zIndex:0}} />
                     <div style={{position:'absolute',left:(retAge-minAge)*pxPerYear,top:-16,fontSize:8,color:'var(--gold)',transform:'translateX(-50%)',fontWeight:600}}>Ret {retAge}</div>
                   </div>
                   {/* Policy bars */}
@@ -31535,7 +31533,7 @@ function DerivedValuesPanel({ policies }) {
   return (
     <div style={{marginTop:24}}>
       <div onClick={() => setOpen(!open)}
-        style={{cursor:'pointer',padding:'10px 14px',background:'rgba(201,169,110,.05)',border:'1px solid rgba(201,169,110,.18)',borderLeft:'3px solid rgba(201,169,110,.5)',borderRadius:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        style={{cursor:'pointer',padding:'10px 14px',background:'color-mix(in oklch, var(--gold) 7%, transparent)',border:'1px solid color-mix(in oklch, var(--gold) 25%, transparent)',borderLeft:'3px solid color-mix(in oklch, var(--gold) 70%, transparent)',borderRadius:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
         <div>
           <span style={{fontSize:12,fontWeight:700,color:'#c9a96e'}}>🧮 Per-policy derived values</span>
           <span style={{fontSize:10,color:'var(--text3)',marginLeft:8}}>{totalDerived} value{totalDerived === 1 ? '' : 's'} across {derivedSnapshot.length} polic{derivedSnapshot.length === 1 ? 'y' : 'ies'} — diagnostic</span>
@@ -31543,7 +31541,7 @@ function DerivedValuesPanel({ policies }) {
         <span style={{fontSize:11,color:'var(--text3)'}}>{open ? '▾' : '▸'}</span>
       </div>
       {open && (
-        <div className="card" style={{borderLeft:'2px solid rgba(201,169,110,.3)',marginTop:6}}>
+        <div className="card" style={{borderLeft:'2px solid color-mix(in oklch, var(--gold) 42%, transparent)',marginTop:6}}>
           {derivedSnapshot.map(d => (
             <DerivedPolicyRow key={d.id} data={d} overrides={{}} setOverrides={() => {}} setDirty={() => {}} />
           ))}
@@ -31685,7 +31683,7 @@ function KnownsAssumptions() {
   // Client facts live on the My Client tab — present them there if needed.
   if (shareMode) {
     return (
-      <div style={{position:'fixed',inset:0,zIndex:9999,background:'#0b0f1a',color:'#e8e8e8',overflow:'auto',padding:20}}>
+      <div style={{position:'fixed',inset:0,zIndex:9999,background:'#fff',color:'var(--text)',overflow:'auto',padding:20}}>
         <div style={{maxWidth:720,margin:'0 auto'}}>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
             <div>
@@ -31694,7 +31692,7 @@ function KnownsAssumptions() {
             </div>
             <button onClick={() => setShareMode(false)} style={{background:'var(--bg3)',color:'var(--text2)',border:'1px solid var(--border)',padding:'8px 16px',borderRadius:8,cursor:'pointer',fontSize:12}}>✕ Exit</button>
           </div>
-          <div style={{background:'var(--bg2)',borderRadius:12,padding:20,border:'1px solid rgba(201,169,110,.2)'}}>
+          <div style={{background:'var(--bg2)',borderRadius:12,padding:20,border:'1px solid color-mix(in oklch, var(--gold) 28%, transparent)'}}>
             <h3 style={{fontSize:16,fontWeight:700,color:'#c9a96e',marginBottom:12}}>🧮 Global assumptions</h3>
             {ASSUMPTION_SLIDERS.map(s => (
               <div key={s.key} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid var(--border)',fontSize:15}}>
@@ -31720,12 +31718,12 @@ function KnownsAssumptions() {
           <p style={{fontSize:11,color:'var(--text3)',marginTop:2}}>Adjust any assumption to see the impact across the portfolio. Client facts live on the <strong>My Client</strong> tab.</p>
         </div>
         <div style={{display:'flex',gap:6,alignItems:'center'}}>
-          <button onClick={() => setShareMode(true)} style={{background:'var(--bg2)',color:'var(--gold)',border:'1px solid rgba(201,169,110,.25)',padding:'6px 14px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>📤 Show client</button>
+          <button onClick={() => setShareMode(true)} style={{background:'var(--bg2)',color:'var(--gold)',border:'1px solid color-mix(in oklch, var(--gold) 35%, transparent)',padding:'6px 14px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer'}}>📤 Show client</button>
         </div>
       </div>
 
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(320px,1fr))',gap:16}}>
-        <div className="card" style={{borderLeft:'2px solid rgba(201,169,110,.3)'}}>
+        <div className="card" style={{borderLeft:'2px solid color-mix(in oklch, var(--gold) 42%, transparent)'}}>
           <h3 style={{fontSize:13,fontWeight:700,color:'#c9a96e',marginBottom:8}}>🧮 Global assumptions</h3>
           {ASSUMPTION_SLIDERS.map(s => (
             <div key={s.key} style={{marginBottom:8}}>
@@ -31746,7 +31744,7 @@ function KnownsAssumptions() {
           <div style={{fontSize:9,color:'var(--text3)',marginTop:8,fontStyle:'italic'}}>Saved automatically to this client's profile.</div>
         </div>
 
-        <div className="card" style={{borderLeft:'2px solid rgba(201,169,110,.3)'}}>
+        <div className="card" style={{borderLeft:'2px solid color-mix(in oklch, var(--gold) 42%, transparent)'}}>
           <h3 style={{fontSize:13,fontWeight:700,color:'#c9a96e',marginBottom:8}}>🧮 Per-policy derived values</h3>
           {derivedSnapshot.length === 0 ? (
             <div style={{fontSize:11,color:'var(--text3)'}}>No derived values yet. Run AI extraction to populate.</div>
@@ -31829,7 +31827,7 @@ function DerivedPolicyRow({ data, overrides, setOverrides, setDirty }) {
             </div>
             {f.meta?.caption && <div style={{fontSize:9,color:'var(--text3)',fontStyle:'italic',marginTop:1}}>{f.meta.rule}</div>}
             {showWhy[f.field] && f.meta?.caption && (
-              <div style={{fontSize:10,color:'var(--text3)',background:'rgba(201,169,110,.04)',padding:'4px 6px',borderRadius:4,marginTop:4}}>
+              <div style={{fontSize:10,color:'var(--text3)',background:'color-mix(in oklch, var(--gold) 6%, transparent)',padding:'4px 6px',borderRadius:4,marginTop:4}}>
                 {f.meta.caption}
                 {f.meta.inputs && <div style={{marginTop:2,fontSize:9}}>Inputs: {Object.entries(f.meta.inputs).map(([k,v]) => k+'='+v).join(', ')}</div>}
               </div>
@@ -31965,7 +31963,7 @@ function SnapGoCapture({ onDone }) {
       <canvas ref={canvasRef} style={{display:'none'}} />
 
       {/* Flash overlay */}
-      {flash && <div style={{position:'absolute',inset:0,background:'rgba(201,169,110,.3)',pointerEvents:'none',transition:'opacity 80ms'}} />}
+      {flash && <div style={{position:'absolute',inset:0,background:'color-mix(in oklch, var(--gold) 42%, transparent)',pointerEvents:'none',transition:'opacity 80ms'}} />}
 
       {/* Top bar: counter + close */}
       <div style={{position:'absolute',top:0,left:0,right:0,padding:'12px 16px',display:'flex',justifyContent:'space-between',alignItems:'center',background:'linear-gradient(180deg,rgba(0,0,0,.6) 0%,transparent 100%)'}}>
@@ -31984,7 +31982,7 @@ function SnapGoCapture({ onDone }) {
 
         {/* Capture button */}
         <button onClick={captureFrame}
-          style={{width:64,height:64,borderRadius:'50%',border:'4px solid #fff',background:'rgba(201,169,110,.3)',cursor:'pointer',flexShrink:0,transition:'transform .1s',backdropFilter:'blur(4px)'}}
+          style={{width:64,height:64,borderRadius:'50%',border:'4px solid #fff',background:'color-mix(in oklch, var(--gold) 42%, transparent)',cursor:'pointer',flexShrink:0,transition:'transform .1s',backdropFilter:'blur(4px)'}}
           onMouseDown={e => e.target.style.transform = 'scale(0.9)'}
           onMouseUp={e => e.target.style.transform = 'scale(1)'}
           onTouchStart={e => e.target.style.transform = 'scale(0.9)'}
@@ -32114,7 +32112,7 @@ function GettingStartedChecklist({ compact = false }) {
   // First incomplete step is "active" — gets the prominent styling and CTA
   const activeStep = !hasProfile ? 1 : !hasPolicies ? 2 : 3;
 
-  const GOLD = '#d4a96a';
+  const GOLD = 'var(--gold)';
   const GREEN = '#5ba8a0';
 
   // Compute specific missing fields for step 1 so we can surface them as
@@ -32177,8 +32175,8 @@ function GettingStartedChecklist({ compact = false }) {
 
   return (
     <div style={{
-      background: 'linear-gradient(135deg, rgba(212,169,106,0.08), rgba(212,169,106,0.02))',
-      border: `1px solid rgba(212,169,106,0.28)`,
+      background: 'linear-gradient(135deg, color-mix(in oklch, var(--gold) 11%, transparent), color-mix(in oklch, var(--gold) 4%, transparent))',
+      border: `1px solid color-mix(in oklch, var(--gold) 39%, transparent)`,
       borderRadius: 14,
       padding: compact ? '14px 16px' : '18px 20px',
       marginBottom: compact ? 14 : 20,
@@ -32205,8 +32203,8 @@ function GettingStartedChecklist({ compact = false }) {
           <div key={step.n} style={{
             padding: '10px 12px',
             marginBottom: i < steps.length - 1 ? 6 : 0,
-            background: isActive ? 'rgba(212,169,106,0.08)' : 'transparent',
-            border: isActive ? `1px solid rgba(212,169,106,0.32)` : `1px solid transparent`,
+            background: isActive ? 'color-mix(in oklch, var(--gold) 11%, transparent)' : 'transparent',
+            border: isActive ? `1px solid color-mix(in oklch, var(--gold) 45%, transparent)` : `1px solid transparent`,
             borderRadius: 8,
             opacity: step.locked ? 0.5 : 1,
             transition: 'all 0.2s',
@@ -32219,7 +32217,7 @@ function GettingStartedChecklist({ compact = false }) {
                 width:26, height:26, borderRadius:'50%',
                 display:'flex', alignItems:'center', justifyContent:'center',
                 background: step.done ? GREEN : isActive ? GOLD : 'var(--bg3)',
-                color: step.done || isActive ? '#0b0f1a' : 'var(--text3)',
+                color: step.done || isActive ? '#fff' : 'var(--text3)',
                 fontSize: step.done ? 14 : 12,
                 fontWeight: 700,
                 flexShrink: 0,
@@ -32270,8 +32268,8 @@ function GettingStartedChecklist({ compact = false }) {
               <div style={{display:'flex', alignItems:'center', gap:10, marginTop:10, marginLeft:38, flexWrap:'wrap'}}>
                 {step.action && (
                   <button onClick={step.action} style={{
-                    background: `linear-gradient(135deg, ${GOLD}, #b8935a)`,
-                    color:'#0b0f1a',
+                    background: `linear-gradient(135deg, ${GOLD}, var(--gold3))`,
+                    color:'#fff',
                     border:'none',
                     padding:'7px 14px',
                     borderRadius:8,
@@ -32485,15 +32483,15 @@ const DERIVED_FIELD_STYLE = {
     display: 'inline-flex', alignItems: 'center', gap: 3,
     fontSize: 9, color: '#c9a96e', fontWeight: 600, cursor: 'help',
     padding: '1px 5px', borderRadius: 4,
-    background: 'rgba(201,169,110,.08)',
+    background: 'color-mix(in oklch, var(--gold) 11%, transparent)',
   },
   caption: {
-    fontSize: 9, fontStyle: 'italic', color: 'rgba(201,169,110,.7)',
+    fontSize: 9, fontStyle: 'italic', color: 'color-mix(in oklch, var(--gold) 98%, transparent)',
     marginTop: 2, lineHeight: 1.3,
   },
   tooltip: {
     position: 'absolute', zIndex: 999, bottom: '100%', left: 0,
-    background: '#1a2332', border: '1px solid rgba(201,169,110,.3)',
+    background: 'var(--bg2)', border: '1px solid color-mix(in oklch, var(--gold) 42%, transparent)',
     borderRadius: 6, padding: '8px 10px', fontSize: 10,
     color: '#d4d4d4', maxWidth: 300, whiteSpace: 'normal',
     boxShadow: '0 4px 12px rgba(0,0,0,.4)',
@@ -32525,7 +32523,7 @@ function DerivedFieldBadge({ derivedMeta, fieldLabel }) {
               k + '=' + (typeof v === 'number' ? v.toLocaleString() : String(v))
             ).join(', ')}</div>
           )}
-          {derivedMeta.caption && <div style={{fontStyle:'italic',color:'rgba(201,169,110,.8)',marginTop:4}}>{derivedMeta.caption}</div>}
+          {derivedMeta.caption && <div style={{fontStyle:'italic',color:'color-mix(in oklch, var(--gold) 100%, transparent)',marginTop:4}}>{derivedMeta.caption}</div>}
         </div>
       )}
     </span>
@@ -33107,7 +33105,7 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
 
         {/* Live extraction progress */}
         {scanProgress && scanProgress.pctComplete < 100 && (
-          <div style={{padding:'8px 16px',background:'rgba(212,169,106,.06)',borderBottom:'1px solid var(--border)'}}>
+          <div style={{padding:'8px 16px',background:'color-mix(in oklch, var(--gold) 9%, transparent)',borderBottom:'1px solid var(--border)'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
               <span style={{fontSize:10,fontWeight:600,color:'var(--gold)'}}>✨ Still extracting...</span>
               <span style={{fontSize:9,color:'var(--text3)'}}>Batch {scanProgress.batch}/{scanProgress.totalBatches}{scanProgress.eta ? ' · '+scanProgress.eta : ''}</span>
@@ -33124,7 +33122,7 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
           <div style={{display:'flex',gap:3,marginBottom:10,overflowX:'auto',paddingBottom:4}}>
             <button onClick={()=>setActiveTab('all')}
               style={{padding:'4px 10px',fontSize:10,borderRadius:6,border:'1px solid '+(activeTab==='all'?'var(--gold)':'var(--border)'),
-                background:activeTab==='all'?'rgba(212,169,106,.12)':'var(--bg2)',color:activeTab==='all'?'var(--gold)':'var(--text3)',cursor:'pointer',fontWeight:activeTab==='all'?700:400,whiteSpace:'nowrap'}}>
+                background:activeTab==='all'?'var(--gold-dim)':'var(--bg2)',color:activeTab==='all'?'var(--gold)':'var(--text3)',cursor:'pointer',fontWeight:activeTab==='all'?700:400,whiteSpace:'nowrap'}}>
               All ({items.length})
             </button>
             {batches.map(b => {
@@ -33231,7 +33229,7 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
                           ) : hasMatch ? (
                             <div style={{display:'inline-flex',gap:5}}>
                               <button onClick={()=>markMergeFromTable(it._idx)}
-                                style={{fontSize:10,padding:'4px 8px',borderRadius:6,border:'1px solid rgba(212,169,106,.28)',background:it._mergeIntoExisting?'rgba(91,168,160,.15)':'rgba(212,169,106,.10)',color:it._mergeIntoExisting?'var(--teal)':'var(--gold)',fontWeight:800,cursor:'pointer'}}>
+                                style={{fontSize:10,padding:'4px 8px',borderRadius:6,border:'1px solid color-mix(in oklch, var(--gold) 39%, transparent)',background:it._mergeIntoExisting?'rgba(91,168,160,.15)':'color-mix(in oklch, var(--gold) 14%, transparent)',color:it._mergeIntoExisting?'var(--teal)':'var(--gold)',fontWeight:800,cursor:'pointer'}}>
                                 {it._mergeIntoExisting ? 'Will merge' : 'Merge'}
                               </button>
                               <button onClick={()=>toggleSelect(it._idx)}
@@ -33241,7 +33239,7 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
                             </div>
                           ) : needsReview ? (
                             <button onClick={()=>toggleExpanded(it._idx)}
-                              style={{fontSize:10,padding:'4px 8px',borderRadius:6,border:'1px solid rgba(212,169,106,.28)',background:'rgba(212,169,106,.10)',color:'var(--gold)',fontWeight:800,cursor:'pointer'}}>
+                              style={{fontSize:10,padding:'4px 8px',borderRadius:6,border:'1px solid color-mix(in oklch, var(--gold) 39%, transparent)',background:'color-mix(in oklch, var(--gold) 14%, transparent)',color:'var(--gold)',fontWeight:800,cursor:'pointer'}}>
                               Needs review
                             </button>
                           ) : (
@@ -33260,7 +33258,7 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
           </div>
           {/* rc2e.48: read-only stats (Decisions / Trusted / Owners) inside disclosure */}
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(120px,1fr))',gap:8,margin:'0 0 10px'}}>
-            <div style={{background:'rgba(212,169,106,.07)',border:'1px solid rgba(212,169,106,.18)',borderRadius:9,padding:9}}>
+            <div style={{background:'color-mix(in oklch, var(--gold) 10%, transparent)',border:'1px solid color-mix(in oklch, var(--gold) 25%, transparent)',borderRadius:9,padding:9}}>
               <div style={{fontSize:9,color:'var(--text3)',fontWeight:800,textTransform:'uppercase',letterSpacing:'.5px'}}>Decisions</div>
               <div style={{fontSize:18,color:needsReviewCount ? 'var(--gold)' : 'var(--teal)',fontWeight:800,marginTop:3}}>{needsReviewCount}</div>
             </div>
@@ -33276,7 +33274,7 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
           {/* rc2e.48: advisor review queue + extraction ledger inside disclosure */}
           {(advisorReviewQueue.length > 0 || (extractionLedger || []).length > 0) && (
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:8,margin:'0 0 10px'}}>
-              <div style={{background:'rgba(212,169,106,.045)',border:'1px solid rgba(212,169,106,.14)',borderRadius:9,padding:9,minWidth:0}}>
+              <div style={{background:'color-mix(in oklch, var(--gold) 6%, transparent)',border:'1px solid color-mix(in oklch, var(--gold) 20%, transparent)',borderRadius:9,padding:9,minWidth:0}}>
                 <div style={{fontSize:9,fontWeight:800,color:'var(--gold)',textTransform:'uppercase',letterSpacing:'.35px',marginBottom:6}}>Advisor review queue</div>
                 {advisorReviewQueue.length === 0 ? (
                   <div style={{fontSize:10,color:'var(--teal)'}}>No conflicts or low-confidence fields left.</div>
@@ -33357,7 +33355,7 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
 
           {/* ── DUPLICATE WARNINGS ── */}
           {items.filter(it=>it._dupOf).length > 0 && (
-            <div style={{background:'rgba(212,169,106,.06)',border:'1px solid rgba(212,169,106,.15)',borderRadius:8,padding:8,marginBottom:10}}>
+            <div style={{background:'color-mix(in oklch, var(--gold) 9%, transparent)',border:'1px solid color-mix(in oklch, var(--gold) 21%, transparent)',borderRadius:8,padding:8,marginBottom:10}}>
               <div style={{fontSize:10,fontWeight:700,color:'var(--gold)'}}>🔄 Possible duplicates detected — deselected automatically. Re-check to import if needed.</div>
             </div>
           )}
@@ -33455,7 +33453,7 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
                   opacity: item._selected ? 1 : .4
                 }}>
                   {showOwnerLabels && ownerLabel && (
-                    <div style={{fontSize:10,fontWeight:700,color:'var(--gold)',background:'rgba(212,169,106,.08)',border:'1px solid rgba(212,169,106,.18)',borderRadius:6,padding:'5px 8px',marginBottom:8}}>
+                    <div style={{fontSize:10,fontWeight:700,color:'var(--gold)',background:'color-mix(in oklch, var(--gold) 12%, transparent)',border:'1px solid color-mix(in oklch, var(--gold) 25%, transparent)',borderRadius:6,padding:'5px 8px',marginBottom:8}}>
                       {ownerLabel}
                     </div>
                   )}
@@ -33492,7 +33490,7 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
                           Trusted
                         </span>
                       ) : (
-                        <span style={{fontSize:9,fontWeight:700,color:'var(--gold)',padding:'2px 7px',borderRadius:4,background:'rgba(212,169,106,.12)',whiteSpace:'nowrap'}}>
+                        <span style={{fontSize:9,fontWeight:700,color:'var(--gold)',padding:'2px 7px',borderRadius:4,background:'var(--gold-dim)',whiteSpace:'nowrap'}}>
                           {verifiable.length} TO CHECK
                         </span>
                       )}
@@ -33533,9 +33531,9 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
                       const c = kind === 'gate' ? 'var(--red)' : kind === 'review' ? 'var(--gold)' : kind === 'note' ? 'var(--text3)' : 'var(--gold)';
                       return {
                         fontSize: 9, fontWeight: 600, padding: '2px 7px', borderRadius: 4,
-                        background: kind === 'gate' ? 'rgba(239,83,80,.10)' : kind === 'note' ? 'rgba(255,255,255,.04)' : 'rgba(212,169,106,.12)',
+                        background: kind === 'gate' ? 'rgba(239,83,80,.10)' : kind === 'note' ? 'rgba(255,255,255,.04)' : 'var(--gold-dim)',
                         color: c,
-                        border: '1px solid ' + (kind === 'gate' ? 'rgba(239,83,80,.30)' : kind === 'note' ? 'rgba(255,255,255,.10)' : 'rgba(212,169,106,.30)'),
+                        border: '1px solid ' + (kind === 'gate' ? 'rgba(239,83,80,.30)' : kind === 'note' ? 'rgba(255,255,255,.10)' : 'color-mix(in oklch, var(--gold) 42%, transparent)'),
                         cursor: 'pointer',
                         whiteSpace: 'nowrap',
                         maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis'
@@ -33613,7 +33611,7 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
                       .filter(([f]) => !verifiableFields.has(f) && item[f] != null);
                     if (extraDerived.length === 0) return null;
                     return (
-                      <div style={{marginTop:6,padding:'6px 8px',background:'rgba(201,169,110,.04)',borderRadius:6,borderLeft:'2px solid rgba(201,169,110,.25)'}}>
+                      <div style={{marginTop:6,padding:'6px 8px',background:'color-mix(in oklch, var(--gold) 6%, transparent)',borderRadius:6,borderLeft:'2px solid color-mix(in oklch, var(--gold) 35%, transparent)'}}>
                         <div style={{fontSize:9,fontWeight:600,color:'#c9a96e',marginBottom:4}}>🧮 Derived fields</div>
                         {extraDerived.map(([field, meta]) => (
                           <div key={field} style={{display:'flex',gap:6,alignItems:'center',padding:'3px 0'}}>
@@ -33636,8 +33634,8 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
                       {(item.riders||[]).map((rd,ri) => (
                         <span key={ri} onClick={()=>toggleRider(item._idx,ri)} style={{
                           fontSize:8,padding:'2px 5px',borderRadius:4,cursor:'pointer',
-                          background: rd._selected!==false ? ({death:'#5b8fd922',ci:'#c97b9a22',tpd:'#9d8abf22',di:'#5ba8a022',acc_medical:'#5ba8a022',acc_tcm:'#5ba8a022',acc_dismember:'#d4a96a22'}[rd.type]||'var(--bg2)') : 'var(--bg)',
-                          color: rd._selected!==false ? ({death:'#5b8fd9',ci:'#c97b9a',tpd:'#9d8abf',di:'#5ba8a0',acc_medical:'#5ba8a0',acc_tcm:'#5ba8a0',acc_dismember:'#d4a96a'}[rd.type]||'var(--text3)') : 'var(--text3)',
+                          background: rd._selected!==false ? ({death:'#5b8fd922',ci:'#c97b9a22',tpd:'#9d8abf22',di:'#5ba8a022',acc_medical:'#5ba8a022',acc_tcm:'#5ba8a022',acc_dismember:'var(--gold)22'}[rd.type]||'var(--bg2)') : 'var(--bg)',
+                          color: rd._selected!==false ? ({death:'#5b8fd9',ci:'#c97b9a',tpd:'#9d8abf',di:'#5ba8a0',acc_medical:'#5ba8a0',acc_tcm:'#5ba8a0',acc_dismember:'var(--gold)'}[rd.type]||'var(--text3)') : 'var(--text3)',
                           textDecoration: rd._selected===false ? 'line-through' : 'none',
                           whiteSpace:'normal',wordBreak:'break-word',maxWidth:'100%'
                         }}>
@@ -33653,7 +33651,7 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
                     {!allClean && (
                       <button onClick={()=>markVerified(item._idx)} style={{
                         width:'100%',padding:'7px 10px',fontSize:11,fontWeight:600,borderRadius:6,
-                        background:'var(--green2)',color:'#0b0f1a',border:'none',cursor:'pointer'
+                        background:'var(--green2)',color:'#fff',border:'none',cursor:'pointer'
                       }}>
                         ✓ Looks good
                       </button>
@@ -33699,7 +33697,7 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
             return (
             <div key={item._idx} style={{background:item._selected?'var(--bg3)':'var(--bg)',borderRadius:8,padding:10,marginBottom:6,border:'1px solid '+(item._dupOf?'var(--gold3)':item._selected?'var(--border2)':'var(--border)'),opacity:item._selected?1:.4,minWidth:0,maxWidth:'100%',overflow:'hidden'}}>
               {showOwnerLabels && ownerLabel && (
-                <div style={{fontSize:10,fontWeight:700,color:'var(--gold)',background:'rgba(212,169,106,.08)',border:'1px solid rgba(212,169,106,.18)',borderRadius:6,padding:'5px 8px',marginBottom:8}}>
+                <div style={{fontSize:10,fontWeight:700,color:'var(--gold)',background:'color-mix(in oklch, var(--gold) 12%, transparent)',border:'1px solid color-mix(in oklch, var(--gold) 25%, transparent)',borderRadius:6,padding:'5px 8px',marginBottom:8}}>
                   {ownerLabel}
                 </div>
               )}
@@ -33758,14 +33756,14 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
               </div>
               {/* Riders inline */}
               {(item.riders||[]).length > 0 && <div style={{display:'flex',gap:3,flexWrap:'wrap',marginTop:5,minWidth:0,maxWidth:'100%'}}>
-                {(item.riders||[]).map((rd,ri)=><span key={ri} onClick={()=>toggleRider(item._idx,ri)} style={{fontSize:8,padding:'2px 5px',borderRadius:4,cursor:'pointer',background:rd._selected!==false?({death:'#5b8fd922',ci:'#c97b9a22',tpd:'#9d8abf22',di:'#5ba8a022',acc_medical:'#5ba8a022',acc_tcm:'#5ba8a022',acc_dismember:'#d4a96a22'}[rd.type]||'var(--bg2)'):'var(--bg)',color:rd._selected!==false?({death:'#5b8fd9',ci:'#c97b9a',tpd:'#9d8abf',di:'#5ba8a0',acc_medical:'#5ba8a0',acc_tcm:'#5ba8a0',acc_dismember:'#d4a96a'}[rd.type]||'var(--text3)'):'var(--text3)',textDecoration:rd._selected===false?'line-through':'none',whiteSpace:'normal',wordBreak:'break-word',maxWidth:'100%'}}>{rd.riderName||(({death:'Death',tpd:'TPD',ci:'CI',eci:'ECI',di:'DI',accidental:'ADD',acc_medical:'Med',acc_tcm:'TCM',acc_dismember:'Dismem',premium_waiver:'Waiver',other:'Other'})[rd.type]||rd.type)} ${(+rd.sa||0).toLocaleString()}</span>)}
+                {(item.riders||[]).map((rd,ri)=><span key={ri} onClick={()=>toggleRider(item._idx,ri)} style={{fontSize:8,padding:'2px 5px',borderRadius:4,cursor:'pointer',background:rd._selected!==false?({death:'#5b8fd922',ci:'#c97b9a22',tpd:'#9d8abf22',di:'#5ba8a022',acc_medical:'#5ba8a022',acc_tcm:'#5ba8a022',acc_dismember:'var(--gold)22'}[rd.type]||'var(--bg2)'):'var(--bg)',color:rd._selected!==false?({death:'#5b8fd9',ci:'#c97b9a',tpd:'#9d8abf',di:'#5ba8a0',acc_medical:'#5ba8a0',acc_tcm:'#5ba8a0',acc_dismember:'var(--gold)'}[rd.type]||'var(--text3)'):'var(--text3)',textDecoration:rd._selected===false?'line-through':'none',whiteSpace:'normal',wordBreak:'break-word',maxWidth:'100%'}}>{rd.riderName||(({death:'Death',tpd:'TPD',ci:'CI',eci:'ECI',di:'DI',accidental:'ADD',acc_medical:'Med',acc_tcm:'TCM',acc_dismember:'Dismem',premium_waiver:'Waiver',other:'Other'})[rd.type]||rd.type)} ${(+rd.sa||0).toLocaleString()}</span>)}
               </div>}
               {/* Fund classification */}
               {isFundLike(item) && (() => {
                 const dest = item._destination||'standalone';
                 return (<div style={{display:'flex',gap:3,flexWrap:'wrap',marginTop:5}}>
                   {['standalone','cpfoa','cpfsa','later'].map(o=>{const l={standalone:'📊 UT',cpfoa:'🏦 OA',cpfsa:'🏦 SA',later:'🏷 Later'};return <button key={o} onClick={()=>updateField(item._idx,'_destination',o)} style={{padding:'2px 6px',fontSize:8,borderRadius:4,border:'1px solid '+(dest===o?'var(--teal)':'var(--border)'),background:dest===o?'rgba(91,168,160,.1)':'transparent',color:dest===o?'var(--teal)':'var(--text3)',cursor:'pointer'}}>{l[o]}</button>;})}
-                  {ilpPolicies.map(ilp=><button key={ilp.id} onClick={()=>updateField(item._idx,'_destination','ilp_'+ilp.id)} style={{padding:'2px 6px',fontSize:8,borderRadius:4,border:'1px solid '+(dest==='ilp_'+ilp.id?'var(--gold)':'var(--border)'),background:dest==='ilp_'+ilp.id?'rgba(212,169,106,.1)':'transparent',color:dest==='ilp_'+ilp.id?'var(--gold)':'var(--text3)',cursor:'pointer'}}>🔗 {(ilp.productName||'ILP').substring(0,15)}</button>)}
+                  {ilpPolicies.map(ilp=><button key={ilp.id} onClick={()=>updateField(item._idx,'_destination','ilp_'+ilp.id)} style={{padding:'2px 6px',fontSize:8,borderRadius:4,border:'1px solid '+(dest==='ilp_'+ilp.id?'var(--gold)':'var(--border)'),background:dest==='ilp_'+ilp.id?'color-mix(in oklch, var(--gold) 14%, transparent)':'transparent',color:dest==='ilp_'+ilp.id?'var(--gold)':'var(--text3)',cursor:'pointer'}}>🔗 {(ilp.productName||'ILP').substring(0,15)}</button>)}
                 </div>);
               })()}
               {/* Tags */}
@@ -33775,7 +33773,7 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
                   <>
                     <span
                       title={'Matches existing: '+(item._knownPolicyMatch.existingName||'?')+' · '+item._knownPolicyMatch.reason}
-                      style={{fontSize:8,padding:'1px 5px',borderRadius:3,background:'rgba(212,169,106,.12)',color:'var(--gold)'}}
+                      style={{fontSize:8,padding:'1px 5px',borderRadius:3,background:'var(--gold-dim)',color:'var(--gold)'}}
                     >🔗 Same as: {(item._knownPolicyMatch.existingName||'existing').slice(0,22)}{(item._knownPolicyMatch.existingName||'').length>22?'…':''}</span>
                     {/* Auto-merge toggle (#3): when ON, this fresh extraction
                         merges its fields into the existing stored policy on
@@ -33793,7 +33791,7 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
                       title={item._mergeIntoExisting?'ON: will merge fields into the existing policy on import':'OFF: will create a new entry on import'}
                     >{item._mergeIntoExisting?'↪ Merge on import':'↪ Merge?'}</span>
                   </>
-                ) : (item._dupOf && <span style={{fontSize:8,padding:'1px 5px',borderRadius:3,background:'rgba(212,169,106,.1)',color:'var(--gold)'}}>🔄 Duplicate</span>)}
+                ) : (item._dupOf && <span style={{fontSize:8,padding:'1px 5px',borderRadius:3,background:'color-mix(in oklch, var(--gold) 14%, transparent)',color:'var(--gold)'}}>🔄 Duplicate</span>)}
                 {/* Merge-conflict indicator: tappable, opens details panel */}
                 {Array.isArray(item._mergeConflicts) && item._mergeConflicts.length > 0 && (
                   <span
@@ -33813,7 +33811,7 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
                 {Array.isArray(item._lowTrustFields) && item._lowTrustFields.length > 0 && (
                   <span
                     title={'The AI has been wrong before on: '+item._lowTrustFields.map(lt => lt.field+' ('+lt.rejections+'× rejected)').join(', ')+'. Double-check these.'}
-                    style={{fontSize:8,padding:'1px 5px',borderRadius:3,background:'rgba(212,169,106,.08)',color:'var(--gold)',border:'1px dashed rgba(212,169,106,.3)'}}
+                    style={{fontSize:8,padding:'1px 5px',borderRadius:3,background:'color-mix(in oklch, var(--gold) 12%, transparent)',color:'var(--gold)',border:'1px dashed color-mix(in oklch, var(--gold) 42%, transparent)'}}
                   >⚡ Check {item._lowTrustFields.slice(0,3).map(lt=>lt.field).join(', ')}{item._lowTrustFields.length>3?'…':''}</span>
                 )}
                 {item._batch > 1 && <span style={{fontSize:8,padding:'1px 5px',borderRadius:3,background:'rgba(91,168,160,.08)',color:'var(--teal)'}}>Batch {item._batch}</span>}
@@ -33939,8 +33937,8 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
                           style={{
                             flex:'1 1 200px',
                             padding:'8px 10px',
-                            background:'rgba(212,169,106,0.08)',
-                            border:'1px solid rgba(212,169,106,0.35)',
+                            background:'color-mix(in oklch, var(--gold) 11%, transparent)',
+                            border:'1px solid color-mix(in oklch, var(--gold) 49%, transparent)',
                             borderRadius:6,
                             fontSize:11,
                             color:'var(--text)',
@@ -34022,7 +34020,7 @@ function Policies() {
     const isFlashed = flashedPolicyIds.has(pid);
     const isSelected = selected.has(pid);
     return {
-      background: isFlashed ? 'rgba(212,169,106,.22)' : (isSelected ? 'rgba(212,169,106,.06)' : 'transparent'),
+      background: isFlashed ? 'color-mix(in oklch, var(--gold) 31%, transparent)' : (isSelected ? 'color-mix(in oklch, var(--gold) 9%, transparent)' : 'transparent'),
       transition: 'background-color 0.6s ease-out',
       ...(isFlashed ? { boxShadow: 'inset 3px 0 0 0 var(--gold)' } : {}),
     };
@@ -38388,7 +38386,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
             return (
               <div style={{display:'grid',gridTemplateColumns:'repeat(3,minmax(0,1fr))',gap:6,marginTop:10}}>
                 {steps.map(step => (
-                  <div key={step.id} title={step.label} style={{minWidth:0,padding:'6px 6px',borderRadius:6,border:'1px solid '+(step.active?'rgba(212,169,106,.35)':step.done?'rgba(91,168,160,.24)':'rgba(255,255,255,.06)'),background:step.active?'rgba(212,169,106,.08)':step.done?'rgba(91,168,160,.06)':'rgba(255,255,255,.025)'}}>
+                  <div key={step.id} title={step.label} style={{minWidth:0,padding:'6px 6px',borderRadius:6,border:'1px solid '+(step.active?'color-mix(in oklch, var(--gold) 49%, transparent)':step.done?'rgba(91,168,160,.24)':'rgba(255,255,255,.06)'),background:step.active?'color-mix(in oklch, var(--gold) 12%, transparent)':step.done?'rgba(91,168,160,.06)':'rgba(255,255,255,.025)'}}>
                     <div style={{fontSize:9,fontWeight:800,color:step.active?'var(--gold)':step.done?'var(--teal)':'var(--text3)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{step.label}</div>
                   </div>
                 ))}
@@ -38427,10 +38425,10 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
                 marginTop:8,padding:'6px 10px',
                 background: scanProgress.bgMode === 'active'
                   ? 'rgba(91,168,160,0.08)'
-                  : 'rgba(212,169,106,0.08)',
+                  : 'color-mix(in oklch, var(--gold) 11%, transparent)',
                 border: '1px solid ' + (scanProgress.bgMode === 'active'
                   ? 'rgba(91,168,160,0.3)'
-                  : 'rgba(212,169,106,0.3)'),
+                  : 'color-mix(in oklch, var(--gold) 42%, transparent)'),
                 borderRadius:6,
                 display:'flex',alignItems:'center',gap:8,
               }}
@@ -38558,7 +38556,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
                   background: hasProgress
                     ? 'linear-gradient(135deg, var(--teal), #4a9088)'
                     : 'var(--gold)',
-                  color: hasProgress ? '#fff' : '#0b0f1a',
+                  color: hasProgress ? '#fff' : '#fff',
                 }}>
                   {hasProgress ? '▶ Resume Extraction' : '🔄 Retry Extraction'}
                 </button>
@@ -38711,7 +38709,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
                   {/* v14.3 C1: Quality warning chip */}
                   {s.file?._qualityFlags?.length > 0 && (
                     <div title={'Quality: ' + s.file._qualityFlags.join(', ')}
-                      style={{position:'absolute',top:2,left:2,background:'rgba(212,169,106,.9)',color:'#000',
+                      style={{position:'absolute',top:2,left:2,background:'color-mix(in oklch, var(--gold) 100%, transparent)',color:'#000',
                         fontSize:8,padding:'1px 3px',borderRadius:3,fontWeight:700}}>
                       ⚠ {s.file._qualityFlags.length}
                     </div>
@@ -38742,7 +38740,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
                 {scanResult.subType} • {scanResult.currency} {(scanResult.sumAssured||0).toLocaleString()} • Premium: {scanResult.currency} {(scanResult.annualPremium||0).toLocaleString()}
               </div>
               {scanResult.notes && <div style={{fontSize:11,color:'var(--text2)',marginTop:4,fontStyle:'italic'}}>{typeof scanResult.notes==='string'?scanResult.notes:JSON.stringify(scanResult.notes)}</div>}
-              {scanResult.userRemarks && <div style={{fontSize:11,color:'var(--gold)',marginTop:4,padding:'4px 8px',background:'rgba(212,169,106,.08)',borderRadius:6}}>Remark: "{scanResult.userRemarks}"</div>}
+              {scanResult.userRemarks && <div style={{fontSize:11,color:'var(--gold)',marginTop:4,padding:'4px 8px',background:'color-mix(in oklch, var(--gold) 12%, transparent)',borderRadius:6}}>Remark: "{scanResult.userRemarks}"</div>}
             </div>
             <div style={{display:'flex',gap:4}}>
               <button className="btn-primary btn-sm" onClick={()=>{setEditing(scanResult);setShowForm(true)}}>Review & Save</button>
@@ -38805,18 +38803,18 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
             { code: 'D',   color: '#5b8fd9', label: 'Death Benefit' },
             { code: 'TPD', color: '#9d8abf', label: 'Total & Permanent Disability' },
             { code: 'CI',  color: '#c97b9a', label: 'Critical Illness' },
-            { code: 'ECI', color: '#d4a96a', label: 'Early Critical Illness' },
+            { code: 'ECI', color: 'var(--gold)', label: 'Early Critical Illness' },
             { code: 'DI',  color: '#5ba8a0', label: 'Disability Income' },
             { code: 'PA',  color: '#e8a87c', label: 'Personal Accident' },
             { code: 'WP',  color: '#a3b8a3', label: 'Waiver of Premium' },
-            { code: 'CV',  color: '#d4a96a', label: 'Cash Value' }
+            { code: 'CV',  color: 'var(--gold)', label: 'Cash Value' }
           ];
           // rc2e.45: Lifecycle status pills shown on each chip.
           // 'inforce' is intentionally absent — it's the default for
           // most policies and stamping it on every chip is just noise.
           const STATUS_BADGES = [
             { code: 'paid-up',     label: 'Paid-up',     color: '#5ba8a0' },
-            { code: 'matured',     label: 'Matured',     color: '#d4a96a' },
+            { code: 'matured',     label: 'Matured',     color: 'var(--gold)' },
             { code: 'lapsed',      label: 'Lapsed',      color: '#dc2626' },
             { code: 'surrendered', label: 'Surrendered', color: '#dc2626' }
           ];
@@ -38827,11 +38825,11 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
             if(rds.some(r=>r.type==='death'&&parseFloat(r.sa)>0)||(p.category==='protection'&&parseFloat(p.sumAssured)>0)) bens.push({l:'D',c:'#5b8fd9'});
             if(rds.some(r=>r.type==='tpd'&&parseFloat(r.sa)>0)) bens.push({l:'TPD',c:'#9d8abf'});
             if(rds.some(r=>r.type==='ci'&&parseFloat(r.sa)>0)||p.subType==='Critical Illness') bens.push({l:'CI',c:'#c97b9a'});
-            if(rds.some(r=>r.type==='eci'&&parseFloat(r.sa)>0)) bens.push({l:'ECI',c:'#d4a96a'});
+            if(rds.some(r=>r.type==='eci'&&parseFloat(r.sa)>0)) bens.push({l:'ECI',c:'var(--gold)'});
             if(rds.some(r=>r.type==='di'&&parseFloat(r.sa)>0)||p.subType==='Disability Income') bens.push({l:'DI',c:'#5ba8a0'});
             if(rds.some(r=>r.type==='accidental'&&parseFloat(r.sa)>0)||p.subType==='Personal Accident') bens.push({l:'PA',c:'#e8a87c'});
             if(rds.some(r=>r.type==='premium_waiver')) bens.push({l:'WP',c:'#a3b8a3'});
-            if(parseFloat(p.cashValue)>0||['Whole Life','Universal Life (UL)','Indexed UL (IUL)','Variable UL (VUL)'].includes(p.subType)||p.category==='savings'||p.category==='investment'||p.category==='retirement') bens.push({l:'CV',c:'#d4a96a'});
+            if(parseFloat(p.cashValue)>0||['Whole Life','Universal Life (UL)','Indexed UL (IUL)','Variable UL (VUL)'].includes(p.subType)||p.category==='savings'||p.category==='investment'||p.category==='retirement') bens.push({l:'CV',c:'var(--gold)'});
             return bens;
           };
 
@@ -38905,7 +38903,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
                                 {p.userRemarks && <div style={{fontSize:9,color:'var(--gold)',fontStyle:'italic',display:'flex',alignItems:'center',gap:3}}>"{p.userRemarks.length>35?p.userRemarks.substring(0,35)+'…':p.userRemarks}" <span style={{cursor:'pointer',fontSize:7,opacity:.5}} onClick={e=>{e.stopPropagation();savePolicy({...p,userRemarks:''});}}>✕</span></div>}
                                 <div style={{display:'flex',gap:3,marginTop:2,alignItems:'center',flexWrap:'wrap'}}>
                                   {bens.length>0 && bens.map((b,i)=><span key={i} style={{fontSize:7,fontWeight:700,padding:'1px 3px',borderRadius:3,background:b.c+'22',color:b.c}}>{b.l}</span>)}
-                                  {p.lifeInsured && p.lifeInsured.trim() && (() => { const liDisplay = cleanPersonDisplayName(p.lifeInsured); return <span title={'Life Assured: '+liDisplay} style={{fontSize:8,fontWeight:600,padding:'1px 5px',borderRadius:3,background:'rgba(212,169,106,.12)',color:'var(--gold)',border:'1px solid rgba(212,169,106,.25)',maxWidth:100,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>LA: {liDisplay}</span>; })()}
+                                  {p.lifeInsured && p.lifeInsured.trim() && (() => { const liDisplay = cleanPersonDisplayName(p.lifeInsured); return <span title={'Life Assured: '+liDisplay} style={{fontSize:8,fontWeight:600,padding:'1px 5px',borderRadius:3,background:'var(--gold-dim)',color:'var(--gold)',border:'1px solid color-mix(in oklch, var(--gold) 35%, transparent)',maxWidth:100,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>LA: {liDisplay}</span>; })()}
                                   {/* rc2e.45: lifecycle status pill — only render when not the default 'inforce' */}
                                   {p.status && p.status !== 'inforce' && (() => {
                                     const sb = STATUS_BADGES.find(x => x.code === p.status);
@@ -40300,7 +40298,7 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
                 <button
                   type="button"
                   onClick={() => set('paymentMethod', 'MediSave')}
-                  style={{fontSize:9,padding:'2px 8px',background:'var(--green2)',color:'#0b0f1a',border:'none',borderRadius:3,cursor:'pointer',fontWeight:600}}
+                  style={{fontSize:9,padding:'2px 8px',background:'var(--green2)',color:'#fff',border:'none',borderRadius:3,cursor:'pointer',fontWeight:600}}
                 >
                   Switch to MediSave
                 </button>
@@ -40544,7 +40542,7 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
 
                 {/* ── Estimate payout from yield button ── */}
                 {!getPolicyAnnualPayout(form) && parseFloat(form.cashValue) > 0 && parseInt(form.annuityStartAge) > 0 && parseInt(form.annuityEndAge) > parseInt(form.annuityStartAge) && (
-                  <div style={{marginBottom:8,padding:'6px 10px',background:'rgba(201,169,110,.06)',borderRadius:6,display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+                  <div style={{marginBottom:8,padding:'6px 10px',background:'color-mix(in oklch, var(--gold) 8%, transparent)',borderRadius:6,display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
                     <button type="button" onClick={() => {
                       const pv = parseFloat(form.cashValue) || 0;
                       const yld = parseFloat(form.retAccumYield) || 3;
@@ -40565,7 +40563,7 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
                           return nf;
                         });
                       }
-                    }} style={{fontSize:10,padding:'4px 10px',borderRadius:5,background:'rgba(201,169,110,.15)',color:'#c9a96e',border:'1px solid rgba(201,169,110,.3)',cursor:'pointer',fontWeight:600,display:'flex',alignItems:'center',gap:4}}>
+                    }} style={{fontSize:10,padding:'4px 10px',borderRadius:5,background:'color-mix(in oklch, var(--gold) 21%, transparent)',color:'#c9a96e',border:'1px solid color-mix(in oklch, var(--gold) 42%, transparent)',cursor:'pointer',fontWeight:600,display:'flex',alignItems:'center',gap:4}}>
                       <span>🧮</span> Estimate payout from yield
                     </button>
                     <span style={{fontSize:9,color:'var(--text3)',fontStyle:'italic'}}>
@@ -40593,7 +40591,7 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
                           {isFin && finLoan > 0
                             ? <div style={{color:'var(--text3)',marginTop:1}}>Cash down ${Math.round(cashDown).toLocaleString()} + ${Math.round(finAnnualInterest).toLocaleString()}/yr interest · {annPayout>0?'$'+Math.round(annPayout).toLocaleString()+'/yr payouts':''}{matSum>0?' + $'+Math.round(matSum).toLocaleString()+' terminal':''} − ${Math.round(finLoan).toLocaleString()} loan repaid</div>
                             : <div style={{color:'var(--text3)',marginTop:1}}>${Math.round(totalPaid).toLocaleString()} premium → {annPayout>0?'$'+Math.round(annPayout).toLocaleString()+'/yr for '+payoutYrs+'yr':''}{matSum>0?' + $'+Math.round(matSum).toLocaleString()+' terminal':''}</div>}
-                          {!form.retAccumYield && <button style={{marginTop:2,fontSize:9,padding:'1px 6px',borderRadius:4,background:'var(--green2)',color:'#0b0f1a',border:'none',cursor:'pointer',fontWeight:600}} onClick={()=>set('retAccumYield',autoYield)}>Use</button>}
+                          {!form.retAccumYield && <button style={{marginTop:2,fontSize:9,padding:'1px 6px',borderRadius:4,background:'var(--green2)',color:'#fff',border:'none',cursor:'pointer',fontWeight:600}} onClick={()=>set('retAccumYield',autoYield)}>Use</button>}
                         </div>
                       )}
                       {!autoYield && <div style={{fontSize:9,color:'var(--text3)'}}>Enter payout + maturity sum to auto-calculate, or set manually</div>}
@@ -40695,7 +40693,7 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
                 specified accumulation year. These materially affect the IRR
                 and must be captured as a distinct cashflow from the terminal
                 maturity value. Works for all three endowment subtypes. */}
-            <div style={{marginBottom:10,padding:10,background:'var(--bg2)',borderRadius:8,border:'1px solid '+(form.endHasCashBenefit?'rgba(201,169,110,.5)':'var(--border)')}}>
+            <div style={{marginBottom:10,padding:10,background:'var(--bg2)',borderRadius:8,border:'1px solid '+(form.endHasCashBenefit?'color-mix(in oklch, var(--gold) 70%, transparent)':'var(--border)')}}>
               <div style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',userSelect:'none'}} onClick={()=>{
                 const newVal = !form.endHasCashBenefit;
                 set('endHasCashBenefit', newVal);
@@ -40763,7 +40761,7 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
               const displayVal = estimated > 0 ? estimated : deriveEstimated;
               const derivedMeta = form._derived && form._derived.estimatedMaturity;
               return (
-                <div style={{marginBottom:8,padding:10,background:'rgba(201,169,110,.04)',borderRadius:8,border:'1px solid rgba(201,169,110,.15)'}}>
+                <div style={{marginBottom:8,padding:10,background:'color-mix(in oklch, var(--gold) 6%, transparent)',borderRadius:8,border:'1px solid color-mix(in oklch, var(--gold) 21%, transparent)'}}>
                   <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
                     <span style={{fontSize:10,fontWeight:700,color:'#c9a96e',textTransform:'uppercase',letterSpacing:'.5px'}}>Estimated Maturity Value</span>
                     {derivedMeta && <DerivedFieldBadge derivedMeta={derivedMeta} fieldLabel="Estimated Maturity" />}
@@ -40779,7 +40777,7 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
                         style={{width:50,fontSize:11,padding:'3px 6px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:4,textAlign:'center'}} />
                     </div>
                   </div>
-                  <div style={{fontSize:9,fontStyle:'italic',color:'rgba(201,169,110,.7)',marginTop:4}}>
+                  <div style={{fontSize:9,fontStyle:'italic',color:'color-mix(in oklch, var(--gold) 98%, transparent)',marginTop:4}}>
                     Estimated at {yieldPct}% yield · not guaranteed · for planning only
                   </div>
                   {!canEstimate && <div style={{fontSize:9,color:'var(--text3)',marginTop:2}}>Enter annual premium, premium term, and policy term to estimate</div>}
@@ -40877,7 +40875,7 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
                       </div>
                     )}
                     {effYieldNum !== null && String(form.endYield) !== effYield && (
-                      <button type="button" onClick={()=>set('endYield',effYield)} style={{marginTop:4,fontSize:9,padding:'2px 8px',borderRadius:4,background:'var(--green2)',color:'#0b0f1a',border:'none',cursor:'pointer',fontWeight:600}}>Use {effYield}% as Yield</button>
+                      <button type="button" onClick={()=>set('endYield',effYield)} style={{marginTop:4,fontSize:9,padding:'2px 8px',borderRadius:4,background:'var(--green2)',color:'#fff',border:'none',cursor:'pointer',fontWeight:600}}>Use {effYield}% as Yield</button>
                     )}
                   </div>
                 );
@@ -40898,7 +40896,7 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
             out, and (2) "surrender value" is a meaningless concept once income
             has begun. This panel replaces that for category='retirement'. */}
         {isRetirement && (
-          <div style={{marginTop:8,padding:14,background:'var(--bg3)',borderRadius:10,border:'1px solid rgba(212,169,106,.3)'}}>
+          <div style={{marginTop:8,padding:14,background:'var(--bg3)',borderRadius:10,border:'1px solid color-mix(in oklch, var(--gold) 42%, transparent)'}}>
             {(() => {
               const totalAnnual = getPolicyAnnualPayout(form);
               const monthly = getPolicyMonthlyPayout(form);
@@ -40966,7 +40964,7 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
                 <>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12,flexWrap:'wrap',gap:8}}>
                     <div style={{fontSize:10,fontWeight:700,color:'var(--gold)',textTransform:'uppercase',letterSpacing:'.5px'}}>💰 Retirement / Annuity — Income Progress</div>
-                    <span style={{fontSize:10,padding:'3px 10px',borderRadius:4,background:'rgba(212,169,106,.12)',color:phaseColor,fontWeight:700,textTransform:'uppercase',border:'1px solid '+phaseColor+'33'}}>
+                    <span style={{fontSize:10,padding:'3px 10px',borderRadius:4,background:'var(--gold-dim)',color:phaseColor,fontWeight:700,textTransform:'uppercase',border:'1px solid '+phaseColor+'33'}}>
                       Phase: {phaseLabel}
                       {phase === 'accum' && yearsToStart > 0 && <span style={{opacity:.7,marginLeft:6}}>· income starts in {yearsToStart}yr</span>}
                       {phase === 'income' && <span style={{opacity:.7,marginLeft:6}}>· year {yearsReceived} of {lifetime?'life':lifetimeYears}</span>}
@@ -41084,7 +41082,7 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
                   )}
                   {/* ── Premium vs projected income summary ── */}
                   {totalAnnual > 0 && totalPrem > 0 && phase !== 'done' && (
-                    <div style={{marginTop:8,padding:'6px 10px',background:'rgba(212,169,106,.06)',borderRadius:6,fontSize:10,color:'var(--text3)',textAlign:'center'}}>
+                    <div style={{marginTop:8,padding:'6px 10px',background:'color-mix(in oklch, var(--gold) 9%, transparent)',borderRadius:6,fontSize:10,color:'var(--text3)',textAlign:'center'}}>
                       {isFin ? (<>
                         Cash outlay: <strong style={{color:'var(--text2)'}}>${Math.round(clientCashOutlay).toLocaleString()}</strong>
                         <span style={{opacity:.7}}> (${totalPrem.toLocaleString()} prem − ${Math.round(finLoan).toLocaleString()} loan + ${Math.round(finInterestLifetime).toLocaleString()} interest)</span>
@@ -41327,7 +41325,7 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
                     <div style={{fontSize:9,color:'var(--text3)',textTransform:'uppercase'}}>Cash (above cap)</div>
                     <div style={{fontSize:14,fontWeight:700,color:cashPart>0?'var(--red)':'var(--green2)'}}>${cashPart.toLocaleString()}/yr</div>
                   </div>
-                  <div style={{background:'rgba(212,169,106,.06)',borderRadius:8,padding:10,border:'1px solid rgba(212,169,106,.25)',textAlign:'center'}}>
+                  <div style={{background:'color-mix(in oklch, var(--gold) 9%, transparent)',borderRadius:8,padding:10,border:'1px solid color-mix(in oklch, var(--gold) 35%, transparent)',textAlign:'center'}}>
                     <div style={{fontSize:9,color:'var(--text3)',textTransform:'uppercase'}}>Total at Trigger</div>
                     <div style={{fontSize:14,fontWeight:700,color:'var(--gold)'}}>${Math.round(totalAtTrigger).toLocaleString()}/mth</div>
                     <div style={{fontSize:9,color:'var(--text3)'}}>{inclusive?'incl. CSHL deducted':'base + uplifts'}</div>
@@ -41479,7 +41477,7 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
 
             {/* v14.4.1 Fix L3: Implicit death benefit row for participating plans */}
             {(form.deathBenefitDynamic || (typeof isParticipatingPlan === 'function' && isParticipatingPlan(form))) && parseFloat(form.sumAssured) > 0 && (
-              <div style={{padding:'8px 10px',marginBottom:8,background:'rgba(201,169,110,.06)',borderRadius:6,border:'1px solid rgba(201,169,110,.15)',display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
+              <div style={{padding:'8px 10px',marginBottom:8,background:'color-mix(in oklch, var(--gold) 8%, transparent)',borderRadius:6,border:'1px solid color-mix(in oklch, var(--gold) 21%, transparent)',display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
                 <div style={{display:'flex',alignItems:'center',gap:6}}>
                   <input type="checkbox" checked={form.deathBenefitDynamic !== false} onChange={e => set('deathBenefitDynamic', e.target.checked)} />
                   <div>
@@ -42356,12 +42354,12 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
           <label style={{fontSize:11,textTransform:'uppercase',fontWeight:600,color:'var(--text3)',letterSpacing:'.5px'}}>Notes — freeform OK, use AI Tidy to clean up</label>
           <textarea rows={3} value={form.notes} onChange={e=>set('notes',e.target.value)} style={{width:'100%',marginTop:4}} placeholder="Key policy details, rider info, anything — AI will clean it up" />
           {form.userRemarks !== undefined && form.userRemarks !== '' ? (
-            <div style={{marginTop:6,padding:'8px 10px',background:'rgba(212,169,106,.08)',border:'1px solid rgba(212,169,106,.2)',borderRadius:8}}>
+            <div style={{marginTop:6,padding:'8px 10px',background:'color-mix(in oklch, var(--gold) 12%, transparent)',border:'1px solid color-mix(in oklch, var(--gold) 28%, transparent)',borderRadius:8}}>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:3}}>
                 <div style={{fontSize:10,fontWeight:600,color:'var(--gold)',textTransform:'uppercase',letterSpacing:'.3px'}}>Advisor Remark</div>
                 <button style={{fontSize:9,padding:'2px 6px',borderRadius:4,background:'rgba(239,83,80,.08)',color:'var(--red)',border:'1px solid rgba(239,83,80,.15)',cursor:'pointer'}} onClick={()=>set('userRemarks','')}>Remove</button>
               </div>
-              <textarea rows={2} value={form.userRemarks} onChange={e=>set('userRemarks',e.target.value)} style={{width:'100%',background:'transparent',border:'1px solid rgba(212,169,106,.2)',borderRadius:6,padding:'6px 8px',fontSize:12,color:'var(--text)',fontStyle:'italic',resize:'vertical'}} />
+              <textarea rows={2} value={form.userRemarks} onChange={e=>set('userRemarks',e.target.value)} style={{width:'100%',background:'transparent',border:'1px solid color-mix(in oklch, var(--gold) 28%, transparent)',borderRadius:6,padding:'6px 8px',fontSize:12,color:'var(--text)',fontStyle:'italic',resize:'vertical'}} />
             </div>
           ) : (
             <button className="btn-secondary btn-sm" style={{marginTop:6,fontSize:10}} onClick={()=>set('userRemarks',' ')}>+ Add Advisor Remark</button>
@@ -42641,8 +42639,8 @@ function FundAllocationEditor({allocations,onChange,reinvest,onSyncWeighted,poli
               <a href={'https://www.google.com/search?q='+encodeURIComponent(a.fundName+' factsheet singapore')}
                 target="_blank" rel="noopener" title="Search Google for fund factsheet"
                 style={{
-                  background:'rgba(201,169,110,.08)', color:'var(--gold)',
-                  border:'1px solid rgba(201,169,110,.2)', borderRadius:6,
+                  background:'color-mix(in oklch, var(--gold) 11%, transparent)', color:'var(--gold)',
+                  border:'1px solid color-mix(in oklch, var(--gold) 28%, transparent)', borderRadius:6,
                   padding:'4px 8px', fontSize:10, fontWeight:600,
                   textDecoration:'none', display:'flex', alignItems:'center', gap:3, flexShrink:0
                 }}>
@@ -42658,7 +42656,7 @@ function FundAllocationEditor({allocations,onChange,reinvest,onSyncWeighted,poli
           )}
           {a._newFund && (
             <div style={{display:'flex',alignItems:'center',gap:6,marginTop:4}}>
-              <span style={{fontSize:9,padding:'1px 6px',borderRadius:3,background:'rgba(212,169,106,.12)',color:'var(--gold)',fontWeight:600}}>🆕 Not in local DB</span>
+              <span style={{fontSize:9,padding:'1px 6px',borderRadius:3,background:'var(--gold-dim)',color:'var(--gold)',fontWeight:600}}>🆕 Not in local DB</span>
             </div>
           )}
           {/* Autocomplete dropdown */}
@@ -43536,7 +43534,7 @@ function ReportTab() {
             labels:retLabels,
             datasets:[
               ...(retCpfEligible ? [{label:'CPF LIFE',     data:retCpfData,       backgroundColor:'rgba(91,168,160,0.85)',  borderRadius:2, stack:'income'}] : []),
-              {label:'Policy',       data:retPolicyData,    backgroundColor:'rgba(212,169,106,0.85)', borderRadius:2, stack:'income'},
+              {label:'Policy',       data:retPolicyData,    backgroundColor:'color-mix(in oklch, var(--gold) 100%, transparent)', borderRadius:2, stack:'income'},
               {label:'Dividends',    data:retDividendsData, backgroundColor:'rgba(157,138,191,0.85)', borderRadius:2, stack:'income'},
               {label:'Other',        data:retOtherData,     backgroundColor:'rgba(91,143,217,0.65)',  borderRadius:2, stack:'income'},
               {label:'Desired',      data:retDesiredData,   type:'line', borderColor:'rgba(220,90,80,0.85)', borderWidth:2.5, borderDash:[6,3], pointRadius:0, fill:false},
@@ -43560,13 +43558,13 @@ function ReportTab() {
             datasets:[{
               label:'Annual Premium',
               data:cashflowValues,
-              borderColor:'#b8935a',
-              backgroundColor:'rgba(212,169,106,0.25)',
+              borderColor:'var(--gold3)',
+              backgroundColor:'color-mix(in oklch, var(--gold) 35%, transparent)',
               borderWidth:2.5,
               fill:true,
               tension:0.35,
               pointRadius:2,
-              pointBackgroundColor:'#b8935a'
+              pointBackgroundColor:'var(--gold3)'
             }]
           },
           options:{
@@ -45427,7 +45425,7 @@ function ExtractDiagnostics() {
             const color = r.status==='pass'?'#22c55e':r.status==='fail'?'#ef4444':r.status==='warn'?'#f59e0b':'var(--text3)';
             return (
               <div key={r.id} style={{borderBottom:'1px solid var(--border)',padding:'4px 0'}}>
-                <div><span style={{color}}>{icon}</span> <strong style={{color:'var(--text1)'}}>{r.name}</strong></div>
+                <div><span style={{color}}>{icon}</span> <strong style={{color:'var(--text)'}}>{r.name}</strong></div>
                 <div style={{color:'var(--text3)',paddingLeft:18,fontSize:10}}>{r.detail}</div>
               </div>
             );
@@ -45643,7 +45641,7 @@ function DriveConnectionCard() {
   const statusPill = (() => {
     // rc2e.53: dropped Local-only branch \u2014 toggle removed, no escape hatch
     if (status==='connected') return {bg:'rgba(91,168,160,.1)',color:'var(--teal)',border:'rgba(91,168,160,.3)',text:'\u25CF Connected'+(pingedEmail||cachedEmail?' as '+(pingedEmail||cachedEmail):'')};
-    if (status==='reconnect-needed') return {bg:'rgba(212,169,106,.12)',color:'var(--gold)',border:'rgba(212,169,106,.35)',text:'\u26A0 Reconnect needed'};
+    if (status==='reconnect-needed') return {bg:'var(--gold-dim)',color:'var(--gold)',border:'color-mix(in oklch, var(--gold) 49%, transparent)',text:'\u26A0 Reconnect needed'};
     return {bg:'var(--bg3)',color:'var(--text3)',border:'var(--border)',text:'\u25CB Not connected'};
   })();
   const msgColor = !statusMsg ? null : statusMsg.kind==='success'?'var(--teal)':statusMsg.kind==='error'?'var(--red)':statusMsg.kind==='warn'?'var(--gold)':'var(--text2)';
@@ -45663,7 +45661,7 @@ function DriveConnectionCard() {
       {statusMsg && <div style={{fontSize:11,color:msgColor,marginBottom:10}}>{statusMsg.text}</div>}
       {/* rc2e.53: Disconnected state shows the only remaining escape hatch — Connect Drive primary CTA. */}
       {status !== 'connected' && status !== 'reconnect-needed' && <div style={{marginBottom:10}}>
-        <button onClick={handleConnect} disabled={busy} style={{padding:'10px 18px',background:'var(--teal)',color:'#0b0f1a',border:'none',borderRadius:8,fontSize:12,fontWeight:700,cursor:busy?'wait':'pointer',opacity:busy?.6:1}}>
+        <button onClick={handleConnect} disabled={busy} style={{padding:'10px 18px',background:'var(--teal)',color:'#fff',border:'none',borderRadius:8,fontSize:12,fontWeight:700,cursor:busy?'wait':'pointer',opacity:busy?.6:1}}>
           {busy ? 'Redirecting...' : 'Connect Google Drive'}
         </button>
       </div>}
@@ -45720,7 +45718,7 @@ function DriveDiscoveryCard() {
           : 'Connect to Google Drive first to enable cross-device sync.'}
       </p>
       <button onClick={handleDiscover} disabled={!isDriveOn || busy}
-        style={{background:(!isDriveOn||busy)?'rgba(212,169,106,.08)':'rgba(212,169,106,.15)',color:'var(--gold)',border:'1px solid rgba(212,169,106,.4)',borderRadius:8,padding:'8px 16px',fontSize:12,fontWeight:600,cursor:(!isDriveOn||busy)?'not-allowed':'pointer',opacity:(!isDriveOn||busy)?.5:1}}>
+        style={{background:(!isDriveOn||busy)?'color-mix(in oklch, var(--gold) 12%, transparent)':'color-mix(in oklch, var(--gold) 21%, transparent)',color:'var(--gold)',border:'1px solid color-mix(in oklch, var(--gold) 56%, transparent)',borderRadius:8,padding:'8px 16px',fontSize:12,fontWeight:600,cursor:(!isDriveOn||busy)?'not-allowed':'pointer',opacity:(!isDriveOn||busy)?.5:1}}>
         {busy ? 'Scanning Drive\u2026' : '\uD83D\uDD0D Discover Clients from Drive'}
       </button>
     </div>
@@ -45825,7 +45823,7 @@ function CloudSyncCard() {
             fontSize:11,
             padding:'3px 8px',
             borderRadius:4,
-            background: status.kind === 'success' ? 'rgba(91,168,160,.12)' : status.kind === 'error' ? 'rgba(239,83,80,.12)' : 'rgba(212,169,106,.1)',
+            background: status.kind === 'success' ? 'rgba(91,168,160,.12)' : status.kind === 'error' ? 'rgba(239,83,80,.12)' : 'color-mix(in oklch, var(--gold) 14%, transparent)',
             color: status.kind === 'success' ? 'var(--green2)' : status.kind === 'error' ? 'var(--red)' : 'var(--gold)',
           }}>
             {status.text}
@@ -45927,12 +45925,12 @@ function ChangelogModal({ onClose }) {
   return (
     <div onClick={e => { if (e.target === e.currentTarget) onClose(); }}
       style={{position:'fixed',inset:0,zIndex:10000,background:'rgba(0,0,0,.7)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}}>
-      <div style={{background:'#1a2332',borderRadius:16,border:'1px solid rgba(201,169,110,.2)',maxWidth:600,width:'100%',maxHeight:'85vh',display:'flex',flexDirection:'column',boxShadow:'0 20px 60px rgba(0,0,0,.5)'}}>
+      <div style={{background:'var(--bg2)',borderRadius:16,border:'1px solid color-mix(in oklch, var(--gold) 28%, transparent)',maxWidth:600,width:'100%',maxHeight:'85vh',display:'flex',flexDirection:'column',boxShadow:'0 20px 60px rgba(0,0,0,.5)'}}>
         {/* Header */}
-        <div style={{padding:'20px 24px 16px',borderBottom:'1px solid rgba(201,169,110,.15)',flexShrink:0}}>
+        <div style={{padding:'20px 24px 16px',borderBottom:'1px solid color-mix(in oklch, var(--gold) 21%, transparent)',flexShrink:0}}>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
             <div>
-              <h2 style={{fontSize:18,fontWeight:700,color:'#e8e8e8',margin:0}}>What's new in PolicyLens</h2>
+              <h2 style={{fontSize:18,fontWeight:700,color:'var(--text)',margin:0}}>What's new in PolicyLens</h2>
               <div style={{fontSize:12,color:'#c9a96e',marginTop:4,fontWeight:600}}>{APP_VERSION} — {APP_VERSION_NAME}</div>
             </div>
             <button onClick={onClose} style={{background:'rgba(255,255,255,.08)',border:'none',color:'#999',fontSize:16,width:32,height:32,borderRadius:'50%',cursor:'pointer',flexShrink:0}}>✕</button>
@@ -45942,7 +45940,7 @@ function ChangelogModal({ onClose }) {
         <div style={{overflow:'auto',padding:'16px 24px 24px',flex:1}}>
           {CHANGELOG.map((entry, ei) => (
             <div key={ei} style={{marginBottom:ei < CHANGELOG.length - 1 ? 24 : 0}}>
-              {ei > 0 && <div style={{fontSize:14,fontWeight:700,color:'#e8e8e8',marginBottom:4}}>{entry.version} — {entry.name}</div>}
+              {ei > 0 && <div style={{fontSize:14,fontWeight:700,color:'var(--text)',marginBottom:4}}>{entry.version} — {entry.name}</div>}
               {ei > 0 && <div style={{fontSize:10,color:'#888',marginBottom:12}}>{entry.date}</div>}
               {entry.sections.map((sec, si) => (
                 <div key={si} style={{marginBottom:14}}>
@@ -45959,7 +45957,7 @@ function ChangelogModal({ onClose }) {
           ))}
         </div>
         {/* Footer */}
-        <div style={{padding:'12px 24px',borderTop:'1px solid rgba(201,169,110,.1)',textAlign:'center',flexShrink:0}}>
+        <div style={{padding:'12px 24px',borderTop:'1px solid color-mix(in oklch, var(--gold) 14%, transparent)',textAlign:'center',flexShrink:0}}>
           <div style={{fontSize:10,color:'#666'}}>Built for Singapore Financial Consultants</div>
         </div>
       </div>
@@ -46055,7 +46053,7 @@ function TierPicker({ currentTier, tierDefinitions, onTierChange, disabled, size
                 onClick={e => { e.stopPropagation(); handleSelect(t); }}
                 style={{
                   padding:'6px 10px', display:'flex', alignItems:'center', gap:8,
-                  cursor:'pointer', background:isFocused?'rgba(212,169,106,.08)':'transparent',
+                  cursor:'pointer', background:isFocused?'color-mix(in oklch, var(--gold) 12%, transparent)':'transparent',
                   fontSize:11, color:'var(--text)', fontWeight:isCurrent?600:400
                 }}>
                 <span style={{width:8, height:8, borderRadius:'50%', background:tColor, flexShrink:0}} />
@@ -46123,7 +46121,7 @@ function ClientTiersPanel({ tierDefinitions, saveTierDefinitions }) {
   };
 
   return (
-    <div className="card" style={{marginBottom:16, borderColor:'rgba(212,169,106,0.2)'}}>
+    <div className="card" style={{marginBottom:16, borderColor:'color-mix(in oklch, var(--gold) 28%, transparent)'}}>
       <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:4, gap:8, flexWrap:'wrap'}}>
         <div style={{flex:1, minWidth:200}}>
           <h3 style={{fontSize:14, fontWeight:600, marginBottom:4}}>🏷️ Client Tiers</h3>
@@ -46132,7 +46130,7 @@ function ClientTiersPanel({ tierDefinitions, saveTierDefinitions }) {
           </p>
         </div>
         {dirty && <button onClick={save} disabled={saving} style={{
-          background:'var(--gold)', color:'#0b0f1a', border:'none',
+          background:'var(--gold)', color:'#fff', border:'none',
           padding:'5px 14px', borderRadius:6, fontSize:11, fontWeight:600, cursor:saving?'wait':'pointer', opacity:saving?0.6:1, flexShrink:0
         }}>{saving ? 'Saving…' : 'Save changes'}</button>}
       </div>
@@ -46183,11 +46181,11 @@ function ClientTiersPanel({ tierDefinitions, saveTierDefinitions }) {
             onKeyDown={e => { if(e.key==='Enter') addTier(); if(e.key==='Escape') { setAdding(false); setNewName(''); } }}
             placeholder="New tier name" autoFocus
             style={{flex:1, fontSize:12, background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:4, padding:'5px 8px', color:'var(--text)'}} />
-          <button onClick={addTier} style={{background:'var(--gold)',color:'#0b0f1a',border:'none',borderRadius:5,padding:'4px 12px',fontSize:11,fontWeight:600,cursor:'pointer'}}>Add</button>
+          <button onClick={addTier} style={{background:'var(--gold)',color:'#fff',border:'none',borderRadius:5,padding:'4px 12px',fontSize:11,fontWeight:600,cursor:'pointer'}}>Add</button>
           <button onClick={() => { setAdding(false); setNewName(''); }} style={{background:'var(--bg3)',color:'var(--text3)',border:'1px solid var(--border)',borderRadius:5,padding:'4px 10px',fontSize:11,cursor:'pointer'}}>Cancel</button>
         </div>
       ) : (
-        <button onClick={() => setAdding(true)} style={{marginTop:8,background:'transparent',color:'var(--gold)',border:'1px solid rgba(212,169,106,.25)',borderRadius:6,padding:'5px 14px',fontSize:11,cursor:'pointer',fontWeight:500}}>+ Add tier</button>
+        <button onClick={() => setAdding(true)} style={{marginTop:8,background:'transparent',color:'var(--gold)',border:'1px solid color-mix(in oklch, var(--gold) 35%, transparent)',borderRadius:6,padding:'5px 14px',fontSize:11,cursor:'pointer',fontWeight:500}}>+ Add tier</button>
       )}
     </div>
   );
@@ -46455,7 +46453,7 @@ function Settings() {
             <strong style={{color:'var(--gold)'}}>{APP_VERSION}</strong> — {APP_VERSION_NAME} <span style={{color:'var(--text3)',fontSize:10}}>({APP_VERSION_DATE})</span>
           </div>
           <button onClick={() => setShowChangelog(true)}
-            style={{fontSize:10,padding:'4px 12px',borderRadius:6,border:'1px solid rgba(201,169,110,.25)',background:'var(--gold-dim)',color:'var(--gold)',cursor:'pointer',fontWeight:600}}>
+            style={{fontSize:10,padding:'4px 12px',borderRadius:6,border:'1px solid color-mix(in oklch, var(--gold) 35%, transparent)',background:'var(--gold-dim)',color:'var(--gold)',cursor:'pointer',fontWeight:600}}>
             View changelog
           </button>
         </div>
