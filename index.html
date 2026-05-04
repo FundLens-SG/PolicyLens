@@ -609,9 +609,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.23';
+const APP_VERSION = 'v2.4.0-rc1.24';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Client View migrated from navy to cream theme + Fraunces hero';
+const APP_VERSION_NAME = 'Design v2 — Dual-slider What-If + 25-year Cashflows chart';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -39414,10 +39414,24 @@ function Dashboard() {
     cash_investments: T.sage,
     other_assets: T.text3
   };
-  // What-if state
-  const [whatIfPct, setWhatIfPct] = React.useState(100);
-  const whatIfDesired = Math.round(desiredMonthly * (whatIfPct / 100));
-  const whatIfGap = Math.max(0, whatIfDesired - totalAtRet);
+  // What-if state — v2.4.0-rc1.24: dual-slider model (retire age × monthly lifestyle)
+  // matching the prototype's PLWhatIf component. Each year of additional work
+  // bumps projected income by ~5% (rough compound + extra contribution proxy).
+  const [whatIfAge, setWhatIfAge] = React.useState(retAge);
+  const [whatIfLifestyle, setWhatIfLifestyle] = React.useState(0);
+  // Initialize lifestyle from desiredMonthly once it's computed (rounded to 500)
+  React.useEffect(() => {
+    if (desiredMonthly > 0 && whatIfLifestyle === 0) {
+      setWhatIfLifestyle(Math.round(desiredMonthly / 500) * 500);
+    }
+  }, [desiredMonthly]);
+  // Project income at the alt retirement age. Crude but readable model:
+  //  +5% per extra year worked  /  -5% per year earlier
+  const whatIfAgeBonus = (whatIfAge - retAge) * 0.05;
+  const whatIfProjected = Math.max(0, Math.round(totalAtRet * (1 + whatIfAgeBonus)));
+  const whatIfTarget = whatIfLifestyle || desiredMonthly || 1;
+  const whatIfCoverPct = Math.min(1, whatIfProjected / whatIfTarget);
+  const whatIfGap = Math.max(0, whatIfTarget - whatIfProjected);
 
   // v2.4.0-rc1.12: Pending-scan ribbon banner — shows when the user
   // has dropped/staged files but hasn't extracted them yet. Per the
@@ -40071,134 +40085,361 @@ function Dashboard() {
       gridColumn: '1 / -1',
       fontStyle: 'italic'
     }
-  }, "Set up CPF + retirement income on the Profile tab to see the breakdown.")))), desiredMonthly > 0 && /*#__PURE__*/React.createElement("div", {
-    style: {
-      background: T.bg2,
-      border: `1px solid ${T.border}`,
-      borderRadius: T.radiusLg,
-      padding: T.cardPad,
-      boxShadow: T.shadow
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      alignItems: 'baseline',
-      justifyContent: 'space-between',
-      marginBottom: 14
-    }
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontFamily: T.serifFamily,
-      fontSize: 18,
-      color: T.text,
-      letterSpacing: '-0.015em'
-    }
-  }, "What if ", clientFirst, " wanted ", /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: T.primary
-    }
-  }, "S$", whatIfDesired.toLocaleString()), " / month at ", retAge, "?"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 12,
-      color: T.text3,
-      marginTop: 3
-    }
-  }, "Drag to adjust the target as a percentage of S$", desiredMonthly.toLocaleString(), ".")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: '6px 12px',
-      borderRadius: 999,
-      background: whatIfGap > 0 ? `color-mix(in oklch, ${T.warn} 18%, transparent)` : `color-mix(in oklch, ${T.green} 18%, transparent)`,
-      color: whatIfGap > 0 ? 'oklch(0.55 0.16 65)' : T.green,
-      fontSize: 12,
-      fontWeight: 600
-    }
-  }, whatIfGap > 0 ? `Gap S$${whatIfGap.toLocaleString()}/mo` : 'Fully covered')), /*#__PURE__*/React.createElement("input", {
-    type: "range",
-    min: "20",
-    max: "150",
-    step: "5",
-    value: whatIfPct,
-    onChange: e => setWhatIfPct(parseInt(e.target.value)),
-    style: {
-      width: '100%',
-      accentColor: T.primary
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      fontSize: 11,
-      color: T.text3,
-      marginTop: 4
-    }
-  }, /*#__PURE__*/React.createElement("span", null, "20%"), /*#__PURE__*/React.createElement("span", null, whatIfPct, "%"), /*#__PURE__*/React.createElement("span", null, "150%"))), totalPremium.annual > 0 && /*#__PURE__*/React.createElement("div", {
-    style: {
-      background: T.bg2,
-      border: `1px solid ${T.border}`,
-      borderRadius: T.radiusLg,
-      padding: T.cardPad,
-      boxShadow: T.shadow
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      alignItems: 'baseline',
-      justifyContent: 'space-between',
-      marginBottom: 14
-    }
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontFamily: T.serifFamily,
-      fontSize: 18,
-      color: T.text,
-      letterSpacing: '-0.015em'
-    }
-  }, "Monthly cashflow"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 12,
-      color: T.text3,
-      marginTop: 3
-    }
-  }, "Average S$", Math.round(totalPremium.annual / 12).toLocaleString(), "/mo across ", Object.entries(premiumBreakdown).filter(([k, v]) => v && (v.annual > 0 || v.single > 0) && k !== 'totalAnnual' && k !== 'totalSingle' && k !== 'total').length, " payment modes."))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      alignItems: 'flex-end',
-      gap: 4,
-      height: 60,
-      marginTop: 10
-    }
-  }, Array.from({
-    length: 12
-  }, (_, m) => {
-    // simple flat distribution — premiums are mostly annual so flatten across months
-    const v = totalPremium.annual / 12;
-    const max = totalPremium.annual / 12 * 1.1;
-    const h = Math.max(8, v / max * 60);
-    const monthName = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'][m];
+  }, "Set up CPF + retirement income on the Profile tab to see the breakdown.")))), desiredMonthly > 0 && (() => {
+    const tone = whatIfCoverPct >= 0.95 ? T.green : whatIfCoverPct >= 0.7 ? T.warn : T.red;
+    const hint = whatIfCoverPct >= 1 ? '🎉 Fully covered — surplus available for legacy planning.' : whatIfCoverPct >= 0.95 ? '✓ Comfortably on track — small buffer in place.' : whatIfCoverPct >= 0.8 ? 'Close — a small monthly top-up to CPF SA closes the gap by retirement.' : whatIfCoverPct >= 0.6 ? 'Gap is meaningful — review with your advisor.' : 'Significant shortfall — let\'s talk through options.';
     return /*#__PURE__*/React.createElement("div", {
-      key: m,
       style: {
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: 4
+        background: T.bg2,
+        border: `1px solid ${T.border}`,
+        borderRadius: T.radiusLg,
+        padding: T.cardPad,
+        boxShadow: T.shadow
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
+        display: 'flex',
+        alignItems: 'baseline',
+        justifyContent: 'space-between',
+        marginBottom: 6
+      }
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: T.serifFamily,
+        fontSize: 22,
+        color: T.text,
+        letterSpacing: '-0.015em'
+      }
+    }, "What if\u2026"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 12.5,
+        color: T.text3,
+        marginTop: 4
+      }
+    }, "Drag to see how retirement age & lifestyle change the picture"))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 22,
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: 28
+      }
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        marginBottom: 8
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 12,
+        color: T.text3,
+        fontWeight: 500
+      }
+    }, "Retire at age"), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontFamily: T.serifFamily,
+        fontSize: 24,
+        color: T.primary,
+        lineHeight: 1,
+        fontWeight: 500
+      }
+    }, whatIfAge)), /*#__PURE__*/React.createElement("input", {
+      type: "range",
+      min: "55",
+      max: "75",
+      value: whatIfAge,
+      onChange: e => setWhatIfAge(parseInt(e.target.value)),
+      style: {
         width: '100%',
-        height: h,
-        background: `linear-gradient(180deg, ${T.primary}, color-mix(in oklch, ${T.primary} 70%, ${T.bg2}))`,
-        borderRadius: 4,
-        transition: T.motion ? `height 1s ${m * 0.04}s ease` : 'none'
+        accentColor: T.primary
       }
     }), /*#__PURE__*/React.createElement("div", {
       style: {
-        fontSize: 9,
-        color: T.text4
+        display: 'flex',
+        justifyContent: 'space-between',
+        fontSize: 10.5,
+        color: T.text4,
+        marginTop: 4
       }
-    }, monthName));
-  }))), /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("span", null, "55"), /*#__PURE__*/React.createElement("span", null, "65"), /*#__PURE__*/React.createElement("span", null, "75"))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        marginBottom: 8
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 12,
+        color: T.text3,
+        fontWeight: 500
+      }
+    }, "Monthly lifestyle"), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontFamily: T.serifFamily,
+        fontSize: 24,
+        color: T.primary,
+        lineHeight: 1,
+        fontWeight: 500
+      }
+    }, "S$", (whatIfLifestyle || desiredMonthly).toLocaleString())), /*#__PURE__*/React.createElement("input", {
+      type: "range",
+      min: "4000",
+      max: "15000",
+      step: "500",
+      value: whatIfLifestyle || desiredMonthly,
+      onChange: e => setWhatIfLifestyle(parseInt(e.target.value)),
+      style: {
+        width: '100%',
+        accentColor: T.primary
+      }
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        fontSize: 10.5,
+        color: T.text4,
+        marginTop: 4
+      }
+    }, /*#__PURE__*/React.createElement("span", null, "S$4k"), /*#__PURE__*/React.createElement("span", null, "S$10k"), /*#__PURE__*/React.createElement("span", null, "S$15k")))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 24,
+        padding: 18,
+        background: `linear-gradient(135deg, ${T.primarySoft}, ${T.bg2})`,
+        borderRadius: T.radius,
+        border: `1px solid ${T.hair || T.border}`
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'baseline',
+        justifyContent: 'space-between'
+      }
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11.5,
+        color: T.text3,
+        fontWeight: 600,
+        letterSpacing: '0.04em',
+        textTransform: 'uppercase'
+      }
+    }, "Projected income at ", whatIfAge), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'baseline',
+        gap: 12,
+        marginTop: 6
+      }
+    }, /*#__PURE__*/React.createElement(PLNumber, {
+      T: T,
+      value: whatIfProjected,
+      prefix: "S$",
+      size: 32,
+      weight: 600,
+      serif: true
+    }), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 13,
+        color: T.text3
+      }
+    }, "per month"))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        padding: '8px 14px',
+        borderRadius: 999,
+        background: `color-mix(in oklch, ${tone} 22%, transparent)`,
+        color: tone,
+        fontSize: 14,
+        fontWeight: 700
+      }
+    }, Math.round(whatIfCoverPct * 100), "% covered")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 14,
+        height: 8,
+        background: T.bg3,
+        borderRadius: 999,
+        overflow: 'hidden'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: `${whatIfCoverPct * 100}%`,
+        height: '100%',
+        background: `linear-gradient(90deg, ${tone}, color-mix(in oklch, ${tone} 65%, white))`,
+        transition: T.motion ? 'width 280ms ease' : 'none'
+      }
+    })), /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 10,
+        fontSize: 12,
+        color: T.text2
+      }
+    }, hint)));
+  })(), totalPremium.annual > 0 && (() => {
+    const startYear = new Date().getFullYear();
+    const years = Array.from({
+      length: 25
+    }, (_, i) => startYear + i);
+    // Build per-year premium outflows — premium continues until the
+    // client reaches retirement age, then drops by ~half (term/saving
+    // policies often paid up by then). Crude but readable.
+    const yearsToRet = Math.max(0, retAge - age);
+    const annualPrem = totalPremium.annual || 0;
+    const premiums = years.map((y, i) => {
+      if (i < yearsToRet) return -annualPrem;
+      if (i < yearsToRet + 5) return -Math.round(annualPrem * 0.6);
+      return -Math.round(annualPrem * 0.3);
+    });
+    // Inflows ramp up: start small from any annuities/dividends now,
+    // rise as policies mature and CPF/annuities kick in at retAge.
+    const baseInflow = (retirementLite?.policyDividends || 0) * 12; // current annual dividend
+    const retInflow = totalAtRet * 12; // monthly → annual at retirement
+    const inflows = years.map((y, i) => {
+      if (i < 5) return Math.round(baseInflow);
+      if (i < yearsToRet) return Math.round(baseInflow + (retInflow - baseInflow) * (i / Math.max(1, yearsToRet)) * 0.3);
+      if (i < yearsToRet + 1) return Math.round(retInflow * 0.7);
+      return Math.round(retInflow);
+    });
+    const maxV = Math.max(1, ...premiums.map(Math.abs), ...inflows);
+    const w = 720,
+      h = 180,
+      pad = 30;
+    const xStep = (w - pad * 2) / (years.length - 1);
+    const yMid = h / 2;
+    const yScale = (yMid - pad / 2) / maxV;
+    const retIdx = years.indexOf(startYear + yearsToRet);
+    const labelYears = [years[0], years[Math.floor(years.length * 0.4)], years[Math.floor(years.length * 0.8)], years[years.length - 1]];
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        background: T.bg2,
+        border: `1px solid ${T.border}`,
+        borderRadius: T.radiusLg,
+        padding: T.cardPad,
+        boxShadow: T.shadow
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'baseline',
+        justifyContent: 'space-between',
+        marginBottom: 14
+      }
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: T.serifFamily,
+        fontSize: 22,
+        color: T.text,
+        letterSpacing: '-0.015em'
+      }
+    }, "Cash flows over 25 years"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 12.5,
+        color: T.text3,
+        marginTop: 4
+      }
+    }, "Premiums going out \xB7 maturities & dividends coming back")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 12,
+        fontSize: 11
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+        color: T.text2
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        width: 10,
+        height: 10,
+        borderRadius: 2,
+        background: T.primary
+      }
+    }), "Out"), /*#__PURE__*/React.createElement("span", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+        color: T.text2
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        width: 10,
+        height: 10,
+        borderRadius: 2,
+        background: T.sage
+      }
+    }), "In"))), /*#__PURE__*/React.createElement("svg", {
+      width: "100%",
+      height: h,
+      viewBox: `0 0 ${w} ${h}`,
+      style: {
+        display: 'block'
+      }
+    }, /*#__PURE__*/React.createElement("line", {
+      x1: pad,
+      y1: yMid,
+      x2: w - pad,
+      y2: yMid,
+      stroke: T.border,
+      strokeWidth: "1"
+    }), premiums.map((v, i) => {
+      const x = pad + i * xStep;
+      const bh = Math.abs(v) * yScale;
+      return /*#__PURE__*/React.createElement("rect", {
+        key: `p${i}`,
+        x: x - 5,
+        y: yMid,
+        width: "10",
+        height: bh,
+        fill: T.primary,
+        opacity: "0.85",
+        rx: "1.5"
+      });
+    }), inflows.map((v, i) => {
+      const x = pad + i * xStep;
+      const bh = v * yScale;
+      return /*#__PURE__*/React.createElement("rect", {
+        key: `r${i}`,
+        x: x - 5,
+        y: yMid - bh,
+        width: "10",
+        height: bh,
+        fill: T.sage,
+        opacity: "0.85",
+        rx: "1.5"
+      });
+    }), retIdx > 0 && (() => {
+      const x = pad + retIdx * xStep;
+      return /*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("line", {
+        x1: x,
+        y1: "14",
+        x2: x,
+        y2: h - 14,
+        stroke: T.lavender,
+        strokeWidth: "1",
+        strokeDasharray: "3 3"
+      }), /*#__PURE__*/React.createElement("text", {
+        x: x,
+        y: "10",
+        fontSize: "10",
+        fill: T.lavender,
+        textAnchor: "middle",
+        fontWeight: "600"
+      }, "Age ", retAge));
+    })(), labelYears.map(y => {
+      const idx = years.indexOf(y);
+      if (idx < 0) return null;
+      const x = pad + idx * xStep;
+      return /*#__PURE__*/React.createElement("text", {
+        key: y,
+        x: x,
+        y: h - 4,
+        fontSize: "10",
+        fill: T.text3,
+        textAnchor: "middle"
+      }, y);
+    })));
+  })(), /*#__PURE__*/React.createElement("div", {
     style: {
       background: T.bg2,
       border: `1px solid ${T.border}`,
