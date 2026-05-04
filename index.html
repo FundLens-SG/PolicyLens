@@ -609,9 +609,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.10';
+const APP_VERSION = 'v2.4.0-rc1.11';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Repository title (Fraunces) + clearer Sync button';
+const APP_VERSION_NAME = 'Design v2 — slim header (3 pills) + Cmd+S shortcut';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -27346,6 +27346,23 @@ function Header() {
     } catch (_) {}
   }, []);
 
+  // v2.4.0-rc1.11: Cmd+S / Ctrl+S keyboard shortcut for Save checkpoint
+  // (now that Save is the only persistent action in the header alongside
+  // + New client and Client View, an obvious shortcut helps FCs build muscle
+  // memory). Listens at window level; only fires when there's an active
+  // client. Prevents the browser's default Save Page As dialog.
+  useEffect(() => {
+    const handler = e => {
+      const isCmdOrCtrlS = (e.key === 's' || e.key === 'S') && (e.metaKey || e.ctrlKey);
+      if (!isCmdOrCtrlS) return;
+      if (!activeClientId) return;
+      e.preventDefault();
+      setSaveOpen(o => !o);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [activeClientId]);
+
   // v2.4.0-rc1.2: New chrome — light cream surface, Fraunces wordmark,
   // pill-style tabs, gradient-avatar client switcher. Old handlers + refs +
   // modal anchors all preserved so existing flows (Save/Load checkpoint,
@@ -27531,80 +27548,65 @@ function Header() {
       marginLeft: 'auto',
       display: 'flex',
       alignItems: 'center',
-      gap: isMobile ? 4 : 6,
+      gap: 8,
       flexShrink: 0
     }
   }, /*#__PURE__*/React.createElement("button", {
-    title: "New Client",
     onClick: () => setNewClientGuardOpen(true),
+    title: "New Client",
     style: {
-      background: T.primaryDim,
-      color: T.primary,
-      border: '1px solid ' + T.primaryDim,
-      width: 28,
-      height: 28,
+      background: 'transparent',
+      color: T.text2,
+      border: '1px solid ' + T.border,
+      height: 32,
+      padding: '0 14px',
       borderRadius: 999,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
+      fontSize: 12.5,
+      fontWeight: 500,
       cursor: 'pointer',
-      fontSize: 14,
-      fontWeight: 700,
-      flexShrink: 0,
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 4,
       fontFamily: T.sansFamily,
-      padding: 0,
+      flexShrink: 0,
+      whiteSpace: 'nowrap',
       transition: T.motion ? 'all 180ms ease' : 'none'
     }
-  }, "+"), /*#__PURE__*/React.createElement(SyncStatusPill, {
-    driveState: driveState
-  }), /*#__PURE__*/React.createElement("div", {
+  }, isMobile ? '+' : '+ New client'), /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'relative',
       display: 'inline-block'
     }
   }, /*#__PURE__*/React.createElement("button", {
     ref: saveButtonRef,
-    title: "Save checkpoint",
     onClick: () => setSaveOpen(o => !o),
     disabled: !activeClientId,
-    style: iconBtnStyle(!!activeClientId)
-  }, "\uD83D\uDCBE"), /*#__PURE__*/React.createElement(CheckpointSavePopover, {
+    title: "Save checkpoint (Cmd+S)",
+    style: {
+      background: 'transparent',
+      color: T.text2,
+      border: '1px solid ' + T.border,
+      height: 32,
+      padding: '0 14px',
+      borderRadius: 999,
+      fontSize: 12.5,
+      fontWeight: 500,
+      cursor: activeClientId ? 'pointer' : 'not-allowed',
+      opacity: activeClientId ? 1 : 0.4,
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 4,
+      fontFamily: T.sansFamily,
+      flexShrink: 0,
+      whiteSpace: 'nowrap',
+      transition: T.motion ? 'all 180ms ease' : 'none'
+    }
+  }, isMobile ? '⌘S' : '⌘ Save'), /*#__PURE__*/React.createElement(CheckpointSavePopover, {
     open: saveOpen,
     onClose: () => setSaveOpen(false),
     clientId: activeClientId,
     anchorRef: saveButtonRef
-  })), /*#__PURE__*/React.createElement("button", {
-    title: "Load checkpoint",
-    onClick: () => setLoadOpen(true),
-    disabled: !activeClientId,
-    style: iconBtnStyle(!!activeClientId)
-  }, "\uD83D\uDCC2"), /*#__PURE__*/React.createElement("button", {
-    title: "Undo last import/delete",
-    onClick: async () => {
-      if (!activeClientId || typeof restoreLastUndo !== 'function') return;
-      if (!confirm('Restore the last import/delete change for this client?')) return;
-      await restoreLastUndo();
-    },
-    disabled: !activeClientId,
-    style: {
-      background: T.bg2,
-      color: T.text2,
-      border: '1px solid ' + T.border,
-      height: 28,
-      borderRadius: 999,
-      padding: '0 12px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      cursor: activeClientId ? 'pointer' : 'not-allowed',
-      fontSize: 11.5,
-      fontWeight: 600,
-      flexShrink: 0,
-      opacity: activeClientId ? 1 : 0.4,
-      fontFamily: T.sansFamily,
-      transition: T.motion ? 'all 180ms ease' : 'none'
-    }
-  }, "Undo"), /*#__PURE__*/React.createElement(CheckpointLoadModal, {
+  })), /*#__PURE__*/React.createElement(CheckpointLoadModal, {
     open: loadOpen,
     onClose: () => setLoadOpen(false),
     clientId: activeClientId,
@@ -27627,27 +27629,23 @@ function Header() {
     allStates: newClientData.allStates,
     allPolicies: newClientData.allPolicies,
     onClose: () => setNewClientModalOpen(false)
-  }), !isMobile && /*#__PURE__*/React.createElement("button", {
-    title: "Guide",
-    onClick: () => window.dispatchEvent(new Event('policylens-open-guide')),
-    style: iconBtnStyle(true)
-  }, "?"), /*#__PURE__*/React.createElement(CostMeterChip, null), /*#__PURE__*/React.createElement("button", {
-    title: "Client Presentation - full-screen read-only view",
+  }), /*#__PURE__*/React.createElement("button", {
     onClick: () => setPresentMode(true),
     disabled: policies.length === 0,
+    title: "Client Presentation \u2014 full-screen read-only view",
     style: {
       background: policies.length === 0 ? T.bg2 : 'linear-gradient(135deg, ' + T.primary + ', ' + T.lavender + ')',
       color: policies.length === 0 ? T.text4 : '#fff',
       border: policies.length === 0 ? '1px solid ' + T.border : '1px solid transparent',
-      padding: isMobile ? '0 10px' : '0 14px',
-      height: 28,
+      padding: isMobile ? '0 12px' : '0 18px',
+      height: 32,
       borderRadius: 999,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 5,
+      gap: 6,
       cursor: policies.length === 0 ? 'not-allowed' : 'pointer',
-      fontSize: 12,
+      fontSize: 12.5,
       fontWeight: 600,
       opacity: policies.length === 0 ? 0.5 : 1,
       flexShrink: 0,
@@ -27656,7 +27654,7 @@ function Header() {
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
-      fontSize: 12
+      fontSize: 13
     }
   }, "\u25B6"), !isMobile && ' Client View'))), /*#__PURE__*/React.createElement("div", {
     style: {

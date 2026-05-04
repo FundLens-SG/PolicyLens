@@ -599,9 +599,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.10';
+const APP_VERSION = 'v2.4.0-rc1.11';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Repository title (Fraunces) + clearer Sync button';
+const APP_VERSION_NAME = 'Design v2 — slim header (3 pills) + Cmd+S shortcut';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -23682,6 +23682,23 @@ function Header() {
     } catch(_){}
   }, []);
 
+  // v2.4.0-rc1.11: Cmd+S / Ctrl+S keyboard shortcut for Save checkpoint
+  // (now that Save is the only persistent action in the header alongside
+  // + New client and Client View, an obvious shortcut helps FCs build muscle
+  // memory). Listens at window level; only fires when there's an active
+  // client. Prevents the browser's default Save Page As dialog.
+  useEffect(() => {
+    const handler = (e) => {
+      const isCmdOrCtrlS = (e.key === 's' || e.key === 'S') && (e.metaKey || e.ctrlKey);
+      if (!isCmdOrCtrlS) return;
+      if (!activeClientId) return;
+      e.preventDefault();
+      setSaveOpen(o => !o);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [activeClientId]);
+
   // v2.4.0-rc1.2: New chrome — light cream surface, Fraunces wordmark,
   // pill-style tabs, gradient-avatar client switcher. Old handlers + refs +
   // modal anchors all preserved so existing flows (Save/Load checkpoint,
@@ -23779,59 +23796,57 @@ function Header() {
           </button>
         )}
 
-        {/* Right-side action cluster (everything from the legacy header, themed v2) */}
+        {/* v2.4.0-rc1.11: Slim header right-side per the prototype.
+            Three pills only: + New client / Save / Client View.
+            Drive sync indicator already lives in PLSuiteStrip above —
+            no duplicate sync pill here. CostMeter, Help (?), Load
+            checkpoint, and Undo functionality preserved (handlers +
+            modals defined below) but no longer cluttering the header
+            chrome. They're reachable through Settings tab in rc1.13. */}
         <div style={{
           marginLeft: 'auto',
           display: 'flex', alignItems: 'center',
-          gap: isMobile ? 4 : 6, flexShrink: 0,
+          gap: 8, flexShrink: 0,
         }}>
-          {/* + New Client */}
-          <button title="New Client" onClick={() => setNewClientGuardOpen(true)}
+          {/* + New client (ghost pill) */}
+          <button onClick={() => setNewClientGuardOpen(true)}
+            title="New Client"
             style={{
-              background: T.primaryDim, color: T.primary,
-              border: '1px solid ' + T.primaryDim,
-              width: 28, height: 28, borderRadius: 999,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', fontSize: 14, fontWeight: 700, flexShrink: 0,
-              fontFamily: T.sansFamily, padding: 0,
+              background: 'transparent', color: T.text2,
+              border: '1px solid ' + T.border,
+              height: 32, padding: '0 14px',
+              borderRadius: 999, fontSize: 12.5, fontWeight: 500,
+              cursor: 'pointer', display: 'inline-flex',
+              alignItems: 'center', gap: 4,
+              fontFamily: T.sansFamily, flexShrink: 0,
+              whiteSpace: 'nowrap',
               transition: T.motion ? 'all 180ms ease' : 'none',
-            }}>+</button>
+            }}>{isMobile ? '+' : '+ New client'}</button>
 
-          {/* Drive sync status pill — existing component, unchanged */}
-          <SyncStatusPill driveState={driveState} />
-
-          {/* Save checkpoint (popover) */}
+          {/* Save checkpoint (ghost pill, opens CheckpointSavePopover) */}
           <div style={{ position: 'relative', display: 'inline-block' }}>
-            <button ref={saveButtonRef} title="Save checkpoint"
+            <button ref={saveButtonRef}
               onClick={() => setSaveOpen(o => !o)} disabled={!activeClientId}
-              style={iconBtnStyle(!!activeClientId)}>💾</button>
+              title="Save checkpoint (Cmd+S)"
+              style={{
+                background: 'transparent', color: T.text2,
+                border: '1px solid ' + T.border,
+                height: 32, padding: '0 14px',
+                borderRadius: 999, fontSize: 12.5, fontWeight: 500,
+                cursor: activeClientId ? 'pointer' : 'not-allowed',
+                opacity: activeClientId ? 1 : 0.4,
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                fontFamily: T.sansFamily, flexShrink: 0,
+                whiteSpace: 'nowrap',
+                transition: T.motion ? 'all 180ms ease' : 'none',
+              }}>{isMobile ? '⌘S' : '⌘ Save'}</button>
             <CheckpointSavePopover open={saveOpen} onClose={() => setSaveOpen(false)}
               clientId={activeClientId} anchorRef={saveButtonRef} />
           </div>
 
-          {/* Load checkpoint */}
-          <button title="Load checkpoint" onClick={() => setLoadOpen(true)} disabled={!activeClientId}
-            style={iconBtnStyle(!!activeClientId)}>📂</button>
-
-          {/* Undo */}
-          <button title="Undo last import/delete" onClick={async () => {
-              if (!activeClientId || typeof restoreLastUndo !== 'function') return;
-              if (!confirm('Restore the last import/delete change for this client?')) return;
-              await restoreLastUndo();
-            }} disabled={!activeClientId}
-            style={{
-              background: T.bg2, color: T.text2,
-              border: '1px solid ' + T.border,
-              height: 28, borderRadius: 999, padding: '0 12px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: activeClientId ? 'pointer' : 'not-allowed',
-              fontSize: 11.5, fontWeight: 600, flexShrink: 0,
-              opacity: activeClientId ? 1 : 0.4,
-              fontFamily: T.sansFamily,
-              transition: T.motion ? 'all 180ms ease' : 'none',
-            }}>Undo</button>
-
-          {/* Modals — same handlers, unchanged */}
+          {/* Modals — same handlers preserved but no in-header trigger.
+              CheckpointLoadModal opens from Settings tab in rc1.13.
+              NewClientGuardModal triggered by '+ New client' above. */}
           <CheckpointLoadModal open={loadOpen} onClose={() => setLoadOpen(false)}
             clientId={activeClientId} switchClient={switchClient} setTab={setTab} />
           <NewClientGuardModal open={newClientGuardOpen}
@@ -23849,17 +23864,9 @@ function Header() {
             allPolicies={newClientData.allPolicies}
             onClose={() => setNewClientModalOpen(false)} />}
 
-          {/* Help — desktop only */}
-          {!isMobile && <button title="Guide"
-            onClick={() => window.dispatchEvent(new Event('policylens-open-guide'))}
-            style={iconBtnStyle(true)}>?</button>}
-
-          {/* v15 STAGE 10: SESSION COST METER (existing component) */}
-          <CostMeterChip />
-
-          {/* Client View — primary gradient pill when policies exist, disabled otherwise */}
-          <button title="Client Presentation - full-screen read-only view"
-            onClick={() => setPresentMode(true)} disabled={policies.length === 0}
+          {/* ▶ Client View — primary gradient pill when policies exist */}
+          <button onClick={() => setPresentMode(true)} disabled={policies.length === 0}
+            title="Client Presentation — full-screen read-only view"
             style={{
               background: policies.length === 0
                 ? T.bg2
@@ -23868,16 +23875,16 @@ function Header() {
               border: policies.length === 0
                 ? '1px solid ' + T.border
                 : '1px solid transparent',
-              padding: isMobile ? '0 10px' : '0 14px', height: 28,
+              padding: isMobile ? '0 12px' : '0 18px', height: 32,
               borderRadius: 999,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               cursor: policies.length === 0 ? 'not-allowed' : 'pointer',
-              fontSize: 12, fontWeight: 600,
+              fontSize: 12.5, fontWeight: 600,
               opacity: policies.length === 0 ? 0.5 : 1, flexShrink: 0,
               fontFamily: T.sansFamily,
               transition: T.motion ? 'all 180ms ease' : 'none',
             }}>
-            <span style={{ fontSize: 12 }}>▶</span>{!isMobile && ' Client View'}
+            <span style={{ fontSize: 13 }}>▶</span>{!isMobile && ' Client View'}
           </button>
         </div>
       </div>
