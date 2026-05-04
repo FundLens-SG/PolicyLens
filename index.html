@@ -609,9 +609,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.26';
+const APP_VERSION = 'v2.4.0-rc1.28';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Notes & Report tabs harmonized to prototype';
+const APP_VERSION_NAME = 'Design v2 — Policies action menu + Retirement income projection chart';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -40309,40 +40309,52 @@ function Dashboard() {
         color: T.text2
       }
     }, hint)));
-  })(), totalPremium.annual > 0 && (() => {
-    const startYear = new Date().getFullYear();
-    const years = Array.from({
-      length: 25
-    }, (_, i) => startYear + i);
-    // Build per-year premium outflows — premium continues until the
-    // client reaches retirement age, then drops by ~half (term/saving
-    // policies often paid up by then). Crude but readable.
-    const yearsToRet = Math.max(0, retAge - age);
-    const annualPrem = totalPremium.annual || 0;
-    const premiums = years.map((y, i) => {
-      if (i < yearsToRet) return -annualPrem;
-      if (i < yearsToRet + 5) return -Math.round(annualPrem * 0.6);
-      return -Math.round(annualPrem * 0.3);
-    });
-    // Inflows ramp up: start small from any annuities/dividends now,
-    // rise as policies mature and CPF/annuities kick in at retAge.
-    const baseInflow = (retirementLite?.policyDividends || 0) * 12; // current annual dividend
-    const retInflow = totalAtRet * 12; // monthly → annual at retirement
-    const inflows = years.map((y, i) => {
-      if (i < 5) return Math.round(baseInflow);
-      if (i < yearsToRet) return Math.round(baseInflow + (retInflow - baseInflow) * (i / Math.max(1, yearsToRet)) * 0.3);
-      if (i < yearsToRet + 1) return Math.round(retInflow * 0.7);
-      return Math.round(retInflow);
-    });
-    const maxV = Math.max(1, ...premiums.map(Math.abs), ...inflows);
-    const w = 720,
-      h = 180,
-      pad = 30;
-    const xStep = (w - pad * 2) / (years.length - 1);
-    const yMid = h / 2;
-    const yScale = (yMid - pad / 2) / maxV;
-    const retIdx = years.indexOf(startYear + yearsToRet);
-    const labelYears = [years[0], years[Math.floor(years.length * 0.4)], years[Math.floor(years.length * 0.8)], years[years.length - 1]];
+  })(), retirementLite?.timeline && retirementLite.timeline.length >= 2 && (() => {
+    const tl = retirementLite.timeline;
+    const filtered = tl.filter(r => r.age >= Math.max(50, retAge - 5) && r.age <= 90);
+    if (filtered.length < 2) return null;
+    const inflPct = retirementLite.inflationRate || 0;
+    const w = 760,
+      h = 240,
+      padL = 50,
+      padR = 16,
+      padT = 30,
+      padB = 32;
+    const innerW = w - padL - padR;
+    const innerH = h - padT - padB;
+    const maxV = Math.max(1, ...filtered.map(r => Math.max(r.total, r.desired)));
+    const axisMax = Math.ceil(maxV / 1000) * 1000;
+    const xStep = innerW / Math.max(1, filtered.length - 1);
+    const xAt = i => padL + i * xStep;
+    const yAt = v => padT + innerH - v / axisMax * innerH;
+    const barW = Math.min(20, Math.max(8, xStep * 0.66));
+    const stackKeys = [{
+      key: 'cpf',
+      label: 'CPF LIFE',
+      color: T.sun
+    }, {
+      key: 'policy',
+      label: 'Policy income',
+      color: T.primary
+    }, {
+      key: 'dividends',
+      label: 'Dividends',
+      color: T.lavender
+    }, {
+      key: 'other',
+      label: 'Other sources',
+      color: T.sage
+    }];
+    const linePath = filtered.map((r, i) => `${i === 0 ? 'M' : 'L'} ${xAt(i)} ${yAt(r.desired)}`).join(' ');
+    const gapTopPath = filtered.map((r, i) => `${i === 0 ? 'M' : 'L'} ${xAt(i)} ${yAt(Math.max(r.desired, r.total))}`).join(' ');
+    const gapBotPath = [...filtered].reverse().map((r, i) => `L ${xAt(filtered.length - 1 - i)} ${yAt(r.total)}`).join(' ');
+    const gapPath = `${gapTopPath} ${gapBotPath} Z`;
+    const ySteps = [0, 0.25, 0.5, 0.75, 1].map(f => Math.round(axisMax * f));
+    const xLabels = filtered.filter(r => r.age % 5 === 0 || r.age === retAge);
+    const retRow = filtered.find(r => r.age === retAge) || filtered[0];
+    const peakYear = filtered.reduce((m, r) => r.total > m.total ? r : m, filtered[0]);
+    const gapAtRet = Math.max(0, (retRow.desired || 0) - (retRow.total || 0));
+    const summaryTone = gapAtRet === 0 ? T.green : gapAtRet < (retRow.desired || 1) * 0.2 ? T.warn : T.red;
     return /*#__PURE__*/React.createElement("div", {
       style: {
         background: T.bg2,
@@ -40356,7 +40368,9 @@ function Dashboard() {
         display: 'flex',
         alignItems: 'baseline',
         justifyContent: 'space-between',
-        marginBottom: 14
+        marginBottom: 6,
+        flexWrap: 'wrap',
+        gap: 12
       }
     }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -40365,19 +40379,34 @@ function Dashboard() {
         color: T.text,
         letterSpacing: '-0.015em'
       }
-    }, "Cash flows over 25 years"), /*#__PURE__*/React.createElement("div", {
+    }, "Retirement income projection"), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 12.5,
         color: T.text3,
         marginTop: 4
       }
-    }, "Premiums going out \xB7 maturities & dividends coming back")), /*#__PURE__*/React.createElement("div", {
+    }, "Year-by-year monthly income from age ", filtered[0].age, " to 90 \u2014 dashed line is your desired lifestyle, growing at ", inflPct.toFixed(1), "%/yr inflation")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        padding: '8px 14px',
+        borderRadius: 999,
+        background: `color-mix(in oklch, ${summaryTone} 18%, transparent)`,
+        color: summaryTone,
+        fontSize: 12,
+        fontWeight: 600,
+        fontVariantNumeric: 'tabular-nums',
+        whiteSpace: 'nowrap'
+      }
+    }, gapAtRet === 0 ? '✓ On track at age ' + retAge : 'Gap at ' + retAge + ': S$' + gapAtRet.toLocaleString() + '/mo')), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
-        gap: 12,
-        fontSize: 11
+        flexWrap: 'wrap',
+        gap: 16,
+        marginTop: 14,
+        marginBottom: 4,
+        fontSize: 11.5
       }
-    }, /*#__PURE__*/React.createElement("span", {
+    }, stackKeys.map(k => /*#__PURE__*/React.createElement("span", {
+      key: k.key,
       style: {
         display: 'flex',
         alignItems: 'center',
@@ -40386,12 +40415,30 @@ function Dashboard() {
       }
     }, /*#__PURE__*/React.createElement("span", {
       style: {
-        width: 10,
-        height: 10,
+        width: 12,
+        height: 8,
         borderRadius: 2,
-        background: T.primary
+        background: k.color
       }
-    }), "Out"), /*#__PURE__*/React.createElement("span", {
+    }), k.label)), /*#__PURE__*/React.createElement("span", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+        color: T.text2
+      }
+    }, /*#__PURE__*/React.createElement("svg", {
+      width: "22",
+      height: "8"
+    }, /*#__PURE__*/React.createElement("line", {
+      x1: "0",
+      y1: "4",
+      x2: "22",
+      y2: "4",
+      stroke: T.red,
+      strokeWidth: "2",
+      strokeDasharray: "4 3"
+    })), "Desired (with inflation)"), /*#__PURE__*/React.createElement("span", {
       style: {
         display: 'flex',
         alignItems: 'center',
@@ -40400,82 +40447,208 @@ function Dashboard() {
       }
     }, /*#__PURE__*/React.createElement("span", {
       style: {
-        width: 10,
-        height: 10,
+        width: 12,
+        height: 8,
         borderRadius: 2,
-        background: T.sage
+        background: `color-mix(in oklch, ${T.red} 16%, transparent)`,
+        border: `1px dashed color-mix(in oklch, ${T.red} 40%, transparent)`
       }
-    }), "In"))), /*#__PURE__*/React.createElement("svg", {
+    }), "Shortfall")), /*#__PURE__*/React.createElement("svg", {
       width: "100%",
       height: h,
       viewBox: `0 0 ${w} ${h}`,
+      preserveAspectRatio: "xMidYMid meet",
       style: {
-        display: 'block'
+        display: 'block',
+        overflow: 'visible'
       }
+    }, /*#__PURE__*/React.createElement("defs", null, /*#__PURE__*/React.createElement("pattern", {
+      id: "plRetGapPattern",
+      patternUnits: "userSpaceOnUse",
+      width: "6",
+      height: "6",
+      patternTransform: "rotate(45)"
     }, /*#__PURE__*/React.createElement("line", {
-      x1: pad,
-      y1: yMid,
-      x2: w - pad,
-      y2: yMid,
+      x1: "0",
+      y1: "0",
+      x2: "0",
+      y2: "6",
+      stroke: T.red,
+      strokeWidth: "1.2",
+      opacity: "0.32"
+    }))), ySteps.map((v, i) => /*#__PURE__*/React.createElement("g", {
+      key: i
+    }, /*#__PURE__*/React.createElement("line", {
+      x1: padL,
+      y1: yAt(v),
+      x2: w - padR,
+      y2: yAt(v),
       stroke: T.border,
-      strokeWidth: "1"
-    }), premiums.map((v, i) => {
-      const x = pad + i * xStep;
-      const bh = Math.abs(v) * yScale;
-      return /*#__PURE__*/React.createElement("rect", {
-        key: `p${i}`,
-        x: x - 5,
-        y: yMid,
-        width: "10",
-        height: bh,
-        fill: T.primary,
-        opacity: "0.85",
-        rx: "1.5"
-      });
-    }), inflows.map((v, i) => {
-      const x = pad + i * xStep;
-      const bh = v * yScale;
-      return /*#__PURE__*/React.createElement("rect", {
-        key: `r${i}`,
-        x: x - 5,
-        y: yMid - bh,
-        width: "10",
-        height: bh,
-        fill: T.sage,
-        opacity: "0.85",
-        rx: "1.5"
-      });
-    }), retIdx > 0 && (() => {
-      const x = pad + retIdx * xStep;
+      strokeWidth: "1",
+      opacity: i === 0 ? 0.7 : 0.35,
+      strokeDasharray: i === 0 ? '0' : '2 4'
+    }), /*#__PURE__*/React.createElement("text", {
+      x: padL - 8,
+      y: yAt(v) + 3,
+      fontSize: "10",
+      fill: T.text3,
+      textAnchor: "end",
+      fontVariantNumeric: "tabular-nums"
+    }, v >= 1000 ? '$' + (v / 1000).toFixed(0) + 'k' : '$' + v))), filtered.map((r, i) => {
+      const x = xAt(i);
+      let yCursor = yAt(0);
+      return /*#__PURE__*/React.createElement("g", {
+        key: 'b' + r.age
+      }, stackKeys.map(k => {
+        const v = r[k.key] || 0;
+        if (v <= 0) return null;
+        const segH = v / axisMax * innerH;
+        yCursor -= segH;
+        return /*#__PURE__*/React.createElement("rect", {
+          key: k.key,
+          x: x - barW / 2,
+          y: yCursor,
+          width: barW,
+          height: segH,
+          fill: k.color,
+          opacity: "0.92",
+          rx: "1"
+        });
+      }));
+    }), /*#__PURE__*/React.createElement("path", {
+      d: gapPath,
+      fill: "url(#plRetGapPattern)",
+      stroke: "none"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: linePath,
+      fill: "none",
+      stroke: T.red,
+      strokeWidth: "2",
+      strokeDasharray: "5 4",
+      strokeLinecap: "round",
+      opacity: "0.85"
+    }), (() => {
+      const idx = filtered.findIndex(r => r.age === retAge);
+      if (idx < 0) return null;
+      const x = xAt(idx);
       return /*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("line", {
         x1: x,
-        y1: "14",
+        y1: padT - 6,
         x2: x,
-        y2: h - 14,
+        y2: padT + innerH,
         stroke: T.lavender,
-        strokeWidth: "1",
+        strokeWidth: "1.2",
         strokeDasharray: "3 3"
+      }), /*#__PURE__*/React.createElement("rect", {
+        x: x - 32,
+        y: padT - 18,
+        width: "64",
+        height: "14",
+        rx: "7",
+        fill: T.bg,
+        stroke: T.lavender,
+        strokeWidth: "1"
       }), /*#__PURE__*/React.createElement("text", {
         x: x,
-        y: "10",
-        fontSize: "10",
+        y: padT - 8,
+        fontSize: "9.5",
         fill: T.lavender,
         textAnchor: "middle",
         fontWeight: "600"
-      }, "Age ", retAge));
-    })(), labelYears.map(y => {
-      const idx = years.indexOf(y);
-      if (idx < 0) return null;
-      const x = pad + idx * xStep;
+      }, "Retire at ", retAge));
+    })(), xLabels.map(r => {
+      const i = filtered.indexOf(r);
       return /*#__PURE__*/React.createElement("text", {
-        key: y,
-        x: x,
-        y: h - 4,
+        key: r.age,
+        x: xAt(i),
+        y: h - 12,
         fontSize: "10",
         fill: T.text3,
-        textAnchor: "middle"
-      }, y);
-    })));
+        textAnchor: "middle",
+        fontVariantNumeric: "tabular-nums"
+      }, r.age);
+    }), /*#__PURE__*/React.createElement("text", {
+      x: padL - 4,
+      y: h - 1,
+      fontSize: "9.5",
+      fill: T.text4,
+      textAnchor: "end"
+    }, "Age")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: 14,
+        marginTop: 14,
+        paddingTop: 14,
+        borderTop: `1px dashed ${T.border}`
+      }
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10.5,
+        color: T.text3,
+        fontWeight: 600,
+        letterSpacing: '0.04em',
+        textTransform: 'uppercase'
+      }
+    }, "At age ", retAge), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 16,
+        color: T.text,
+        fontWeight: 600,
+        marginTop: 4,
+        fontVariantNumeric: 'tabular-nums'
+      }
+    }, "S$", (retRow.total || 0).toLocaleString(), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 11,
+        color: T.text3,
+        fontWeight: 500
+      }
+    }, " / S$", (retRow.desired || 0).toLocaleString()))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10.5,
+        color: T.text3,
+        fontWeight: 600,
+        letterSpacing: '0.04em',
+        textTransform: 'uppercase'
+      }
+    }, "Peak income"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 16,
+        color: T.text,
+        fontWeight: 600,
+        marginTop: 4,
+        fontVariantNumeric: 'tabular-nums'
+      }
+    }, "S$", (peakYear.total || 0).toLocaleString(), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 11,
+        color: T.text3,
+        fontWeight: 500
+      }
+    }, " at age ", peakYear.age))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10.5,
+        color: T.text3,
+        fontWeight: 600,
+        letterSpacing: '0.04em',
+        textTransform: 'uppercase'
+      }
+    }, "Inflation"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 16,
+        color: T.text,
+        fontWeight: 600,
+        marginTop: 4,
+        fontVariantNumeric: 'tabular-nums'
+      }
+    }, inflPct.toFixed(1), "%", /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 11,
+        color: T.text3,
+        fontWeight: 500
+      }
+    }, " /yr \xB7 target \xD7", Math.pow(1 + inflPct / 100, Math.max(0, retAge - age)).toFixed(2))))));
   })(), /*#__PURE__*/React.createElement("div", {
     style: {
       background: T.bg2,
@@ -47842,6 +48015,8 @@ function Policies() {
   const [staged, setStaged] = useState([]);
   const [unsentCaptures, setUnsentCaptures] = useState([]);
   const [snapGoOpen, setSnapGoOpen] = useState(false);
+  // v2.4.0-rc1.27: scan-source picker popover state
+  const [scanMenuOpen, setScanMenuOpen] = useState(false);
   // Check for unsent snap captures on mount
   useEffect(() => {
     PolicyDB.getUnsentCaptures().then(caps => {
@@ -52518,8 +52693,9 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
   })())), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
-      gap: 6,
-      flexWrap: 'wrap'
+      gap: 8,
+      flexWrap: 'wrap',
+      alignItems: 'center'
     }
   }, /*#__PURE__*/React.createElement("input", {
     ref: cameraRef,
@@ -52546,92 +52722,200 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       e.target.value = '';
     }
   }), /*#__PURE__*/React.createElement("button", {
-    className: "btn-secondary btn-sm",
     disabled: scanning,
-    title: isMobile ? 'Snap Mode' : scanning ? 'Finish current extraction first' : 'Snap Mode',
-    onClick: startSnapMode
-  }, "\uD83D\uDCF7", !isMobile && ' Camera'), /*#__PURE__*/React.createElement("button", {
-    className: "btn-secondary btn-sm",
-    disabled: scanning,
-    title: isMobile ? 'Gallery' : scanning ? 'Finish current extraction first' : 'Gallery',
-    onClick: () => {
-      const inp = document.createElement('input');
-      inp.type = 'file';
-      inp.accept = 'image/*';
-      inp.multiple = true;
-      inp.onchange = e => {
-        const files = Array.from(e.target.files);
-        if (files.length) {
-          stagePhotos(files);
-        }
-      };
-      inp.click();
-    }
-  }, "\uD83D\uDDBC", !isMobile && ' Gallery'), /*#__PURE__*/React.createElement("button", {
-    className: "btn-secondary btn-sm",
-    disabled: scanning,
-    title: isMobile ? 'Upload' : scanning ? 'Finish current extraction first' : 'Upload',
-    onClick: () => uploadRef.current?.click()
-  }, "\uD83D\uDCC4", !isMobile && ' Upload'), /*#__PURE__*/React.createElement("button", {
-    className: "btn-secondary btn-sm",
-    disabled: scanning,
-    title: scanning ? 'Finish current extraction first' : '',
-    onClick: async () => {
-      try {
-        const items = await navigator.clipboard.read();
-        const files = [];
-        for (const item of items) {
-          for (const type of item.types) {
-            if (type.startsWith('image/')) {
-              const blob = await item.getType(type);
-              files.push(new File([blob], 'paste_' + Date.now() + '.' + type.split('/')[1], {
-                type
-              }));
-            }
-          }
-        }
-        if (files.length > 0) {
-          stagePhotos(files);
-        } else {
-          const text = await navigator.clipboard.readText();
-          if (text && text.length > 20) {
-            stagePhotos([new File([text], 'paste.txt', {
-              type: 'text/plain'
-            })]);
-          } else {
-            toast('No content in clipboard — copy a screenshot or text first', 'warning');
-          }
-        }
-      } catch (e) {
-        toast('Clipboard access denied — try Ctrl+V on the drop zone', 'error');
-      }
-    },
-    title: scanning ? 'Finish current extraction first' : 'Paste from clipboard'
-  }, "\uD83D\uDCCB", !isMobile && ' Paste'), /*#__PURE__*/React.createElement("button", {
-    className: "btn-primary btn-sm",
-    disabled: scanning,
-    title: scanning ? 'Finish current extraction first' : '',
     onClick: () => {
       setEditing(null);
       setScanResult(null);
       setShowForm(true);
+    },
+    style: {
+      height: 32,
+      padding: '0 16px',
+      fontSize: 12,
+      fontWeight: 600,
+      borderRadius: 999,
+      background: 'var(--bg2)',
+      color: 'var(--text2)',
+      border: `1px solid ${T_V2.border}`,
+      cursor: scanning ? 'wait' : 'pointer',
+      whiteSpace: 'nowrap',
+      fontFamily: T_V2.sansFamily,
+      opacity: scanning ? 0.5 : 1,
+      transition: T_V2.motion ? 'all 180ms ease' : 'none'
     }
-  }, "+ Add"), selected.size > 0 && /*#__PURE__*/React.createElement("button", {
+  }, "+ Add manually"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'relative'
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    disabled: scanning,
+    onClick: () => setScanMenuOpen(o => !o),
+    style: {
+      height: 32,
+      padding: '0 16px',
+      fontSize: 12,
+      fontWeight: 600,
+      borderRadius: 999,
+      background: 'var(--gold)',
+      color: '#fff',
+      border: '1px solid var(--gold)',
+      cursor: scanning ? 'wait' : 'pointer',
+      whiteSpace: 'nowrap',
+      fontFamily: T_V2.sansFamily,
+      opacity: scanning ? 0.5 : 1,
+      transition: T_V2.motion ? 'all 180ms ease' : 'none',
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 6
+    }
+  }, "\uD83D\uDCC4 Scan documents", /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 9,
+      opacity: 0.7,
+      marginLeft: 2
+    }
+  }, "\u25BE")), scanMenuOpen && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    onClick: () => setScanMenuOpen(false),
+    style: {
+      position: 'fixed',
+      inset: 0,
+      zIndex: 50
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'absolute',
+      top: 'calc(100% + 6px)',
+      right: 0,
+      zIndex: 60,
+      background: 'var(--bg)',
+      border: `1px solid ${T_V2.border}`,
+      borderRadius: T_V2.radius || 14,
+      padding: 6,
+      minWidth: 220,
+      boxShadow: '0 10px 28px rgba(60,40,20,0.12)',
+      fontFamily: T_V2.sansFamily
+    }
+  }, [['📷', 'Take photo', 'Snap a policy with the camera', () => {
+    setScanMenuOpen(false);
+    startSnapMode();
+  }], ['🖼', 'Choose from gallery', 'Pick existing images from your device', () => {
+    setScanMenuOpen(false);
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = 'image/*';
+    inp.multiple = true;
+    inp.onchange = e => {
+      const files = Array.from(e.target.files);
+      if (files.length) {
+        stagePhotos(files);
+      }
+    };
+    inp.click();
+  }], ['📄', 'Upload files', 'PDFs, Excel, Word, images…', () => {
+    setScanMenuOpen(false);
+    uploadRef.current?.click();
+  }], ['📋', 'Paste from clipboard', 'Screenshot or copied text', async () => {
+    setScanMenuOpen(false);
+    try {
+      const items = await navigator.clipboard.read();
+      const files = [];
+      for (const item of items) {
+        for (const type of item.types) {
+          if (type.startsWith('image/')) {
+            const blob = await item.getType(type);
+            files.push(new File([blob], 'paste_' + Date.now() + '.' + type.split('/')[1], {
+              type
+            }));
+          }
+        }
+      }
+      if (files.length > 0) {
+        stagePhotos(files);
+      } else {
+        const text = await navigator.clipboard.readText();
+        if (text && text.length > 20) {
+          stagePhotos([new File([text], 'paste.txt', {
+            type: 'text/plain'
+          })]);
+        } else {
+          toast('No content in clipboard — copy a screenshot or text first', 'warning');
+        }
+      }
+    } catch (e) {
+      toast('Clipboard access denied — try Ctrl+V on the drop zone', 'error');
+    }
+  }]].map(([icon, title, sub, onClick]) => /*#__PURE__*/React.createElement("button", {
+    key: title,
+    onClick: onClick,
+    style: {
+      width: '100%',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 12,
+      padding: '10px 12px',
+      background: 'transparent',
+      border: 'none',
+      borderRadius: 8,
+      cursor: 'pointer',
+      textAlign: 'left',
+      transition: T_V2.motion ? 'background 120ms ease' : 'none'
+    },
+    onMouseEnter: e => e.currentTarget.style.background = 'var(--bg2)',
+    onMouseLeave: e => e.currentTarget.style.background = 'transparent'
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 18,
+      flexShrink: 0
+    }
+  }, icon), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      fontWeight: 600,
+      color: 'var(--text)'
+    }
+  }, title), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--text3)',
+      marginTop: 1
+    }
+  }, sub))))))), selected.size > 0 && /*#__PURE__*/React.createElement("button", {
     className: "btn-danger btn-sm",
     onClick: deleteSelected
   }, "\uD83D\uDDD1 Delete (", selected.size, ")"), policies.length > 0 && selected.size === 0 && /*#__PURE__*/React.createElement("button", {
-    className: "btn-danger btn-sm",
-    style: {
-      opacity: .7
-    },
     onClick: async () => {
       if (!confirm('⚠️ Delete ALL ' + policies.length + ' policies?\n\nThis cannot be undone. Client profile will not be affected.')) return;
       if (!confirm('Final confirmation — permanently delete all policies?')) return;
       for (const pol of policies) await deletePolicy(pol.id);
       toast('All policies deleted', 'success');
     },
+    style: {
+      height: 32,
+      padding: '0 12px',
+      fontSize: 11,
+      fontWeight: 500,
+      borderRadius: 999,
+      background: 'transparent',
+      color: 'var(--text3)',
+      border: 'none',
+      cursor: 'pointer',
+      whiteSpace: 'nowrap',
+      fontFamily: T_V2.sansFamily,
+      transition: T_V2.motion ? 'color 180ms ease' : 'none'
+    },
+    onMouseEnter: e => {
+      e.currentTarget.style.color = 'var(--red)';
+    },
+    onMouseLeave: e => {
+      e.currentTarget.style.color = 'var(--text3)';
+    },
     title: "Delete all policies"
-  }, "\uD83D\uDDD1", !isMobile && ' Delete All'))), !showForm && /*#__PURE__*/React.createElement(DropZone, {
+  }, "\uD83D\uDDD1 Clear all"))), !showForm && /*#__PURE__*/React.createElement(DropZone, {
     active: !showForm,
     onFiles: files => stagePhotos(files),
     label: "\uD83D\uDCCE Drop or paste any document or images \u2014 they'll queue for extraction"
