@@ -609,9 +609,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.45';
-const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Settings 8-point friction reduction (Drive slim, groups, etc.)';
+const APP_VERSION = 'v2.4.0-rc1.46';
+const APP_VERSION_DATE = '2026-05-05';
+const APP_VERSION_NAME = 'Design v2 — Local Backup removed, AI extraction moved to Advanced';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -69396,94 +69396,6 @@ function DriveDiscoveryCard() {
     }
   }, busy ? 'Scanning Drive\u2026' : '\uD83D\uDD0D Discover Clients from Drive'));
 }
-function LocalBackupCard() {
-  const {
-    policies,
-    clientProfile,
-    clientName,
-    savePolicy,
-    deletePolicy,
-    saveProfile
-  } = useContext(AppCtx);
-  const loadRef = useRef(null);
-  // v2.4.0-rc1.41: demoted to a quiet inline strip — was a full card with
-  // helper paragraph competing with Drive sync for visual weight. Now sits
-  // as a tight one-line "Local backup · Download / Load" row right below
-  // the Drive card so it's adjacent but obviously secondary.
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: 14,
-      flexWrap: 'wrap',
-      padding: '10px 18px',
-      background: 'var(--bg2)',
-      border: '1px solid ' + T_V2.border,
-      borderRadius: T_V2.radiusLg,
-      marginBottom: 16,
-      marginTop: -4
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 11,
-      color: 'var(--text3)',
-      fontWeight: 600,
-      letterSpacing: '0.04em',
-      textTransform: 'uppercase'
-    }
-  }, "Local backup"), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 11,
-      color: 'var(--text3)'
-    }
-  }, "Manual JSON archive \u2014 useful for offline transfer."), /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginLeft: 'auto',
-      display: 'flex',
-      gap: 6,
-      flexWrap: 'wrap'
-    }
-  }, /*#__PURE__*/React.createElement("button", {
-    onClick: () => doLocalSave(clientProfile, clientName, policies),
-    style: {
-      padding: '5px 12px',
-      fontSize: 11.5,
-      fontWeight: 500,
-      borderRadius: 999,
-      background: 'var(--bg)',
-      color: 'var(--text2)',
-      border: '1px solid ' + T_V2.border,
-      cursor: 'pointer',
-      whiteSpace: 'nowrap',
-      fontFamily: T_V2.sansFamily
-    }
-  }, "\u2B07 Download"), /*#__PURE__*/React.createElement("input", {
-    ref: loadRef,
-    type: "file",
-    accept: ".json",
-    style: {
-      display: 'none'
-    },
-    onChange: e => {
-      if (e.target.files[0]) doLocalLoad(e.target.files[0], policies, savePolicy, deletePolicy, saveProfile, clientProfile);
-      e.target.value = '';
-    }
-  }), /*#__PURE__*/React.createElement("button", {
-    onClick: () => loadRef.current?.click(),
-    style: {
-      padding: '5px 12px',
-      fontSize: 11.5,
-      fontWeight: 500,
-      borderRadius: 999,
-      background: 'var(--bg)',
-      color: 'var(--text2)',
-      border: '1px solid ' + T_V2.border,
-      cursor: 'pointer',
-      whiteSpace: 'nowrap',
-      fontFamily: T_V2.sansFamily
-    }
-  }, "\u2B06 Restore")));
-}
 function CloudSyncCard() {
   const {
     runCloudSync,
@@ -70944,7 +70856,7 @@ function Settings() {
       color: 'var(--text4)',
       marginTop: 2
     }
-  }, "Where your client portfolios live and how they back up.")), /*#__PURE__*/React.createElement(DriveConnectionCard, null), /*#__PURE__*/React.createElement(LocalBackupCard, null), /*#__PURE__*/React.createElement("div", {
+  }, "Where your client portfolios live.")), /*#__PURE__*/React.createElement(DriveConnectionCard, null), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 8,
       marginBottom: 14
@@ -70963,10 +70875,95 @@ function Settings() {
       color: 'var(--text4)',
       marginTop: 2
     }
-  }, "How clients are organised, AI extraction, and document unlock.")), /*#__PURE__*/React.createElement(ClientTiersPanel, {
+  }, "How clients are organised and how protected PDFs unlock.")), /*#__PURE__*/React.createElement(ClientTiersPanel, {
     tierDefinitions: tierDefinitions,
     saveTierDefinitions: saveTierDefinitions
-  }), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("details", {
+    style: {
+      marginBottom: 16,
+      background: 'var(--bg2)',
+      border: '1px solid ' + T_V2.border,
+      borderRadius: T_V2.radiusLg
+    }
+  }, /*#__PURE__*/React.createElement("summary", {
+    style: {
+      cursor: 'pointer',
+      padding: '14px 18px',
+      fontSize: 13,
+      color: 'var(--text2)',
+      userSelect: 'none',
+      listStyle: 'none',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 18
+    }
+  }, "\uD83D\uDD13"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: T_V2.serifFamily,
+      fontSize: 18,
+      fontWeight: 400,
+      letterSpacing: '-0.015em',
+      color: 'var(--text)',
+      lineHeight: 1.2
+    }
+  }, "PDF unlock passwords"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 11,
+      color: 'var(--text3)'
+    }
+  }, "\xB7 optional, NRIC + DOB tried automatically"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      marginLeft: 'auto',
+      fontSize: 11,
+      color: 'var(--text4)'
+    }
+  }, "\u25BC")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: '4px 18px 18px',
+      borderTop: '1px solid ' + T_V2.border,
+      marginTop: 0,
+      paddingTop: 14
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontSize: 11.5,
+      color: 'var(--text3)',
+      margin: '0 0 12px',
+      lineHeight: 1.5
+    }
+  }, "Preset passwords to auto-unlock protected policy PDFs. Common: NRIC, DOB in ", /*#__PURE__*/React.createElement("code", {
+    style: {
+      fontFamily: T_V2.monoFamily,
+      fontSize: 10.5,
+      padding: '1px 5px',
+      background: 'var(--bg3)',
+      borderRadius: 3
+    }
+  }, "DDMMYYYY"), " format. Client NRIC and DOB from the profile are already tried automatically \u2014 only add custom passwords here."), /*#__PURE__*/React.createElement(PdfPasswordEditor, null))), /*#__PURE__*/React.createElement("details", {
+    style: {
+      marginBottom: 16,
+      background: 'var(--bg2)',
+      border: '1px solid var(--border)',
+      borderRadius: 8
+    }
+  }, /*#__PURE__*/React.createElement("summary", {
+    style: {
+      cursor: 'pointer',
+      padding: '10px 14px',
+      fontSize: 12,
+      fontWeight: 600,
+      color: 'var(--text2)',
+      userSelect: 'none'
+    }
+  }, "Advanced (debug tools \u2014 for troubleshooting)"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: '4px 12px 12px'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
     className: "card",
     style: {
       marginBottom: 16,
@@ -71184,92 +71181,7 @@ function Settings() {
       lineHeight: 1.5,
       margin: '8px 0 0'
     }
-  }, "Private service-account JSON stays in the Worker, never in the browser. Leave as the built-in URL unless you're testing another Worker.")))), /*#__PURE__*/React.createElement("details", {
-    style: {
-      marginBottom: 16,
-      background: 'var(--bg2)',
-      border: '1px solid ' + T_V2.border,
-      borderRadius: T_V2.radiusLg
-    }
-  }, /*#__PURE__*/React.createElement("summary", {
-    style: {
-      cursor: 'pointer',
-      padding: '14px 18px',
-      fontSize: 13,
-      color: 'var(--text2)',
-      userSelect: 'none',
-      listStyle: 'none',
-      display: 'flex',
-      alignItems: 'center',
-      gap: 10
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 18
-    }
-  }, "\uD83D\uDD13"), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontFamily: T_V2.serifFamily,
-      fontSize: 18,
-      fontWeight: 400,
-      letterSpacing: '-0.015em',
-      color: 'var(--text)',
-      lineHeight: 1.2
-    }
-  }, "PDF unlock passwords"), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 11,
-      color: 'var(--text3)'
-    }
-  }, "\xB7 optional, NRIC + DOB tried automatically"), /*#__PURE__*/React.createElement("span", {
-    style: {
-      marginLeft: 'auto',
-      fontSize: 11,
-      color: 'var(--text4)'
-    }
-  }, "\u25BC")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: '4px 18px 18px',
-      borderTop: '1px solid ' + T_V2.border,
-      marginTop: 0,
-      paddingTop: 14
-    }
-  }, /*#__PURE__*/React.createElement("p", {
-    style: {
-      fontSize: 11.5,
-      color: 'var(--text3)',
-      margin: '0 0 12px',
-      lineHeight: 1.5
-    }
-  }, "Preset passwords to auto-unlock protected policy PDFs. Common: NRIC, DOB in ", /*#__PURE__*/React.createElement("code", {
-    style: {
-      fontFamily: T_V2.monoFamily,
-      fontSize: 10.5,
-      padding: '1px 5px',
-      background: 'var(--bg3)',
-      borderRadius: 3
-    }
-  }, "DDMMYYYY"), " format. Client NRIC and DOB from the profile are already tried automatically \u2014 only add custom passwords here."), /*#__PURE__*/React.createElement(PdfPasswordEditor, null))), /*#__PURE__*/React.createElement("details", {
-    style: {
-      marginBottom: 16,
-      background: 'var(--bg2)',
-      border: '1px solid var(--border)',
-      borderRadius: 8
-    }
-  }, /*#__PURE__*/React.createElement("summary", {
-    style: {
-      cursor: 'pointer',
-      padding: '10px 14px',
-      fontSize: 12,
-      fontWeight: 600,
-      color: 'var(--text2)',
-      userSelect: 'none'
-    }
-  }, "Advanced (debug tools \u2014 for troubleshooting)"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: '4px 12px 12px'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, "Private service-account JSON stays in the Worker, never in the browser. Leave as the built-in URL unless you're testing another Worker.")))), /*#__PURE__*/React.createElement("div", {
     className: "card",
     style: {
       marginBottom: 16

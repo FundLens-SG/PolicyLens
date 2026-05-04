@@ -599,9 +599,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.45';
-const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Settings 8-point friction reduction (Drive slim, groups, etc.)';
+const APP_VERSION = 'v2.4.0-rc1.46';
+const APP_VERSION_DATE = '2026-05-05';
+const APP_VERSION_NAME = 'Design v2 — Local Backup removed, AI extraction moved to Advanced';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -47344,50 +47344,6 @@ function DriveDiscoveryCard() {
   );
 }
 
-function LocalBackupCard() {
-  const { policies, clientProfile, clientName, savePolicy, deletePolicy, saveProfile } = useContext(AppCtx);
-  const loadRef = useRef(null);
-  // v2.4.0-rc1.41: demoted to a quiet inline strip — was a full card with
-  // helper paragraph competing with Drive sync for visual weight. Now sits
-  // as a tight one-line "Local backup · Download / Load" row right below
-  // the Drive card so it's adjacent but obviously secondary.
-  return (
-    <div style={{
-      display:'flex',alignItems:'center',gap:14,flexWrap:'wrap',
-      padding:'10px 18px',background:'var(--bg2)',
-      border:'1px solid '+T_V2.border,borderRadius:T_V2.radiusLg,
-      marginBottom:16,marginTop:-4,
-    }}>
-      <span style={{fontSize:11,color:'var(--text3)',fontWeight:600,letterSpacing:'0.04em',textTransform:'uppercase'}}>
-        Local backup
-      </span>
-      <span style={{fontSize:11,color:'var(--text3)'}}>
-        Manual JSON archive — useful for offline transfer.
-      </span>
-      <div style={{marginLeft:'auto',display:'flex',gap:6,flexWrap:'wrap'}}>
-        <button onClick={() => doLocalSave(clientProfile, clientName, policies)} style={{
-          padding:'5px 12px',fontSize:11.5,fontWeight:500,
-          borderRadius:999,background:'var(--bg)',color:'var(--text2)',
-          border:'1px solid '+T_V2.border,cursor:'pointer',whiteSpace:'nowrap',
-          fontFamily:T_V2.sansFamily,
-        }}>
-          ⬇ Download
-        </button>
-        <input ref={loadRef} type="file" accept=".json" style={{display:'none'}}
-          onChange={e => { if(e.target.files[0]) doLocalLoad(e.target.files[0], policies, savePolicy, deletePolicy, saveProfile, clientProfile); e.target.value=''; }} />
-        <button onClick={() => loadRef.current?.click()} style={{
-          padding:'5px 12px',fontSize:11.5,fontWeight:500,
-          borderRadius:999,background:'var(--bg)',color:'var(--text2)',
-          border:'1px solid '+T_V2.border,cursor:'pointer',whiteSpace:'nowrap',
-          fontFamily:T_V2.sansFamily,
-        }}>
-          ⬆ Restore
-        </button>
-      </div>
-    </div>
-  );
-}
-
 function CloudSyncCard() {
   const { runCloudSync, policies } = useContext(AppCtx);
   const [syncing, setSyncing] = useState(false);
@@ -48087,14 +48043,11 @@ function Settings() {
 
       <div style={{marginTop:8,marginBottom:14}}>
         <div style={{fontSize:11,fontWeight:600,color:'var(--text3)',letterSpacing:'0.06em',textTransform:'uppercase'}}>Data</div>
-        <div style={{fontSize:12,color:'var(--text4)',marginTop:2}}>Where your client portfolios live and how they back up.</div>
+        <div style={{fontSize:12,color:'var(--text4)',marginTop:2}}>Where your client portfolios live.</div>
       </div>
 
       {/* ═══ v2.1.0 PHASE A: GOOGLE DRIVE ═══ */}
       <DriveConnectionCard />
-
-      {/* ═══ v2.2.0-beta: LOCAL BACKUP (belt-and-suspenders) ═══ */}
-      <LocalBackupCard />
 
       {/* v2.3.0-rc2c.5s: DriveDiscoveryCard merged into DriveConnectionCard */}
 
@@ -48107,12 +48060,43 @@ function Settings() {
 
       <div style={{marginTop:8,marginBottom:14}}>
         <div style={{fontSize:11,fontWeight:600,color:'var(--text3)',letterSpacing:'0.06em',textTransform:'uppercase'}}>Workspace</div>
-        <div style={{fontSize:12,color:'var(--text4)',marginTop:2}}>How clients are organised, AI extraction, and document unlock.</div>
+        <div style={{fontSize:12,color:'var(--text4)',marginTop:2}}>How clients are organised and how protected PDFs unlock.</div>
       </div>
 
       {/* ═══ CLIENT TIERS ═══ */}
       <ClientTiersPanel tierDefinitions={tierDefinitions} saveTierDefinitions={saveTierDefinitions} />
 
+      {/* v2.4.0-rc1.44: PDF Unlock Passwords collapsed by default.
+          Most FCs never touch this — client NRIC + DOB are tried
+          automatically from the profile. Hidden behind a disclosure
+          so the Settings page reads cleaner on first load. */}
+      <details style={{marginBottom:16,background:'var(--bg2)',border:'1px solid '+T_V2.border,borderRadius:T_V2.radiusLg}}>
+        <summary style={{cursor:'pointer',padding:'14px 18px',fontSize:13,color:'var(--text2)',userSelect:'none',listStyle:'none',display:'flex',alignItems:'center',gap:10}}>
+          <span style={{fontSize:18}}>🔓</span>
+          <span style={{fontFamily:T_V2.serifFamily,fontSize:18,fontWeight:400,letterSpacing:'-0.015em',color:'var(--text)',lineHeight:1.2}}>PDF unlock passwords</span>
+          <span style={{fontSize:11,color:'var(--text3)'}}>· optional, NRIC + DOB tried automatically</span>
+          <span style={{marginLeft:'auto',fontSize:11,color:'var(--text4)'}}>▼</span>
+        </summary>
+        <div style={{padding:'4px 18px 18px',borderTop:'1px solid '+T_V2.border,marginTop:0,paddingTop:14}}>
+          <p style={{fontSize:11.5,color:'var(--text3)',margin:'0 0 12px',lineHeight:1.5}}>
+            Preset passwords to auto-unlock protected policy PDFs. Common: NRIC, DOB in <code style={{fontFamily:T_V2.monoFamily,fontSize:10.5,padding:'1px 5px',background:'var(--bg3)',borderRadius:3}}>DDMMYYYY</code> format. Client NRIC and DOB from the profile are already tried automatically — only add custom passwords here.
+          </p>
+          <PdfPasswordEditor />
+        </div>
+      </details>
+
+      {/* rc2e.50: Six debug/diagnostics cards (Scan Cache, Extraction Queue,
+          Extraction Diagnostics, Correction Memory, Learned Patterns, Pipeline
+          Telemetry) collapsed under one Advanced disclosure. Default closed
+          so daily-use Settings stays clean for the FC; one click reveals all
+          tools intact for troubleshooting. */}
+      <details style={{marginBottom:16,background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:8}}>
+        <summary style={{cursor:'pointer',padding:'10px 14px',fontSize:12,fontWeight:600,color:'var(--text2)',userSelect:'none'}}>
+          Advanced (debug tools — for troubleshooting)
+        </summary>
+        <div style={{padding:'4px 12px 12px'}}>
+      {/* v2.4.0-rc1.46: AI document extraction moved into Advanced —
+          inference is auto-routed, daily-use FCs never need this. */}
       {/* v2.4.0-rc1.43: AI Document Extraction simplified.
           Was: full card with 4 lines of reassurance copy + always-visible
           Document AI Proxy URL input + Save/Test/Reset row + paragraph
@@ -48191,35 +48175,7 @@ function Settings() {
         </details>
       </div>
 
-      {/* v2.4.0-rc1.44: PDF Unlock Passwords collapsed by default.
-          Most FCs never touch this — client NRIC + DOB are tried
-          automatically from the profile. Hidden behind a disclosure
-          so the Settings page reads cleaner on first load. */}
-      <details style={{marginBottom:16,background:'var(--bg2)',border:'1px solid '+T_V2.border,borderRadius:T_V2.radiusLg}}>
-        <summary style={{cursor:'pointer',padding:'14px 18px',fontSize:13,color:'var(--text2)',userSelect:'none',listStyle:'none',display:'flex',alignItems:'center',gap:10}}>
-          <span style={{fontSize:18}}>🔓</span>
-          <span style={{fontFamily:T_V2.serifFamily,fontSize:18,fontWeight:400,letterSpacing:'-0.015em',color:'var(--text)',lineHeight:1.2}}>PDF unlock passwords</span>
-          <span style={{fontSize:11,color:'var(--text3)'}}>· optional, NRIC + DOB tried automatically</span>
-          <span style={{marginLeft:'auto',fontSize:11,color:'var(--text4)'}}>▼</span>
-        </summary>
-        <div style={{padding:'4px 18px 18px',borderTop:'1px solid '+T_V2.border,marginTop:0,paddingTop:14}}>
-          <p style={{fontSize:11.5,color:'var(--text3)',margin:'0 0 12px',lineHeight:1.5}}>
-            Preset passwords to auto-unlock protected policy PDFs. Common: NRIC, DOB in <code style={{fontFamily:T_V2.monoFamily,fontSize:10.5,padding:'1px 5px',background:'var(--bg3)',borderRadius:3}}>DDMMYYYY</code> format. Client NRIC and DOB from the profile are already tried automatically — only add custom passwords here.
-          </p>
-          <PdfPasswordEditor />
-        </div>
-      </details>
 
-      {/* rc2e.50: Six debug/diagnostics cards (Scan Cache, Extraction Queue,
-          Extraction Diagnostics, Correction Memory, Learned Patterns, Pipeline
-          Telemetry) collapsed under one Advanced disclosure. Default closed
-          so daily-use Settings stays clean for the FC; one click reveals all
-          tools intact for troubleshooting. */}
-      <details style={{marginBottom:16,background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:8}}>
-        <summary style={{cursor:'pointer',padding:'10px 14px',fontSize:12,fontWeight:600,color:'var(--text2)',userSelect:'none'}}>
-          Advanced (debug tools — for troubleshooting)
-        </summary>
-        <div style={{padding:'4px 12px 12px'}}>
       {/* ═══ EXTRACT CACHE ═══ */}
       <div className="card" style={{marginBottom:16}}>
         <h3 style={{fontSize:14,fontWeight:600,marginBottom:4}}>📦 Scan Cache</h3>
