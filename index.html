@@ -609,9 +609,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.21';
+const APP_VERSION = 'v2.4.0-rc1.22';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Profile sub-cards promoted to top-level (2×2 grid)';
+const APP_VERSION_NAME = 'Design v2 — Bulk Verify modal harmonized (Fraunces title + sticky footer)';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -45356,33 +45356,48 @@ function BulkVerifyModal({
   }, /*#__PURE__*/React.createElement("div", {
     className: "modal",
     style: {
-      maxWidth: 900,
-      maxHeight: '90vh'
+      maxWidth: 1100,
+      maxHeight: '90vh',
+      padding: 0,
+      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'column'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
+      padding: '20px 26px',
+      borderBottom: '1px solid var(--border)',
+      background: 'linear-gradient(180deg, color-mix(in oklch, var(--gold) 12%, var(--bg2)), var(--bg2))',
       display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
-      marginBottom: 12,
-      gap: 10,
+      alignItems: 'center',
+      gap: 14,
       flexWrap: 'wrap'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 24
+    }
+  }, "\u2728"), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: '1 1 240px',
       minWidth: 0
     }
   }, /*#__PURE__*/React.createElement("h3", {
     style: {
-      fontSize: 16,
-      fontWeight: 700
+      fontFamily: T_V2.serifFamily,
+      fontSize: 22,
+      fontWeight: 400,
+      letterSpacing: '-0.015em',
+      color: 'var(--text)',
+      margin: 0,
+      lineHeight: 1.2
     }
-  }, "Verify Extracted Policies"), /*#__PURE__*/React.createElement("p", {
+  }, "Review what we found"), /*#__PURE__*/React.createElement("p", {
     style: {
-      fontSize: 11,
+      fontSize: 12,
       color: 'var(--text3)',
-      marginTop: 2
+      marginTop: 4,
+      lineHeight: 1.5
     }
   }, needsReviewCount > 0 ? /*#__PURE__*/React.createElement(React.Fragment, null, "AI extracted ", /*#__PURE__*/React.createElement("strong", {
     style: {
@@ -45408,18 +45423,46 @@ function BulkVerifyModal({
     style: {
       display: 'flex',
       alignItems: 'center',
-      gap: 8,
+      gap: 10,
       flexShrink: 0
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, needsReviewCount === 0 && totalCount > 0 && /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 6,
+      padding: '5px 11px',
+      borderRadius: 999,
+      fontSize: 11,
+      fontWeight: 600,
+      background: 'color-mix(in oklch, var(--green2) 14%, transparent)',
+      color: 'var(--green2)',
+      border: '1px solid color-mix(in oklch, var(--green2) 30%, transparent)'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 6,
+      height: 6,
+      borderRadius: 999,
+      background: 'var(--green2)'
+    }
+  }), "Ready to import"), /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
       color: 'var(--text3)',
       fontSize: 20,
-      padding: '4px 8px'
+      padding: '4px 8px',
+      border: 'none',
+      cursor: 'pointer'
     }
-  }, "\xD7"))), scanProgress && scanProgress.pctComplete < 100 && /*#__PURE__*/React.createElement("div", {
+  }, "\xD7"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: '14px 18px',
+      overflow: 'auto',
+      flex: 1
+    }
+  }, scanProgress && scanProgress.pctComplete < 100 && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '8px 16px',
       background: 'color-mix(in oklch, var(--gold) 9%, transparent)',
@@ -47157,14 +47200,15 @@ function BulkVerifyModal({
         maxWidth: 200
       }
     }, "\uD83D\uDCDD ", item.notes)));
-  })), /*#__PURE__*/React.createElement("div", {
+  }))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginTop: 16,
-      paddingTop: 12,
-      borderTop: '1px solid var(--border)'
+      padding: '14px 22px',
+      borderTop: '1px solid var(--border)',
+      background: 'var(--bg2)',
+      flexShrink: 0
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {

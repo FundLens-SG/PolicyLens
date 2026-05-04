@@ -599,9 +599,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.21';
+const APP_VERSION = 'v2.4.0-rc1.22';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Profile sub-cards promoted to top-level (2×2 grid)';
+const APP_VERSION_NAME = 'Design v2 — Bulk Verify modal harmonized (Fraunces title + sticky footer)';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -33467,11 +33467,23 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
 
   return (
     <div className="modal-overlay" onClick={e=>{if(e.target===e.currentTarget)onClose()}}>
-      <div className="modal" style={{maxWidth:900,maxHeight:'90vh'}}>
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:12,gap:10,flexWrap:'wrap'}}>
+      {/* v2.4.0-rc1.22: Bulk Verify modal visual harmonization
+          - Wider shell (1100px) so the policy card grid breathes
+          - Fraunces serif title with the "Review what we found" narrative
+            tone from the design prototype
+          - Header strip gets a soft gold→bg2 gradient + 24px padding
+          - Status pill replaces the dense one-line summary copy */}
+      <div className="modal" style={{maxWidth:1100,maxHeight:'90vh',padding:0,overflow:'hidden',display:'flex',flexDirection:'column'}}>
+        <div style={{
+          padding:'20px 26px',
+          borderBottom:'1px solid var(--border)',
+          background:'linear-gradient(180deg, color-mix(in oklch, var(--gold) 12%, var(--bg2)), var(--bg2))',
+          display:'flex',alignItems:'center',gap:14,flexWrap:'wrap'
+        }}>
+          <span style={{fontSize:24}}>✨</span>
           <div style={{flex:'1 1 240px',minWidth:0}}>
-            <h3 style={{fontSize:16,fontWeight:700}}>Verify Extracted Policies</h3>
-            <p style={{fontSize:11,color:'var(--text3)',marginTop:2}}>
+            <h3 style={{fontFamily:T_V2.serifFamily,fontSize:22,fontWeight:400,letterSpacing:'-0.015em',color:'var(--text)',margin:0,lineHeight:1.2}}>Review what we found</h3>
+            <p style={{fontSize:12,color:'var(--text3)',marginTop:4,lineHeight:1.5}}>
               {needsReviewCount > 0
                 ? <>AI extracted <strong style={{color:'var(--text2)'}}>{totalCount}</strong> polic{totalCount===1?'y':'ies'}. <strong style={{color:'var(--gold)'}}>{needsReviewCount}</strong> need your eye — the rest are auto-trusted.</>
                 : <>AI extracted <strong style={{color:'var(--text2)'}}>{totalCount}</strong> polic{totalCount===1?'y':'ies'}. <strong style={{color:'var(--green2)'}}>All fields high confidence</strong> — review and import.</>}
@@ -33479,10 +33491,22 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
               {ownerKeysInView.length > 1 && <> · <strong style={{color:'var(--text2)'}}>{ownerKeysInView.length}</strong> owners detected</>}
             </p>
           </div>
-          <div style={{display:'flex',alignItems:'center',gap:8,flexShrink:0}}>
-            <button onClick={onClose} style={{background:'none',color:'var(--text3)',fontSize:20,padding:'4px 8px'}}>×</button>
+          <div style={{display:'flex',alignItems:'center',gap:10,flexShrink:0}}>
+            {needsReviewCount === 0 && totalCount > 0 && (
+              <span style={{
+                display:'inline-flex',alignItems:'center',gap:6,
+                padding:'5px 11px',borderRadius:999,fontSize:11,fontWeight:600,
+                background:'color-mix(in oklch, var(--green2) 14%, transparent)',
+                color:'var(--green2)',border:'1px solid color-mix(in oklch, var(--green2) 30%, transparent)'
+              }}>
+                <span style={{width:6,height:6,borderRadius:999,background:'var(--green2)'}} />
+                Ready to import
+              </span>
+            )}
+            <button onClick={onClose} style={{background:'none',color:'var(--text3)',fontSize:20,padding:'4px 8px',border:'none',cursor:'pointer'}}>×</button>
           </div>
         </div>
+        <div style={{padding:'14px 18px',overflow:'auto',flex:1}}>
 
         {/* Live extraction progress */}
         {scanProgress && scanProgress.pctComplete < 100 && (
@@ -34203,7 +34227,10 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
           })}
         </div>
 
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:16,paddingTop:12,borderTop:'1px solid var(--border)'}}>
+        </div>
+        {/* v2.4.0-rc1.22: Sticky footer strip — actions always visible
+            even when policy cards overflow vertically. */}
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'14px 22px',borderTop:'1px solid var(--border)',background:'var(--bg2)',flexShrink:0}}>
           <div style={{fontSize:12,color:'var(--text2)'}}>{items.filter(it=>it._selected).length} of {items.length} policies selected</div>
           <div style={{display:'flex',gap:8}}>
             <button className="btn-secondary" onClick={onClose}>Cancel</button>
