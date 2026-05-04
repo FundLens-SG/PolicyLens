@@ -157,8 +157,8 @@ html,body{overflow-x:hidden;width:100%}
 html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text)}
 #root{height:100%;display:flex;flex-direction:column}
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
-input,select,textarea{font-family:inherit;background:var(--bg);color:var(--text);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;font-size:13px;outline:none;transition:border .2s}
-input:focus,select:focus,textarea:focus{border-color:var(--gold)}
+input,select,textarea{font-family:inherit;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:13px;outline:none;transition:border .15s ease, box-shadow .15s ease}
+input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-dim)}
 input::placeholder{color:var(--text3)}
 select{cursor:pointer}
 button{font-family:inherit;cursor:pointer;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:500;transition:all .15s}
@@ -592,9 +592,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.6';
+const APP_VERSION = 'v2.4.0-rc1.7';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — internal CKG suite strip + page padding';
+const APP_VERSION_NAME = 'Design v2 — Profile tab title (Fraunces) + quiet labels + input focus';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -28128,10 +28128,14 @@ function ProfileTab() {
 
   return (
     <div className="fade-in">
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12,flexWrap:'wrap',gap:8}}>
-        <div>
-          <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
-            <h2 style={{fontSize:18,fontWeight:600,margin:0}}>My Profile</h2>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:T_V2.sectionGap||28,flexWrap:'wrap',gap:14}}>
+        <div style={{minWidth:0,flex:'1 1 auto'}}>
+          {/* v2.4.0-rc1.7: Page title in Fraunces 32, subtitle below.
+              The TierPicker / Reviewed / Mark Reviewed pills row sits
+              UNDER the subtitle so the heading reads cleanly. */}
+          <h2 style={{fontFamily:T_V2.serifFamily,fontSize:32,fontWeight:400,letterSpacing:'-0.015em',color:'var(--text)',margin:0,lineHeight:1.1}}>My Profile</h2>
+          <div style={{fontSize:13,color:'var(--text3)',marginTop:4,lineHeight:1.5}}>Client details used across all policies — fill once, use everywhere.</div>
+          <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',marginTop:14}}>
             {/* v2.2.0-rc2.1.4: TierPicker reads from driveState (single source of truth) */}
             {(() => {
               const tier = driveState?.tier || UNASSIGNED_TIER;
@@ -28178,7 +28182,6 @@ function ProfileTab() {
               Merge Client
             </button>}
           </div>
-          <p style={{fontSize:12,color:'var(--text3)',marginTop:4}}>Client details used across all policies — fill once, use everywhere</p>
         </div>
         <div style={{display:'flex',gap:6,alignItems:'center'}}>
           <input ref={camRef} type="file" accept="image/*" capture="environment" multiple style={{display:'none'}} onChange={e=>{scanProfile(e.target.files);e.target.value='';}} />
@@ -28344,7 +28347,7 @@ function ProfileTab() {
         <div style={{fontSize:11,color:'var(--text3)',marginBottom:10}}>Used for protection gap analysis, retirement projections, and cashflow timeline</div>
         <div className="resp-2col" style={{gap:16}}>
           <div style={{background:'var(--bg3)',borderRadius:8,padding:12,border:'1px solid var(--border)'}}>
-            <div style={{fontSize:10,fontWeight:700,color:'var(--gold)',textTransform:'uppercase',letterSpacing:'.5px',marginBottom:8}}>Income & Retirement</div>
+            <div style={{fontSize:11,fontWeight:600,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.04em',marginBottom:8}}>Income &amp; Retirement</div>
             <div className="field"><label>Gross Annual Income ($)</label><input type="number" value={p.annualIncome||''} onChange={e=>set('annualIncome',e.target.value)} placeholder="e.g. 120000" /><div style={{fontSize:10,color:'var(--text3)'}}>{p.annualIncome ? '$'+(Math.round(p.annualIncome/12)).toLocaleString()+'/mth' : ''}</div></div>
             <div className="field"><label>Desired Monthly Income in Retirement</label><input type="number" value={p.desiredRetIncome||''} onChange={e=>set('desiredRetIncome',e.target.value)} placeholder="e.g. 5000" /><div style={{fontSize:10,color:'var(--text3)'}}>Target lifestyle expense in today's dollars</div></div>
             <div style={{fontSize:9,color:'var(--text3)',fontStyle:'italic',marginTop:6}}>Retirement age and inflation rate are now set in the <strong>Assumptions</strong> card below.</div>
@@ -28366,7 +28369,7 @@ function ProfileTab() {
         <div className="resp-2col" style={{marginTop:12,gap:16}}>
           {cpfEligible && (
           <div style={{background:'var(--bg3)',borderRadius:8,padding:12,border:'1px solid rgba(91,168,160,.2)'}}>
-            <div style={{fontSize:10,fontWeight:700,color:'var(--green2)',textTransform:'uppercase',letterSpacing:'.5px',marginBottom:8}}>CPF LIFE Projection</div>
+            <div style={{fontSize:11,fontWeight:600,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.04em',marginBottom:8}}>CPF LIFE Projection</div>
 
             {/* Toggle: Use scheme target vs actual balances */}
             <div style={{marginBottom:8}}>
@@ -28571,7 +28574,7 @@ function ProfileTab() {
           )}
           <div style={{background:'var(--bg3)',borderRadius:8,padding:12,border:'1px solid rgba(157,138,191,.2)',gridColumn:cpfEligible?'auto':'1 / -1'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
-              <div style={{fontSize:10,fontWeight:700,color:'#9d8abf',textTransform:'uppercase',letterSpacing:'.5px'}}>Other Retirement Income</div>
+              <div style={{fontSize:11,fontWeight:600,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.04em'}}>Other Retirement Income</div>
               <button className="btn-secondary btn-sm" onClick={()=>set('otherRetIncome',[...(p.otherRetIncome||[]),{id:'ori_'+Date.now(),source:'',amount:'',appreciation:'2',fromAge:'65',toAge:'85'}])} style={{fontSize:9,padding:'2px 8px'}}>+ Add</button>
             </div>
             {(p.otherRetIncome||[]).length === 0 && <div style={{fontSize:10,color:'var(--text3)',textAlign:'center',padding:8}}>Rental, dividends, part-time work, spousal support…</div>}

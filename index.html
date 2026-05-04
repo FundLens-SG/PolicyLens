@@ -156,8 +156,8 @@ html,body{overflow-x:hidden;width:100%}
 html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text)}
 #root{height:100%;display:flex;flex-direction:column}
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
-input,select,textarea{font-family:inherit;background:var(--bg);color:var(--text);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;font-size:13px;outline:none;transition:border .2s}
-input:focus,select:focus,textarea:focus{border-color:var(--gold)}
+input,select,textarea{font-family:inherit;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:13px;outline:none;transition:border .15s ease, box-shadow .15s ease}
+input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-dim)}
 input::placeholder{color:var(--text3)}
 select{cursor:pointer}
 button{font-family:inherit;cursor:pointer;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:500;transition:all .15s}
@@ -602,9 +602,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.6';
+const APP_VERSION = 'v2.4.0-rc1.7';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — internal CKG suite strip + page padding';
+const APP_VERSION_NAME = 'Design v2 — Profile tab title (Fraunces) + quiet labels + input focus';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -34349,25 +34349,42 @@ function ProfileTab() {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 12,
+      alignItems: 'flex-start',
+      marginBottom: T_V2.sectionGap || 28,
       flexWrap: 'wrap',
-      gap: 8
+      gap: 14
     }
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      minWidth: 0,
+      flex: '1 1 auto'
+    }
+  }, /*#__PURE__*/React.createElement("h2", {
+    style: {
+      fontFamily: T_V2.serifFamily,
+      fontSize: 32,
+      fontWeight: 400,
+      letterSpacing: '-0.015em',
+      color: 'var(--text)',
+      margin: 0,
+      lineHeight: 1.1
+    }
+  }, "My Profile"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: 'var(--text3)',
+      marginTop: 4,
+      lineHeight: 1.5
+    }
+  }, "Client details used across all policies \u2014 fill once, use everywhere."), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 10,
-      flexWrap: 'wrap'
+      flexWrap: 'wrap',
+      marginTop: 14
     }
-  }, /*#__PURE__*/React.createElement("h2", {
-    style: {
-      fontSize: 18,
-      fontWeight: 600,
-      margin: 0
-    }
-  }, "My Profile"), (() => {
+  }, (() => {
     const tier = driveState?.tier || UNASSIGNED_TIER;
     return /*#__PURE__*/React.createElement(TierPicker, {
       currentTier: tier,
@@ -34459,13 +34476,7 @@ function ProfileTab() {
       outline: 'none',
       whiteSpace: 'nowrap'
     }
-  }, "Merge Client")), /*#__PURE__*/React.createElement("p", {
-    style: {
-      fontSize: 12,
-      color: 'var(--text3)',
-      marginTop: 4
-    }
-  }, "Client details used across all policies \u2014 fill once, use everywhere")), /*#__PURE__*/React.createElement("div", {
+  }, "Merge Client"))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 6,
@@ -34819,11 +34830,11 @@ function ProfileTab() {
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 10,
-      fontWeight: 700,
-      color: 'var(--gold)',
+      fontSize: 11,
+      fontWeight: 600,
+      color: 'var(--text3)',
       textTransform: 'uppercase',
-      letterSpacing: '.5px',
+      letterSpacing: '0.04em',
       marginBottom: 8
     }
   }, "Income & Retirement"), /*#__PURE__*/React.createElement("div", {
@@ -34919,11 +34930,11 @@ function ProfileTab() {
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 10,
-      fontWeight: 700,
-      color: 'var(--green2)',
+      fontSize: 11,
+      fontWeight: 600,
+      color: 'var(--text3)',
       textTransform: 'uppercase',
-      letterSpacing: '.5px',
+      letterSpacing: '0.04em',
       marginBottom: 8
     }
   }, "CPF LIFE Projection"), /*#__PURE__*/React.createElement("div", {
@@ -35434,11 +35445,11 @@ function ProfileTab() {
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 10,
-      fontWeight: 700,
-      color: '#9d8abf',
+      fontSize: 11,
+      fontWeight: 600,
+      color: 'var(--text3)',
       textTransform: 'uppercase',
-      letterSpacing: '.5px'
+      letterSpacing: '0.04em'
     }
   }, "Other Retirement Income"), /*#__PURE__*/React.createElement("button", {
     className: "btn-secondary btn-sm",
