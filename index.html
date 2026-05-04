@@ -98,16 +98,62 @@ html,body{overflow-x:hidden;width:100%}
 /* Landscape support — both orientations are fully usable. The OrientationLock
    floating button (bottom-right) provides optional manual lock for users who
    prefer to fix orientation. No automatic portrait-only enforcement. */
+/* v2.4.0-rc1.4: Global theme swap to the design v2 light cream + warm coral
+   palette (sunset / warmth 0.6 / light, baked from PL_TOKENS_DEFAULTS).
+   These resolved oklch values flow through ~2100 var(--…) callsites
+   across the app — header, dashboard, tabs, modals all pick up the new
+   theme automatically. ~850 hardcoded brass/navy literals will be swept
+   in rc1.5. The legacy dark theme is preserved as a comment for one-batch
+   revert + eventual restore via a future Settings → Dark mode toggle.
+
+   Legacy dark (pre-v2.4):
+     --bg:#0b0f1a;--bg2:#111827;--bg3:#171f2e;--bg4:#1f2a3d;
+     --text:#e8dcc8;--text2:#a39580;--text3:#6b6050;
+     --border:#1e2738;--border2:#2a3548;
+     --gold:#d4a96a;--gold2:#e8c992;--gold3:#b8935a;
+*/
 :root{
---bg:#0b0f1a;--bg2:#111827;--bg3:#171f2e;--bg4:#1f2a3d;
---text:#e8dcc8;--text2:#a39580;--text3:#6b6050;
---border:#1e2738;--border2:#2a3548;
---gold:#d4a96a;--gold2:#e8c992;--gold3:#b8935a;--gold-dim:rgba(212,169,106,.12);
---green:#34d399;--green2:#6ee7b7;--green-dim:rgba(52,211,153,.12);
---red:#ef5350;--red2:#fca5a5;--red-dim:rgba(239,83,80,.1);
---blue:#5b8fd9;--blue2:#7daaec;--purple:#9d8abf;--orange:#d4a96a;--teal:#5ba8a0;--pink:#c97b9a;
---cat-protection:#5b8fd9;--cat-savings:#5ba8a0;--cat-health:#c97b9a;
---cat-investment:#9d8abf;--cat-retirement:#d4a96a;--cat-maternity:#c97b9a;
+/* Surfaces — warm cream paper */
+--bg:oklch(0.979 0.017 65.2);
+--bg2:oklch(0.963 0.019 65.2);
+--bg3:oklch(0.931 0.023 65.2);
+--bg4:oklch(0.888 0.027 65.2);
+/* Text — warm near-black on cream */
+--text:oklch(0.26 0.022 50);
+--text2:oklch(0.42 0.022 50);
+--text3:oklch(0.58 0.022 50);
+--text4:oklch(0.72 0.018 50);
+/* Borders */
+--border:oklch(0.88 0.014 70);
+--border2:oklch(0.82 0.018 70);
+--hair:oklch(0.26 0.022 50 / 0.08);
+/* Primary — warm coral (replaces brass gold). The --gold name is kept
+   for ~259 inline uses; semantically it now resolves to coral. */
+--gold:oklch(0.72 0.16 38);
+--gold2:oklch(0.82 0.13 38);
+--gold3:oklch(0.62 0.18 38);
+--gold-dim:color-mix(in oklch, oklch(0.72 0.16 38) 18%, transparent);
+/* Semantic */
+--green:oklch(0.68 0.13 155);
+--green2:oklch(0.74 0.10 155);
+--green-dim:color-mix(in oklch, oklch(0.68 0.13 155) 18%, transparent);
+--red:oklch(0.65 0.18 25);
+--red2:oklch(0.78 0.10 25);
+--red-dim:color-mix(in oklch, oklch(0.65 0.18 25) 14%, transparent);
+/* Accent — palette colors (sunset) */
+--blue:oklch(0.74 0.12 230);
+--blue2:oklch(0.82 0.10 245);
+--purple:oklch(0.74 0.11 295);
+--orange:oklch(0.72 0.16 38);
+--teal:oklch(0.74 0.10 175);
+--pink:oklch(0.82 0.10 5);
+/* Category — uses palette accents */
+--cat-protection:oklch(0.74 0.12 230);
+--cat-savings:oklch(0.74 0.10 155);
+--cat-health:oklch(0.82 0.10 5);
+--cat-investment:oklch(0.74 0.11 295);
+--cat-retirement:oklch(0.86 0.14 90);
+--cat-maternity:oklch(0.82 0.10 5);
 }
 html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text)}
 #root{height:100%;display:flex;flex-direction:column}
@@ -558,9 +604,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.3';
+const APP_VERSION = 'v2.4.0-rc1.4';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Dashboard (hero + KPIs + family + bars + cashflow + policies)';
+const APP_VERSION_NAME = 'Design v2 — global cream theme + dashboard data fixes';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -38628,10 +38674,14 @@ function Dashboard() {
   const activePols = policies.filter(p => p && p.status !== 'matured' && p.status !== 'surrendered' && p.status !== 'lapsed');
   const insurerCount = new Set(activePols.map(p => p.insurer).filter(Boolean)).size;
   const protectionGap = (() => {
+    // rc1.4 fix: gaps[].cur (not .have) is the legacy field name for current
+    // coverage. The rc1.3 build read .have which was always undefined → the
+    // KPI showed full need as a gap.
     let g = 0;
     for (const row of gaps || []) {
+      if (row.isFlag) continue; // skip Hospitalisation (boolean, not $)
       const need = parseFloat(row.need) || 0,
-        have = parseFloat(row.have) || 0;
+        have = parseFloat(row.cur) || 0;
       if (need > have) g += need - have;
     }
     return g;
@@ -38723,10 +38773,14 @@ function Dashboard() {
     emoji: '🌅'
   }];
   // Protection rows (4 — Death/TPD/CI/DI)
-  const protectionRows = (gaps || []).slice(0, 4).map(g => ({
-    key: g.label || g.key,
-    label: g.label,
-    have: parseFloat(g.have) || 0,
+  // rc1.4 fix: read g.cur (legacy field name), and pick the four numeric
+  // gap rows (Death / TPD / CI / Disability) — skip Early CI (subset of CI)
+  // and Hospitalisation (isFlag, not numeric).
+  const protectionRows = [0, 1, 2, 4].map(i => gaps?.[i]).filter(Boolean).map(g => ({
+    key: g.label || 'gap',
+    label: (g.label || '').replace(/\s*\([^)]*\)\s*$/, ''),
+    // strip trailing "(20yr expenses)" detail
+    have: parseFloat(g.cur) || 0,
     need: parseFloat(g.need) || 0
   })).filter(r => r.need > 0);
   // Retirement bar segments
@@ -38757,14 +38811,18 @@ function Dashboard() {
   });
   const retBarMax = Math.max(desiredMonthly, totalAtRet, 1);
   // Categories grouped — for All policies table
-  const catOrder = ['protection', 'savings', 'health', 'investment', 'retirement', 'maternity'];
+  // rc1.4 fix: include cash_investments (FDs / T-bills / Bonds) and
+  // other_assets so the All-Policies table doesn't silently drop them.
+  const catOrder = ['protection', 'savings', 'health', 'investment', 'retirement', 'maternity', 'cash_investments', 'other_assets'];
   const catLabel = {
     protection: 'Protection',
     savings: 'Savings',
     health: 'Health',
     investment: 'Investment',
     retirement: 'Retirement',
-    maternity: 'Maternity'
+    maternity: 'Maternity',
+    cash_investments: 'Cash / FI / Bonds',
+    other_assets: 'Other Assets'
   };
   const catTone = {
     protection: T.sky,
@@ -38772,7 +38830,9 @@ function Dashboard() {
     health: T.blush,
     investment: T.lavender,
     retirement: T.sun,
-    maternity: T.blush
+    maternity: T.blush,
+    cash_investments: T.sage,
+    other_assets: T.text3
   };
   // What-if state
   const [whatIfPct, setWhatIfPct] = React.useState(100);
