@@ -609,9 +609,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.14';
+const APP_VERSION = 'v2.4.0-rc1.15';
 const APP_VERSION_DATE = '2026-05-04';
-const APP_VERSION_NAME = 'Design v2 — Settings page header + Quick actions card (Load/Undo/Help)';
+const APP_VERSION_NAME = 'Fix: false-positive Drive sync prompt for connected users';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -47373,11 +47373,43 @@ function Policies() {
     try {
       if (!window._user?.id) return; // not signed in
       if (driveLSGet(DRIVE_LS.localOnlyMode) === '1') return; // legacy local-only user — handled by migration modal below
+      // v2.4.0-rc1.15 fix: skip immediately for users who've ever connected
+      // Drive on this device. The hub session's provider_token kicks in
+      // asynchronously; checking status here at mount can return false
+      // while Drive boot is still in progress, falsely triggering the
+      // 'Connect Google Drive' prompt for users who are already connected.
+      if (driveLSGet(DRIVE_LS.hasEverConnected) === '1') return;
       if (driveClient.getStatus() === 'connected') return; // already on Drive
       const dismissedAt = parseInt(driveLSGet(DRIVE_PROMPT_DISMISS_KEY) || '0', 10);
       if (dismissedAt && Date.now() - dismissedAt < DRIVE_PROMPT_DISMISS_MS) return;
-      // 1.5s delay so the page settles before the modal pops
-      setTimeout(() => setDriveSyncPromptOpen(true), 1500);
+      // 3s delay (was 1.5s) gives Drive boot — including the
+      // _refreshDriveTokenViaEdgeFn fallback path — time to finish.
+      // Re-check Drive status when the timer fires; if Drive connected
+      // during the wait, skip the prompt entirely. This closes the
+      // race condition where the suite strip shows '● Drive synced'
+      // but the modal still pops because the at-mount status check
+      // fired before the boot resolved.
+      setTimeout(() => {
+        try {
+          if (driveClient.getStatus() === 'connected') return;
+          if (driveLSGet(DRIVE_LS.hasEverConnected) === '1') return;
+          if (driveLSGet(DRIVE_LS.oauthGrantedAt)) return;
+          // Also skip if the hub session has a provider_token — that means
+          // the user just signed in via the hub and Drive is reachable but
+          // hasn't pinged yet.
+          const sb = window._SB || (typeof getSB === 'function' ? getSB() : null);
+          if (sb?.auth?.getSession) {
+            sb.auth.getSession().then(r => {
+              if (r?.data?.session?.provider_token) return;
+              setDriveSyncPromptOpen(true);
+            }).catch(() => setDriveSyncPromptOpen(true));
+            return;
+          }
+          setDriveSyncPromptOpen(true);
+        } catch (_) {
+          setDriveSyncPromptOpen(true);
+        }
+      }, 3000);
     } catch (_) {}
   }, [policies?.length]);
 
