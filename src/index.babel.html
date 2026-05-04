@@ -599,9 +599,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.46';
+const APP_VERSION = 'v2.4.0-rc1.47';
 const APP_VERSION_DATE = '2026-05-05';
-const APP_VERSION_NAME = 'Design v2 — Local Backup removed, AI extraction moved to Advanced';
+const APP_VERSION_NAME = 'Hotfix — Client View TDZ error (GOLD const hoisted)';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -21177,6 +21177,20 @@ function App() {
 function PresentMode() {
   const {policies, clientProfile, clientName, setPresentMode} = useContext(AppCtx);
 
+  // ── Styling: v2.4.0-rc1.23 — migrated from dark navy to cream theme.
+  //    Same constant names retained so the 200+ inline references below
+  //    don't need to change. They now resolve to design v2 tokens.
+  // v2.4.0-rc1.47: hoisted to the top of the function body so derived
+  //    metric blocks below (policyEvents.color, eventTone) can read GOLD
+  //    without hitting a temporal-dead-zone "Cannot access GOLD before
+  //    initialization" runtime error in Client View.
+  const NAVY = 'var(--bg)';            // outer background — cream paper
+  const NAVY_LIGHT = 'var(--bg2)';     // card surface — soft elevated cream
+  const GOLD = 'var(--gold)';          // accent — terracotta/coral
+  const GOLD_DARK = 'var(--gold3)';    // accent darker
+  const CREAM = 'var(--text)';         // primary text — deep walnut
+  const MUTED = 'var(--text3)';        // secondary text
+
   // ── Derived metrics — all inline, no external dependencies ──
   const active = policies.filter(p =>
     p.status !== 'lapsed' && p.status !== 'surrendered' && p.status !== 'matured'
@@ -21555,15 +21569,7 @@ function PresentMode() {
     setPresentMode(false);
   };
 
-  // ── Styling: v2.4.0-rc1.23 — migrated from dark navy to cream theme.
-  //    Same constant names retained so the 200+ inline references below
-  //    don't need to change. They now resolve to design v2 tokens. ──
-  const NAVY = 'var(--bg)';            // outer background — cream paper
-  const NAVY_LIGHT = 'var(--bg2)';     // card surface — soft elevated cream
-  const GOLD = 'var(--gold)';          // accent — terracotta/coral
-  const GOLD_DARK = 'var(--gold3)';    // accent darker
-  const CREAM = 'var(--text)';         // primary text — deep walnut
-  const MUTED = 'var(--text3)';        // secondary text
+  // (Styling constants moved to top of function — see hoisted block above.)
 
   return (
     <div style={{
