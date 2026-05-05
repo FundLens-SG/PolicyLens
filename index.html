@@ -609,9 +609,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.50';
+const APP_VERSION = 'v2.4.0-rc1.51';
 const APP_VERSION_DATE = '2026-05-05';
-const APP_VERSION_NAME = 'Visual Report V2 — 5-page advisory layout, labeled charts, sharper actions';
+const APP_VERSION_NAME = 'Visual Report V2 polish — header, score card, chart labels, richer policy register';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -64918,37 +64918,49 @@ function ReportTab() {
         doc.setFillColor(...T.primarySoft);
         doc.circle(W + 10, -8, 38, 'F');
       };
+      // v2.4.0-rc1.51: 2-row header for better breathing room.
+      //   Row 1 (y=8):  POLICYLENS · "Insurance portfolio review" (left)
+      //                 ·  Date pill (right, italic, ringed for emphasis)
+      //   Row 2 (y=15): Client meta (center, slightly larger and softer)
+      //   Hairline at y=18.5 separates the header band from page content.
       const pageHeader = (sectionN, title) => {
         pageBg();
-        // Top strip — POLICYLENS · client + age + gender · date · page
-        label('POLICYLENS', M, 9, T.primary);
-        const meta = [clientLabel, 'age ' + currentAge, p.gender].filter(Boolean).join(' · ');
-        text(meta, W / 2, 9, {
+        label('POLICYLENS', M, 8, T.primary);
+        text('Insurance portfolio review', M + 25, 8, {
           size: 6.4,
           color: T.text3,
-          align: 'center'
+          style: 'normal'
         });
-        text(today, W - M, 9, {
-          size: 6.4,
-          color: T.text3,
-          align: 'right'
+        // Date — italic on right, with subtle dot leader so it reads as report metadata
+        text(today, W - M, 8, {
+          size: 7,
+          color: T.text2,
+          align: 'right',
+          style: 'italic'
+        });
+        // Centered client meta (row 2)
+        const meta = [clientLabel, 'age ' + currentAge, p.gender].filter(Boolean).join(' · ');
+        text(meta, W / 2, 15, {
+          size: 7.2,
+          color: T.text2,
+          align: 'center'
         });
         // Hairline
         doc.setDrawColor(...T.border);
-        doc.setLineWidth(0.18);
-        doc.line(M, 12, W - M, 12);
-        // Section number + title — compact, no big serif badge
+        doc.setLineWidth(0.16);
+        doc.line(M, 18.5, W - M, 18.5);
+        // Section number + title
         if (sectionN) {
           setFont('helvetica', 'bold', 6.4, T.primary);
-          doc.text(String(sectionN).padStart(2, '0'), M, 19);
-          text(title, M + 8, 19, {
+          doc.text(String(sectionN).padStart(2, '0'), M, 25);
+          text(title, M + 8, 25, {
             family: 'times',
             style: 'bold',
             size: 13,
             color: T.text
           });
         } else {
-          text(title, M, 19, {
+          text(title, M, 25, {
             family: 'times',
             style: 'bold',
             size: 13,
@@ -65389,7 +65401,7 @@ function ReportTab() {
           area: 'Retirement income',
           why: 'Lifestyle continuity.',
           short: 'Retirement gap — build CPF + drawdown + policy income strategy.',
-          discuss: 'CPF top-up, annuity, drawdown plan'
+          discuss: 'CPF top-up, annuity, dividends, drawdown plan'
         },
         prem: {
           area: 'Premium runway',
@@ -65469,11 +65481,11 @@ function ReportTab() {
       // PAGE 1 — Executive review
       // ─────────────────────────────────────────────────────────────────
       pageHeader(1, 'Executive review');
-      // Top row: Diagnosis (left) + Score (right) — y=24..70
+      // Top row: Diagnosis (left) + Score (right) — y=30..76 (rc1.51 bumped from 24..70)
       const diagW = CW * 0.66 - 2,
         scoreW = CW * 0.34 - 0;
-      card(M, 24, diagW, 46, T.surface, T.border, 4);
-      label('Portfolio diagnosis', M + 5, 32);
+      card(M, 30, diagW, 46, T.surface, T.border, 4);
+      label('Portfolio diagnosis', M + 5, 38);
       const diagSentences = (() => {
         const parts = [];
         const policiesStr = activePolicies.length ? activePolicies.length + ' active polic' + (activePolicies.length === 1 ? 'y' : 'ies') + ' provide ' + money(totalCoverage) + ' of cover' : 'No active policies on file';
@@ -65483,45 +65495,59 @@ function ReportTab() {
         if (retirement.desired > 0) parts.push('Retirement income at ' + retirementAge + ' covers ' + retPct + '% of the inflation-adjusted lifestyle target.');
         return parts.join(' ');
       })();
-      text(diagSentences, M + 5, 42, {
+      text(diagSentences, M + 5, 48, {
         size: 8.4,
         color: T.text,
         maxW: diagW - 10,
         maxLines: 5,
         lineH: 5
       });
-      // Score card
-      card(M + diagW + 4, 24, scoreW - 4, 46, T.surface, T.border, 4);
-      label('Protection score', M + diagW + 9, 32);
-      text(String(score), M + diagW + 9, 47, {
-        family: 'times',
-        style: 'bold',
-        size: 24,
-        color: scoreTone
-      });
-      text('/100', M + diagW + 9 + doc.getTextWidth(String(score)) * 1.6 + 1, 47, {
-        size: 8,
+      // Score card — v2.4.0-rc1.51: redesigned for proper vertical rhythm.
+      //   Use measured text width for "/100" placement (was a hacky × 1.6
+      //   multiplier that broke for 1-digit scores). Status pill spans the
+      //   card width. Divider separates the score block from the retirement
+      //   row, which now right-aligns its values for clean alignment.
+      // rc1.51 fix: renamed sy → scY to avoid VarRedeclaration with the
+      // sy let-binding used by the source mix table on Page 3.
+      const scX = M + diagW + 4,
+        scY = 30,
+        scW = scoreW - 4;
+      card(scX, scY, scW, 46, T.surface, T.border, 4);
+      label('Protection score', scX + 5, scY + 8);
+      // Big score number — measure width AT its font, then position "/100"
+      setFont('times', 'bold', 24, scoreTone);
+      doc.text(String(score), scX + 5, scY + 24);
+      const scoreNumW = doc.getTextWidth(String(score));
+      text('/100', scX + 5 + scoreNumW + 2, scY + 22, {
+        size: 9,
         color: T.text3
       });
-      pill(scoreLabel, M + diagW + 9, 53, score < 50 ? 'danger' : score < 80 ? 'warn' : 'success', {
+      // Status pill — full width within card padding
+      pill(scoreLabel, scX + 5, scY + 28, score < 50 ? 'danger' : score < 80 ? 'warn' : 'success', {
         size: 5.6,
-        w: scoreW - 13
+        w: scW - 10
       });
-      label('Retirement', M + diagW + 9, 64);
-      text(retPct + '% covered', M + diagW + 9 + 18, 64, {
-        size: 7.4,
+      // Divider before retirement row
+      doc.setDrawColor(...T.border);
+      doc.setLineWidth(0.15);
+      doc.line(scX + 5, scY + 35, scX + scW - 5, scY + 35);
+      label('Retirement', scX + 5, scY + 40);
+      text(retPct + '% covered', scX + scW - 5, scY + 40, {
+        size: 7.6,
         style: 'bold',
-        color: retPct < 70 ? T.danger : T.success
+        color: retPct < 70 ? T.danger : T.success,
+        align: 'right'
       });
       text(monthlyGap > 0 ? 'Gap ' + money(monthlyGap, {
         suffix: '/mo'
-      }) : 'On track', M + diagW + 9 + 18, 67.5, {
+      }) : 'On track', scX + scW - 5, scY + 44, {
         size: 6.4,
-        color: T.text3
+        color: T.text3,
+        align: 'right'
       });
 
       // KPI strip — 5 compact cards
-      const kpiY = 76,
+      const kpiY = 80,
         kpiH = 22,
         kpiW = (CW - 4 * 2) / 5;
       const kpis = [['Insured value', money(totalCoverage), activePolicies.length + ' policies', T.sky], ['Annual premium', money(totalAnnualPrem), premiumRatio ? premiumRatio + '% of income' : 'recurring', premiumRatio > 15 ? T.danger : T.sun], ['Active policies', String(activePolicies.length), activeInsurers + ' insurers', T.lavender], ['Protection gap', money(protectionGap), score + '/100 score', scoreTone], ['Retirement income', money(retTotal, {
@@ -65548,7 +65574,7 @@ function ReportTab() {
       });
 
       // Top 4 planning gaps table
-      const gapTblY = 104;
+      const gapTblY = 108; // rc1.51: bumped from 104 to follow KPI strip at y=80+22+6
       label('Top 4 planning gaps', M, gapTblY);
       const gapWidths = [9, 56, 32, 32, 32, CW - 9 - 56 - 32 - 32 - 32];
       tableRow(M, gapTblY + 3, gapWidths, ['Rank', 'Area', 'Current', 'Target', 'Gap', 'Priority'], {
@@ -65568,9 +65594,10 @@ function ReportTab() {
         });
       });
 
-      // Discussion sequence chips
+      // Priority focus chips — v2.4.0-rc1.51 renamed from "Advisor discussion
+      // sequence" since this PDF is a client-facing artifact.
       const seqY = gapTblY + 9 + top4.length * 7.4 + 8;
-      label('Advisor discussion sequence', M, seqY);
+      label('Priority focus areas', M, seqY);
       const sequence = [];
       protRows.forEach(r => {
         if (r.pct < 50 && sequence.length < 5) sequence.push(r.short);
@@ -65604,29 +65631,29 @@ function ReportTab() {
       // ─────────────────────────────────────────────────────────────────
       doc.addPage();
       pageHeader(2, 'Protection gap map');
-      // Header strip
-      card(M, 24, CW, 14, T.surface, T.border, 4);
-      text('Score', M + 5, 33, {
+      // Header strip — rc1.51: bumped y from 24 to 30 for header clearance
+      card(M, 30, CW, 14, T.surface, T.border, 4);
+      text('Score', M + 5, 39, {
         size: 6.4,
         style: 'bold',
         color: T.text3
       });
-      text(score + '/100', M + 5 + 14, 33, {
+      text(score + '/100', M + 5 + 14, 39, {
         family: 'times',
         style: 'bold',
         size: 10.5,
         color: scoreTone
       });
-      pill(scoreLabel, M + 5 + 50, 30.5, score < 50 ? 'danger' : score < 80 ? 'warn' : 'success', {
+      pill(scoreLabel, M + 5 + 50, 36.5, score < 50 ? 'danger' : score < 80 ? 'warn' : 'success', {
         size: 5.4,
         w: 38
       });
-      text('Total gap', W - M - 5, 31, {
+      text('Total gap', W - M - 5, 37, {
         size: 6.4,
         color: T.text3,
         align: 'right'
       });
-      text(money(protectionGap), W - M - 5, 35.5, {
+      text(money(protectionGap), W - M - 5, 41.5, {
         family: 'times',
         style: 'bold',
         size: 10.5,
@@ -65637,10 +65664,14 @@ function ReportTab() {
       // Main table (left 65%) + priority matrix (right 35%)
       const tblW = CW * 0.66,
         matW = CW * 0.34 - 4;
-      // Table header
-      const tcols = [40, 30, 30, 16, 28, tblW - 40 - 30 - 30 - 16 - 28];
+      // v2.4.0-rc1.51: Column widths fit tblW exactly. Earlier version used
+      // [40,30,30,16,28,...] which summed to 144mm against a 125mm tblW —
+      // the negative final width caused the Gap column to render outside
+      // the table and bleed into the priority matrix area (the floating
+      // unlabeled "S$2.8M" the user spotted between Critical and Review).
+      const tcols = [38, 22, 22, 11, 20, tblW - 38 - 22 - 22 - 11 - 20];
       const tblX = M,
-        tblYstart = 44;
+        tblYstart = 50; // rc1.51: was 44; bumped to follow score strip at y=30+14+6
       tableRow(tblX, tblYstart, tcols, ['Area', 'Current', 'Recommended', '%', 'Gap', 'Advisory'], {
         header: true,
         h: 6
@@ -65704,9 +65735,9 @@ function ReportTab() {
       doc.addPage();
       pageHeader(3, 'Retirement income gap');
       // Top diagnosis row — 5 stat boxes
-      const diagY = 24,
+      const diagY = 30,
         diagH = 22,
-        diagW2 = (CW - 4 * 2) / 5;
+        diagW2 = (CW - 4 * 2) / 5; // rc1.51: bumped from 24
       const diags = [['Projected at ' + retirementAge, money(retTotal, {
         suffix: '/mo'
       }), 'monthly', retPct < 70 ? T.danger : T.success], ['Desired at ' + retirementAge, money(retirement.desired, {
@@ -65768,20 +65799,32 @@ function ReportTab() {
         h: 6
       });
       const sources = [['CPF LIFE', retirement.cpf, T.sun], ['Policy income', retirement.policy, T.primary], ['Dividends', retirement.dividends, T.lavender], ['Other sources', retirement.other, T.sage]];
+      // v2.4.0-rc1.51: render income-source rows manually so the color dot
+      // doesn't collide with the source label. Previously the dot was at
+      // M+1.6 and the label started at the cell padding ~M+2 — overlapping
+      // by ~0.5mm and clipping characters in "CPF LIFE" / "Other sources".
       let sy = srcY + 9;
       sources.forEach((s, i) => {
-        tableRow(M, sy, srcCols, [s[0], money(s[1], {
-          suffix: '/mo'
-        })], {
-          alt: i % 2 === 1,
-          align: ['left', 'right'],
-          colors: [T.text, T.text2],
-          h: 6.6,
-          sizes: [6.6, 6.6]
-        });
-        // Color dot
+        const fillC = i % 2 === 1 ? T.surface2 : T.surface;
+        const rowW = srcCols[0] + srcCols[1];
+        doc.setFillColor(...fillC);
+        doc.setDrawColor(...T.border);
+        doc.setLineWidth(0.12);
+        doc.rect(M, sy, rowW, 6.6, 'FD');
+        // Color dot in left padding gutter (4mm allotted before label text)
         doc.setFillColor(...s[2]);
-        doc.circle(M + 1.6, sy + 3.3, 0.9, 'F');
+        doc.circle(M + 3, sy + 3.3, 1.1, 'F');
+        text(s[0], M + 7, sy + 4.3, {
+          size: 6.6,
+          color: T.text
+        });
+        text(money(s[1], {
+          suffix: '/mo'
+        }), M + rowW - 3, sy + 4.3, {
+          size: 6.6,
+          color: T.text2,
+          align: 'right'
+        });
         sy += 6.6;
       });
       tableRow(M, sy, srcCols, ['Total', money(retTotal, {
@@ -65865,25 +65908,26 @@ function ReportTab() {
           y: yy
         };
       });
-      // Direct labels
+      // Direct labels — v2.4.0-rc1.51: "Projected income" was being placed
+      // INSIDE the chart at the first bar's y-position, where it cut into
+      // the bars. Now placed cleanly above the chart top-left corner. The
+      // "Desired" label keeps its end-of-line anchor but is nudged up so
+      // it doesn't sit directly on the curve.
       const lastRow = tlRows[tlRows.length - 1];
-      const firstRow = tlRows[0];
       if (lastRow) {
-        text('Desired (+' + (retirement.inflation || inflPct).toFixed(1) + '% p.a.)', xAt(lastRow.age) - 3, yAt(n(lastRow.desired)) - 1.5, {
+        text('Desired (+' + (retirement.inflation || inflPct).toFixed(1) + '% p.a.)', xAt(lastRow.age) - 3, yAt(n(lastRow.desired)) - 2.5, {
           size: 5.2,
           style: 'bold',
           color: T.danger,
           align: 'right'
         });
       }
-      if (firstRow) {
-        const projY = yAt(n(firstRow.total) || n(firstRow.cpf) + n(firstRow.policy) + n(firstRow.dividends) + n(firstRow.other));
-        text('Projected income', xAt(firstRow.age) + 2, projY + 4, {
-          size: 5.2,
-          style: 'bold',
-          color: T.text2
-        });
-      }
+      // "Projected income" label — top-left, outside the bars
+      text('Projected income', chartX, chartY - 2, {
+        size: 5.4,
+        style: 'bold',
+        color: T.text2
+      });
       // Retirement age vertical marker
       const retX = xAt(retirementAge);
       doc.setDrawColor(...T.lavender);
@@ -65973,7 +66017,7 @@ function ReportTab() {
         rightW = CW * 0.4 - 0,
         rightX = M + leftW + 4;
       // Left chart
-      const chartCardY = 24;
+      const chartCardY = 30; // rc1.51: bumped from 24 to follow new 2-row header
       card(M, chartCardY, leftW, 84, T.surface, T.border, 4);
       label('20-year premium outlook', M + 4, chartCardY + 5);
       const pcPadL = 16,
@@ -66123,21 +66167,45 @@ function ReportTab() {
       const startInventoryPage = (sub = 'Compact policy listing.') => {
         doc.addPage();
         pageHeader(5, 'Policy register');
-        return 24;
+        return 30;
       };
+      // v2.4.0-rc1.51: Policy register expanded to 2-line rows.
+      //   - Top line (bold):   Insurer · Product · Type · Cover · Premium · Prem-end · Method · Riders
+      //   - Sub line (small):  Policy # · Sub-type · Years held · Status · Notes/financed flags · Owner
+      //   - Rider codes use a proper mapping (D / TPD / CI / ECI / DI / PA / WP / TI), not blind 3-char slice that produced "DEA" for Death.
+      const RIDER_CODE = {
+        death: 'D',
+        tpd: 'TPD',
+        ci: 'CI',
+        eci: 'ECI',
+        di: 'DI',
+        accidental: 'PA',
+        accident: 'PA',
+        pa: 'PA',
+        premium_waiver: 'WP',
+        waiver: 'WP',
+        wp: 'WP',
+        terminal_illness: 'TI',
+        terminal: 'TI',
+        ti: 'TI',
+        enhanced_living: 'ECI'
+      };
+      const riderShort = rd => RIDER_CODE[(rd.type || '').toLowerCase().replace(/[^a-z_]/g, '')] || (rd.type || '').toUpperCase().slice(0, 3);
       let invY = startInventoryPage();
-      const invCols = [60, 22, 24, 22, 18, 18, CW - 60 - 22 - 24 - 22 - 18 - 18];
+      const invCols = [62, 22, 22, 22, 18, 16, CW - 62 - 22 - 22 - 22 - 18 - 16];
       const drawInvHeader = y => {
-        tableRow(M, y, invCols, ['Insurer / product', 'Type', 'Cover', 'Premium', 'Prem end', 'Method', 'Riders'], {
+        tableRow(M, y, invCols, ['Insurer · product', 'Type', 'Cover', 'Premium', 'Prem end', 'Method', 'Riders'], {
           header: true,
           h: 6
         });
         return y + 6;
       };
+      // Each row is 11mm tall: 2 stacked lines (bold top + small subline)
+      const ROW_H = 11;
       categoryOrder.forEach(cat => {
         const arr = grouped[cat] || [];
         if (!arr.length) return;
-        if (invY > 250) invY = startInventoryPage();
+        if (invY > 248) invY = startInventoryPage();
         // Category bar
         doc.setFillColor(...(categoryColor[cat] || T.primary));
         doc.roundedRect(M, invY, 2.4, 6, 1, 1, 'F');
@@ -66154,25 +66222,106 @@ function ReportTab() {
         invY += 7;
         invY = drawInvHeader(invY);
         arr.forEach((pol, i) => {
-          if (invY > 273) {
+          if (invY + ROW_H > 270) {
             invY = startInventoryPage('Continued');
             invY = drawInvHeader(invY);
           }
+          // Row background (alternating)
+          const fillC = i % 2 === 1 ? T.surface2 : T.surface;
+          doc.setFillColor(...fillC);
+          doc.setDrawColor(...T.border);
+          doc.setLineWidth(0.12);
+          doc.rect(M, invY, CW, ROW_H, 'FD');
+
+          // Build top + subline content
           const productLine = [pol.insurer || '—', pol.productName || pol.policyName || pol.subType || 'Policy'].filter(Boolean).join(' · ');
           const cover = n(pol.sumAssured) > 0 ? money(pol.sumAssured) : '—';
           const prem = isSinglePremium(pol) ? n(pol.annualPremium) ? money(pol.annualPremium) + ' lump' : 'Single' : annualizedPremium(pol) > 0 ? money(annualizedPremium(pol)) : '—';
           const premEnd = pol.premEndAge ? 'age ' + pol.premEndAge : pol.premTerm ? pol.premTerm + 'y' : '—';
           const method = pol.paymentMethod ? safe(pol.paymentMethod, 14) : '—';
-          const riderCodes = (pol.riders || []).map(rd => (rd.type || '').toUpperCase().slice(0, 3)).filter(Boolean).slice(0, 4).join(' ');
-          tableRow(M, invY, invCols, [productLine, safe(pol.subType || '—', 14), cover, prem, premEnd, method, riderCodes || '—'], {
-            alt: i % 2 === 1,
-            h: 7.4,
-            align: ['left', 'left', 'right', 'right', 'center', 'left', 'left'],
-            styles: ['bold', null, null, null, null, null, null],
-            colors: [T.text, T.text3, T.text2, T.text2, T.text3, T.text3, T.primary],
-            sizes: [6.4, 5.8, 6, 6, 5.8, 5.8, 5.6]
+          const riderCodes = (pol.riders || []).map(riderShort).filter(Boolean).slice(0, 5).join(' ');
+          // Subline metadata
+          const startAge = parseInt(pol.premStartAge) || parseInt(pol.ageAtEntry);
+          const yearsHeld = startAge && currentAge >= startAge ? currentAge - startAge : null;
+          const policyNum = pol.policyNumber ? '#' + safe(String(pol.policyNumber), 14) : '';
+          const status = pol.status && pol.status !== 'inforce' ? safe(String(pol.status).charAt(0).toUpperCase() + String(pol.status).slice(1), 14) : '';
+          const subType = safe(pol.subType || '', 22);
+          const flags = [];
+          if (pol.notes && String(pol.notes).trim()) flags.push('✦ note');
+          if (pol.financed) flags.push('$ financed');
+          if (pol.excludeFromRetirement) flags.push('⊘ off-retirement');
+          if (pol.lifeInsured && pol.policyOwner && String(pol.lifeInsured).trim() !== String(pol.policyOwner).trim()) flags.push('LA ' + safe(pol.lifeInsured, 14));
+          const sublineParts = [policyNum, subType, yearsHeld != null ? yearsHeld + 'y in force' : null, status, ...flags].filter(Boolean);
+          const subline = sublineParts.join(' · ');
+
+          // Render Col 1 (Insurer/product) — 2 stacked lines
+          let cx = M;
+          text(productLine, cx + 2, invY + 4.6, {
+            size: 6.4,
+            style: 'bold',
+            color: T.text,
+            maxW: invCols[0] - 4,
+            maxLines: 1
           });
-          invY += 7.4;
+          if (subline) text(subline, cx + 2, invY + 8.8, {
+            size: 5.4,
+            color: T.text3,
+            maxW: invCols[0] - 4,
+            maxLines: 1
+          });
+          cx += invCols[0];
+
+          // Col 2 — Type (vertically centered)
+          text(safe(pol.subType || '—', 14), cx + 2, invY + 6.6, {
+            size: 5.8,
+            color: T.text3,
+            maxW: invCols[1] - 4,
+            maxLines: 1
+          });
+          cx += invCols[1];
+
+          // Col 3 — Cover (right-aligned)
+          text(cover, cx + invCols[2] - 2, invY + 6.6, {
+            size: 6.4,
+            color: T.text2,
+            align: 'right'
+          });
+          cx += invCols[2];
+
+          // Col 4 — Premium (right-aligned)
+          text(prem, cx + invCols[3] - 2, invY + 6.6, {
+            size: 6.4,
+            color: T.text2,
+            align: 'right'
+          });
+          cx += invCols[3];
+
+          // Col 5 — Prem end (centered)
+          text(premEnd, cx + invCols[4] / 2, invY + 6.6, {
+            size: 5.8,
+            color: T.text3,
+            align: 'center'
+          });
+          cx += invCols[4];
+
+          // Col 6 — Method
+          text(method, cx + 2, invY + 6.6, {
+            size: 5.6,
+            color: T.text3,
+            maxW: invCols[5] - 4,
+            maxLines: 1
+          });
+          cx += invCols[5];
+
+          // Col 7 — Riders (color-coded)
+          text(riderCodes || '—', cx + 2, invY + 6.6, {
+            size: 5.8,
+            style: 'bold',
+            color: T.primary,
+            maxW: invCols[6] - 4,
+            maxLines: 1
+          });
+          invY += ROW_H;
         });
         invY += 4;
       });
