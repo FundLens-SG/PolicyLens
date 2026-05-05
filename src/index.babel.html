@@ -599,9 +599,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.52';
+const APP_VERSION = 'v2.4.0-rc1.53';
 const APP_VERSION_DATE = '2026-05-05';
-const APP_VERSION_NAME = 'Family PDF cream rebuild + Household map regrouped + Merge clients in family view';
+const APP_VERSION_NAME = 'Client name flash fix — profile.name takes precedence over stale clientName + Reconcile button';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -22963,6 +22963,42 @@ function ClientsTab() {
   const filtered = filter === 'all' ? visibleStates : visibleStates.filter(ds => (ds.tier || UNASSIGNED_TIER) === filter);
   const chips = [{id:'all',label:'All'}, ...tierDefinitions.map(t => ({id:t, label:t}))];
   const getProfileForClient = (ds) => profilesByClient[ds.clientId] || (ds.clientId === activeClientId ? clientProfile : null) || {};
+  // v2.4.0-rc1.53: prefer profile.name over drive_state.clientName when
+  // resolving the display name for a client. This eliminates the "tin"
+  // flicker the user spotted, where a stale ds.clientName from a prior
+  // sync would show momentarily because the profile lookup wasn't yet
+  // applied to the rendered name.
+  const resolveClientName = (ds) => {
+    const profile = getProfileForClient(ds);
+    const profileName = (profile && typeof profile.name === 'string') ? profile.name.trim() : '';
+    if (profileName) return profileName;
+    return (ds.clientName || '').trim() || 'Untitled';
+  };
+  // v2.4.0-rc1.53: Reconcile drive_state.clientName ↔ profile.name when
+  // they disagree. Profile is the source of truth (it's what the FC
+  // edits in the Profile tab); drive_state.clientName is a cache for the
+  // switcher list. When they drift, point drive_state at profile.name.
+  const reconcileClientNames = async () => {
+    let fixed = 0;
+    for (const ds of allStates) {
+      const profile = profilesByClient[ds.clientId];
+      const profileName = (profile && typeof profile.name === 'string') ? profile.name.trim() : '';
+      if (!profileName) continue;
+      if ((ds.clientName || '').trim() !== profileName) {
+        try {
+          const fresh = await PolicyDB.getDriveState(ds.clientId).catch(() => ds);
+          await PolicyDB.saveDriveState({ ...fresh, clientName: profileName });
+          fixed++;
+        } catch(e) { console.warn('[Reconcile] failed for', ds.clientId, e); }
+      }
+    }
+    try { window.dispatchEvent(new Event('policylens-clients-changed')); } catch(_) {}
+    if (fixed > 0) {
+      try { toast('Reconciled ' + fixed + ' client name' + (fixed===1?'':'s'), 'success', 3500); } catch(_) {}
+    } else {
+      try { toast('No name mismatches found', 'info', 3000); } catch(_) {}
+    }
+  };
   const openClientView = async (clientId, targetTab='profile') => {
     if (!clientId) return;
     try {
@@ -23206,7 +23242,7 @@ function ClientsTab() {
           </div>
           <div style={{minWidth:0,alignSelf:'center'}}>
             <div style={{display:'flex',alignItems:'center',gap:7,flexWrap:'wrap'}}>
-              <span style={{fontSize:13,fontWeight:800,color:'var(--text)',minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:isMobile?'100%':340}}>{ds.clientName || 'Untitled'}</span>
+              <span style={{fontSize:13,fontWeight:800,color:'var(--text)',minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:isMobile?'100%':340}}>{resolveClientName(ds)}</span>
               {isActive && <span style={{fontSize:9,fontWeight:800,color:'var(--gold)',background:'var(--gold-dim)',border:'1px solid color-mix(in oklch, var(--gold) 31%, transparent)',borderRadius:999,padding:'2px 6px'}}>Viewing</span>}
               <span style={{fontSize:9,color:'var(--text3)',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:999,padding:'2px 6px'}}>{tierLabel}</span>
               {syncLabel && <span style={{fontSize:9,color:syncColor,background:syncState.bg,border:'1px solid rgba(255,255,255,.05)',borderRadius:999,padding:'2px 6px'}}>{syncLabel}</span>}
@@ -23245,7 +23281,7 @@ function ClientsTab() {
             onClick={e => e.stopPropagation()}
             onChange={e => { e.stopPropagation(); toggleClientSelection(ds.clientId); }}
             style={selectionCheckboxStyle} />
-          <span style={{fontSize:14,fontWeight:600,color:'var(--text)',flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{ds.clientName || 'Untitled'}</span>
+          <span style={{fontSize:14,fontWeight:600,color:'var(--text)',flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{resolveClientName(ds)}</span>
           <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
             <TierPicker
               currentTier={tierLabel}
@@ -23486,6 +23522,18 @@ function ClientsTab() {
               </button>
             ))}
           </div>
+          {/* v2.4.0-rc1.53: Reconcile button — repairs drive_state.clientName
+              when it disagrees with profile.name. Useful for fixing the
+              "tin"-style flicker where a stale ds.clientName from prior
+              sync momentarily renders. Shown only on desktop to keep the
+              mobile header tight. */}
+          {!isMobile && allStates.length > 0 && (
+            <button onClick={reconcileClientNames}
+              title="Sync drive_state names with the profile name source of truth"
+              style={{background:'var(--bg2)',color:'var(--text2)',border:'1px solid var(--border)',borderRadius:8,padding:'6px 12px',fontSize:11,fontWeight:500,cursor:'pointer',flexShrink:0,whiteSpace:'nowrap'}}>
+              ⟲ Reconcile
+            </button>
+          )}
           <button onClick={() => activeClientId ? setClientsGuardOpen(true) : setShowNewClient(true)}
             title="New Client"
             style={{background:'color-mix(in oklch, var(--gold) 21%, transparent)',color:'var(--gold)',border:'1px solid color-mix(in oklch, var(--gold) 56%, transparent)',borderRadius:isMobile?'50%':8,width:isMobile?32:'auto',height:isMobile?32:'auto',padding:isMobile?0:'6px 14px',fontSize:isMobile?18:11,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,lineHeight:1}}>
@@ -23664,7 +23712,8 @@ function ClientsTab() {
             const syncState = syncStateFor(ds);
             const syncLabel = syncState.label;
             const syncColor = syncState.color;
-            const initial = (ds.clientName || '?').trim().slice(0,1).toUpperCase() || '?';
+            const displayName = resolveClientName(ds);
+            const initial = (displayName || '?').trim().slice(0,1).toUpperCase() || '?';
             return (
               <div key={ds.clientId} onClick={() => openClientView(ds.clientId, 'profile')}
                 style={{
@@ -23694,7 +23743,7 @@ function ClientsTab() {
                       fontFamily:T_V2.serifFamily, fontSize:16, color:'var(--text)',
                       letterSpacing:'-0.01em', fontWeight:500,
                       whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis',
-                    }}>{ds.clientName || 'Untitled'}</div>
+                    }}>{displayName}</div>
                     <div style={{fontSize:11, color:'var(--text3)', marginTop:2}}>
                       {totalPrem > 0 ? 'S$' + Math.round(totalPrem).toLocaleString() + '/yr' : 'No premiums'} · {clientPols.length} {clientPols.length===1?'policy':'policies'}
                     </div>
