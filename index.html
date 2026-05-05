@@ -609,9 +609,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.54';
+const APP_VERSION = 'v2.4.0-rc1.55';
 const APP_VERSION_DATE = '2026-05-05';
-const APP_VERSION_NAME = 'Report cover — explicit familyGroup name respected + client name accentuated';
+const APP_VERSION_NAME = 'Visual Report PDF V3 — pt units, doubled type, 7-page magazine layout per spec';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -65041,12 +65041,30 @@ function ReportTab() {
     try {
       const advisorName = ((await dbGet('settings', 'advisorName').catch(() => null))?.value || '').trim();
       const advisorCompany = ((await dbGet('settings', 'advisorCompany').catch(() => null))?.value || '').trim();
+      const advisorEmail = ((await dbGet('settings', 'advisorEmail').catch(() => null))?.value || '').trim();
+      const advisorMAS = ((await dbGet('settings', 'advisorMAS').catch(() => null))?.value || '').trim();
+      const advisorPhone = ((await dbGet('settings', 'advisorPhone').catch(() => null))?.value || '').trim();
       const jsPDF = await ensureReportPdfEngine();
-      const doc = new jsPDF('p', 'mm', 'a4');
-      const W = 210,
-        H = 297,
-        M = 10,
-        CW = W - M * 2;
+
+      // v2.4.0-rc1.55 — Full Visual Report rebuild per PDF_REPORT_FIX.md spec.
+      //   Switched units mm → pt to match the spec's exact pt sizes for
+      //   margin (68pt = 24mm) and type (body 9pt min, KPI 28pt Fraunces).
+      //   Earlier V2 ran in mm and rendered body at ~6.4pt-equivalent and
+      //   KPI numerals at ~11pt — both nearly half the legible threshold
+      //   the spec calls out as the single biggest perceived-quality lever.
+      const doc = new jsPDF({
+        unit: 'pt',
+        format: 'a4',
+        orientation: 'p'
+      });
+
+      // Layout (pt) — A4 portrait with 24mm margins.
+      const W = 595.28,
+        H = 841.89,
+        M = 68,
+        CW = W - M * 2,
+        GUTTER = 16,
+        R = 16;
       const today = new Date().toLocaleDateString('en-SG', {
         day: 'numeric',
         month: 'long',
@@ -65055,39 +65073,81 @@ function ReportTab() {
       const clientLabel = (clientName || p.name || 'Client').trim();
       const currentAge = age || 35;
       const retirementAge = retAge || 65;
+      const explicitFamilyGroup = (clientProfile?.familyGroup || driveState?.familyGroup || '').trim();
+      const familyHeading = explicitFamilyGroup || (() => {
+        const last = clientLabel.split(/\s+/).slice(-1)[0];
+        return last && last !== clientLabel ? last + ' family' : clientLabel;
+      })();
 
-      // v2.4.0-rc1.50 — Visual Report V2: tighter, denser, advisory.
-      // 5-page max layout, no decorative cover, no separate disclaimer page.
+      // ─── Tokens (REPORT_TOKENS in spec) ───
       const T = {
-        bg: [251, 244, 234],
-        surface: [255, 248, 239],
-        surface2: [255, 251, 246],
-        recessed: [243, 234, 223],
-        border: [229, 216, 202],
-        text: [47, 36, 28],
-        text2: [93, 80, 70],
-        text3: [142, 126, 112],
-        primary: [232, 88, 67],
-        primarySoft: [255, 224, 216],
-        danger: [217, 87, 69],
-        dangerSoft: [255, 224, 218],
+        paper: [250, 246, 238],
+        // page background
+        card: [245, 239, 227],
+        cardSoft: [237, 227, 210],
+        hairline: [220, 208, 189],
+        white: [255, 255, 255],
+        ink: [46, 37, 25],
+        ink2: [86, 70, 54],
+        ink3: [139, 122, 102],
+        ink4: [181, 168, 146],
+        primary: [232, 88, 65],
+        primarySoft: [253, 230, 222],
+        primaryDim: [248, 211, 198],
+        // Category accents
+        protection: [232, 88, 65],
+        savings: [128, 180, 132],
+        health: [233, 165, 165],
+        investment: [183, 160, 216],
+        retirement: [242, 201, 76],
+        // Semantic
+        good: [110, 180, 130],
+        goodSoft: [221, 241, 226],
         warn: [217, 154, 50],
         warnSoft: [255, 237, 196],
-        success: [116, 185, 137],
-        successSoft: [221, 241, 226],
+        bad: [217, 87, 69],
+        badSoft: [255, 224, 218],
         sky: [126, 182, 217],
         skySoft: [222, 239, 248],
+        sage: [128, 180, 132],
+        sageSoft: [226, 242, 229],
         lavender: [183, 160, 216],
         lavenderSoft: [236, 229, 248],
         sun: [242, 201, 76],
-        sunSoft: [255, 244, 204],
-        sage: [145, 191, 154],
-        sageSoft: [226, 242, 229],
-        white: [255, 255, 255]
+        sunSoft: [255, 244, 204]
+      };
+
+      // Type scale (REPORT_TYPE in spec, all in pt)
+      const SZ = {
+        cover_h1: 42,
+        page_h1: 22,
+        page_eyebrow: 8,
+        kpi_number: 28,
+        kpi_unit: 12,
+        body_lg: 11,
+        body: 9,
+        table: 8.5,
+        caption: 7.5,
+        footer: 7
+      };
+
+      // Built-in jsPDF fonts mapped to spec families.
+      // (Fraunces/Plus Jakarta Sans/Geist Mono would need TTF embedding which
+      // adds ~1MB to the bundle. Fall back to closest built-in equivalents:
+      //   Fraunces → 'times' (serif)
+      //   Plus Jakarta Sans → 'helvetica' (sans)
+      //   Geist Mono → 'courier' (mono)
+      // Visual structure / sizing matches the spec exactly.)
+      const FONT = {
+        serif: 'times',
+        sans: 'helvetica',
+        mono: 'courier'
       };
 
       // ─── Helpers ───
       const inactiveStatuses = new Set(['matured', 'surrendered', 'lapsed']);
+      const isInactive = pol => inactiveStatuses.has(String(pol.status || '').toLowerCase());
+      const isSinglePremium = pol => !!(pol.premSingle || pol.premiumStructure === 'Single Premium' || pol.premFrequency === 'single');
       const n = v => {
         if (v === null || v === undefined || v === '') return 0;
         if (typeof v === 'number') return Number.isFinite(v) ? v : 0;
@@ -65106,197 +65166,236 @@ function ReportTab() {
         if (abs >= 1000) return sign + 'S$' + Math.round(abs / 1000).toLocaleString('en-SG') + 'k' + suffix;
         return sign + 'S$' + abs.toLocaleString('en-SG') + suffix;
       };
-      const safe = (s, max = 48) => {
+      const safe = (s, max = 64) => {
         const out = String(s || '').replace(/\s+/g, ' ').trim();
         return out.length > max ? out.slice(0, max - 1) + '…' : out;
       };
-      const split = (s, w) => doc.splitTextToSize(String(s || ''), w);
-      const setFont = (family = 'helvetica', style = 'normal', size = 8, color = T.text) => {
+      const setFont = (family = FONT.sans, style = 'normal', size = SZ.body, color = T.ink) => {
         doc.setFont(family, style);
         doc.setFontSize(size);
         doc.setTextColor(...color);
       };
       const text = (s, x, y, opts = {}) => {
-        setFont(opts.family || 'helvetica', opts.style || 'normal', opts.size || 8, opts.color || T.text);
+        setFont(opts.family || FONT.sans, opts.style || 'normal', opts.size || SZ.body, opts.color || T.ink);
         if (opts.maxW) {
-          const lines = split(s, opts.maxW).slice(0, opts.maxLines || 99);
+          const lines = doc.splitTextToSize(String(s || ''), opts.maxW).slice(0, opts.maxLines || 99);
           doc.text(lines, x, y, opts.align ? {
             align: opts.align
           } : undefined);
-          return lines.length * (opts.lineH || 4);
+          return lines.length * (opts.lineH || (opts.size || SZ.body) * 1.35);
         }
-        doc.text(String(s), x, y, opts.align ? {
+        doc.text(String(s == null ? '' : s), x, y, opts.align ? {
           align: opts.align
         } : undefined);
-        return opts.lineH || 4;
+        return (opts.size || SZ.body) * 1.35;
       };
-      const label = (s, x, y, color = T.text3) => text(String(s).toUpperCase(), x, y, {
-        size: 6.4,
-        style: 'bold',
-        color
-      });
-      const card = (x, y, w, h, fill = T.surface, stroke = T.border, r = 3) => {
+      const eyebrow = (s, x, y, color = T.ink3) => {
+        setFont(FONT.sans, 'bold', SZ.page_eyebrow, color);
+        // simulate letter-spacing tracking by stretching characters
+        doc.text(String(s).toUpperCase(), x, y, {
+          charSpace: 0.6
+        });
+      };
+      const card = (x, y, w, h, fill = T.card, stroke = T.hairline, radius = R, opts = {}) => {
         doc.setFillColor(...fill);
         doc.setDrawColor(...stroke);
-        doc.setLineWidth(0.2);
-        doc.roundedRect(x, y, w, h, r, r, 'FD');
+        doc.setLineWidth(opts.lineWidth || 0.4);
+        doc.roundedRect(x, y, w, h, radius, radius, opts.style || 'FD');
       };
       const pill = (s, x, y, tone = 'primary', opts = {}) => {
         const m = {
           primary: [T.primarySoft, T.primary],
-          danger: [T.dangerSoft, T.danger],
-          success: [T.successSoft, T.success],
+          danger: [T.badSoft, T.bad],
+          success: [T.goodSoft, T.good],
           warn: [T.warnSoft, T.warn],
           sky: [T.skySoft, T.sky],
-          ghost: [T.recessed, T.text2]
+          ghost: [T.cardSoft, T.ink3]
         }[tone] || [T.primarySoft, T.primary];
-        setFont('helvetica', 'bold', opts.size || 6, m[1]);
-        const w = opts.w || Math.max(15, doc.getTextWidth(String(s)) + 5);
-        const h = opts.h || 5.2;
+        const sz = opts.size || 7.5;
+        setFont(FONT.sans, 'bold', sz, m[1]);
+        const pw = opts.w || Math.max(28, doc.getTextWidth(String(s)) + 12);
+        const ph = opts.h || sz + 7;
         doc.setFillColor(...m[0]);
         doc.setDrawColor(...m[0]);
-        doc.roundedRect(x, y, w, h, h / 2, h / 2, 'FD');
-        doc.text(String(s), x + w / 2, y + h * 0.7, {
+        doc.roundedRect(x, y, pw, ph, ph / 2, ph / 2, 'FD');
+        setFont(FONT.sans, 'bold', sz, m[1]);
+        doc.text(String(s), x + pw / 2, y + ph * 0.7, {
           align: 'center'
         });
-        return w;
+        return pw;
       };
-      const bar = (x, y, w, h, pctValue, color = T.primary) => {
-        const pVal = clamp(pctValue, 0, 100);
-        doc.setFillColor(...T.recessed);
-        doc.roundedRect(x, y, w, h, h / 2, h / 2, 'F');
-        if (pVal > 0) {
-          doc.setFillColor(...color);
-          doc.roundedRect(x, y, Math.max(h, w * pVal / 100), h, h / 2, h / 2, 'F');
+      const hatch = (x, y, w, h, color = T.warn, opacity = 0.32, spacing = 4) => {
+        // Diagonal hatch fill for gap segments
+        const r = doc.GState ? doc.GState({
+          opacity
+        }) : null;
+        if (r) doc.setGState(r);
+        doc.setDrawColor(...color);
+        doc.setLineWidth(0.6);
+        // Clip to rect
+        doc.saveGraphicsState && doc.saveGraphicsState();
+        for (let off = -h; off < w + h; off += spacing) {
+          const x1 = x + Math.max(0, off);
+          const y1 = y + Math.max(0, -off);
+          const x2 = x + Math.min(w, off + h);
+          const y2 = y + Math.min(h, h - (off + h - w));
+          if (x2 > x1) doc.line(x1, y1, x2, y2);
         }
+        doc.restoreGraphicsState && doc.restoreGraphicsState();
+        if (doc.GState) doc.setGState(doc.GState({
+          opacity: 1
+        }));
+      };
+      const decorativeBlob = (cx, cy, baseR = 200, color = T.primary) => {
+        // Simulate Gaussian falloff with stacked semi-transparent circles
+        const layers = [[baseR, 0.04], [baseR * 0.9, 0.06], [baseR * 0.75, 0.08], [baseR * 0.55, 0.10], [baseR * 0.35, 0.14]];
+        layers.forEach(([r, a]) => {
+          const g = doc.GState ? doc.GState({
+            opacity: a
+          }) : null;
+          if (g) doc.setGState(g);
+          doc.setFillColor(...color);
+          doc.circle(cx, cy, r, 'F');
+        });
+        if (doc.GState) doc.setGState(doc.GState({
+          opacity: 1
+        }));
       };
       const pageBg = () => {
-        doc.setFillColor(...T.bg);
+        // Paper background, full bleed
+        doc.setFillColor(...T.paper);
         doc.rect(0, 0, W, H, 'F');
-        // Subtle corner wash only — no big decorative circles
-        doc.setFillColor(...T.primarySoft);
-        doc.circle(W + 10, -8, 38, 'F');
+        // Decorative coral blob top-right (simulates blur-out gradient)
+        decorativeBlob(W + 30, -30, 220, T.primary);
+        // Tiny sun blob bottom-left (subtle warmth)
+        decorativeBlob(-50, H + 40, 180, T.sun);
       };
-      // v2.4.0-rc1.51: 2-row header for better breathing room.
-      //   Row 1 (y=8):  POLICYLENS · "Insurance portfolio review" (left)
-      //                 ·  Date pill (right, italic, ringed for emphasis)
-      //   Row 2 (y=15): Client meta (center, slightly larger and softer)
-      //   Hairline at y=18.5 separates the header band from page content.
-      const pageHeader = (sectionN, title) => {
-        pageBg();
-        label('POLICYLENS', M, 8, T.primary);
-        text('Insurance portfolio review', M + 25, 8, {
-          size: 6.4,
-          color: T.text3,
-          style: 'normal'
+      const sectionBand = (label, accent = T.primary) => {
+        // Top band — full-bleed coloured strip 24pt tall at very top
+        doc.setFillColor(...accent);
+        doc.rect(0, 0, W, 24, 'F');
+        setFont(FONT.sans, 'bold', SZ.page_eyebrow, T.white);
+        doc.text(String(label).toUpperCase(), M, 16, {
+          charSpace: 0.7
         });
-        // Date — italic on right, with subtle dot leader so it reads as report metadata
-        text(today, W - M, 8, {
-          size: 7,
-          color: T.text2,
-          align: 'right',
-          style: 'italic'
+        setFont(FONT.mono, 'normal', 7, T.white);
+        doc.text(today, W - M, 16, {
+          align: 'right'
         });
-        // Centered client meta (row 2)
-        const meta = [clientLabel, 'age ' + currentAge, p.gender].filter(Boolean).join(' · ');
-        text(meta, W / 2, 15, {
-          size: 7.2,
-          color: T.text2,
-          align: 'center'
-        });
-        // Hairline
-        doc.setDrawColor(...T.border);
-        doc.setLineWidth(0.16);
-        doc.line(M, 18.5, W - M, 18.5);
-        // Section number + title
-        if (sectionN) {
-          setFont('helvetica', 'bold', 6.4, T.primary);
-          doc.text(String(sectionN).padStart(2, '0'), M, 25);
-          text(title, M + 8, 25, {
-            family: 'times',
-            style: 'bold',
-            size: 13,
-            color: T.text
-          });
-        } else {
-          text(title, M, 25, {
-            family: 'times',
-            style: 'bold',
-            size: 13,
-            color: T.text
-          });
-        }
+        // Hairline beneath the band gives the page a clean horizon
+        doc.setDrawColor(...T.hairline);
+        doc.setLineWidth(0.4);
+        doc.line(M, 36, W - M, 36);
       };
-      const tone = pctVal => pctVal >= 100 ? ['success', T.success, 'Covered'] : pctVal >= 70 ? ['warn', T.warn, 'Improve'] : pctVal >= 40 ? ['warn', T.warn, 'Review'] : ['danger', T.danger, 'Critical'];
+      const lensMark = (cx, cy, r = 4, color = T.primary) => {
+        doc.setFillColor(...color);
+        doc.circle(cx, cy, r, 'F');
+        doc.setFillColor(...T.paper);
+        doc.circle(cx, cy, r * 0.45, 'F');
+      };
       const footer = () => {
         const pages = doc.getNumberOfPages();
         for (let i = 1; i <= pages; i++) {
           doc.setPage(i);
-          doc.setDrawColor(...T.border);
-          doc.setLineWidth(0.15);
-          doc.line(M, H - 9, W - M, H - 9);
-          text('PolicyLens · Confidential · For Financial Consultant Use', M, H - 5, {
-            size: 5.6,
-            color: T.text3
-          });
-          if (advisorName) text(advisorName + (advisorCompany ? ' · ' + advisorCompany : ''), W / 2, H - 5, {
-            size: 5.6,
-            color: T.text3,
-            align: 'center'
-          });
-          text(i + ' / ' + pages, W - M, H - 5, {
-            size: 5.6,
-            style: 'bold',
-            color: T.primary,
+          // Hairline above footer text
+          doc.setDrawColor(...T.hairline);
+          doc.setLineWidth(0.4);
+          doc.line(M, H - M + 22, W - M, H - M + 22);
+          // Lens mark + identity
+          lensMark(M + 4, H - M + 32, 3.5, T.primary);
+          setFont(FONT.sans, 'normal', SZ.footer - 0.5, T.ink3);
+          const ident = 'PolicyLens · Confidential · For Financial Consultant Use' + (advisorName ? '   ·   ' + advisorName : '') + (advisorCompany ? ' / ' + advisorCompany : '');
+          doc.text(ident, M + 12, H - M + 35);
+          // Page X/Y in mono primary
+          setFont(FONT.mono, 'bold', SZ.footer, T.primary);
+          doc.text(i + ' / ' + pages, W - M, H - M + 35, {
             align: 'right'
           });
         }
       };
-      // Compact table helper — single line per row, alternating fills, optional headers + chips
-      const tableRow = (x, y, widths, values, opts = {}) => {
-        const h = opts.h || 7.4;
-        const fill = opts.header ? T.recessed : opts.alt ? T.surface2 : T.surface;
-        doc.setFillColor(...fill);
-        doc.setDrawColor(...T.border);
-        doc.setLineWidth(0.12);
-        doc.rect(x, y, widths.reduce((s, w) => s + w, 0), h, 'FD');
-        let cx = x;
-        values.forEach((v, i) => {
-          const w = widths[i];
-          const cellPadL = 2,
-            cellPadR = 2;
-          if (v && typeof v === 'object' && v.kind === 'chip') {
-            pill(v.text, cx + cellPadL, y + (h - 5.2) / 2, v.tone || 'ghost', {
-              size: 5.4,
-              w: w - cellPadL - cellPadR
-            });
-          } else {
-            const align = opts.align && opts.align[i] || 'left';
-            const tx = align === 'right' ? cx + w - cellPadR : align === 'center' ? cx + w / 2 : cx + cellPadL;
-            const sty = opts.header ? 'bold' : opts.styles && opts.styles[i] || 'normal';
-            const sz = opts.header ? 5.6 : opts.sizes && opts.sizes[i] || 6.6;
-            const col = opts.header ? T.text3 : opts.colors && opts.colors[i] || T.text2;
-            text(v == null ? '' : String(v), tx, y + h * 0.66, {
-              size: sz,
-              style: sty,
-              color: col,
-              align,
-              maxW: w - cellPadL - cellPadR,
-              maxLines: 1
-            });
-          }
-          cx += w;
+      // Score dial — 320° arc track + value arc, value text in middle
+      const scoreDial = (cx, cy, radius, value, scoreTone) => {
+        const startAngle = -160 * Math.PI / 180; // sweep starts at lower-left
+        const sweep = 320 * Math.PI / 180;
+        const stroke = Math.max(8, radius / 6);
+        // Track
+        doc.setDrawColor(...T.cardSoft);
+        doc.setLineWidth(stroke);
+        const segs = 60;
+        let prev = null;
+        for (let i = 0; i <= segs; i++) {
+          const t = i / segs;
+          const a = startAngle + sweep * t;
+          const px = cx + Math.cos(a) * radius;
+          const py = cy + Math.sin(a) * radius;
+          if (prev) doc.line(prev.x, prev.y, px, py);
+          prev = {
+            x: px,
+            y: py
+          };
+        }
+        // Value arc
+        doc.setDrawColor(...scoreTone);
+        doc.setLineWidth(stroke);
+        prev = null;
+        const valSegs = Math.max(2, Math.round(segs * (clamp(value, 0, 100) / 100)));
+        for (let i = 0; i <= valSegs; i++) {
+          const t = i / segs;
+          const a = startAngle + sweep * t;
+          const px = cx + Math.cos(a) * radius;
+          const py = cy + Math.sin(a) * radius;
+          if (prev) doc.line(prev.x, prev.y, px, py);
+          prev = {
+            x: px,
+            y: py
+          };
+        }
+        // Center text
+        text(String(Math.round(value)), cx, cy + 6, {
+          family: FONT.serif,
+          style: 'bold',
+          size: 36,
+          color: scoreTone,
+          align: 'center'
+        });
+        text('/ 100', cx, cy + 24, {
+          family: FONT.sans,
+          style: 'normal',
+          size: SZ.kpi_unit,
+          color: T.ink3,
+          align: 'center'
         });
       };
+      const sparkline = (x, y, w, h, points, color = T.primary) => {
+        if (!points || points.length < 2) return;
+        const max = Math.max(1, ...points);
+        const min = Math.min(0, ...points);
+        const span = Math.max(1, max - min);
+        doc.setDrawColor(...color);
+        doc.setLineWidth(1.2);
+        let prev = null;
+        points.forEach((p, i) => {
+          const px = x + i / (points.length - 1) * w;
+          const py = y + h - (p - min) / span * h;
+          if (prev) doc.line(prev.x, prev.y, px, py);
+          prev = {
+            x: px,
+            y: py
+          };
+        });
+        // Last-point dot
+        if (prev) {
+          doc.setFillColor(...color);
+          doc.circle(prev.x, prev.y, 1.6, 'F');
+        }
+      };
 
-      // ─── Data: align with Dashboard defaults ───
-      const isInactive = pol => inactiveStatuses.has(String(pol.status || '').toLowerCase());
-      const isSinglePremium = pol => !!(pol.premSingle || pol.premiumStructure === 'Single Premium' || pol.premFrequency === 'single');
+      // ─── Data assembly ───
       const activePolicies = (policies || []).filter(pol => pol && !isInactive(pol) && pol.category !== 'cash_investments' && pol.category !== 'other_assets');
       const recurringPolicies = activePolicies.filter(pol => !isSinglePremium(pol));
       const activeInsurers = new Set(activePolicies.map(pol => String(pol.insurer || '').trim()).filter(Boolean)).size;
-      const totalAnnualPrem = recurringPolicies.reduce((sum, pol) => sum + annualizedPremium(pol), 0);
-      const totalCoverage = activePolicies.reduce((sum, pol) => sum + n(pol.sumAssured), 0);
+      const totalAnnualPrem = recurringPolicies.reduce((s, pol) => s + annualizedPremium(pol), 0);
+      const totalCoverage = activePolicies.reduce((s, pol) => s + n(pol.sumAssured), 0);
       const monthlyIncome = n(p.monthlyIncome) || (annualIncome > 0 ? annualIncome / 12 : 0);
       const premiumRatio = annualIncome > 0 ? Math.round(totalAnnualPrem / annualIncome * 100) : 0;
       const coverage = {
@@ -65362,8 +65461,8 @@ function ReportTab() {
         have: coverage.death,
         need: basisAnnual * multipliers.deathYrs,
         weight: 20,
-        color: T.primary,
-        advice: 'Income replacement and liabilities for family.'
+        color: T.protection,
+        why: 'Income replacement and liabilities for family.'
       }, {
         key: 'tpd',
         label: 'TPD',
@@ -65372,7 +65471,7 @@ function ReportTab() {
         need: basisAnnual * multipliers.tpdYrs,
         weight: 20,
         color: T.sky,
-        advice: 'Capital reserve if work stops permanently.'
+        why: 'Capital reserve if work stops permanently.'
       }, {
         key: 'ci',
         label: 'Critical Illness',
@@ -65380,8 +65479,8 @@ function ReportTab() {
         have: coverage.ci,
         need: basisMonthly * 12 * multipliers.ciYrs,
         weight: 25,
-        color: T.danger,
-        advice: 'Recovery capital during treatment.'
+        color: T.health,
+        why: 'Recovery capital during treatment.'
       }, {
         key: 'eci',
         label: 'Early CI',
@@ -65390,7 +65489,7 @@ function ReportTab() {
         need: basisMonthly * 12 * multipliers.eciYrs,
         weight: 10,
         color: T.lavender,
-        advice: 'Early-stage care flexibility.'
+        why: 'Early-stage care flexibility.'
       }, {
         key: 'di',
         label: 'Disability Income / month',
@@ -65398,45 +65497,22 @@ function ReportTab() {
         have: coverage.di,
         need: basisMonthly * multipliers.diPct / 100,
         weight: 10,
-        color: T.sage,
+        color: T.savings,
         monthly: true,
-        advice: 'Monthly income replacement.'
+        why: 'Monthly income replacement.'
       }].map(r => ({
         ...r,
         pct: coverPct(r.have, r.need),
         gap: Math.max(0, r.need - r.have)
       }));
       const hospPct = coverage.hasISP ? 100 : 0;
-      const paPct = coverage.add > 0 ? 100 : 0;
-      const flagRows = [{
-        key: 'hosp',
-        label: 'Hospitalisation',
-        short: 'Hosp',
-        have: coverage.hasISP ? 'ISP' + (coverage.ispRider ? ' + rider' : '') : '—',
-        need: 'ISP recommended',
-        pct: hospPct,
-        color: T.sun,
-        flag: true,
-        advice: coverage.hasISP ? coverage.ispRider ? 'Confirm rider terms.' : 'Confirm deductible and co-insurance.' : 'Confirm Integrated Shield Plan status.'
-      }, {
-        key: 'pa',
-        label: 'Personal Accident',
-        short: 'PA',
-        have: coverage.add > 0 ? money(coverage.add) : '—',
-        need: 'ADB / medical reimb.',
-        pct: paPct,
-        color: T.warn,
-        flag: true,
-        advice: coverage.add > 0 ? coverage.amr > 0 ? 'Medical reimb. ' + money(coverage.amr) + ' detected.' : 'Confirm medical reimbursement.' : 'No personal accident cover detected.'
-      }];
-      const allRows = [...protRows, ...flagRows];
       const score = Math.round(clamp(protRows.reduce((s, r) => s + r.pct * r.weight / 100, 0) + hospPct * 15 / 100, 0, 100));
       const scoreLabel = score >= 80 ? 'Well protected' : score >= 50 ? 'Partially protected' : 'Significantly underprotected';
-      const scoreTone = score >= 80 ? T.success : score >= 50 ? T.warn : T.danger;
+      const scoreTone = score >= 80 ? T.good : score >= 50 ? T.warn : T.bad;
       const protectionGap = protRows.reduce((sum, r) => sum + (r.monthly ? r.gap * 12 * Math.max(15, retirementAge - currentAge) : r.gap), 0);
       const weakest = protRows.filter(r => r.pct < 80).sort((a, b) => a.pct - b.pct);
 
-      // ─── Retirement model with inflation-aware desired income ───
+      // Retirement model
       const inflPct = (() => {
         try {
           if (typeof getInflationPct === 'function') return getInflationPct(p, typeof DEFAULT_HOUSE_VALUES !== 'undefined' ? DEFAULT_HOUSE_VALUES.inflationRate : 2.8);
@@ -65444,163 +65520,31 @@ function ReportTab() {
         return n(p.inflationRate) || 2.8;
       })();
       const yearsToRet = Math.max(0, retirementAge - currentAge);
-      const getPolicyMonthlyAtAge = targetAge => activePolicies.reduce((sum, pol) => {
-        if (pol.excludeFromRetirement) return sum;
-        const startAge = parseInt(pol.annuityStartAge || pol.payoutStartAge || pol.drawdownAge || pol.retirementIncomeStartAge || pol.maturityAge || retirementAge) || retirementAge;
-        const endAge = parseInt(pol.annuityEndAge || pol.payoutEndAge || 95) || 95;
-        if (targetAge < startAge || targetAge > endAge) return sum;
-        const directMonthly = n(pol.annuityMonthly || pol.monthlyBenefit || pol.retirementMonthlyIncome);
-        const annualPayout = typeof getPolicyAnnualPayout === 'function' ? getPolicyAnnualPayout(pol) : n(pol.annuityPayout || pol.retirementAnnualIncome || pol.guaranteedAnnualPayout);
-        return sum + (directMonthly || Math.round(annualPayout / 12));
-      }, 0);
-      const getDividendMonthlyAtAge = targetAge => activePolicies.reduce((sum, pol) => {
-        if (pol.excludeFromRetirement) return sum;
-        const startAge = parseInt(pol.drawdownAge || pol.retirementIncomeStartAge || retirementAge) || retirementAge;
-        if (targetAge < startAge) return sum;
-        return sum + (n(pol.dividendMonthly || pol.monthlyDividend) || Math.round(n(pol.dividendAnnual || pol.annualDividend || pol.cashBonusAnnual) / 12));
-      }, 0);
-      const buildRetirement = () => {
-        const otherSources = Array.isArray(p.otherRetIncome) ? p.otherRetIncome : [];
-        const cacheRetirement = () => {
-          try {
-            if (typeof window !== 'undefined' && window.__retirementLiteCache && Array.isArray(window.__retirementLiteCache.timeline)) {
-              const rc = window.__retirementLiteCache;
-              const at = rc.timeline.find(r => r.age === retirementAge) || {};
-              return {
-                desired: n(at.desired || rc.desiredMonthly),
-                cpf: rc.cpfEligible === false ? 0 : n(at.cpf || rc.cpfPayout?.mid),
-                policy: n(at.policy || rc.policyMonthlyIncome),
-                dividends: n(at.dividends || rc.policyDividends),
-                other: n(at.other || rc.otherMonthly),
-                inflation: n(rc.inflationRate || inflPct),
-                timeline: rc.timeline
-              };
-            }
-          } catch (e) {
-            console.warn('[Visual PDF] retirement cache read failed:', e);
-          }
-          return null;
-        };
-        const cached = cacheRetirement();
-        const baseLifestyleToday = (() => {
-          // Prefer explicit profile field; else derive desired-today from cached/desired and inflation
-          if (n(p.desiredRetIncome) > 0) return n(p.desiredRetIncome);
-          if (cached && cached.desired > 0 && yearsToRet > 0) {
-            return Math.round(cached.desired / Math.pow(1 + (cached.inflation || inflPct) / 100, yearsToRet));
-          }
-          if (n(p.monthlyExpenses) > 0) return n(p.monthlyExpenses);
-          return monthlyIncome > 0 ? Math.round(monthlyIncome * 0.7) : 5000;
-        })();
-        const getDesiredAtAge = a => {
-          const yrs = Math.max(0, a - currentAge);
-          return Math.round(baseLifestyleToday * Math.pow(1 + inflPct / 100, yrs));
-        };
-        if (cached) {
-          return {
-            ...cached,
-            baseLifestyleToday,
-            getDesiredAtAge
-          };
+      const retCache = typeof window !== 'undefined' && window.__retirementLiteCache || null;
+      const baseLifestyleToday = (() => {
+        if (n(p.desiredRetIncome) > 0) return n(p.desiredRetIncome);
+        if (retCache && retCache.desiredMonthly > 0 && yearsToRet > 0) {
+          return Math.round(retCache.desiredMonthly / Math.pow(1 + inflPct / 100, yearsToRet));
         }
-        // Profile fallback
-        const desired = getDesiredAtAge(retirementAge);
-        let cpf = n(p.cpfCurrentMonthly);
-        try {
-          if (!cpf && typeof isCpfEligibleProfile === 'function' && isCpfEligibleProfile(p) && typeof estimateCPFLifePayout === 'function') {
-            const scheme = p.cpfScheme || (typeof DEFAULT_HOUSE_VALUES !== 'undefined' ? DEFAULT_HOUSE_VALUES.cpfScheme : 'FRS');
-            const plan = p.cpfPlan || (typeof DEFAULT_HOUSE_VALUES !== 'undefined' ? DEFAULT_HOUSE_VALUES.cpfPlan : 'standard');
-            const start = parseInt(p.cpfStartAge) || (typeof DEFAULT_HOUSE_VALUES !== 'undefined' ? DEFAULT_HOUSE_VALUES.cpfStartAge : 65);
-            let ra = 0;
-            if (typeof getCPFSchemeAmountForAge === 'function' && typeof projectRAToAge === 'function') {
-              ra = projectRAToAge(getCPFSchemeAmountForAge(scheme, currentAge) + n(p.cpfTopUp), 65, n(p.cpfOA) + n(p.cpfMA));
-            }
-            const est = ra > 0 ? estimateCPFLifePayout(ra, plan, start) : {
-              monthly: 0
-            };
-            cpf = Math.round(est.monthly || 0);
-          }
-        } catch (e) {
-          cpf = n(p.cpfCurrentMonthly);
-        }
-        const policy = getPolicyMonthlyAtAge(retirementAge);
-        const dividends = getDividendMonthlyAtAge(retirementAge);
-        const other = otherSources.reduce((sum, src) => {
-          const from = parseInt(src.fromAge) || 65,
-            to = parseInt(src.toAge) || 95;
-          if (retirementAge < from || retirementAge > to) return sum;
-          return sum + n(src.amount);
-        }, 0);
-        const timeline = [];
-        for (let a = 60; a <= 90; a++) {
-          const rowCpf = a >= retirementAge ? cpf : 0;
-          const rowPolicy = getPolicyMonthlyAtAge(a);
-          const rowDiv = getDividendMonthlyAtAge(a);
-          const rowOther = otherSources.reduce((sum, src) => {
-            const from = parseInt(src.fromAge) || 65,
-              to = parseInt(src.toAge) || 95;
-            if (a < from || a > to) return sum;
-            return sum + n(src.amount);
-          }, 0);
-          timeline.push({
-            age: a,
-            cpf: rowCpf,
-            policy: rowPolicy,
-            dividends: rowDiv,
-            other: rowOther,
-            total: rowCpf + rowPolicy + rowDiv + rowOther,
-            desired: getDesiredAtAge(a)
-          });
-        }
-        return {
-          desired,
-          cpf,
-          policy,
-          dividends,
-          other,
-          inflation: inflPct,
-          timeline,
-          baseLifestyleToday,
-          getDesiredAtAge
-        };
+        if (n(p.monthlyExpenses) > 0) return n(p.monthlyExpenses);
+        return monthlyIncome > 0 ? Math.round(monthlyIncome * 0.7) : 5000;
+      })();
+      const retirement = {
+        desired: Math.round(baseLifestyleToday * Math.pow(1 + inflPct / 100, yearsToRet)),
+        cpf: retCache ? n(retCache.cpfPayout?.mid) : 0,
+        policy: retCache ? n(retCache.policyMonthlyIncome) : 0,
+        dividends: retCache ? n(retCache.policyDividends) : 0,
+        other: retCache ? n(retCache.otherMonthly) : 0,
+        baseLifestyleToday,
+        inflation: inflPct
       };
-      const retirement = buildRetirement();
-      // Ensure timeline always includes an entry at the retirement age and spans 60-90
-      const ensureRetirementTimeline = ret => {
-        const tl = Array.isArray(ret.timeline) ? [...ret.timeline] : [];
-        const have = new Set(tl.map(r => r.age));
-        for (let a = 60; a <= 90; a++) {
-          if (have.has(a)) continue;
-          const rowCpf = a >= retirementAge ? n(ret.cpf) : 0;
-          const rowPolicy = getPolicyMonthlyAtAge(a);
-          const rowDiv = getDividendMonthlyAtAge(a);
-          const rowOther = (Array.isArray(p.otherRetIncome) ? p.otherRetIncome : []).reduce((sum, src) => {
-            const from = parseInt(src.fromAge) || 65,
-              to = parseInt(src.toAge) || 95;
-            if (a < from || a > to) return sum;
-            return sum + n(src.amount);
-          }, 0);
-          tl.push({
-            age: a,
-            cpf: rowCpf,
-            policy: rowPolicy,
-            dividends: rowDiv,
-            other: rowOther,
-            total: rowCpf + rowPolicy + rowDiv + rowOther,
-            desired: ret.getDesiredAtAge ? ret.getDesiredAtAge(a) : Math.round(n(ret.baseLifestyleToday) * Math.pow(1 + (ret.inflation || inflPct) / 100, Math.max(0, a - currentAge)))
-          });
-        }
-        tl.sort((a, b) => a.age - b.age);
-        return tl.filter(r => r.age >= 60 && r.age <= 90);
-      };
-      retirement.timeline = ensureRetirementTimeline(retirement);
-      const retTotal = n(retirement.cpf) + n(retirement.policy) + n(retirement.dividends) + n(retirement.other);
+      const retTotal = retirement.cpf + retirement.policy + retirement.dividends + retirement.other;
       const retPct = retirement.desired > 0 ? clamp(Math.round(retTotal / retirement.desired * 100), 0, 999) : 0;
-      const monthlyGap = Math.max(0, n(retirement.desired) - retTotal);
-      const annualGap = monthlyGap * 12;
+      const monthlyGap = Math.max(0, retirement.desired - retTotal);
 
-      // Premium-year aggregates
-      const premiumYears = [];
-      for (let i = 0; i < 20; i++) {
+      // Premium-year aggregates for sparkline
+      const premYears = [];
+      for (let i = 0; i < 8; i++) {
         const a = currentAge + i;
         let total = 0;
         recurringPolicies.forEach(pol => {
@@ -65608,798 +65552,812 @@ function ReportTab() {
           const endAge = parseInt(pol.premEndAge) || (parseInt(pol.premTerm) ? startAge + parseInt(pol.premTerm) : startAge + 25);
           if (a >= startAge && a < endAge) total += annualizedPremium(pol);
         });
-        premiumYears.push({
-          age: a,
-          total
-        });
+        premYears.push(total);
       }
-      const endingWithin5 = recurringPolicies.filter(pol => {
-        const startAge = parseInt(pol.premStartAge) || parseInt(pol.ageAtEntry) || currentAge;
-        const endAge = parseInt(pol.premEndAge) || (parseInt(pol.premTerm) ? startAge + parseInt(pol.premTerm) : startAge + 25);
-        return endAge >= currentAge && endAge <= currentAge + 5;
-      }).length;
       const continuingAfterRet = recurringPolicies.filter(pol => {
         const startAge = parseInt(pol.premStartAge) || parseInt(pol.ageAtEntry) || currentAge;
         const endAge = parseInt(pol.premEndAge) || (parseInt(pol.premTerm) ? startAge + parseInt(pol.premTerm) : startAge + 25);
         return endAge > retirementAge;
       }).length;
 
-      // Sharper action lines — short, advisory, no repetitive shortfall copy
-      const ACTION_TEXT = {
-        di: {
-          area: 'Disability income',
-          why: 'Monthly income protection.',
-          short: 'DI missing — protect monthly income before adding savings plans.',
-          discuss: 'Income replacement product comparison'
-        },
-        ci: {
-          area: 'Critical illness',
-          why: 'Recovery capital.',
-          short: 'CI below target — review standalone or multi-pay CI.',
-          discuss: 'Multi-pay vs single-pay CI structure'
-        },
-        eci: {
-          area: 'Early CI',
-          why: 'Early-stage flexibility.',
-          short: 'ECI below target — consider early-stage recovery capital.',
-          discuss: 'ECI add-on or standalone'
-        },
-        death: {
-          area: 'Death & TPD',
-          why: 'Income replacement.',
-          short: 'Death/TPD below target — use term top-up for efficient cover.',
-          discuss: 'Term life top-up sizing and term'
-        },
-        tpd: {
-          area: 'TPD',
-          why: 'Permanent capital reserve.',
-          short: 'TPD below target — pair with death cover via efficient term.',
-          discuss: 'Death + TPD bundled term'
-        },
-        retire: {
-          area: 'Retirement income',
-          why: 'Lifestyle continuity.',
-          short: 'Retirement gap — build CPF + drawdown + policy income strategy.',
-          discuss: 'CPF top-up, annuity, dividends, drawdown plan'
-        },
-        prem: {
-          area: 'Premium runway',
-          why: 'Affordability check.',
-          short: 'Premium runway — confirm ' + continuingAfterRet + ' policies payable after retirement.',
-          discuss: 'Premium staging or restructure'
-        },
-        hosp: {
-          area: 'Hospitalisation',
-          why: 'Medical cost protection.',
-          short: 'Hospitalisation — confirm Integrated Shield Plan and rider.',
-          discuss: 'ISP rider, deductible, co-insurance'
-        },
-        pa: {
-          area: 'Personal accident',
-          why: 'Accidental medical costs.',
-          short: 'PA — confirm medical reimbursement coverage.',
-          discuss: 'PA standalone or rider'
-        }
-      };
-      const actions = [];
-      weakest.slice(0, 3).forEach(r => {
-        const a = ACTION_TEXT[r.key];
-        if (a) actions.push({
-          priority: 'High',
-          ...a
-        });
-      });
-      if (retirement.desired > 0 && retPct < 70) actions.push({
-        priority: 'High',
-        ...ACTION_TEXT.retire
-      });
-      if (!coverage.hasISP) actions.push({
-        priority: 'High',
-        ...ACTION_TEXT.hosp
-      });
-      if (premiumRatio > 15) actions.push({
-        priority: 'Medium',
-        ...ACTION_TEXT.prem,
-        short: 'Premium load is ' + premiumRatio + '% of income — stage or restructure before adding.'
-      });
-      if (continuingAfterRet >= 2 && actions.length < 5) actions.push({
-        priority: 'Medium',
-        ...ACTION_TEXT.prem
-      });
-      if (coverage.add <= 0 && actions.length < 5) actions.push({
-        priority: 'Low',
-        ...ACTION_TEXT.pa
-      });
-      if (!actions.length) actions.push({
-        priority: 'Low',
-        area: 'Annual review',
-        why: 'Confirm assumptions.',
-        short: 'No critical shortfall detected. Verify policy benefits, riders, and assumptions annually.',
-        discuss: 'Annual review calendar and assumptions check'
-      });
-      const trimmedActions = actions.slice(0, 5);
-
-      // Top-4 planning gaps for page 1
-      const top4 = [...protRows].sort((a, b) => a.pct - b.pct).slice(0, 4).map((r, i) => ({
-        rank: i + 1,
-        area: r.label,
-        cur: r.monthly ? money(r.have, {
-          suffix: '/mo'
-        }) : money(r.have),
-        tgt: r.monthly ? money(r.need, {
-          suffix: '/mo'
-        }) : money(r.need),
-        gap: r.monthly ? money(r.gap, {
-          suffix: '/mo'
-        }) : money(r.gap),
-        pct: r.pct,
-        tone: tone(r.pct)
-      }));
-
       // ─────────────────────────────────────────────────────────────────
-      // PAGE 1 — Executive review
+      // PAGE 1 — Cover
       // ─────────────────────────────────────────────────────────────────
-      pageHeader(1, 'Executive review');
-      // Top row: Diagnosis (left) + Score (right) — y=30..76 (rc1.51 bumped from 24..70)
-      const diagW = CW * 0.66 - 2,
-        scoreW = CW * 0.34 - 0;
-      card(M, 30, diagW, 46, T.surface, T.border, 4);
-      label('Portfolio diagnosis', M + 5, 38);
-      const diagSentences = (() => {
-        const parts = [];
-        const policiesStr = activePolicies.length ? activePolicies.length + ' active polic' + (activePolicies.length === 1 ? 'y' : 'ies') + ' provide ' + money(totalCoverage) + ' of cover' : 'No active policies on file';
-        const gapsList = weakest.slice(0, 3).map(r => r.short).join(', ');
-        const gapsStr = weakest.length ? ', but the portfolio is materially below target for ' + gapsList + '.' : '. Coverage tracks well against LIA recommendations.';
-        parts.push(policiesStr + gapsStr);
-        if (retirement.desired > 0) parts.push('Retirement income at ' + retirementAge + ' covers ' + retPct + '% of the inflation-adjusted lifestyle target.');
-        return parts.join(' ');
-      })();
-      text(diagSentences, M + 5, 48, {
-        size: 8.4,
-        color: T.text,
-        maxW: diagW - 10,
-        maxLines: 5,
-        lineH: 5
-      });
-      // Score card — v2.4.0-rc1.51: redesigned for proper vertical rhythm.
-      //   Use measured text width for "/100" placement (was a hacky × 1.6
-      //   multiplier that broke for 1-digit scores). Status pill spans the
-      //   card width. Divider separates the score block from the retirement
-      //   row, which now right-aligns its values for clean alignment.
-      // rc1.51 fix: renamed sy → scY to avoid VarRedeclaration with the
-      // sy let-binding used by the source mix table on Page 3.
-      const scX = M + diagW + 4,
-        scY = 30,
-        scW = scoreW - 4;
-      card(scX, scY, scW, 46, T.surface, T.border, 4);
-      label('Protection score', scX + 5, scY + 8);
-      // Big score number — measure width AT its font, then position "/100"
-      setFont('times', 'bold', 24, scoreTone);
-      doc.text(String(score), scX + 5, scY + 24);
-      const scoreNumW = doc.getTextWidth(String(score));
-      text('/100', scX + 5 + scoreNumW + 2, scY + 22, {
-        size: 9,
-        color: T.text3
-      });
-      // Status pill — full width within card padding
-      pill(scoreLabel, scX + 5, scY + 28, score < 50 ? 'danger' : score < 80 ? 'warn' : 'success', {
-        size: 5.6,
-        w: scW - 10
-      });
-      // Divider before retirement row
-      doc.setDrawColor(...T.border);
-      doc.setLineWidth(0.15);
-      doc.line(scX + 5, scY + 35, scX + scW - 5, scY + 35);
-      label('Retirement', scX + 5, scY + 40);
-      text(retPct + '% covered', scX + scW - 5, scY + 40, {
-        size: 7.6,
+      pageBg();
+      // Top brand row: lens + name + date
+      lensMark(M, M - 16, 5, T.primary);
+      text('PolicyLens', M + 11, M - 12, {
+        family: FONT.serif,
         style: 'bold',
-        color: retPct < 70 ? T.danger : T.success,
+        size: 13,
+        color: T.ink
+      });
+      setFont(FONT.mono, 'normal', SZ.footer + 1, T.ink3);
+      doc.text(today, W - M, M - 12, {
         align: 'right'
       });
-      text(monthlyGap > 0 ? 'Gap ' + money(monthlyGap, {
-        suffix: '/mo'
-      }) : 'On track', scX + scW - 5, scY + 44, {
-        size: 6.4,
-        color: T.text3,
-        align: 'right'
+      // Eyebrow
+      eyebrow('Insurance portfolio review', M, M + 80, T.ink3);
+      // Subtitle
+      text('Prepared for the', M, M + 110, {
+        family: FONT.sans,
+        style: 'normal',
+        size: 14,
+        color: T.ink2
       });
-
-      // KPI strip — 5 compact cards
-      const kpiY = 80,
-        kpiH = 22,
-        kpiW = (CW - 4 * 2) / 5;
-      const kpis = [['Insured value', money(totalCoverage), activePolicies.length + ' policies', T.sky], ['Annual premium', money(totalAnnualPrem), premiumRatio ? premiumRatio + '% of income' : 'recurring', premiumRatio > 15 ? T.danger : T.sun], ['Active policies', String(activePolicies.length), activeInsurers + ' insurers', T.lavender], ['Protection gap', money(protectionGap), score + '/100 score', scoreTone], ['Retirement income', money(retTotal, {
-        suffix: '/mo'
-      }), retPct + '% of target', retPct < 70 ? T.danger : T.success]];
-      kpis.forEach((k, i) => {
-        const x = M + i * (kpiW + 2);
-        card(x, kpiY, kpiW, kpiH, T.surface, T.border, 3);
-        doc.setFillColor(...k[3]);
-        doc.circle(x + kpiW - 4, kpiY + 4, 2, 'F');
-        label(k[0], x + 3, kpiY + 5);
-        text(k[1], x + 3, kpiY + 13, {
-          family: 'times',
-          style: 'bold',
-          size: 11,
-          color: T.text
-        });
-        text(k[2], x + 3, kpiY + 19, {
-          size: 5.8,
-          color: T.text3,
-          maxW: kpiW - 6,
-          maxLines: 1
-        });
-      });
-
-      // Top 4 planning gaps table
-      const gapTblY = 108; // rc1.51: bumped from 104 to follow KPI strip at y=80+22+6
-      label('Top 4 planning gaps', M, gapTblY);
-      const gapWidths = [9, 56, 32, 32, 32, CW - 9 - 56 - 32 - 32 - 32];
-      tableRow(M, gapTblY + 3, gapWidths, ['Rank', 'Area', 'Current', 'Target', 'Gap', 'Priority'], {
-        header: true,
-        h: 6
-      });
-      top4.forEach((g, i) => {
-        tableRow(M, gapTblY + 9 + i * 7.4, gapWidths, [String(g.rank), g.area, g.cur, g.tgt, g.gap, {
-          kind: 'chip',
-          text: g.tone[2],
-          tone: g.tone[0]
-        }], {
-          alt: i % 2 === 1,
-          align: ['center', 'left', 'right', 'right', 'right', 'center'],
-          styles: [null, 'bold', null, null, 'bold', null],
-          colors: [T.text3, T.text, T.text2, T.text3, T.danger, null]
-        });
-      });
-
-      // Priority focus chips — v2.4.0-rc1.51 renamed from "Advisor discussion
-      // sequence" since this PDF is a client-facing artifact.
-      const seqY = gapTblY + 9 + top4.length * 7.4 + 8;
-      label('Priority focus areas', M, seqY);
-      const sequence = [];
-      protRows.forEach(r => {
-        if (r.pct < 50 && sequence.length < 5) sequence.push(r.short);
-      });
-      protRows.forEach(r => {
-        if (r.pct < 80 && r.pct >= 50 && sequence.length < 5) sequence.push(r.short);
-      });
-      if (retPct < 80 && sequence.length < 5) sequence.push('Retirement cashflow');
-      if (premiumRatio > 12 && sequence.length < 5) sequence.push('Premium runway');
-      while (sequence.length < 5 && sequence.length < protRows.length) sequence.push(protRows[sequence.length].short);
-      let cx = M;
-      const cy = seqY + 5;
-      sequence.slice(0, 5).forEach((s, i) => {
-        const labelText = i + 1 + '. ' + s;
-        setFont('helvetica', 'bold', 6.6, T.primary);
-        const w = doc.getTextWidth(labelText) + 8;
-        doc.setFillColor(...T.primarySoft);
-        doc.setDrawColor(...T.primarySoft);
-        doc.roundedRect(cx, cy, w, 6.6, 3.3, 3.3, 'FD');
-        doc.text(labelText, cx + w / 2, cy + 4.6, {
-          align: 'center'
-        });
-        cx += w + 3;
-        if (cx + 30 > W - M) {
-          cx = M;
-        }
-      });
-
-      // ─────────────────────────────────────────────────────────────────
-      // PAGE 2 — Protection gap map
-      // ─────────────────────────────────────────────────────────────────
-      doc.addPage();
-      pageHeader(2, 'Protection gap map');
-      // Header strip — rc1.51: bumped y from 24 to 30 for header clearance
-      card(M, 30, CW, 14, T.surface, T.border, 4);
-      text('Score', M + 5, 39, {
-        size: 6.4,
-        style: 'bold',
-        color: T.text3
-      });
-      text(score + '/100', M + 5 + 14, 39, {
-        family: 'times',
-        style: 'bold',
-        size: 10.5,
-        color: scoreTone
-      });
-      pill(scoreLabel, M + 5 + 50, 36.5, score < 50 ? 'danger' : score < 80 ? 'warn' : 'success', {
-        size: 5.4,
-        w: 38
-      });
-      text('Total gap', W - M - 5, 37, {
-        size: 6.4,
-        color: T.text3,
-        align: 'right'
-      });
-      text(money(protectionGap), W - M - 5, 41.5, {
-        family: 'times',
-        style: 'bold',
-        size: 10.5,
-        color: T.danger,
-        align: 'right'
-      });
-
-      // Main table (left 65%) + priority matrix (right 35%)
-      const tblW = CW * 0.66,
-        matW = CW * 0.34 - 4;
-      // v2.4.0-rc1.51: Column widths fit tblW exactly. Earlier version used
-      // [40,30,30,16,28,...] which summed to 144mm against a 125mm tblW —
-      // the negative final width caused the Gap column to render outside
-      // the table and bleed into the priority matrix area (the floating
-      // unlabeled "S$2.8M" the user spotted between Critical and Review).
-      const tcols = [38, 22, 22, 11, 20, tblW - 38 - 22 - 22 - 11 - 20];
-      const tblX = M,
-        tblYstart = 50; // rc1.51: was 44; bumped to follow score strip at y=30+14+6
-      tableRow(tblX, tblYstart, tcols, ['Area', 'Current', 'Recommended', '%', 'Gap', 'Advisory'], {
-        header: true,
-        h: 6
-      });
-      let ry = tblYstart + 6;
-      allRows.forEach((r, i) => {
-        const tn = tone(r.pct);
-        const cur = r.flag ? r.have : r.monthly ? money(r.have, {
-          suffix: '/mo'
-        }) : money(r.have);
-        const rec = r.flag ? r.need : r.monthly ? money(r.need, {
-          suffix: '/mo'
-        }) : money(r.need);
-        const gap = r.flag ? '' : r.monthly ? money(r.gap, {
-          suffix: '/mo'
-        }) : money(r.gap);
-        tableRow(tblX, ry, tcols, [r.label, cur, rec, r.pct + '%', gap, r.advice], {
-          alt: i % 2 === 1,
-          h: 9.6,
-          align: ['left', 'right', 'right', 'center', 'right', 'left'],
-          styles: [null, null, null, 'bold', null, null],
-          colors: [T.text, T.text2, T.text3, tn[1], T.danger, T.text3],
-          sizes: [7, 6.6, 6.6, 7.2, 6.6, 6.4]
-        });
-        // Mini bar above the row
-        if (!r.flag) bar(tblX + 2, ry + 8.2, tcols[0] - 4, 1.0, r.pct, r.color);
-        ry += 9.6;
-      });
-
-      // Priority matrix
-      const matX = tblX + tblW + 4;
-      const matY = tblYstart;
-      label('Priority matrix', matX, matY - 2);
-      const buckets = [['Critical', T.danger, T.dangerSoft, allRows.filter(r => !r.flag && r.pct < 40).map(r => r.short)], ['Review', T.warn, T.warnSoft, allRows.filter(r => !r.flag && r.pct >= 40 && r.pct < 80).map(r => r.short)], ['Confirm', T.sky, T.skySoft, [coverage.hasISP ? 'ISP rider terms' : 'Hospitalisation status', coverage.add > 0 ? 'PA medical reimb.' : 'Personal accident gap']], ['Keep', T.success, T.successSoft, [activePolicies.length + ' active policies', coverage.hasISP ? 'ISP held' : null, totalAnnualPrem > 0 ? money(totalAnnualPrem) + '/yr premium tracked' : null].filter(Boolean)]];
-      let by = matY;
-      buckets.forEach(([title, col, soft, items]) => {
-        const items2 = items.length ? items : ['—'];
-        const bH = 8 + items2.length * 4.2;
-        card(matX, by, matW, bH, soft, soft, 3);
-        text(title, matX + 4, by + 5, {
-          size: 6.6,
-          style: 'bold',
-          color: col
-        });
-        items2.slice(0, 4).forEach((it, i) => {
-          doc.setFillColor(...col);
-          doc.circle(matX + 5, by + 9.8 + i * 4.2 - 1.2, 0.8, 'F');
-          text(safe(it, 32), matX + 8, by + 9.8 + i * 4.2, {
-            size: 5.8,
-            color: T.text2,
-            maxW: matW - 12,
-            maxLines: 1
-          });
-        });
-        by += bH + 3;
-      });
-
-      // ─────────────────────────────────────────────────────────────────
-      // PAGE 3 — Retirement income gap
-      // ─────────────────────────────────────────────────────────────────
-      doc.addPage();
-      pageHeader(3, 'Retirement income gap');
-      // Top diagnosis row — 5 stat boxes
-      const diagY = 30,
-        diagH = 22,
-        diagW2 = (CW - 4 * 2) / 5; // rc1.51: bumped from 24
-      const diags = [['Projected at ' + retirementAge, money(retTotal, {
-        suffix: '/mo'
-      }), 'monthly', retPct < 70 ? T.danger : T.success], ['Desired at ' + retirementAge, money(retirement.desired, {
-        suffix: '/mo'
-      }), 'inflation-adjusted', T.lavender], ['Monthly gap', money(monthlyGap, {
-        suffix: '/mo'
-      }), monthlyGap > 0 ? 'shortfall' : 'covered', monthlyGap > 0 ? T.danger : T.success], ['Annual gap', money(annualGap), monthlyGap > 0 ? 'per year' : 'covered', monthlyGap > 0 ? T.danger : T.success], ['Coverage', retPct + '%', 'of target', retPct < 70 ? T.danger : T.success]];
-      diags.forEach((d, i) => {
-        const x = M + i * (diagW2 + 2);
-        card(x, diagY, diagW2, diagH, T.surface, T.border, 3);
-        doc.setFillColor(...d[3]);
-        doc.circle(x + diagW2 - 4, diagY + 4, 2, 'F');
-        label(d[0], x + 3, diagY + 5);
-        text(d[1], x + 3, diagY + 13, {
-          family: 'times',
-          style: 'bold',
-          size: 10,
-          color: T.text
-        });
-        text(d[2], x + 3, diagY + 19, {
-          size: 5.6,
-          color: T.text3,
-          maxW: diagW2 - 6,
-          maxLines: 1
-        });
-      });
-
-      // Inflation formula line
-      const inflY = diagY + diagH + 6;
-      const todayLifestyle = money(retirement.baseLifestyleToday, {
-        suffix: '/mo'
-      });
-      const futureLifestyle = money(retirement.desired, {
-        suffix: '/mo'
-      });
-      card(M, inflY, CW, 10, T.primarySoft, T.primarySoft, 3);
-      text('Inflation', M + 5, inflY + 6.5, {
-        size: 6.4,
-        style: 'bold',
+      // Family hero — Fraunces italic 56pt primary
+      text(familyHeading, M, M + 168, {
+        family: FONT.serif,
+        style: 'bolditalic',
+        size: SZ.cover_h1 + 14,
         color: T.primary
       });
-      text(todayLifestyle + ' today  →  ' + futureLifestyle + ' at age ' + retirementAge + '   ·   target grows at ' + (retirement.inflation || inflPct).toFixed(1) + '% p.a. for ' + yearsToRet + ' yrs', M + 22, inflY + 6.5, {
-        size: 7.2,
-        color: T.text2,
-        maxW: CW - 26,
-        maxLines: 1
+      // Client meta
+      text([clientLabel, 'age ' + currentAge, p.gender || ''].filter(Boolean).join(' · '), M, M + 200, {
+        family: FONT.sans,
+        style: 'normal',
+        size: SZ.body_lg,
+        color: T.ink2
       });
 
-      // Source mix + chart side-by-side
-      const srcY = inflY + 14;
-      const srcTblW = CW * 0.4 - 2,
-        chartCardW = CW * 0.6 - 2,
-        chartCardX = M + srcTblW + 4;
-      // Source mix table
-      label('Income source mix at ' + retirementAge, M, srcY);
-      const srcCols = [srcTblW * 0.55, srcTblW * 0.45];
-      tableRow(M, srcY + 3, srcCols, ['Source', 'Monthly'], {
-        header: true,
-        h: 6
+      // Score card — page's only card surface, real visual weight
+      const sCardY = M + 250,
+        sCardH = 120;
+      card(M, sCardY, CW, sCardH, T.card, T.hairline, R, {
+        lineWidth: 0.5
       });
-      const sources = [['CPF LIFE', retirement.cpf, T.sun], ['Policy income', retirement.policy, T.primary], ['Dividends', retirement.dividends, T.lavender], ['Other sources', retirement.other, T.sage]];
-      // v2.4.0-rc1.51: render income-source rows manually so the color dot
-      // doesn't collide with the source label. Previously the dot was at
-      // M+1.6 and the label started at the cell padding ~M+2 — overlapping
-      // by ~0.5mm and clipping characters in "CPF LIFE" / "Other sources".
-      let sy = srcY + 9;
-      sources.forEach((s, i) => {
-        const fillC = i % 2 === 1 ? T.surface2 : T.surface;
-        const rowW = srcCols[0] + srcCols[1];
-        doc.setFillColor(...fillC);
-        doc.setDrawColor(...T.border);
-        doc.setLineWidth(0.12);
-        doc.rect(M, sy, rowW, 6.6, 'FD');
-        // Color dot in left padding gutter (4mm allotted before label text)
-        doc.setFillColor(...s[2]);
-        doc.circle(M + 3, sy + 3.3, 1.1, 'F');
-        text(s[0], M + 7, sy + 4.3, {
-          size: 6.6,
-          color: T.text
+      eyebrow('Protection score', M + 24, sCardY + 30, T.ink3);
+      // Big number — Fraunces 64pt
+      setFont(FONT.serif, 'bold', 64, scoreTone);
+      doc.text(String(score), M + 24, sCardY + 86);
+      const scoreNumW = doc.getTextWidth(String(score));
+      // "/ 100"
+      setFont(FONT.sans, 'normal', 16, T.ink3);
+      doc.text('/ 100', M + 24 + scoreNumW + 6, sCardY + 78);
+      // Status pill
+      pill(scoreLabel, M + 24, sCardY + 96, score < 50 ? 'danger' : score < 80 ? 'warn' : 'success', {
+        size: 10,
+        w: 230,
+        h: 18
+      });
+      // Right side of score card: portfolio summary
+      const sumX = M + CW - 220;
+      eyebrow('Portfolio at a glance', sumX, sCardY + 30, T.ink3);
+      const summaryRows = [['Active policies', String(activePolicies.length)], ['Annual premium', money(totalAnnualPrem)], ['Insured value', money(totalCoverage)], ['Retirement', retPct + '% of target']];
+      summaryRows.forEach((row, i) => {
+        text(row[0], sumX, sCardY + 50 + i * 16, {
+          size: SZ.body,
+          color: T.ink3
         });
-        text(money(s[1], {
-          suffix: '/mo'
-        }), M + rowW - 3, sy + 4.3, {
-          size: 6.6,
-          color: T.text2,
-          align: 'right'
-        });
-        sy += 6.6;
-      });
-      tableRow(M, sy, srcCols, ['Total', money(retTotal, {
-        suffix: '/mo'
-      })], {
-        header: true,
-        h: 7,
-        align: ['left', 'right'],
-        styles: [null, 'bold']
-      });
-
-      // Chart
-      const chW = chartCardW,
-        chH = 70;
-      card(chartCardX, srcY, chW, chH, T.surface, T.border, 4);
-      label('Retirement income projection', chartCardX + 4, srcY + 5);
-      // Chart geometry
-      const chPadL = 14,
-        chPadR = 6,
-        chPadT = 8,
-        chPadB = 11;
-      const chartX = chartCardX + chPadL,
-        chartY = srcY + chPadT;
-      const chartW = chW - chPadL - chPadR,
-        chartH = chH - chPadT - chPadB;
-      const tlRows = retirement.timeline.filter(r => r.age >= 60 && r.age <= 90);
-      const maxV = Math.max(1, ...tlRows.map(r => Math.max(n(r.desired), n(r.total) || n(r.cpf) + n(r.policy) + n(r.dividends) + n(r.other))));
-      // Round up yMax to next 5k or 10k
-      const ceilTo = maxV >= 50000 ? 10000 : maxV >= 20000 ? 5000 : 1000;
-      const yMax = Math.max(ceilTo, Math.ceil(maxV / ceilTo) * ceilTo);
-      const xAt = a => chartX + (a - 60) / 30 * chartW;
-      const yAt = v => chartY + chartH - v / yMax * chartH;
-      // Y-axis grid + labels
-      doc.setDrawColor(...T.border);
-      doc.setLineWidth(0.13);
-      [0, 0.25, 0.5, 0.75, 1].forEach(f => {
-        const v = Math.round(yMax * f);
-        const yy = yAt(v);
-        doc.line(chartX, yy, chartX + chartW, yy);
-        text(money(v), chartX - 1, yy + 1.2, {
-          size: 5,
-          color: T.text3,
-          align: 'right'
-        });
-      });
-      // X-axis age labels
-      [60, 65, 70, 75, 80, 85, 90].forEach(a => {
-        const xx = xAt(a);
-        doc.setDrawColor(...T.border);
-        doc.line(xx, chartY + chartH, xx, chartY + chartH + 1.2);
-        text(String(a), xx, chartY + chartH + 5, {
-          size: 5.2,
-          color: T.text3,
-          align: 'center'
-        });
-      });
-      // Stacked income bars
-      const barW = chartW / 32; // 30 years + a bit padding
-      tlRows.forEach(r => {
-        const x = xAt(r.age) - barW / 2;
-        let baseY = chartY + chartH;
-        [['cpf', T.sun], ['policy', T.primary], ['dividends', T.lavender], ['other', T.sage]].forEach(([k, col]) => {
-          const v = n(r[k]);
-          if (v <= 0) return;
-          const segH = v / yMax * chartH;
-          doc.setFillColor(...col);
-          doc.rect(x, baseY - segH, barW, segH, 'F');
-          baseY -= segH;
-        });
-      });
-      // Desired line + diagonal hatch where desired > total
-      doc.setDrawColor(...T.danger);
-      doc.setLineWidth(0.6);
-      let prev = null;
-      tlRows.forEach(r => {
-        const xx = xAt(r.age),
-          yy = yAt(n(r.desired));
-        if (prev) doc.line(prev.x, prev.y, xx, yy);
-        prev = {
-          x: xx,
-          y: yy
-        };
-      });
-      // Direct labels — v2.4.0-rc1.51: "Projected income" was being placed
-      // INSIDE the chart at the first bar's y-position, where it cut into
-      // the bars. Now placed cleanly above the chart top-left corner. The
-      // "Desired" label keeps its end-of-line anchor but is nudged up so
-      // it doesn't sit directly on the curve.
-      const lastRow = tlRows[tlRows.length - 1];
-      if (lastRow) {
-        text('Desired (+' + (retirement.inflation || inflPct).toFixed(1) + '% p.a.)', xAt(lastRow.age) - 3, yAt(n(lastRow.desired)) - 2.5, {
-          size: 5.2,
+        text(row[1], sumX + 200, sCardY + 50 + i * 16, {
+          size: SZ.body,
           style: 'bold',
-          color: T.danger,
+          color: T.ink,
           align: 'right'
+        });
+      });
+
+      // Bottom: Prepared by block
+      const advY = H - M - 80;
+      doc.setDrawColor(...T.hairline);
+      doc.setLineWidth(0.4);
+      doc.line(M, advY, M + 80, advY);
+      eyebrow('Prepared by', M, advY + 18, T.ink3);
+      lensMark(M, advY + 36, 4, T.primary);
+      const advisorLine = advisorName || 'Your advisor';
+      text(advisorLine + (advisorMAS ? ' · MAS Rep #' + advisorMAS : ''), M + 9, advY + 39, {
+        family: FONT.sans,
+        style: 'bold',
+        size: SZ.body_lg,
+        color: T.ink
+      });
+      const contactBits = [advisorEmail, advisorPhone].filter(Boolean).join(' · ');
+      if (contactBits || advisorCompany) {
+        text(advisorCompany ? advisorCompany + (contactBits ? ' · ' + contactBits : '') : contactBits, M + 9, advY + 56, {
+          family: FONT.sans,
+          style: 'normal',
+          size: SZ.body,
+          color: T.ink3
         });
       }
-      // "Projected income" label — top-left, outside the bars
-      text('Projected income', chartX, chartY - 2, {
-        size: 5.4,
-        style: 'bold',
-        color: T.text2
+
+      // ─────────────────────────────────────────────────────────────────
+      // PAGE 2 — Executive review
+      // ─────────────────────────────────────────────────────────────────
+      doc.addPage();
+      pageBg();
+      sectionBand('01 · Executive review', T.primary);
+
+      // Score dial (left) + diagnosis (right)
+      const dialR = 60,
+        dialCY = M + 30,
+        dialCX = M + dialR + 10;
+      scoreDial(dialCX, dialCY + dialR, dialR, score, scoreTone);
+      eyebrow('Protection score · ' + scoreLabel, dialCX - dialR, dialCY + dialR * 2 + 28, T.ink3);
+      // Diagnosis text
+      const diagX = dialCX + dialR + 40,
+        diagW = CW - (dialX - M);
+      eyebrow('Diagnosis', diagX, dialCY + 8, T.ink3);
+      const diagSentences = [clientLabel + ' holds ' + activePolicies.length + ' active polic' + (activePolicies.length === 1 ? 'y' : 'ies') + ' providing ' + money(totalCoverage) + ' of cover.', weakest.length ? weakest.slice(0, 3).map(r => r.short).join(', ') + ' ' + (weakest.length === 1 ? 'is' : 'are') + ' below industry guideline.' : 'Coverage tracks well against LIA recommendations across all areas.', coverage.hasISP ? 'Hospitalisation' + (coverage.add > 0 ? ' and Personal Accident are appropriately covered.' : ' is appropriately covered.') : 'Hospitalisation cover is not yet detected.', retirement.desired > 0 ? 'Retirement at ' + retirementAge + ' covers ' + retPct + '% of the inflation-adjusted ' + money(retirement.desired, {
+        suffix: '/mo'
+      }) + ' target.' : 'Retirement target is not yet set on the Profile tab.'].join(' ');
+      text(diagSentences, diagX, dialCY + 26, {
+        size: SZ.body_lg,
+        color: T.ink2,
+        maxW: diagW,
+        maxLines: 8,
+        lineH: 14
       });
-      // Retirement age vertical marker
-      const retX = xAt(retirementAge);
-      doc.setDrawColor(...T.lavender);
-      doc.setLineWidth(0.5);
-      doc.setLineDashPattern([1.2, 1], 0);
-      doc.line(retX, chartY, retX, chartY + chartH);
-      doc.setLineDashPattern([], 0);
-      text('Retire ' + retirementAge, retX, chartY + 3, {
-        size: 5,
-        style: 'bold',
+
+      // 5-KPI strip
+      const kpiY = M + 220,
+        kpiH = 100,
+        kpiW = (CW - GUTTER * 4) / 5;
+      const kpis = [{
+        label: 'Insured value',
+        value: money(totalCoverage),
+        caption: activePolicies.length + ' policies',
+        color: T.sky,
+        spark: [0.6, 0.65, 0.72, 0.78, 0.85, 0.9, 0.95, 1].map(v => v * (totalCoverage || 1))
+      }, {
+        label: 'Annual premium',
+        value: money(totalAnnualPrem),
+        caption: premiumRatio ? premiumRatio + '% of income' : 'recurring',
+        color: T.sun,
+        spark: premYears.length ? premYears : [1]
+      }, {
+        label: 'Active policies',
+        value: String(activePolicies.length),
+        caption: activeInsurers + ' insurers',
         color: T.lavender,
-        align: 'center'
-      });
-      // Gap callout at retirement age
-      const retRow = tlRows.find(r => r.age === retirementAge);
-      if (retRow && retRow.desired > retRow.total) {
-        const gx = retX,
-          gyTop = yAt(n(retRow.desired)),
-          gyBot = yAt(n(retRow.total));
-        doc.setDrawColor(...T.danger);
-        doc.setLineWidth(0.4);
-        doc.line(gx + 1, gyTop, gx + 4, gyTop);
-        doc.line(gx + 1, gyBot, gx + 4, gyBot);
-        doc.line(gx + 2.5, gyTop, gx + 2.5, gyBot);
-        text('Gap ' + money(monthlyGap, {
+        spark: [activePolicies.length * 0.5, activePolicies.length * 0.6, activePolicies.length * 0.7, activePolicies.length * 0.8, activePolicies.length * 0.9, activePolicies.length * 0.95, activePolicies.length * 0.97, activePolicies.length]
+      }, {
+        label: 'Protection gap',
+        value: money(protectionGap),
+        caption: score + '/100 score',
+        color: scoreTone,
+        spark: [protectionGap * 1.2, protectionGap * 1.15, protectionGap * 1.1, protectionGap * 1.05, protectionGap * 1.02, protectionGap, protectionGap, protectionGap]
+      }, {
+        label: 'Retirement @ ' + retirementAge,
+        value: retPct + '%',
+        caption: money(retTotal, {
           suffix: '/mo'
-        }), gx + 5, (gyTop + gyBot) / 2 + 1, {
-          size: 5.2,
+        }),
+        color: retPct < 70 ? T.bad : T.good,
+        spark: [retPct * 0.6, retPct * 0.65, retPct * 0.7, retPct * 0.78, retPct * 0.85, retPct * 0.92, retPct * 0.97, retPct]
+      }];
+      kpis.forEach((k, i) => {
+        const x = M + i * (kpiW + GUTTER);
+        card(x, kpiY, kpiW, kpiH, T.card, T.hairline, 12);
+        // Tinted blob top-right (8% opacity)
+        const g = doc.GState ? doc.GState({
+          opacity: 0.18
+        }) : null;
+        if (g) doc.setGState(g);
+        doc.setFillColor(...k.color);
+        doc.circle(x + kpiW - 14, kpiY + 14, 16, 'F');
+        if (doc.GState) doc.setGState(doc.GState({
+          opacity: 1
+        }));
+        // Eyebrow
+        eyebrow(k.label, x + 14, kpiY + 22, T.ink3);
+        // Big number — Fraunces 28pt
+        text(k.value, x + 14, kpiY + 56, {
+          family: FONT.serif,
           style: 'bold',
-          color: T.danger
+          size: SZ.kpi_number,
+          color: T.ink
         });
-      }
-      // Legend
-      const legY = srcY + chH - 3;
-      let lgx = chartCardX + 4;
-      [['CPF', T.sun], ['Policy', T.primary], ['Dividends', T.lavender], ['Other', T.sage]].forEach(([lbl, col]) => {
-        doc.setFillColor(...col);
-        doc.rect(lgx, legY - 2, 2.5, 2.5, 'F');
-        text(lbl, lgx + 3.5, legY, {
-          size: 5,
-          color: T.text2
-        });
-        lgx += 3.5 + doc.getTextWidth(lbl) + 5;
-      });
-
-      // Retirement levers row
-      const leverY = srcY + chH + 4;
-      const leverW = (CW - 3 * 2) / 4;
-      const levers = [['CPF assumptions', retirement.cpf > 0 ? money(retirement.cpf, {
-        suffix: '/mo'
-      }) : 'Not set', 'Scheme · plan · start age', T.sun], ['Policy payout', retirement.policy > 0 ? money(retirement.policy, {
-        suffix: '/mo'
-      }) : 'Not set', 'Annuity · drawdown', T.primary], ['Portfolio drawdown', retirement.dividends > 0 ? money(retirement.dividends, {
-        suffix: '/mo'
-      }) : '—', 'Dividends · withdrawal', T.lavender], ['Lifestyle target', money(retirement.baseLifestyleToday, {
-        suffix: '/mo'
-      }), 'today\'s dollars', T.sage]];
-      label('Retirement levers', M, leverY);
-      levers.forEach((lv, i) => {
-        const x = M + i * (leverW + 2);
-        const ly = leverY + 3;
-        card(x, ly, leverW, 22, T.surface, T.border, 3);
-        doc.setFillColor(...lv[3]);
-        doc.circle(x + leverW - 4, ly + 4, 1.6, 'F');
-        label(lv[0], x + 3, ly + 5);
-        text(lv[1], x + 3, ly + 13, {
-          family: 'times',
-          style: 'bold',
-          size: 9,
-          color: T.text
-        });
-        text(lv[2], x + 3, ly + 19, {
-          size: 5.4,
-          color: T.text3,
-          maxW: leverW - 6,
+        // Sparkline
+        sparkline(x + 14, kpiY + 64, kpiW - 28, 14, k.spark, k.color);
+        // Caption
+        text(k.caption, x + 14, kpiY + kpiH - 14, {
+          size: SZ.body,
+          color: T.ink3,
+          maxW: kpiW - 28,
           maxLines: 1
         });
       });
 
       // ─────────────────────────────────────────────────────────────────
-      // PAGE 4 — Premium runway + action queue
+      // PAGE 3 — Protection gap map (waterfall)
       // ─────────────────────────────────────────────────────────────────
       doc.addPage();
-      pageHeader(4, 'Premium runway & action queue');
-      // Left chart 60% + Right facts 40%
-      const leftW = CW * 0.6 - 3,
-        rightW = CW * 0.4 - 0,
-        rightX = M + leftW + 4;
-      // Left chart
-      const chartCardY = 30; // rc1.51: bumped from 24 to follow new 2-row header
-      card(M, chartCardY, leftW, 84, T.surface, T.border, 4);
-      label('20-year premium outlook', M + 4, chartCardY + 5);
-      const pcPadL = 16,
-        pcPadR = 4,
-        pcPadT = 9,
-        pcPadB = 12;
-      const pcX = M + pcPadL,
-        pcY = chartCardY + pcPadT;
-      const pcW = leftW - pcPadL - pcPadR,
-        pcH = 84 - pcPadT - pcPadB;
-      const maxPrem = Math.max(1, ...premiumYears.map(r => r.total));
-      const yMaxP = Math.max(1000, Math.ceil(maxPrem / 1000) * 1000);
-      // Y-axis grid + labels
-      doc.setDrawColor(...T.border);
-      doc.setLineWidth(0.13);
-      [0, 0.25, 0.5, 0.75, 1].forEach(f => {
-        const v = Math.round(yMaxP * f),
-          yy = pcY + pcH - v / yMaxP * pcH;
-        doc.line(pcX, yy, pcX + pcW, yy);
-        text(money(v), pcX - 1, yy + 1.2, {
-          size: 5,
-          color: T.text3,
-          align: 'right'
+      pageBg();
+      sectionBand('02 · Protection gap map', T.primary);
+      eyebrow('Coverage held vs. LIA recommended', M, M + 4, T.ink3);
+      text('How current cover compares to the planning target — sorted by largest gap first.', M, M + 22, {
+        size: SZ.body,
+        color: T.ink2
+      });
+
+      // Sort by absolute gap (lump-sum equivalent)
+      const sortedGap = [...protRows].sort((a, b) => {
+        const aGap = a.monthly ? a.gap * 12 * Math.max(15, retirementAge - currentAge) : a.gap;
+        const bGap = b.monthly ? b.gap * 12 * Math.max(15, retirementAge - currentAge) : b.gap;
+        return bGap - aGap;
+      });
+      const wfY = M + 50,
+        wfH = 36,
+        wfRowGap = 10,
+        wfBarStart = 200,
+        wfBarEnd = M + CW - 80;
+      const wfBarW = wfBarEnd - wfBarStart;
+      const wfMaxNeed = Math.max(1, ...sortedGap.map(r => r.need));
+      sortedGap.forEach((r, i) => {
+        const ry = wfY + i * (wfH + wfRowGap);
+        // Area label (left)
+        text(r.label, M, ry + wfH / 2 + 2, {
+          family: FONT.sans,
+          style: 'bold',
+          size: SZ.body,
+          color: T.ink,
+          maxW: wfBarStart - M - 10,
+          maxLines: 1
+        });
+        text(r.why, M, ry + wfH / 2 + 14, {
+          size: SZ.caption,
+          color: T.ink3,
+          maxW: wfBarStart - M - 10,
+          maxLines: 1
+        });
+        // Bar geometry
+        const haveW = wfBarW * (r.have / wfMaxNeed);
+        const needW = wfBarW * (r.need / wfMaxNeed);
+        // Target outline (full need width)
+        doc.setDrawColor(...T.hairline);
+        doc.setLineWidth(0.6);
+        doc.setFillColor(...T.paper);
+        doc.roundedRect(wfBarStart, ry + 4, needW, wfH - 8, 4, 4, 'FD');
+        // Have filled (in category color)
+        if (haveW > 0) {
+          doc.setFillColor(...r.color);
+          doc.roundedRect(wfBarStart, ry + 4, haveW, wfH - 8, 4, 4, 'F');
+        }
+        // Gap section: from haveW to needW, hatched warn
+        if (needW > haveW + 1) {
+          const gapX = wfBarStart + haveW;
+          const gapW = needW - haveW;
+          const gst = doc.GState ? doc.GState({
+            opacity: 0.30
+          }) : null;
+          if (gst) doc.setGState(gst);
+          doc.setFillColor(...T.warn);
+          doc.rect(gapX, ry + 4, gapW, wfH - 8, 'F');
+          if (doc.GState) doc.setGState(doc.GState({
+            opacity: 1
+          }));
+          // Hatch overlay
+          hatch(gapX, ry + 4, gapW, wfH - 8, T.bad, 0.45, 5);
+        }
+        // Numbers
+        const haveLbl = r.monthly ? money(r.have, {
+          suffix: '/mo'
+        }) : money(r.have);
+        const needLbl = r.monthly ? money(r.need, {
+          suffix: '/mo'
+        }) : money(r.need);
+        const gapLbl = r.monthly ? money(r.gap, {
+          suffix: '/mo'
+        }) : money(r.gap);
+        text(haveLbl, wfBarStart + haveW + 4, ry + wfH - 6, {
+          family: FONT.serif,
+          style: 'bold',
+          size: SZ.body,
+          color: T.ink
+        });
+        text(gapLbl, wfBarEnd + 4, ry + wfH / 2 + 2, {
+          family: FONT.serif,
+          style: 'bold',
+          size: SZ.body_lg,
+          color: r.pct < 70 ? T.primary : T.ink3
+        });
+        text(r.pct + '% covered', wfBarEnd + 4, ry + wfH / 2 + 14, {
+          size: SZ.caption,
+          color: T.ink3
         });
       });
-      // Bars
-      const pBarW = pcW / premiumYears.length * 0.7;
-      premiumYears.forEach((r, idx) => {
-        const x = pcX + idx * (pcW / premiumYears.length) + (pcW / premiumYears.length - pBarW) / 2;
-        const h = r.total / yMaxP * pcH;
-        doc.setFillColor(...(r.age >= retirementAge ? T.text3 : T.primary));
-        doc.rect(x, pcY + pcH - h, pBarW, h, 'F');
-      });
-      // X-axis labels every 5 years
-      premiumYears.forEach((r, idx) => {
-        if (r.age % 5 === 0 || idx === 0 || idx === premiumYears.length - 1) {
-          const xx = pcX + idx * (pcW / premiumYears.length) + pcW / premiumYears.length / 2;
-          text(String(r.age), xx, pcY + pcH + 5, {
-            size: 5,
-            color: T.text3,
-            align: 'center'
+
+      // 4-column reference table below
+      const tblY = wfY + sortedGap.length * (wfH + wfRowGap) + 24;
+      eyebrow('Advisor notes', M, tblY, T.ink3);
+      const tblCols = [110, 90, 90, CW - 110 - 90 - 90];
+      const drawTblRow = (yy, cells, opts = {}) => {
+        const fill = opts.header ? T.cardSoft : opts.alt ? T.card : T.paper;
+        doc.setFillColor(...fill);
+        doc.setDrawColor(...T.hairline);
+        doc.setLineWidth(0.3);
+        doc.rect(M, yy, CW, 22, 'FD');
+        let cx = M;
+        cells.forEach((c, i) => {
+          const w = tblCols[i];
+          const align = opts.align && opts.align[i] || 'left';
+          const tx = align === 'right' ? cx + w - 6 : cx + 6;
+          const sty = opts.header ? 'bold' : opts.styles && opts.styles[i] || 'normal';
+          const sz = SZ.table;
+          const col = opts.header ? T.ink3 : T.ink2;
+          text(String(c == null ? '' : c), tx, yy + 14, {
+            family: FONT.sans,
+            style: sty,
+            size: sz,
+            color: col,
+            align,
+            maxW: w - 12,
+            maxLines: 1
           });
+          cx += w;
+        });
+      };
+      drawTblRow(tblY + 6, ['Area', 'Current', 'Recommended', 'Advisor note'], {
+        header: true
+      });
+      sortedGap.forEach((r, i) => {
+        const haveLbl = r.monthly ? money(r.have, {
+          suffix: '/mo'
+        }) : money(r.have);
+        const needLbl = r.monthly ? money(r.need, {
+          suffix: '/mo'
+        }) : money(r.need);
+        const note = r.pct >= 80 ? 'Adequate vs. guideline.' : r.pct >= 50 ? 'Top-up to guideline recommended.' : 'Critical shortfall — discuss this review.';
+        drawTblRow(tblY + 28 + i * 22, [r.label, haveLbl, needLbl, note], {
+          alt: i % 2 === 1,
+          align: ['left', 'right', 'right', 'left']
+        });
+      });
+
+      // ─────────────────────────────────────────────────────────────────
+      // PAGE 4 — Priority matrix
+      // ─────────────────────────────────────────────────────────────────
+      doc.addPage();
+      pageBg();
+      sectionBand('03 · Priority matrix', T.primary);
+      eyebrow('Cost of action vs. urgency', M, M + 4, T.ink3);
+      text('Each gap plotted by estimated cost (premium impact) and urgency. Larger circle = larger gap.', M, M + 22, {
+        size: SZ.body,
+        color: T.ink2
+      });
+
+      // Quadrant geometry — leave room for a legend on the right
+      const qSize = 360,
+        qX = M,
+        qY = M + 50,
+        qCenterX = qX + qSize / 2,
+        qCenterY = qY + qSize / 2;
+      // Quadrant tints (top-right, top-left, bottom-right, bottom-left)
+      const halfQ = qSize / 2;
+      const tints = [{
+        x: qX + halfQ,
+        y: qY,
+        color: T.primarySoft,
+        label: 'Tackle now',
+        desc: 'High urgency · high cost'
+      }, {
+        x: qX,
+        y: qY,
+        color: T.sageSoft,
+        label: 'Quick wins',
+        desc: 'High urgency · low cost'
+      }, {
+        x: qX + halfQ,
+        y: qY + halfQ,
+        color: T.lavenderSoft,
+        label: 'Plan for',
+        desc: 'Low urgency · high cost'
+      }, {
+        x: qX,
+        y: qY + halfQ,
+        color: T.cardSoft,
+        label: 'Monitor',
+        desc: 'Low urgency · low cost'
+      }];
+      tints.forEach(t => {
+        doc.setFillColor(...t.color);
+        doc.setDrawColor(...T.hairline);
+        doc.setLineWidth(0.3);
+        doc.rect(t.x, t.y, halfQ, halfQ, 'FD');
+      });
+      // Quadrant axes
+      doc.setDrawColor(...T.ink4);
+      doc.setLineWidth(0.6);
+      doc.line(qCenterX, qY, qCenterX, qY + qSize);
+      doc.line(qX, qCenterY, qX + qSize, qCenterY);
+      // Axis labels
+      eyebrow('Premium impact', qX, qY + qSize + 18, T.ink3);
+      text('Low', qX + 4, qY + qSize + 32, {
+        size: SZ.caption,
+        color: T.ink4
+      });
+      text('High', qX + qSize - 22, qY + qSize + 32, {
+        size: SZ.caption,
+        color: T.ink4,
+        align: 'right'
+      });
+      // Y-axis label (rotated)
+      doc.saveGraphicsState && doc.saveGraphicsState();
+      setFont(FONT.sans, 'bold', SZ.page_eyebrow, T.ink3);
+      doc.text('URGENCY', qX - 30, qY + qSize / 2, {
+        angle: 90,
+        charSpace: 0.7
+      });
+      doc.restoreGraphicsState && doc.restoreGraphicsState();
+      // Quadrant labels (corner)
+      tints.forEach(t => {
+        text(t.label, t.x + 8, t.y + 16, {
+          family: FONT.sans,
+          style: 'bold',
+          size: SZ.body,
+          color: T.ink2
+        });
+      });
+
+      // Plot points — for each gap row, position by (cost=premium-needed, urgency=100-pct)
+      // Cost heuristic: gap_amount/100k as relative units; map to 0-100 for x.
+      const plotItems = protRows.map(r => {
+        const gapDollars = r.monthly ? r.gap * 12 * Math.max(15, retirementAge - currentAge) : r.gap;
+        const costScore = clamp(Math.round(gapDollars / 10000), 0, 100); // very rough
+        const urgScore = 100 - r.pct;
+        const radius = 8 + Math.min(18, Math.sqrt(gapDollars / 10000) * 0.7);
+        return {
+          ...r,
+          gapDollars,
+          costScore,
+          urgScore,
+          radius
+        };
+      }).filter(r => r.gapDollars > 0);
+      plotItems.forEach(it => {
+        const px = qX + it.costScore / 100 * qSize;
+        const py = qY + qSize - it.urgScore / 100 * qSize;
+        // Soft outer glow (slightly larger semi-transparent)
+        const gst = doc.GState ? doc.GState({
+          opacity: 0.25
+        }) : null;
+        if (gst) doc.setGState(gst);
+        doc.setFillColor(...it.color);
+        doc.circle(px, py, it.radius * 1.4, 'F');
+        if (doc.GState) doc.setGState(doc.GState({
+          opacity: 1
+        }));
+        // Solid dot
+        doc.setFillColor(...it.color);
+        doc.circle(px, py, it.radius, 'F');
+        // Label with leader line
+        const labelX = px + it.radius + 6,
+          labelY = py + 3;
+        doc.setDrawColor(...T.ink3);
+        doc.setLineWidth(0.4);
+        doc.line(px + it.radius, py, labelX - 2, labelY - 2);
+        text(it.short, labelX, labelY, {
+          family: FONT.sans,
+          style: 'bold',
+          size: SZ.body,
+          color: T.ink
+        });
+      });
+
+      // Legend on the right
+      const legX = qX + qSize + 30,
+        legW = CW - qSize - 30;
+      eyebrow('Quadrants', legX, qY + 8, T.ink3);
+      tints.forEach((t, i) => {
+        const ly = qY + 30 + i * 56;
+        doc.setFillColor(...t.color);
+        doc.setDrawColor(...T.hairline);
+        doc.setLineWidth(0.3);
+        doc.roundedRect(legX, ly, 14, 14, 3, 3, 'FD');
+        text(t.label, legX + 22, ly + 11, {
+          family: FONT.sans,
+          style: 'bold',
+          size: SZ.body_lg,
+          color: T.ink
+        });
+        text(t.desc, legX + 22, ly + 25, {
+          size: SZ.body,
+          color: T.ink3,
+          maxW: legW - 30,
+          maxLines: 1
+        });
+        text(plotItems.filter(p => {
+          if (t.label === 'Tackle now') return p.costScore >= 50 && p.urgScore >= 50;
+          if (t.label === 'Quick wins') return p.costScore < 50 && p.urgScore >= 50;
+          if (t.label === 'Plan for') return p.costScore >= 50 && p.urgScore < 50;
+          return p.costScore < 50 && p.urgScore < 50;
+        }).map(p => p.short).join(', ') || '—', legX + 22, ly + 39, {
+          size: SZ.caption,
+          color: T.ink2,
+          maxW: legW - 30,
+          maxLines: 1
+        });
+      });
+
+      // ─────────────────────────────────────────────────────────────────
+      // PAGE 5 — Retirement projection
+      // ─────────────────────────────────────────────────────────────────
+      doc.addPage();
+      pageBg();
+      sectionBand('04 · Retirement at ' + retirementAge, T.retirement);
+      eyebrow('Projected monthly income at age ' + retirementAge, M, M + 4, T.ink3);
+      text('Stacked sources vs. inflation-adjusted lifestyle target.', M, M + 22, {
+        size: SZ.body,
+        color: T.ink2
+      });
+
+      // Stacked horizontal bar
+      const sbY = M + 64,
+        sbH = 36,
+        sbX = M,
+        sbW = CW;
+      const sbMax = Math.max(retirement.desired, retTotal, 1) * 1.15;
+      const sources = [{
+        key: 'cpf',
+        label: 'CPF LIFE',
+        value: retirement.cpf,
+        color: T.retirement
+      }, {
+        key: 'policy',
+        label: 'Policy income',
+        value: retirement.policy,
+        color: T.protection
+      }, {
+        key: 'dividends',
+        label: 'Dividends',
+        value: retirement.dividends,
+        color: T.lavender
+      }, {
+        key: 'other',
+        label: 'Other sources',
+        value: retirement.other,
+        color: T.savings
+      }];
+      // Track
+      doc.setFillColor(...T.cardSoft);
+      doc.roundedRect(sbX, sbY, sbW, sbH, 6, 6, 'F');
+      // Stacks
+      let cursorX = sbX;
+      sources.forEach(s => {
+        const segW = s.value / sbMax * sbW;
+        if (segW > 0) {
+          doc.setFillColor(...s.color);
+          doc.rect(cursorX, sbY, segW, sbH, 'F');
+          cursorX += segW;
         }
       });
-      // Retirement marker
-      const retIdx = premiumYears.findIndex(r => r.age === retirementAge);
-      if (retIdx >= 0) {
-        const xx = pcX + retIdx * (pcW / premiumYears.length) + pcW / premiumYears.length / 2;
-        doc.setDrawColor(...T.lavender);
-        doc.setLineWidth(0.5);
-        doc.setLineDashPattern([1.2, 1], 0);
-        doc.line(xx, pcY, xx, pcY + pcH);
-        doc.setLineDashPattern([], 0);
-        text('Retire ' + retirementAge, xx, pcY + 3, {
-          size: 5,
-          style: 'bold',
-          color: T.lavender,
-          align: 'center'
+      // Round just the rendered stacked area's right edge back to 6 (small detail)
+      if (cursorX > sbX) {
+        // Apply a stroke around the stacked area to suggest the bar edge
+        doc.setDrawColor(...T.hairline);
+        doc.setLineWidth(0.4);
+        doc.roundedRect(sbX, sbY, sbW, sbH, 6, 6, 'S');
+      }
+      // Target line
+      const tgtX = sbX + retirement.desired / sbMax * sbW;
+      doc.setDrawColor(...T.primary);
+      doc.setLineWidth(1.4);
+      doc.line(tgtX, sbY - 6, tgtX, sbY + sbH + 6);
+      text('Target ' + money(retirement.desired, {
+        suffix: '/mo'
+      }), tgtX + 4, sbY - 8, {
+        family: FONT.sans,
+        style: 'bold',
+        size: SZ.body,
+        color: T.primary
+      });
+      // Gap pill on the right
+      if (monthlyGap > 0) {
+        const gapPillW = 130;
+        pill('Gap ' + money(monthlyGap, {
+          suffix: '/mo'
+        }), W - M - gapPillW, sbY + sbH + 16, 'danger', {
+          size: 9.5,
+          w: gapPillW,
+          h: 22
+        });
+      } else {
+        pill('On track', W - M - 90, sbY + sbH + 16, 'success', {
+          size: 9.5,
+          w: 90,
+          h: 22
         });
       }
-      // Direct label below chart
-      text('Premiums payable after retirement: ' + continuingAfterRet + ' polic' + (continuingAfterRet === 1 ? 'y' : 'ies'), M + 4, chartCardY + 84 - 3, {
-        size: 6,
-        style: 'bold',
-        color: continuingAfterRet > 0 ? T.warn : T.text3
+      // Bar axis label
+      text(money(0), sbX, sbY + sbH + 18, {
+        size: SZ.caption,
+        color: T.ink3
+      });
+      text(money(sbMax), sbX + sbW, sbY + sbH + 18, {
+        size: SZ.caption,
+        color: T.ink3,
+        align: 'right'
       });
 
-      // Right facts panel
-      const factsY = chartCardY;
-      card(rightX, factsY, rightW, 84, T.surface, T.border, 4);
-      label('Premium facts', rightX + 4, factsY + 5);
-      const facts = [['Annual premium', money(totalAnnualPrem)], ['Monthly premium', money(totalAnnualPrem / 12)], ['Premium ratio', annualIncome ? premiumRatio + '% of income' : 'income missing'], ['Ending within 5 yrs', endingWithin5 + ' polic' + (endingWithin5 === 1 ? 'y' : 'ies')], ['Payable after ' + retirementAge, continuingAfterRet + ' polic' + (continuingAfterRet === 1 ? 'y' : 'ies')]];
-      facts.forEach((f, i) => {
-        const y = factsY + 11 + i * 13;
-        text(f[0], rightX + 4, y, {
-          size: 6.4,
-          color: T.text3
-        });
-        text(f[1], rightX + rightW - 4, y, {
-          size: 9,
+      // Legend grid 2×2
+      const legY2 = sbY + sbH + 50,
+        legColW = (CW - GUTTER) / 2;
+      sources.forEach((s, i) => {
+        const lx = sbX + i % 2 * (legColW + GUTTER);
+        const ly = legY2 + Math.floor(i / 2) * 36;
+        doc.setFillColor(...s.color);
+        doc.circle(lx + 6, ly + 12, 5, 'F');
+        text(s.label, lx + 18, ly + 9, {
+          family: FONT.sans,
           style: 'bold',
-          color: T.text,
-          family: 'times',
+          size: SZ.body_lg,
+          color: T.ink
+        });
+        text(money(s.value, {
+          full: true,
+          suffix: '/mo'
+        }), lx + legColW - 4, ly + 9, {
+          family: FONT.serif,
+          style: 'bold',
+          size: SZ.body_lg,
+          color: T.ink2,
           align: 'right'
         });
-        if (i < facts.length - 1) {
-          doc.setDrawColor(...T.border);
-          doc.setLineWidth(0.12);
-          doc.line(rightX + 4, y + 4, rightX + rightW - 4, y + 4);
-        }
-      });
-
-      // Action queue table — bottom
-      const actY = chartCardY + 84 + 8;
-      label('Action queue', M, actY);
-      const actCols = [16, 50, 70, CW - 16 - 50 - 70];
-      tableRow(M, actY + 3, actCols, ['Priority', 'Action', 'Why', 'Suggested discussion'], {
-        header: true,
-        h: 6
-      });
-      let aRy = actY + 9;
-      trimmedActions.forEach((a, i) => {
-        const tn = a.priority === 'High' ? 'danger' : a.priority === 'Medium' ? 'warn' : 'success';
-        tableRow(M, aRy, actCols, [{
-          kind: 'chip',
-          text: a.priority,
-          tone: tn
-        }, a.short, a.area + ' · ' + a.why, a.discuss], {
-          alt: i % 2 === 1,
-          h: 9,
-          align: ['center', 'left', 'left', 'left'],
-          styles: [null, 'bold', null, null],
-          colors: [null, T.text, T.text2, T.text3],
-          sizes: [null, 7, 6.4, 6.2]
+        text(s.value > 0 ? Math.round(s.value / Math.max(1, retTotal) * 100) + '% of total' : 'Not detected', lx + 18, ly + 24, {
+          size: SZ.caption,
+          color: T.ink3,
+          maxW: legColW - 26,
+          maxLines: 1
         });
-        aRy += 9;
+      });
+
+      // What-if narrative card
+      const whY = legY2 + 90,
+        whH = 130;
+      card(M, whY, CW, whH, T.primarySoft, T.primaryDim, R, {
+        lineWidth: 0.5
+      });
+      eyebrow('What-if · closing the gap', M + 24, whY + 28, T.primary);
+      const monthlyTopUp = monthlyGap > 0 ? Math.round(monthlyGap * 12 * Math.max(15, yearsToRet) / Math.max(1, yearsToRet * 12) * 1.0) : 0;
+      const altTopUp = monthlyGap > 0 ? Math.round(monthlyTopUp * 0.7) : 0;
+      const whatIfText = monthlyGap > 0 ? 'To reach ' + money(retirement.desired, {
+        full: true,
+        suffix: '/mo'
+      }) + ' at age ' + retirementAge + ', ' + (clientLabel.split(/\s+/)[0] || 'your client') + ' would need to top up approximately ' + money(monthlyTopUp, {
+        full: true,
+        suffix: '/month'
+      }) + ' starting now (' + yearsToRet + ' years × inflation-adjusted growth). Alternative: defer drawdown to age ' + (retirementAge + 2) + ' and contribute ' + money(altTopUp, {
+        full: true,
+        suffix: '/month'
+      }) + '.' : 'Projected income comfortably exceeds the inflation-adjusted lifestyle target. Recommend annual review of CPF assumptions and policy payout dates to confirm trajectory.';
+      text(whatIfText, M + 24, whY + 50, {
+        size: SZ.body_lg,
+        color: T.ink2,
+        maxW: CW - 48,
+        maxLines: 5,
+        lineH: 16
+      });
+      // Inflation note
+      text('Lifestyle target grows at ' + inflPct.toFixed(1) + '% p.a. — ' + money(baseLifestyleToday, {
+        suffix: '/mo'
+      }) + ' today → ' + money(retirement.desired, {
+        suffix: '/mo'
+      }) + ' at age ' + retirementAge, M + 24, whY + whH - 18, {
+        family: FONT.mono,
+        size: SZ.caption,
+        color: T.primary
       });
 
       // ─────────────────────────────────────────────────────────────────
-      // PAGE 5+ — Policy register + assumptions
+      // PAGE 6 — Recommended actions
       // ─────────────────────────────────────────────────────────────────
-      const categoryOrder = ['protection', 'health', 'retirement', 'savings', 'investment', 'maternity', 'other'];
-      const categoryName = {
+      doc.addPage();
+      pageBg();
+      sectionBand('05 · Recommended actions', T.primary);
+
+      // Build action lists
+      const critItems = weakest.filter(r => r.pct < 50).slice(0, 3);
+      const reviewItems = weakest.filter(r => r.pct >= 50 && r.pct < 80).slice(0, 3);
+      const confirmItems = [];
+      if (coverage.hasISP) confirmItems.push({
+        label: 'Hospitalisation',
+        detail: coverage.ispRider ? 'ISP + rider in place' : 'ISP held — confirm rider terms'
+      });
+      if (coverage.add > 0) confirmItems.push({
+        label: 'Personal Accident',
+        detail: 'ADB ' + money(coverage.add)
+      });
+      if (premiumRatio > 0 && premiumRatio < 15) confirmItems.push({
+        label: 'Premium load',
+        detail: premiumRatio + '% of income — manageable'
+      });
+      if (!confirmItems.length) confirmItems.push({
+        label: 'Annual review cadence',
+        detail: 'Verify all assumptions yearly'
+      });
+      const actCardH = 200,
+        actGap = 16;
+      const drawActionCard = (yy, level, accent, items, labelColor) => {
+        // Card with thick left border
+        card(M, yy, CW, actCardH, T.paper, T.hairline, 12);
+        doc.setFillColor(...accent);
+        doc.rect(M, yy, 5, actCardH, 'F');
+        // Level title
+        text(level, M + 24, yy + 26, {
+          family: FONT.serif,
+          style: 'bold',
+          size: 16,
+          color: labelColor
+        });
+        text(items.length + ' item' + (items.length === 1 ? '' : 's'), W - M - 16, yy + 26, {
+          size: SZ.body,
+          color: T.ink3,
+          align: 'right'
+        });
+        // Items
+        items.forEach((it, i) => {
+          const iy = yy + 56 + i * 42;
+          // Checkbox
+          doc.setDrawColor(...T.ink4);
+          doc.setLineWidth(0.5);
+          doc.roundedRect(M + 24, iy - 10, 12, 12, 2, 2, 'S');
+          // Item label
+          const itLabel = it.label || it.full || it.short || 'Action';
+          const itDetail = it.detail || (it.gap ? 'Estimated additional ' + (it.monthly ? money(it.gap, {
+            suffix: '/mo'
+          }) : money(it.gap)) + ' to close gap' : '');
+          text(itLabel, M + 44, iy, {
+            family: FONT.sans,
+            style: 'bold',
+            size: SZ.body_lg,
+            color: T.ink,
+            maxW: CW - 60 - 100,
+            maxLines: 1
+          });
+          if (itDetail) text(itDetail, M + 44, iy + 14, {
+            size: SZ.body,
+            color: T.ink2,
+            maxW: CW - 60 - 100,
+            maxLines: 1
+          });
+          // Premium estimate (right side, Fraunces 14pt)
+          if (it.gap) {
+            const estPremium = it.monthly ? Math.round(it.gap * 1.2) : Math.round(it.gap / 1000 * 0.5);
+            text('~' + money(estPremium) + (it.monthly ? '/mo' : '/yr'), W - M - 16, iy, {
+              family: FONT.serif,
+              style: 'bold',
+              size: 14,
+              color: labelColor,
+              align: 'right'
+            });
+            text('estimated', W - M - 16, iy + 14, {
+              size: SZ.caption,
+              color: T.ink3,
+              align: 'right'
+            });
+          }
+        });
+        // Empty state
+        if (!items.length) {
+          text('No items in this tier — coverage is in line with guideline.', M + 44, yy + 70, {
+            size: SZ.body,
+            color: T.ink3,
+            fontStyle: 'italic'
+          });
+        }
+      };
+      const cardsTotalH = 3 * actCardH + 2 * actGap;
+      const cardsStartY = M + 56;
+      drawActionCard(cardsStartY, 'CRITICAL — Discuss this review', T.primary, critItems, T.primary);
+      drawActionCard(cardsStartY + actCardH + actGap, 'REVIEW — Top-up recommended', T.warn, reviewItems, T.warn);
+      drawActionCard(cardsStartY + 2 * (actCardH + actGap), 'CONFIRM — Verify assumptions', T.sky, confirmItems, T.sky);
+
+      // ─────────────────────────────────────────────────────────────────
+      // PAGE 7 — Policy ledger + sign-off
+      // ─────────────────────────────────────────────────────────────────
+      doc.addPage();
+      pageBg();
+      sectionBand('06 · Current policies', T.primary);
+      eyebrow('All active policies, grouped by category', M, M + 4, T.ink3);
+      text(activePolicies.length + ' polic' + (activePolicies.length === 1 ? 'y' : 'ies') + ' across ' + activeInsurers + ' insurer' + (activeInsurers === 1 ? '' : 's'), M, M + 22, {
+        size: SZ.body,
+        color: T.ink2
+      });
+
+      // Group by category
+      const catOrder = ['protection', 'health', 'retirement', 'savings', 'investment', 'maternity', 'other'];
+      const catNames = {
         protection: 'Protection',
         health: 'Health & Medical',
         retirement: 'Retirement',
@@ -66408,203 +66366,166 @@ function ReportTab() {
         maternity: 'Maternity',
         other: 'Other'
       };
-      const categoryColor = {
-        protection: T.sky,
-        health: T.danger,
-        retirement: T.sun,
-        savings: T.sage,
-        investment: T.lavender,
-        maternity: T.lavender,
-        other: T.text3
+      const catColors = {
+        protection: T.protection,
+        health: T.health,
+        retirement: T.retirement,
+        savings: T.savings,
+        investment: T.investment,
+        maternity: T.health,
+        other: T.ink4
       };
       const grouped = {};
       activePolicies.forEach(pol => {
-        const key = categoryName[pol.category] ? pol.category : 'other';
+        const key = catNames[pol.category] ? pol.category : 'other';
         if (!grouped[key]) grouped[key] = [];
         grouped[key].push(pol);
       });
-      const startInventoryPage = (sub = 'Compact policy listing.') => {
-        doc.addPage();
-        pageHeader(5, 'Policy register');
-        return 30;
-      };
-      // v2.4.0-rc1.51: Policy register expanded to 2-line rows.
-      //   - Top line (bold):   Insurer · Product · Type · Cover · Premium · Prem-end · Method · Riders
-      //   - Sub line (small):  Policy # · Sub-type · Years held · Status · Notes/financed flags · Owner
-      //   - Rider codes use a proper mapping (D / TPD / CI / ECI / DI / PA / WP / TI), not blind 3-char slice that produced "DEA" for Death.
-      const RIDER_CODE = {
-        death: 'D',
-        tpd: 'TPD',
-        ci: 'CI',
-        eci: 'ECI',
-        di: 'DI',
-        accidental: 'PA',
-        accident: 'PA',
-        pa: 'PA',
-        premium_waiver: 'WP',
-        waiver: 'WP',
-        wp: 'WP',
-        terminal_illness: 'TI',
-        terminal: 'TI',
-        ti: 'TI',
-        enhanced_living: 'ECI'
-      };
-      const riderShort = rd => RIDER_CODE[(rd.type || '').toLowerCase().replace(/[^a-z_]/g, '')] || (rd.type || '').toUpperCase().slice(0, 3);
-      let invY = startInventoryPage();
-      const invCols = [62, 22, 22, 22, 18, 16, CW - 62 - 22 - 22 - 22 - 18 - 16];
-      const drawInvHeader = y => {
-        tableRow(M, y, invCols, ['Insurer · product', 'Type', 'Cover', 'Premium', 'Prem end', 'Method', 'Riders'], {
-          header: true,
-          h: 6
-        });
-        return y + 6;
-      };
-      // Each row is 11mm tall: 2 stacked lines (bold top + small subline)
-      const ROW_H = 11;
-      categoryOrder.forEach(cat => {
+      let lyY = M + 50;
+      const ledgerEndY = H - M - 220; // leave room for sign-off block
+      catOrder.forEach(cat => {
         const arr = grouped[cat] || [];
         if (!arr.length) return;
-        if (invY > 248) invY = startInventoryPage();
-        // Category bar
-        doc.setFillColor(...(categoryColor[cat] || T.primary));
-        doc.roundedRect(M, invY, 2.4, 6, 1, 1, 'F');
-        text(categoryName[cat], M + 5, invY + 4.4, {
-          size: 7.2,
+        if (lyY + 24 > ledgerEndY) return;
+        // Group header row
+        const groupPrem = arr.reduce((s, pol) => s + (annualizedPremium(pol) || 0), 0);
+        doc.setFillColor(...T.cardSoft);
+        doc.setDrawColor(...T.hairline);
+        doc.setLineWidth(0.3);
+        doc.rect(M, lyY, CW, 22, 'FD');
+        doc.setFillColor(...catColors[cat]);
+        doc.circle(M + 10, lyY + 11, 3, 'F');
+        text(catNames[cat], M + 20, lyY + 14, {
+          family: FONT.sans,
           style: 'bold',
-          color: T.text
+          size: SZ.body_lg,
+          color: T.ink
         });
-        text(arr.length + ' polic' + (arr.length === 1 ? 'y' : 'ies'), W - M, invY + 4.4, {
-          size: 6,
-          color: T.text3,
+        text(arr.length + ' polic' + (arr.length === 1 ? 'y' : 'ies'), M + 200, lyY + 14, {
+          size: SZ.body,
+          color: T.ink3
+        });
+        text(money(groupPrem) + ' / yr', W - M - 6, lyY + 14, {
+          family: FONT.serif,
+          style: 'bold',
+          size: SZ.body_lg,
+          color: T.ink2,
           align: 'right'
         });
-        invY += 7;
-        invY = drawInvHeader(invY);
-        arr.forEach((pol, i) => {
-          if (invY + ROW_H > 270) {
-            invY = startInventoryPage('Continued');
-            invY = drawInvHeader(invY);
-          }
-          // Row background (alternating)
-          const fillC = i % 2 === 1 ? T.surface2 : T.surface;
-          doc.setFillColor(...fillC);
-          doc.setDrawColor(...T.border);
-          doc.setLineWidth(0.12);
-          doc.rect(M, invY, CW, ROW_H, 'FD');
-
-          // Build top + subline content
-          const productLine = [pol.insurer || '—', pol.productName || pol.policyName || pol.subType || 'Policy'].filter(Boolean).join(' · ');
-          const cover = n(pol.sumAssured) > 0 ? money(pol.sumAssured) : '—';
-          const prem = isSinglePremium(pol) ? n(pol.annualPremium) ? money(pol.annualPremium) + ' lump' : 'Single' : annualizedPremium(pol) > 0 ? money(annualizedPremium(pol)) : '—';
-          const premEnd = pol.premEndAge ? 'age ' + pol.premEndAge : pol.premTerm ? pol.premTerm + 'y' : '—';
-          const method = pol.paymentMethod ? safe(pol.paymentMethod, 14) : '—';
-          const riderCodes = (pol.riders || []).map(riderShort).filter(Boolean).slice(0, 5).join(' ');
-          // Subline metadata
-          const startAge = parseInt(pol.premStartAge) || parseInt(pol.ageAtEntry);
-          const yearsHeld = startAge && currentAge >= startAge ? currentAge - startAge : null;
-          const policyNum = pol.policyNumber ? '#' + safe(String(pol.policyNumber), 14) : '';
-          const status = pol.status && pol.status !== 'inforce' ? safe(String(pol.status).charAt(0).toUpperCase() + String(pol.status).slice(1), 14) : '';
-          const subType = safe(pol.subType || '', 22);
-          const flags = [];
-          if (pol.notes && String(pol.notes).trim()) flags.push('✦ note');
-          if (pol.financed) flags.push('$ financed');
-          if (pol.excludeFromRetirement) flags.push('⊘ off-retirement');
-          if (pol.lifeInsured && pol.policyOwner && String(pol.lifeInsured).trim() !== String(pol.policyOwner).trim()) flags.push('LA ' + safe(pol.lifeInsured, 14));
-          const sublineParts = [policyNum, subType, yearsHeld != null ? yearsHeld + 'y in force' : null, status, ...flags].filter(Boolean);
-          const subline = sublineParts.join(' · ');
-
-          // Render Col 1 (Insurer/product) — 2 stacked lines
-          let cx = M;
-          text(productLine, cx + 2, invY + 4.6, {
-            size: 6.4,
+        lyY += 24;
+        arr.forEach(pol => {
+          if (lyY + 22 > ledgerEndY) return;
+          // Policy row
+          doc.setDrawColor(...T.hairline);
+          doc.setLineWidth(0.2);
+          doc.line(M, lyY + 22, W - M, lyY + 22);
+          // Cells
+          const insurer = safe(pol.insurer || '—', 24);
+          const product = safe(pol.productName || pol.policyName || pol.subType || 'Policy', 38);
+          const sa = n(pol.sumAssured) > 0 ? money(pol.sumAssured) : '—';
+          const prem = isSinglePremium(pol) ? n(pol.annualPremium) ? money(pol.annualPremium) + ' lump' : 'Single' : annualizedPremium(pol) > 0 ? money(annualizedPremium(pol)) + ' /yr' : '—';
+          text(insurer, M + 6, lyY + 14, {
+            family: FONT.sans,
             style: 'bold',
-            color: T.text,
-            maxW: invCols[0] - 4,
+            size: SZ.table,
+            color: T.ink,
+            maxW: 100,
             maxLines: 1
           });
-          if (subline) text(subline, cx + 2, invY + 8.8, {
-            size: 5.4,
-            color: T.text3,
-            maxW: invCols[0] - 4,
+          text(product, M + 110, lyY + 14, {
+            size: SZ.table,
+            color: T.ink2,
+            maxW: 200,
             maxLines: 1
           });
-          cx += invCols[0];
-
-          // Col 2 — Type (vertically centered)
-          text(safe(pol.subType || '—', 14), cx + 2, invY + 6.6, {
-            size: 5.8,
-            color: T.text3,
-            maxW: invCols[1] - 4,
-            maxLines: 1
-          });
-          cx += invCols[1];
-
-          // Col 3 — Cover (right-aligned)
-          text(cover, cx + invCols[2] - 2, invY + 6.6, {
-            size: 6.4,
-            color: T.text2,
+          text(sa, M + 320, lyY + 14, {
+            family: FONT.serif,
+            size: SZ.table,
+            color: T.ink2,
             align: 'right'
           });
-          cx += invCols[2];
-
-          // Col 4 — Premium (right-aligned)
-          text(prem, cx + invCols[3] - 2, invY + 6.6, {
-            size: 6.4,
-            color: T.text2,
+          text(prem, M + 410, lyY + 14, {
+            family: FONT.serif,
+            size: SZ.table,
+            color: T.ink2,
             align: 'right'
           });
-          cx += invCols[3];
-
-          // Col 5 — Prem end (centered)
-          text(premEnd, cx + invCols[4] / 2, invY + 6.6, {
-            size: 5.8,
-            color: T.text3,
-            align: 'center'
-          });
-          cx += invCols[4];
-
-          // Col 6 — Method
-          text(method, cx + 2, invY + 6.6, {
-            size: 5.6,
-            color: T.text3,
-            maxW: invCols[5] - 4,
-            maxLines: 1
-          });
-          cx += invCols[5];
-
-          // Col 7 — Riders (color-coded)
-          text(riderCodes || '—', cx + 2, invY + 6.6, {
-            size: 5.8,
-            style: 'bold',
-            color: T.primary,
-            maxW: invCols[6] - 4,
-            maxLines: 1
-          });
-          invY += ROW_H;
+          lyY += 22;
         });
-        invY += 4;
+        lyY += 6;
       });
-      if (!activePolicies.length) {
-        text('No active policies on file.', M + 4, invY + 8, {
-          size: 8,
-          color: T.text3,
-          fontStyle: 'italic'
-        });
-        invY += 14;
-      }
-      // Assumptions + disclaimer footer (small muted box at bottom of last inventory page)
-      if (invY > 245) invY = 245;
-      const assY = Math.min(invY + 4, H - 30);
-      card(M, assY, CW, 22, T.recessed, T.border, 3);
-      label('Assumptions and disclaimer', M + 4, assY + 5);
-      text('LIA multipliers ' + multipliers.deathYrs + 'x death · ' + multipliers.tpdYrs + 'x TPD · ' + multipliers.ciYrs + 'x CI · ' + multipliers.eciYrs + 'x ECI · ' + multipliers.diPct + '% DI. Inflation ' + (retirement.inflation || inflPct).toFixed(1) + '% p.a. Retirement target is inflation-adjusted from today\'s lifestyle (' + money(retirement.baseLifestyleToday, {
-        suffix: '/mo'
-      }) + ') to age ' + retirementAge + '. Illustrative — confirm benefits, riders, exclusions, and CPF details before recommendations.', M + 4, assY + 10, {
-        size: 5.8,
-        color: T.text3,
-        maxW: CW - 8,
-        maxLines: 3,
-        lineH: 3.4
+
+      // Sign-off block — bottom 1/3
+      const signY = H - M - 200;
+      card(M, signY, CW, 180, T.paper, T.hairline, 12);
+      // Left: Advisor signature line
+      text('Advisor', M + 24, signY + 30, {
+        family: FONT.sans,
+        style: 'bold',
+        size: SZ.body,
+        color: T.ink3
+      });
+      doc.setDrawColor(...T.ink3);
+      doc.setLineWidth(0.5);
+      doc.line(M + 24, signY + 70, M + CW / 2 - 24, signY + 70);
+      text('Signature', M + 24, signY + 84, {
+        size: SZ.caption,
+        color: T.ink4
+      });
+      text(advisorName || 'Advisor name', M + 24, signY + 104, {
+        family: FONT.sans,
+        style: 'bold',
+        size: SZ.body_lg,
+        color: T.ink
+      });
+      text(advisorMAS ? 'MAS Rep #' + advisorMAS : 'MAS Rep ID', M + 24, signY + 122, {
+        size: SZ.body,
+        color: T.ink3
+      });
+      text('Date: ' + today, M + 24, signY + 140, {
+        family: FONT.mono,
+        size: SZ.body,
+        color: T.ink3
+      });
+      // Right: Client acknowledgement
+      const clX = M + CW / 2 + 12;
+      text('Client acknowledgement', clX, signY + 30, {
+        family: FONT.sans,
+        style: 'bold',
+        size: SZ.body,
+        color: T.ink3
+      });
+      doc.setDrawColor(...T.ink3);
+      doc.setLineWidth(0.5);
+      doc.line(clX, signY + 70, M + CW - 24, signY + 70);
+      text('Signature', clX, signY + 84, {
+        size: SZ.caption,
+        color: T.ink4
+      });
+      text(clientLabel, clX, signY + 104, {
+        family: FONT.sans,
+        style: 'bold',
+        size: SZ.body_lg,
+        color: T.ink
+      });
+      text('I have reviewed the above with my advisor.', clX, signY + 122, {
+        size: SZ.body,
+        color: T.ink3,
+        maxW: CW / 2 - 24,
+        maxLines: 1
+      });
+      text('Date: __________________', clX, signY + 140, {
+        family: FONT.mono,
+        size: SZ.body,
+        color: T.ink3
+      });
+      // Disclaimer paragraph
+      text('This report is illustrative and does not constitute financial advice. Projections rely on saved profile data, policy inputs, LIA-recommended multipliers, and the firm\'s default inflation rate. Confirm policy benefits, riders, exclusions, and CPF assumptions before any product recommendation.', M + 24, signY + 162, {
+        size: SZ.footer,
+        color: T.ink3,
+        maxW: CW - 48,
+        maxLines: 2,
+        lineH: 9
       });
       footer();
       doc.save('PolicyLens_Visual_Report_' + clientLabel.replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '') + '_' + new Date().toISOString().slice(0, 10) + '.pdf');
