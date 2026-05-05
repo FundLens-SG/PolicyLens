@@ -609,9 +609,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.56';
+const APP_VERSION = 'v2.4.0-rc1.57';
 const APP_VERSION_DATE = '2026-05-06';
-const APP_VERSION_NAME = 'Family Visual Report V3 — concentration map, empty-member variant, plural & em-dash fixes';
+const APP_VERSION_NAME = 'Mobile-responsive dashboard + Report preview — KPI/hero/grids reflow under 768px';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -38859,6 +38859,11 @@ function Dashboard() {
     houseDefaults,
     driveState
   } = useContext(AppCtx);
+  // v2.4.0-rc1.57: viewport-aware layout. Below 768px we collapse the
+  // 2-col hero, 5-col KPI grid, and Coverage-Guidelines summary which
+  // were truncating mid-word ("INSUR VALU", "S$ 1") on small phones.
+  const isMobile = useViewportIsMobile();
+  const isNarrow = typeof window !== 'undefined' ? window.innerWidth < 480 : false;
   const p = clientProfile || {};
   const age = getProfileAge(p) ?? 35;
   const retAge = getRetirementAge(p, houseDefaults.retirementAge); // v2.0.3
@@ -40643,7 +40648,7 @@ function Dashboard() {
       background: `linear-gradient(135deg, ${T.primarySoft}, ${T.bg2} 60%)`,
       border: `1px solid ${T.border}`,
       borderRadius: T.radiusLg,
-      padding: '32px 32px 28px',
+      padding: isMobile ? '22px 18px 20px' : '32px 32px 28px',
       boxShadow: T.shadow
     }
   }, /*#__PURE__*/React.createElement(PLBlob, {
@@ -40668,11 +40673,15 @@ function Dashboard() {
     style: {
       position: 'relative',
       display: 'grid',
-      gridTemplateColumns: '1.5fr 1fr',
-      gap: 36,
+      gridTemplateColumns: isMobile ? '1fr' : '1.5fr 1fr',
+      gap: isMobile ? 18 : 36,
       alignItems: 'center'
     }
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13,
       color: T.primary,
@@ -40682,11 +40691,12 @@ function Dashboard() {
   }, greeting, ", ", fcFirst, " \u2615"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: T.serifFamily,
-      fontSize: 42,
+      fontSize: isNarrow ? 26 : isMobile ? 30 : 42,
       color: T.text,
       letterSpacing: '-0.025em',
-      lineHeight: 1.05,
-      fontWeight: 400
+      lineHeight: 1.1,
+      fontWeight: 400,
+      wordBreak: 'break-word'
     }
   }, "Here's how the ", /*#__PURE__*/React.createElement("span", {
     style: {
@@ -40786,8 +40796,8 @@ function Dashboard() {
   })())))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
-      gridTemplateColumns: 'repeat(5, 1fr)',
-      gap: 12
+      gridTemplateColumns: isNarrow ? '1fr' : isMobile ? 'repeat(2, 1fr)' : 'repeat(5, 1fr)',
+      gap: isMobile ? 10 : 12
     }
   }, kpis.map(k => /*#__PURE__*/React.createElement("div", {
     key: k.label,
@@ -40798,8 +40808,9 @@ function Dashboard() {
       background: T.bg2,
       border: `1px solid ${T.border}`,
       borderRadius: T.radiusLg,
-      padding: T.cardPad,
-      boxShadow: T.shadow
+      padding: isMobile ? 14 : T.cardPad,
+      boxShadow: T.shadow,
+      minWidth: 0
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -40822,23 +40833,28 @@ function Dashboard() {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'flex-start',
-      marginBottom: 14
+      marginBottom: 14,
+      gap: 6
     }
   }, /*#__PURE__*/React.createElement(PLLabel, {
     T: T,
     style: {
-      fontSize: 10.5
+      fontSize: 10.5,
+      lineHeight: 1.25,
+      whiteSpace: 'normal',
+      overflow: 'visible'
     }
   }, k.label), /*#__PURE__*/React.createElement("span", {
     style: {
-      fontSize: 18
+      fontSize: 18,
+      flexShrink: 0
     }
   }, k.emoji)), /*#__PURE__*/React.createElement(PLNumber, {
     T: T,
     value: k.value || 0,
     prefix: k.prefix || '',
     suffix: k.suffix || '',
-    size: 28,
+    size: isMobile ? 22 : 28,
     weight: 600
   }), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -40965,8 +40981,8 @@ function Dashboard() {
       marginTop: 22
     } : {
       display: 'grid',
-      gridTemplateColumns: `repeat(${Math.min(4, familyNodes.length)}, 1fr)`,
-      gap: 14,
+      gridTemplateColumns: `repeat(${isMobile ? Math.min(2, familyNodes.length) : Math.min(4, familyNodes.length)}, 1fr)`,
+      gap: isMobile ? 10 : 14,
       marginTop: 22
     }
   }, familyNodes.map((person, i) => {
@@ -41081,8 +41097,8 @@ function Dashboard() {
   }))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
-      gap: 16
+      gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+      gap: isMobile ? 12 : 16
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -41348,23 +41364,26 @@ function Dashboard() {
     }
   }, /*#__PURE__*/React.createElement("summary", {
     style: {
-      padding: '16px 20px',
+      padding: isMobile ? '14px 16px' : '16px 20px',
       cursor: 'pointer',
       listStyle: 'none',
       display: 'flex',
-      alignItems: 'center',
+      alignItems: isMobile ? 'flex-start' : 'center',
       gap: 12,
+      flexWrap: 'wrap',
       fontFamily: T.sansFamily,
       color: T.text2,
       fontSize: 13
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
-      fontSize: 18
+      fontSize: 18,
+      flexShrink: 0
     }
   }, "\uD83D\uDCD0"), /*#__PURE__*/React.createElement("div", {
     style: {
-      flex: 1
+      flex: '1 1 220px',
+      minWidth: 0
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -41383,7 +41402,9 @@ function Dashboard() {
   }, "How recommended sum-assured is calculated \xB7 click to adjust method & overrides")), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 11,
-      color: T.text3
+      color: T.text3,
+      flex: isMobile ? '1 1 100%' : '0 0 auto',
+      marginTop: isMobile ? 2 : 0
     }
   }, "Death ", LIA_MULTIPLIERS.deathYrs, "\xD7 \xB7 TPD ", LIA_MULTIPLIERS.tpdYrs, "\xD7 \xB7 CI ", LIA_MULTIPLIERS.ciYrs, "\xD7 \xB7 ECI ", LIA_MULTIPLIERS.eciYrs, "\xD7 \xB7 DI ", LIA_MULTIPLIERS.diPct, "%")), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -41607,8 +41628,8 @@ function Dashboard() {
       style: {
         marginTop: 22,
         display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap: 28
+        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+        gap: isMobile ? 16 : 28
       }
     }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -65023,6 +65044,11 @@ function ReportTab() {
     activeClientId,
     driveState
   } = useContext(AppCtx);
+  // v2.4.0-rc1.57: viewport-aware preview pane. The preview pages were
+  // hardcoded to 48–60pt padding and 3-column grids that horizontally
+  // overflowed phones, clipping "TAN MEI LIAN Family", "S$ 1.70M", etc.
+  const isMobile = useViewportIsMobile();
+  const isNarrow = typeof window !== 'undefined' ? window.innerWidth < 480 : false;
   const [generating, setGenerating] = useState(false);
   const [generatingVisual, setGeneratingVisual] = useState(false);
   const [generatingFamilyVisual, setGeneratingFamilyVisual] = useState(false);
@@ -69068,7 +69094,7 @@ function ReportTab() {
   return /*#__PURE__*/React.createElement("div", {
     className: "fade-in",
     style: {
-      padding: '4px 4px 60px'
+      padding: isMobile ? '4px 0 60px' : '4px 4px 60px'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -69087,7 +69113,7 @@ function ReportTab() {
   }, /*#__PURE__*/React.createElement("h2", {
     style: {
       fontFamily: T_V2.serifFamily,
-      fontSize: 32,
+      fontSize: isMobile ? 24 : 32,
       fontWeight: 400,
       letterSpacing: '-0.015em',
       color: 'var(--text)',
@@ -69172,17 +69198,18 @@ function ReportTab() {
       background: PAPER,
       border: `1px solid ${RULE}`,
       borderRadius: T_V2.radiusLg,
-      padding: '48px 60px',
+      padding: isMobile ? '28px 22px' : '48px 60px',
       boxShadow: T_V2.shadow,
       color: INK,
       position: 'relative',
-      minHeight: 340
+      minHeight: isMobile ? 240 : 340,
+      overflow: 'hidden'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'absolute',
       top: 18,
-      right: 24,
+      right: isMobile ? 16 : 24,
       fontSize: 10,
       color: INK4,
       letterSpacing: '0.05em',
@@ -69194,24 +69221,26 @@ function ReportTab() {
       color: INK4,
       letterSpacing: '0.15em',
       textTransform: 'uppercase',
-      fontWeight: 600
+      fontWeight: 600,
+      marginTop: isMobile ? 14 : 0
     }
   }, "Portfolio Review \xB7 prepared for"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: T_V2.serifFamily,
-      fontSize: 48,
+      fontSize: isNarrow ? 28 : isMobile ? 34 : 48,
       marginTop: 8,
       letterSpacing: '-0.02em',
       color: INK,
       fontWeight: 400,
-      lineHeight: 1.05
+      lineHeight: 1.05,
+      wordBreak: 'break-word'
     }
   }, useExplicitFamily ? familyName : familyName.replace(/^Your client$/, 'Your client')), clientHeadName !== 'this client' && /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: T_V2.serifFamily,
       fontStyle: 'italic',
-      fontSize: 18,
-      marginTop: 14,
+      fontSize: isMobile ? 16 : 18,
+      marginTop: isMobile ? 10 : 14,
       color: INK2,
       fontWeight: 400,
       letterSpacing: '-0.005em'
@@ -69233,15 +69262,19 @@ function ReportTab() {
     style: {
       height: 1,
       background: RULE,
-      margin: '32px 0'
+      margin: isMobile ? '22px 0' : '32px 0'
     }
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
-      gridTemplateColumns: 'repeat(3, 1fr)',
-      gap: 36
+      gridTemplateColumns: isNarrow ? '1fr' : isMobile ? 'repeat(3, minmax(0, 1fr))' : 'repeat(3, 1fr)',
+      gap: isMobile ? 16 : 36
     }
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 10,
       color: INK4,
@@ -69252,13 +69285,18 @@ function ReportTab() {
   }, "Insured value"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: T_V2.serifFamily,
-      fontSize: 34,
+      fontSize: isMobile ? 22 : 34,
       marginTop: 6,
       color: INK,
       fontWeight: 400,
-      fontVariantNumeric: 'tabular-nums'
+      fontVariantNumeric: 'tabular-nums',
+      whiteSpace: 'nowrap'
     }
-  }, totalCoverage > 0 ? 'S$ ' + (totalCoverage / 1000000).toFixed(2).replace(/\.00$/, '') + 'M' : '—')), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, totalCoverage > 0 ? 'S$ ' + (totalCoverage / 1000000).toFixed(2).replace(/\.00$/, '') + 'M' : '—')), /*#__PURE__*/React.createElement("div", {
+    style: {
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 10,
       color: INK4,
@@ -69269,13 +69307,18 @@ function ReportTab() {
   }, "Annual premium"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: T_V2.serifFamily,
-      fontSize: 34,
+      fontSize: isMobile ? 22 : 34,
       marginTop: 6,
       color: INK,
       fontWeight: 400,
-      fontVariantNumeric: 'tabular-nums'
+      fontVariantNumeric: 'tabular-nums',
+      whiteSpace: 'nowrap'
     }
-  }, totalAnnualPremium > 0 ? 'S$ ' + Math.round(totalAnnualPremium).toLocaleString() : '—')), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, totalAnnualPremium > 0 ? 'S$ ' + Math.round(totalAnnualPremium).toLocaleString() : '—')), /*#__PURE__*/React.createElement("div", {
+    style: {
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 10,
       color: INK4,
@@ -69286,11 +69329,12 @@ function ReportTab() {
   }, "Retirement coverage"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: T_V2.serifFamily,
-      fontSize: 34,
+      fontSize: isMobile ? 22 : 34,
       marginTop: 6,
       color: INK,
       fontWeight: 400,
-      fontVariantNumeric: 'tabular-nums'
+      fontVariantNumeric: 'tabular-nums',
+      whiteSpace: 'nowrap'
     }
   }, retCoverPct > 0 ? retCoverPct + '%' : '—'))), activePols.length > 0 && /*#__PURE__*/React.createElement("div", {
     style: {
@@ -69314,16 +69358,17 @@ function ReportTab() {
       background: PAPER,
       border: `1px solid ${RULE}`,
       borderRadius: T_V2.radiusLg,
-      padding: '40px 60px',
+      padding: isMobile ? '24px 20px' : '40px 60px',
       boxShadow: T_V2.shadow,
       color: INK,
-      position: 'relative'
+      position: 'relative',
+      overflow: 'hidden'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'absolute',
       top: 18,
-      right: 24,
+      right: isMobile ? 16 : 24,
       fontSize: 10,
       color: INK4,
       letterSpacing: '0.05em',
@@ -69335,12 +69380,13 @@ function ReportTab() {
       color: INK4,
       letterSpacing: '0.15em',
       textTransform: 'uppercase',
-      fontWeight: 600
+      fontWeight: 600,
+      marginTop: isMobile ? 14 : 0
     }
   }, "Section 1"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: T_V2.serifFamily,
-      fontSize: 30,
+      fontSize: isMobile ? 22 : 30,
       marginTop: 6,
       letterSpacing: '-0.02em',
       color: INK,
@@ -69421,7 +69467,7 @@ function ReportTab() {
   })), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
+      gridTemplateColumns: isNarrow ? '1fr' : '1fr 1fr',
       gap: 14,
       marginTop: 22,
       paddingTop: 18,
@@ -69492,16 +69538,17 @@ function ReportTab() {
       background: PAPER,
       border: `1px solid ${RULE}`,
       borderRadius: T_V2.radiusLg,
-      padding: '40px 60px',
+      padding: isMobile ? '24px 20px' : '40px 60px',
       boxShadow: T_V2.shadow,
       color: INK,
-      position: 'relative'
+      position: 'relative',
+      overflow: 'hidden'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'absolute',
       top: 18,
-      right: 24,
+      right: isMobile ? 16 : 24,
       fontSize: 10,
       color: INK4,
       letterSpacing: '0.05em',
@@ -69513,12 +69560,13 @@ function ReportTab() {
       color: INK4,
       letterSpacing: '0.15em',
       textTransform: 'uppercase',
-      fontWeight: 600
+      fontWeight: 600,
+      marginTop: isMobile ? 14 : 0
     }
   }, "Section 2"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: T_V2.serifFamily,
-      fontSize: 30,
+      fontSize: isMobile ? 22 : 30,
       marginTop: 6,
       letterSpacing: '-0.02em',
       color: INK,
@@ -69534,11 +69582,15 @@ function ReportTab() {
   }, "Projected monthly income vs your desired lifestyle"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
-      gap: 32,
+      gridTemplateColumns: isNarrow ? '1fr' : '1fr 1fr',
+      gap: isMobile ? 18 : 32,
       alignItems: 'baseline'
     }
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 10,
       color: INK4,
@@ -69549,12 +69601,13 @@ function ReportTab() {
   }, "Projected at ", retAge), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: T_V2.serifFamily,
-      fontSize: 42,
+      fontSize: isMobile ? 28 : 42,
       marginTop: 6,
       color: INK,
       fontWeight: 400,
       fontVariantNumeric: 'tabular-nums',
-      lineHeight: 1
+      lineHeight: 1,
+      whiteSpace: 'nowrap'
     }
   }, "S$ ", retIncome.toLocaleString()), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -69562,7 +69615,11 @@ function ReportTab() {
       color: INK3,
       marginTop: 6
     }
-  }, "per month")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, "per month")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 10,
       color: INK4,
@@ -69573,12 +69630,13 @@ function ReportTab() {
   }, "Desired lifestyle"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: T_V2.serifFamily,
-      fontSize: 42,
+      fontSize: isMobile ? 28 : 42,
       marginTop: 6,
       color: INK,
       fontWeight: 400,
       fontVariantNumeric: 'tabular-nums',
-      lineHeight: 1
+      lineHeight: 1,
+      whiteSpace: 'nowrap'
     }
   }, "S$ ", retDesired.toLocaleString()), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -69651,16 +69709,17 @@ function ReportTab() {
       background: PAPER,
       border: `1px solid ${RULE}`,
       borderRadius: T_V2.radiusLg,
-      padding: '40px 60px',
+      padding: isMobile ? '24px 20px' : '40px 60px',
       boxShadow: T_V2.shadow,
       color: INK,
-      position: 'relative'
+      position: 'relative',
+      overflow: 'hidden'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'absolute',
       top: 18,
-      right: 24,
+      right: isMobile ? 16 : 24,
       fontSize: 10,
       color: INK4,
       letterSpacing: '0.05em',
@@ -69672,12 +69731,13 @@ function ReportTab() {
       color: INK4,
       letterSpacing: '0.15em',
       textTransform: 'uppercase',
-      fontWeight: 600
+      fontWeight: 600,
+      marginTop: isMobile ? 14 : 0
     }
   }, "Section 3"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: T_V2.serifFamily,
-      fontSize: 30,
+      fontSize: isMobile ? 22 : 30,
       marginTop: 6,
       letterSpacing: '-0.02em',
       color: INK,
@@ -69690,7 +69750,103 @@ function ReportTab() {
       marginTop: 6,
       marginBottom: 22
     }
-  }, activePols.length > 5 ? `Showing 5 of ${activePols.length} active policies — full list in the PDF` : `${activePols.length} active polic${activePols.length === 1 ? 'y' : 'ies'}`), /*#__PURE__*/React.createElement("div", {
+  }, activePols.length > 5 ? `Showing 5 of ${activePols.length} active policies — full list in the PDF` : `${activePols.length} active polic${activePols.length === 1 ? 'y' : 'ies'}`), isMobile ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 0
+    }
+  }, topPolicies.map(({
+    pol,
+    prem
+  }, i) => /*#__PURE__*/React.createElement("div", {
+    key: pol.id || i,
+    style: {
+      padding: '12px 0',
+      borderTop: `1px solid ${RULE}`,
+      fontSize: 13
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      gap: 10,
+      alignItems: 'baseline'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: INK,
+      fontWeight: 600,
+      minWidth: 0,
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap'
+    }
+  }, pol.insurer || '—'), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: INK,
+      fontVariantNumeric: 'tabular-nums',
+      fontWeight: 600,
+      whiteSpace: 'nowrap',
+      flexShrink: 0
+    }
+  }, "S$ ", Math.round(prem).toLocaleString(), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: INK4,
+      fontWeight: 400
+    }
+  }, " /yr"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      gap: 10,
+      marginTop: 4,
+      fontSize: 12,
+      color: INK3
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      minWidth: 0,
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap'
+    }
+  }, pol.productName || pol.policyName || '—'), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontVariantNumeric: 'tabular-nums',
+      whiteSpace: 'nowrap',
+      flexShrink: 0
+    }
+  }, parseFloat(pol.sumAssured) > 0 ? 'SA S$' + parseFloat(pol.sumAssured).toLocaleString() : 'SA —')))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'baseline',
+      padding: '14px 0',
+      borderTop: `2px solid ${INK4}`,
+      fontSize: 13
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: INK4,
+      fontStyle: 'italic'
+    }
+  }, "Total annual premium"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: INK,
+      fontVariantNumeric: 'tabular-nums',
+      fontWeight: 700,
+      fontFamily: T_V2.serifFamily,
+      fontSize: 16
+    }
+  }, "S$ ", Math.round(totalAnnualPremium).toLocaleString(), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: INK4,
+      fontSize: 11,
+      fontWeight: 400,
+      fontFamily: T_V2.sansFamily
+    }
+  }, " /yr")))) : /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
@@ -69781,7 +69937,7 @@ function ReportTab() {
       background: ACCENT_SOFT,
       border: `1px solid ${RULE}`,
       borderRadius: T_V2.radiusLg,
-      padding: '24px 32px',
+      padding: isMobile ? '18px 20px' : '24px 32px',
       color: INK2,
       fontSize: 12.5,
       lineHeight: 1.6

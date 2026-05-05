@@ -599,9 +599,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.56';
+const APP_VERSION = 'v2.4.0-rc1.57';
 const APP_VERSION_DATE = '2026-05-06';
-const APP_VERSION_NAME = 'Family Visual Report V3 — concentration map, empty-member variant, plural & em-dash fixes';
+const APP_VERSION_NAME = 'Mobile-responsive dashboard + Report preview — KPI/hero/grids reflow under 768px';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -30248,6 +30248,11 @@ const PLRetirementProjectionChart = React.memo(function PLRetirementProjectionCh
 // ═══════════════════════════════════════════════════════════════
 function Dashboard() {
   const {policies,setTab,apiKey,clientProfile,saveProfile,houseDefaults,driveState} = useContext(AppCtx);
+  // v2.4.0-rc1.57: viewport-aware layout. Below 768px we collapse the
+  // 2-col hero, 5-col KPI grid, and Coverage-Guidelines summary which
+  // were truncating mid-word ("INSUR VALU", "S$ 1") on small phones.
+  const isMobile = useViewportIsMobile();
+  const isNarrow = typeof window !== 'undefined' ? window.innerWidth < 480 : false;
   const p = clientProfile || {};
   const age = getProfileAge(p) ?? 35;
   const retAge = getRetirementAge(p, houseDefaults.retirementAge); // v2.0.3
@@ -31286,17 +31291,17 @@ function Dashboard() {
         background: `linear-gradient(135deg, ${T.primarySoft}, ${T.bg2} 60%)`,
         border: `1px solid ${T.border}`,
         borderRadius: T.radiusLg,
-        padding: '32px 32px 28px',
+        padding: isMobile ? '22px 18px 20px' : '32px 32px 28px',
         boxShadow: T.shadow,
       }}>
         <PLBlob T={T} color={T.primary}  size={300} style={{ top: -80,  right: -60, opacity: 0.18 }} />
         <PLBlob T={T} color={T.lavender} size={200} style={{ bottom: -60, right: 100, opacity: 0.12 }} />
-        <div style={{ position:'relative', display:'grid', gridTemplateColumns:'1.5fr 1fr', gap: 36, alignItems:'center' }}>
-          <div>
+        <div style={{ position:'relative', display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1.5fr 1fr', gap: isMobile ? 18 : 36, alignItems:'center' }}>
+          <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 13, color: T.primary, fontWeight: 600, marginBottom: 10 }}>
               {greeting}, {fcFirst} ☕
             </div>
-            <div style={{ fontFamily: T.serifFamily, fontSize: 42, color: T.text, letterSpacing: '-0.025em', lineHeight: 1.05, fontWeight: 400 }}>
+            <div style={{ fontFamily: T.serifFamily, fontSize: isNarrow ? 26 : isMobile ? 30 : 42, color: T.text, letterSpacing: '-0.025em', lineHeight: 1.1, fontWeight: 400, wordBreak: 'break-word' }}>
               Here&apos;s how the <span style={{ color: T.primary, fontStyle: 'italic' }}>{clientLastName || clientFirst}</span> {clientLastName ? 'family' : 'portfolio'} is doing today.
             </div>
             <div style={{ fontSize: 13.5, color: T.text2, marginTop: 14, lineHeight: 1.55, maxWidth: 540 }}>
@@ -31359,23 +31364,27 @@ function Dashboard() {
       </div>
 
       {/* ── 3b. KPI grid ── */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(5, 1fr)', gap: 12 }}>
+      {/* v2.4.0-rc1.57: 2-up grid below 768px, single column under 380px.
+          Was repeat(5,1fr) which truncated labels mid-word ("INSUR VALU",
+          "ACTIV POLIC") and clipped the dollar values ("S$ 1") on phones. */}
+      <div style={{ display:'grid', gridTemplateColumns: isNarrow ? '1fr' : isMobile ? 'repeat(2, 1fr)' : 'repeat(5, 1fr)', gap: isMobile ? 10 : 12 }}>
         {kpis.map(k => (
           <div key={k.label} style={{
             position:'relative', overflow:'hidden', minHeight: 130,
             background: T.bg2, border: `1px solid ${T.border}`,
-            borderRadius: T.radiusLg, padding: T.cardPad, boxShadow: T.shadow,
+            borderRadius: T.radiusLg, padding: isMobile ? 14 : T.cardPad, boxShadow: T.shadow,
+            minWidth: 0,
           }}>
             <div style={{
               position:'absolute', top: -20, right: -20, width: 80, height: 80,
               borderRadius:'50%', background: k.accent, opacity: 0.12, filter: 'blur(20px)',
             }} />
             <div style={{ position:'relative' }}>
-              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom: 14 }}>
-                <PLLabel T={T} style={{ fontSize: 10.5 }}>{k.label}</PLLabel>
-                <span style={{ fontSize: 18 }}>{k.emoji}</span>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom: 14, gap: 6 }}>
+                <PLLabel T={T} style={{ fontSize: 10.5, lineHeight: 1.25, whiteSpace: 'normal', overflow: 'visible' }}>{k.label}</PLLabel>
+                <span style={{ fontSize: 18, flexShrink: 0 }}>{k.emoji}</span>
               </div>
-              <PLNumber T={T} value={k.value || 0} prefix={k.prefix || ''} suffix={k.suffix || ''} size={28} weight={600} />
+              <PLNumber T={T} value={k.value || 0} prefix={k.prefix || ''} suffix={k.suffix || ''} size={isMobile ? 22 : 28} weight={600} />
               <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                 <div style={{ fontSize: 11.5, fontWeight: 500,
                   color: k.tone === 'good' ? T.green : k.tone === 'warn' ? 'oklch(0.55 0.16 65)' : T.text3,
@@ -31445,7 +31454,7 @@ function Dashboard() {
               3 for 3, 4 for 4+. */}
           <div style={familyNodes.length === 1
             ? { display:'flex', justifyContent:'center', marginTop: 22 }
-            : { display:'grid', gridTemplateColumns:`repeat(${Math.min(4, familyNodes.length)}, 1fr)`, gap: 14, marginTop: 22 }
+            : { display:'grid', gridTemplateColumns:`repeat(${isMobile ? Math.min(2, familyNodes.length) : Math.min(4, familyNodes.length)}, 1fr)`, gap: isMobile ? 10 : 14, marginTop: 22 }
           }>
             {familyNodes.map((person, i) => {
               const ringColor = person.coverage >= 0.9 ? T.green : person.coverage >= 0.6 ? T.warn : T.red;
@@ -31499,7 +31508,7 @@ function Dashboard() {
       )}
 
       {/* ── 3d. Protection (left) + Retirement (right) ── */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap: 16 }}>
+      <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 12 : 16 }}>
         {/* Protection bars */}
         <div style={{ background: T.bg2, border: `1px solid ${T.border}`, borderRadius: T.radiusLg, padding: T.cardPad, boxShadow: T.shadow }}>
           <div style={{ display:'flex', alignItems:'baseline', justifyContent:'space-between', marginBottom: 4 }}>
@@ -31629,13 +31638,16 @@ function Dashboard() {
         background: T.bg2, border: `1px solid ${T.border}`,
         borderRadius: T.radiusLg, boxShadow: T.shadow, padding: 0,
       }}>
+        {/* v2.4.0-rc1.57: on mobile we wrap the multiplier strip below
+            the title instead of squeezing it into a side column — the
+            old layout collapsed the title into a tall stacked tower. */}
         <summary style={{
-          padding: '16px 20px', cursor: 'pointer', listStyle: 'none',
-          display: 'flex', alignItems: 'center', gap: 12,
+          padding: isMobile ? '14px 16px' : '16px 20px', cursor: 'pointer', listStyle: 'none',
+          display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', gap: 12, flexWrap: 'wrap',
           fontFamily: T.sansFamily, color: T.text2, fontSize: 13,
         }}>
-          <span style={{ fontSize: 18 }}>📐</span>
-          <div style={{ flex: 1 }}>
+          <span style={{ fontSize: 18, flexShrink: 0 }}>📐</span>
+          <div style={{ flex: '1 1 220px', minWidth: 0 }}>
             <div style={{ fontFamily: T.serifFamily, fontSize: 18, color: T.text, letterSpacing: '-0.015em', lineHeight: 1.2 }}>
               Coverage Guidelines (LIA Framework)
             </div>
@@ -31643,7 +31655,7 @@ function Dashboard() {
               How recommended sum-assured is calculated · click to adjust method &amp; overrides
             </div>
           </div>
-          <span style={{ fontSize: 11, color: T.text3 }}>
+          <span style={{ fontSize: 11, color: T.text3, flex: isMobile ? '1 1 100%' : '0 0 auto', marginTop: isMobile ? 2 : 0 }}>
             Death {LIA_MULTIPLIERS.deathYrs}× · TPD {LIA_MULTIPLIERS.tpdYrs}× · CI {LIA_MULTIPLIERS.ciYrs}× · ECI {LIA_MULTIPLIERS.eciYrs}× · DI {LIA_MULTIPLIERS.diPct}%
           </span>
         </summary>
@@ -31769,7 +31781,7 @@ function Dashboard() {
             </div>
           </div>
 
-          <div style={{ marginTop: 22, display:'grid', gridTemplateColumns:'1fr 1fr', gap: 28 }}>
+          <div style={{ marginTop: 22, display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 16 : 28 }}>
             <div>
               <div style={{ display:'flex', justifyContent:'space-between', marginBottom: 8 }}>
                 <span style={{ fontSize: 12, color: T.text3, fontWeight: 500 }}>Retire at age</span>
@@ -44850,6 +44862,11 @@ async function ensureReportPdfEngine({ autoTable = false } = {}) {
 
 function ReportTab() {
   const {policies,clientName,clientProfile,activeClientId,driveState} = useContext(AppCtx);
+  // v2.4.0-rc1.57: viewport-aware preview pane. The preview pages were
+  // hardcoded to 48–60pt padding and 3-column grids that horizontally
+  // overflowed phones, clipping "TAN MEI LIAN Family", "S$ 1.70M", etc.
+  const isMobile = useViewportIsMobile();
+  const isNarrow = typeof window !== 'undefined' ? window.innerWidth < 480 : false;
   const [generating, setGenerating] = useState(false);
   const [generatingVisual, setGeneratingVisual] = useState(false);
   const [generatingFamilyVisual, setGeneratingFamilyVisual] = useState(false);
@@ -47365,10 +47382,10 @@ function ReportTab() {
   const fmtKHave = (v, mode) => mode === 'mo' ? 'S$' + Math.round(v).toLocaleString() + '/mo' : 'S$' + (v / 1000).toFixed(0) + 'k';
 
   return (
-    <div className="fade-in" style={{padding:'4px 4px 60px'}}>
+    <div className="fade-in" style={{padding: isMobile ? '4px 0 60px' : '4px 4px 60px'}}>
       <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:18,flexWrap:'wrap',gap:14}}>
         <div style={{minWidth:0,flex:'1 1 auto'}}>
-          <h2 style={{fontFamily:T_V2.serifFamily,fontSize:32,fontWeight:400,letterSpacing:'-0.015em',color:'var(--text)',margin:0,lineHeight:1.1}}>Report</h2>
+          <h2 style={{fontFamily:T_V2.serifFamily,fontSize: isMobile ? 24 : 32,fontWeight:400,letterSpacing:'-0.015em',color:'var(--text)',margin:0,lineHeight:1.1}}>Report</h2>
           <p style={{fontSize:13,color:'var(--text3)',marginTop:6,lineHeight:1.5,margin:'6px 0 0'}}>
             A clean summary you can hand to {clientHeadName}. Preview below — download for the full PDF.
           </p>
@@ -47413,50 +47430,50 @@ function ReportTab() {
         {/* PAGE 1 — Cover */}
         <div style={{
           background:PAPER,border:`1px solid ${RULE}`,borderRadius:T_V2.radiusLg,
-          padding:'48px 60px',boxShadow:T_V2.shadow,color:INK,position:'relative',
-          minHeight:340,
+          padding: isMobile ? '28px 22px' : '48px 60px', boxShadow:T_V2.shadow,color:INK,position:'relative',
+          minHeight: isMobile ? 240 : 340, overflow: 'hidden',
         }}>
-          <div style={{position:'absolute',top:18,right:24,fontSize:10,color:INK4,letterSpacing:'0.05em',fontStyle:'italic'}}>
+          <div style={{position:'absolute',top:18,right: isMobile ? 16 : 24, fontSize:10,color:INK4,letterSpacing:'0.05em',fontStyle:'italic'}}>
             Page 1 of 4 · cover
           </div>
-          <div style={{fontSize:10,color:INK4,letterSpacing:'0.15em',textTransform:'uppercase',fontWeight:600}}>
+          <div style={{fontSize:10,color:INK4,letterSpacing:'0.15em',textTransform:'uppercase',fontWeight:600, marginTop: isMobile ? 14 : 0}}>
             Portfolio Review · prepared for
           </div>
           {/* v2.4.0-rc1.54: family heading respects an explicit family
               group name verbatim (e.g. "TAN MEI LIAN Family"). Falls
               back to "The {LastName} family" derivation only when no
               family group is set. */}
-          <div style={{fontFamily:T_V2.serifFamily,fontSize:48,marginTop:8,letterSpacing:'-0.02em',color:INK,fontWeight:400,lineHeight:1.05}}>
+          <div style={{fontFamily:T_V2.serifFamily,fontSize: isNarrow ? 28 : isMobile ? 34 : 48, marginTop:8,letterSpacing:'-0.02em',color:INK,fontWeight:400,lineHeight:1.05, wordBreak: 'break-word'}}>
             {useExplicitFamily ? familyName : familyName.replace(/^Your client$/, 'Your client')}
           </div>
           {/* v2.4.0-rc1.54: client name is now its own line and visually
               accentuated — bigger Times Italic, INK2 (was small grey on
               the date row). Date moves below as quieter metadata. */}
           {clientHeadName !== 'this client' && (
-            <div style={{fontFamily:T_V2.serifFamily,fontStyle:'italic',fontSize:18,marginTop:14,color:INK2,fontWeight:400,letterSpacing:'-0.005em'}}>
+            <div style={{fontFamily:T_V2.serifFamily,fontStyle:'italic',fontSize: isMobile ? 16 : 18, marginTop: isMobile ? 10 : 14, color:INK2,fontWeight:400,letterSpacing:'-0.005em'}}>
               for {clientHeadName}
             </div>
           )}
           <div style={{fontSize:11,color:INK4,marginTop:6,letterSpacing:'0.04em',textTransform:'uppercase',fontWeight:500}}>
             Prepared {new Date().toLocaleDateString('en-SG', { day: 'numeric', month: 'long', year: 'numeric' })}
           </div>
-          <div style={{height:1,background:RULE,margin:'32px 0'}} />
-          <div style={{display:'grid',gridTemplateColumns:'repeat(3, 1fr)',gap:36}}>
-            <div>
+          <div style={{height:1,background:RULE,margin: isMobile ? '22px 0' : '32px 0'}} />
+          <div style={{display:'grid',gridTemplateColumns: isNarrow ? '1fr' : isMobile ? 'repeat(3, minmax(0, 1fr))' : 'repeat(3, 1fr)', gap: isMobile ? 16 : 36}}>
+            <div style={{minWidth: 0}}>
               <div style={{fontSize:10,color:INK4,letterSpacing:'0.1em',textTransform:'uppercase',fontWeight:600}}>Insured value</div>
-              <div style={{fontFamily:T_V2.serifFamily,fontSize:34,marginTop:6,color:INK,fontWeight:400,fontVariantNumeric:'tabular-nums'}}>
+              <div style={{fontFamily:T_V2.serifFamily,fontSize: isMobile ? 22 : 34, marginTop:6,color:INK,fontWeight:400,fontVariantNumeric:'tabular-nums', whiteSpace: 'nowrap'}}>
                 {totalCoverage > 0 ? 'S$ ' + (totalCoverage/1000000).toFixed(2).replace(/\.00$/, '') + 'M' : '—'}
               </div>
             </div>
-            <div>
+            <div style={{minWidth: 0}}>
               <div style={{fontSize:10,color:INK4,letterSpacing:'0.1em',textTransform:'uppercase',fontWeight:600}}>Annual premium</div>
-              <div style={{fontFamily:T_V2.serifFamily,fontSize:34,marginTop:6,color:INK,fontWeight:400,fontVariantNumeric:'tabular-nums'}}>
+              <div style={{fontFamily:T_V2.serifFamily,fontSize: isMobile ? 22 : 34, marginTop:6,color:INK,fontWeight:400,fontVariantNumeric:'tabular-nums', whiteSpace: 'nowrap'}}>
                 {totalAnnualPremium > 0 ? 'S$ ' + Math.round(totalAnnualPremium).toLocaleString() : '—'}
               </div>
             </div>
-            <div>
+            <div style={{minWidth: 0}}>
               <div style={{fontSize:10,color:INK4,letterSpacing:'0.1em',textTransform:'uppercase',fontWeight:600}}>Retirement coverage</div>
-              <div style={{fontFamily:T_V2.serifFamily,fontSize:34,marginTop:6,color:INK,fontWeight:400,fontVariantNumeric:'tabular-nums'}}>
+              <div style={{fontFamily:T_V2.serifFamily,fontSize: isMobile ? 22 : 34, marginTop:6,color:INK,fontWeight:400,fontVariantNumeric:'tabular-nums', whiteSpace: 'nowrap'}}>
                 {retCoverPct > 0 ? retCoverPct + '%' : '—'}
               </div>
             </div>
@@ -47484,15 +47501,15 @@ function ReportTab() {
         {/* PAGE 2 — Protection coverage */}
         <div style={{
           background:PAPER,border:`1px solid ${RULE}`,borderRadius:T_V2.radiusLg,
-          padding:'40px 60px',boxShadow:T_V2.shadow,color:INK,position:'relative',
+          padding: isMobile ? '24px 20px' : '40px 60px', boxShadow:T_V2.shadow,color:INK,position:'relative', overflow: 'hidden',
         }}>
-          <div style={{position:'absolute',top:18,right:24,fontSize:10,color:INK4,letterSpacing:'0.05em',fontStyle:'italic'}}>
+          <div style={{position:'absolute',top:18, right: isMobile ? 16 : 24, fontSize:10,color:INK4,letterSpacing:'0.05em',fontStyle:'italic'}}>
             Page 2 of 4 · protection
           </div>
-          <div style={{fontSize:10,color:INK4,letterSpacing:'0.15em',textTransform:'uppercase',fontWeight:600}}>
+          <div style={{fontSize:10,color:INK4,letterSpacing:'0.15em',textTransform:'uppercase',fontWeight:600, marginTop: isMobile ? 14 : 0}}>
             Section 1
           </div>
-          <div style={{fontFamily:T_V2.serifFamily,fontSize:30,marginTop:6,letterSpacing:'-0.02em',color:INK,fontWeight:400}}>
+          <div style={{fontFamily:T_V2.serifFamily,fontSize: isMobile ? 22 : 30, marginTop:6,letterSpacing:'-0.02em',color:INK,fontWeight:400}}>
             Protection coverage
           </div>
           <div style={{fontSize:12.5,color:INK3,marginTop:6,marginBottom:24}}>
@@ -47524,7 +47541,7 @@ function ReportTab() {
           </div>
 
           {/* Flag-style: Hospitalisation + PA */}
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginTop:22,paddingTop:18,borderTop:`1px dashed ${RULE}`}}>
+          <div style={{display:'grid', gridTemplateColumns: isNarrow ? '1fr' : '1fr 1fr', gap:14,marginTop:22,paddingTop:18,borderTop:`1px dashed ${RULE}`}}>
             <div>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:4}}>
                 <span style={{fontSize:13,color:INK,fontWeight:600}}>Hospitalisation</span>
@@ -47554,32 +47571,32 @@ function ReportTab() {
         {(retDesired > 0 || retIncome > 0) && (
         <div style={{
           background:PAPER,border:`1px solid ${RULE}`,borderRadius:T_V2.radiusLg,
-          padding:'40px 60px',boxShadow:T_V2.shadow,color:INK,position:'relative',
+          padding: isMobile ? '24px 20px' : '40px 60px', boxShadow:T_V2.shadow,color:INK,position:'relative', overflow: 'hidden',
         }}>
-          <div style={{position:'absolute',top:18,right:24,fontSize:10,color:INK4,letterSpacing:'0.05em',fontStyle:'italic'}}>
+          <div style={{position:'absolute',top:18, right: isMobile ? 16 : 24, fontSize:10,color:INK4,letterSpacing:'0.05em',fontStyle:'italic'}}>
             Page 3 of 4 · retirement
           </div>
-          <div style={{fontSize:10,color:INK4,letterSpacing:'0.15em',textTransform:'uppercase',fontWeight:600}}>
+          <div style={{fontSize:10,color:INK4,letterSpacing:'0.15em',textTransform:'uppercase',fontWeight:600, marginTop: isMobile ? 14 : 0}}>
             Section 2
           </div>
-          <div style={{fontFamily:T_V2.serifFamily,fontSize:30,marginTop:6,letterSpacing:'-0.02em',color:INK,fontWeight:400}}>
+          <div style={{fontFamily:T_V2.serifFamily,fontSize: isMobile ? 22 : 30, marginTop:6,letterSpacing:'-0.02em',color:INK,fontWeight:400}}>
             Retirement at {retAge}
           </div>
           <div style={{fontSize:12.5,color:INK3,marginTop:6,marginBottom:22}}>
             Projected monthly income vs your desired lifestyle
           </div>
 
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:32,alignItems:'baseline'}}>
-            <div>
+          <div style={{display:'grid', gridTemplateColumns: isNarrow ? '1fr' : '1fr 1fr', gap: isMobile ? 18 : 32, alignItems:'baseline'}}>
+            <div style={{minWidth: 0}}>
               <div style={{fontSize:10,color:INK4,letterSpacing:'0.1em',textTransform:'uppercase',fontWeight:600}}>Projected at {retAge}</div>
-              <div style={{fontFamily:T_V2.serifFamily,fontSize:42,marginTop:6,color:INK,fontWeight:400,fontVariantNumeric:'tabular-nums',lineHeight:1}}>
+              <div style={{fontFamily:T_V2.serifFamily,fontSize: isMobile ? 28 : 42, marginTop:6,color:INK,fontWeight:400,fontVariantNumeric:'tabular-nums',lineHeight:1, whiteSpace:'nowrap'}}>
                 S$ {retIncome.toLocaleString()}
               </div>
               <div style={{fontSize:13,color:INK3,marginTop:6}}>per month</div>
             </div>
-            <div>
+            <div style={{minWidth: 0}}>
               <div style={{fontSize:10,color:INK4,letterSpacing:'0.1em',textTransform:'uppercase',fontWeight:600}}>Desired lifestyle</div>
-              <div style={{fontFamily:T_V2.serifFamily,fontSize:42,marginTop:6,color:INK,fontWeight:400,fontVariantNumeric:'tabular-nums',lineHeight:1}}>
+              <div style={{fontFamily:T_V2.serifFamily,fontSize: isMobile ? 28 : 42, marginTop:6,color:INK,fontWeight:400,fontVariantNumeric:'tabular-nums',lineHeight:1, whiteSpace:'nowrap'}}>
                 S$ {retDesired.toLocaleString()}
               </div>
               <div style={{fontSize:13,color:INK3,marginTop:6}}>per month, today's dollars</div>
@@ -47619,58 +47636,93 @@ function ReportTab() {
         {topPolicies.length > 0 && (
         <div style={{
           background:PAPER,border:`1px solid ${RULE}`,borderRadius:T_V2.radiusLg,
-          padding:'40px 60px',boxShadow:T_V2.shadow,color:INK,position:'relative',
+          padding: isMobile ? '24px 20px' : '40px 60px', boxShadow:T_V2.shadow,color:INK,position:'relative', overflow:'hidden',
         }}>
-          <div style={{position:'absolute',top:18,right:24,fontSize:10,color:INK4,letterSpacing:'0.05em',fontStyle:'italic'}}>
+          <div style={{position:'absolute',top:18, right: isMobile ? 16 : 24, fontSize:10,color:INK4,letterSpacing:'0.05em',fontStyle:'italic'}}>
             Page {(retDesired > 0 || retIncome > 0) ? '4' : '3'} of 4 · policies
           </div>
-          <div style={{fontSize:10,color:INK4,letterSpacing:'0.15em',textTransform:'uppercase',fontWeight:600}}>
+          <div style={{fontSize:10,color:INK4,letterSpacing:'0.15em',textTransform:'uppercase',fontWeight:600, marginTop: isMobile ? 14 : 0}}>
             Section 3
           </div>
-          <div style={{fontFamily:T_V2.serifFamily,fontSize:30,marginTop:6,letterSpacing:'-0.02em',color:INK,fontWeight:400}}>
+          <div style={{fontFamily:T_V2.serifFamily,fontSize: isMobile ? 22 : 30, marginTop:6,letterSpacing:'-0.02em',color:INK,fontWeight:400}}>
             Top policies by premium
           </div>
           <div style={{fontSize:12.5,color:INK3,marginTop:6,marginBottom:22}}>
             {activePols.length > 5 ? `Showing 5 of ${activePols.length} active policies — full list in the PDF` : `${activePols.length} active polic${activePols.length===1?'y':'ies'}`}
           </div>
 
-          <div style={{display:'flex',flexDirection:'column',gap:0}}>
-            {topPolicies.map(({pol, prem}, i) => (
-              <div key={pol.id || i} style={{
-                display:'grid',gridTemplateColumns:'1.6fr 2fr 1fr 1fr',
-                alignItems:'center',padding:'14px 0',
-                borderTop:`1px solid ${RULE}`,fontSize:13,
+          {/* v2.4.0-rc1.57: on mobile we render policies as stacked cards
+              instead of a 4-col grid (which clipped insurer/product names
+              and crammed numbers into 50px cells). */}
+          {isMobile ? (
+            <div style={{display:'flex', flexDirection:'column', gap:0}}>
+              {topPolicies.map(({pol, prem}, i) => (
+                <div key={pol.id || i} style={{
+                  padding:'12px 0', borderTop:`1px solid ${RULE}`, fontSize:13,
+                }}>
+                  <div style={{display:'flex', justifyContent:'space-between', gap:10, alignItems:'baseline'}}>
+                    <span style={{color:INK,fontWeight:600, minWidth:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{pol.insurer || '—'}</span>
+                    <span style={{color:INK,fontVariantNumeric:'tabular-nums',fontWeight:600,whiteSpace:'nowrap',flexShrink:0}}>
+                      S$ {Math.round(prem).toLocaleString()}<span style={{color:INK4,fontWeight:400}}> /yr</span>
+                    </span>
+                  </div>
+                  <div style={{display:'flex',justifyContent:'space-between',gap:10,marginTop:4,fontSize:12,color:INK3}}>
+                    <span style={{minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{pol.productName || pol.policyName || '—'}</span>
+                    <span style={{fontVariantNumeric:'tabular-nums',whiteSpace:'nowrap',flexShrink:0}}>
+                      {parseFloat(pol.sumAssured) > 0 ? 'SA S$' + parseFloat(pol.sumAssured).toLocaleString() : 'SA —'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+              <div style={{
+                display:'flex',justifyContent:'space-between',alignItems:'baseline',
+                padding:'14px 0', borderTop:`2px solid ${INK4}`, fontSize:13,
               }}>
-                <span style={{color:INK,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{pol.insurer || '—'}</span>
-                <span style={{color:INK2,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{pol.productName || pol.policyName || '—'}</span>
-                <span style={{color:INK2,fontVariantNumeric:'tabular-nums',textAlign:'right'}}>
-                  {parseFloat(pol.sumAssured) > 0 ? 'S$ ' + parseFloat(pol.sumAssured).toLocaleString() : <span style={{color:INK4}}>—</span>}
-                </span>
-                <span style={{color:INK2,fontVariantNumeric:'tabular-nums',textAlign:'right',fontWeight:600}}>
-                  S$ {Math.round(prem).toLocaleString()}<span style={{color:INK4,fontWeight:400}}> /yr</span>
+                <span style={{color:INK4,fontStyle:'italic'}}>Total annual premium</span>
+                <span style={{color:INK,fontVariantNumeric:'tabular-nums',fontWeight:700,fontFamily:T_V2.serifFamily,fontSize:16}}>
+                  S$ {Math.round(totalAnnualPremium).toLocaleString()}<span style={{color:INK4,fontSize:11,fontWeight:400,fontFamily:T_V2.sansFamily}}> /yr</span>
                 </span>
               </div>
-            ))}
-            <div style={{
-              display:'grid',gridTemplateColumns:'1.6fr 2fr 1fr 1fr',
-              alignItems:'center',padding:'14px 0',
-              borderTop:`2px solid ${INK4}`,fontSize:13,
-            }}>
-              <span style={{color:INK4,fontStyle:'italic'}}>Total</span>
-              <span></span>
-              <span></span>
-              <span style={{color:INK,fontVariantNumeric:'tabular-nums',textAlign:'right',fontWeight:700,fontFamily:T_V2.serifFamily,fontSize:16}}>
-                S$ {Math.round(totalAnnualPremium).toLocaleString()}<span style={{color:INK4,fontSize:11,fontWeight:400,fontFamily:T_V2.sansFamily}}> /yr</span>
-              </span>
             </div>
-          </div>
+          ) : (
+            <div style={{display:'flex',flexDirection:'column',gap:0}}>
+              {topPolicies.map(({pol, prem}, i) => (
+                <div key={pol.id || i} style={{
+                  display:'grid',gridTemplateColumns:'1.6fr 2fr 1fr 1fr',
+                  alignItems:'center',padding:'14px 0',
+                  borderTop:`1px solid ${RULE}`,fontSize:13,
+                }}>
+                  <span style={{color:INK,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{pol.insurer || '—'}</span>
+                  <span style={{color:INK2,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{pol.productName || pol.policyName || '—'}</span>
+                  <span style={{color:INK2,fontVariantNumeric:'tabular-nums',textAlign:'right'}}>
+                    {parseFloat(pol.sumAssured) > 0 ? 'S$ ' + parseFloat(pol.sumAssured).toLocaleString() : <span style={{color:INK4}}>—</span>}
+                  </span>
+                  <span style={{color:INK2,fontVariantNumeric:'tabular-nums',textAlign:'right',fontWeight:600}}>
+                    S$ {Math.round(prem).toLocaleString()}<span style={{color:INK4,fontWeight:400}}> /yr</span>
+                  </span>
+                </div>
+              ))}
+              <div style={{
+                display:'grid',gridTemplateColumns:'1.6fr 2fr 1fr 1fr',
+                alignItems:'center',padding:'14px 0',
+                borderTop:`2px solid ${INK4}`,fontSize:13,
+              }}>
+                <span style={{color:INK4,fontStyle:'italic'}}>Total</span>
+                <span></span>
+                <span></span>
+                <span style={{color:INK,fontVariantNumeric:'tabular-nums',textAlign:'right',fontWeight:700,fontFamily:T_V2.serifFamily,fontSize:16}}>
+                  S$ {Math.round(totalAnnualPremium).toLocaleString()}<span style={{color:INK4,fontSize:11,fontWeight:400,fontFamily:T_V2.sansFamily}}> /yr</span>
+                </span>
+              </div>
+            </div>
+          )}
         </div>
         )}
 
         {/* CLOSING NOTE */}
         <div style={{
           background:ACCENT_SOFT,border:`1px solid ${RULE}`,borderRadius:T_V2.radiusLg,
-          padding:'24px 32px',color:INK2,fontSize:12.5,lineHeight:1.6,
+          padding: isMobile ? '18px 20px' : '24px 32px', color:INK2,fontSize:12.5,lineHeight:1.6,
         }}>
           <strong style={{color:INK,fontFamily:T_V2.serifFamily,fontSize:15,letterSpacing:'-0.01em'}}>This is a live preview.</strong>
           <br />
