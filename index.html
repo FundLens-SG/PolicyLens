@@ -176,6 +176,8 @@ td{padding:8px 12px;font-size:13px;border-bottom:1px solid var(--border)}
 .modal{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;max-width:720px;width:95%;max-height:85vh;overflow-y:auto;overflow-x:hidden;padding:24px;box-shadow:0 24px 64px rgba(0,0,0,.4)}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch}
 label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:4px}
 .field{margin-bottom:12px}
 .tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:500;background:var(--gold-dim);color:var(--gold)}
@@ -202,7 +204,8 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
 .gap-bar{height:8px;border-radius:4px;background:var(--bg4);overflow:hidden;position:relative}
 .gap-bar-fill{height:100%;border-radius:4px;transition:width .5s ease}
 @media(max-width:768px){
-.grid-2,.grid-3{grid-template-columns:1fr}
+.grid-2,.grid-3{grid-template-columns:1fr!important}
+.grid-4{grid-template-columns:1fr 1fr!important}
 .desktop-only{display:none!important}
 }
 
@@ -226,7 +229,7 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
   canvas{max-width:100%!important}
 }
 @media(max-width:480px){
-  .grid-2,.grid-3{grid-template-columns:1fr!important;gap:8px!important}
+  .grid-2,.grid-3,.grid-4{grid-template-columns:1fr!important;gap:8px!important}
   .resp-2col,.resp-5col,.resp-side{grid-template-columns:1fr!important}
 }
 
@@ -609,9 +612,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.57';
+const APP_VERSION = 'v2.4.0-rc1.58';
 const APP_VERSION_DATE = '2026-05-06';
-const APP_VERSION_NAME = 'Mobile-responsive dashboard + Report preview — KPI/hero/grids reflow under 768px';
+const APP_VERSION_NAME = 'Mobile-responsive sweep — Profile, Policies, modals, routing cockpit collapse on phones';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -18931,10 +18934,8 @@ function ReconcileSyncModal({
       lineHeight: 1.5
     }
   }, "We found data on this device ", /*#__PURE__*/React.createElement("strong", null, "and"), " in your cloud account. Choose how to merge them \u2014 this only happens once."), /*#__PURE__*/React.createElement("div", {
+    className: "grid-2",
     style: {
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
-      gap: 12,
       marginBottom: 18
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -23676,9 +23677,8 @@ function PresentMode() {
       marginBottom: 20
     }
   }, "Retirement Readiness"), /*#__PURE__*/React.createElement("div", {
+    className: "grid-2",
     style: {
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
       gap: 24,
       marginBottom: 20
     }
@@ -27442,9 +27442,8 @@ function MergeClientModal({
       margin: '0 0 14px'
     }
   }, "Use this when OCR created a wrong duplicate name. Policies, owner names and Drive sync move from the source client into the selected correct client."), /*#__PURE__*/React.createElement("div", {
+    className: "grid-2",
     style: {
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
       gap: 10,
       marginBottom: 12
     }
@@ -32972,8 +32971,8 @@ function PolicyOwnerRoutingModal({
       lineHeight: 1.5
     }
   }, "PolicyLens found ", detected.size, " name group", detected.size > 1 ? 's' : '', " that may belong to another owner or dependant. Confirm the owner before import so the Clients, Policies and Reports tabs stay aligned."), /*#__PURE__*/React.createElement("div", {
+    className: "grid-2",
     style: {
-      display: 'grid',
       gridTemplateColumns: 'minmax(180px,1fr) minmax(220px,1.4fr)',
       gap: 10,
       marginBottom: 14
@@ -33123,6 +33122,12 @@ function PolicyOwnerRoutingModal({
       marginBottom: 8
     }
   }, "Routing review cockpit"), /*#__PURE__*/React.createElement("div", {
+    className: "scroll-x"
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      minWidth: 540
+    }
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr 1.2fr 72px 1.3fr',
@@ -33193,7 +33198,7 @@ function PolicyOwnerRoutingModal({
       color: 'var(--text3)',
       paddingLeft: 4
     }
-  }, "+", routingRows.length - 8, " more routing rows"))), (() => {
+  }, "+", routingRows.length - 8, " more routing rows"))))), (() => {
     const lifeAssuredOnlyCount = entries.filter(([_k, info]) => info.needsOwnerQuestion).length;
     if (lifeAssuredOnlyCount < 2) return null;
     return /*#__PURE__*/React.createElement("div", {
@@ -33393,8 +33398,8 @@ function PolicyOwnerRoutingModal({
       };
       return /*#__PURE__*/React.createElement("div", {
         key: (item.policyIndex ?? pi) + ':' + (item.policyNumber || item.productName || ''),
+        className: "grid-2",
         style: {
-          display: 'grid',
           gridTemplateColumns: 'minmax(0,1fr) minmax(180px,.9fr)',
           gap: 8,
           alignItems: 'center'
@@ -35866,14 +35871,15 @@ function ProfileTab() {
         marginLeft: 6
       }
     }, "\u2192 RA at 65: ", /*#__PURE__*/React.createElement("strong", null, "$", raAt65.toLocaleString()))), /*#__PURE__*/React.createElement("div", {
+      className: "scroll-x",
       style: {
         borderRadius: 6,
-        border: '1px solid var(--border)',
-        overflow: 'hidden'
+        border: '1px solid var(--border)'
       }
     }, /*#__PURE__*/React.createElement("table", {
       style: {
         width: '100%',
+        minWidth: 520,
         fontSize: 10,
         borderCollapse: 'collapse'
       }
@@ -36321,9 +36327,8 @@ function ProfileTab() {
       lineHeight: 1
     }
   }, "\xD7")), /*#__PURE__*/React.createElement("div", {
+    className: "grid-4",
     style: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(4, 1fr)',
       gap: 6
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -37897,9 +37902,8 @@ function ReviewSession({
       marginBottom: 12
     }
   }, "\uD83D\uDCB0 Premium Efficiency Analysis"), /*#__PURE__*/React.createElement("div", {
+    className: "grid-2",
     style: {
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
       gap: 8,
       marginBottom: 12
     }
@@ -38065,9 +38069,8 @@ function ReviewSession({
       marginBottom: 12
     }
   }, "\uD83C\uDFE6 Retirement Readiness"), /*#__PURE__*/React.createElement("div", {
+    className: "grid-3",
     style: {
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr 1fr',
       gap: 8,
       marginBottom: 12
     }
@@ -38769,9 +38772,8 @@ const PLRetirementProjectionChart = React.memo(function PLRetirementProjectionCh
       fontWeight: 600
     }
   }, "S$", (hoverRow.desired - hoverRow.total).toLocaleString(), "/mo")))), /*#__PURE__*/React.createElement("div", {
+    className: "grid-3",
     style: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(3, 1fr)',
       gap: 14,
       marginTop: 14,
       paddingTop: 14,
@@ -39997,9 +39999,8 @@ function Dashboard() {
       color: 'var(--text2)'
     }
   }, "Snap a photo of any policy contract, benefit illustration, or CRM screen")), /*#__PURE__*/React.createElement("div", {
+    className: "grid-3",
     style: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(3, 1fr)',
       gap: 10,
       marginTop: 14
     }
@@ -59424,9 +59425,8 @@ function PolicyFormModal({
         color: 'var(--gold)'
       }
     }, /*#__PURE__*/React.createElement("strong", null, "Total:"), " $", Math.round(totalAnnual).toLocaleString(), "/yr")), totalAnnual > 0 && /*#__PURE__*/React.createElement("div", {
+      className: "grid-3",
       style: {
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr 1fr',
         gap: 10
       }
     }, phase === 'accum' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
@@ -59891,9 +59891,8 @@ function PolicyFormModal({
     const annualIcu = daily * icuMult * payableDays;
     if (daily === 0) return null;
     return /*#__PURE__*/React.createElement("div", {
+      className: "grid-3",
       style: {
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr 1fr',
         gap: 10
       }
     }, /*#__PURE__*/React.createElement("div", {
@@ -60384,9 +60383,8 @@ function PolicyFormModal({
     const maxPayout = sa * totalCap / 100;
     if (sa === 0) return null;
     return /*#__PURE__*/React.createElement("div", {
+      className: isECI ? 'grid-3' : 'grid-2',
       style: {
-        display: 'grid',
-        gridTemplateColumns: isECI ? '1fr 1fr 1fr' : '1fr 1fr',
         gap: 10
       }
     }, isECI && /*#__PURE__*/React.createElement("div", {
@@ -62538,9 +62536,8 @@ function PolicyFormModal({
     }
     if (mv === 0 && cost === 0) return null;
     return /*#__PURE__*/React.createElement("div", {
+      className: "grid-3",
       style: {
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr 1fr',
         gap: 10
       }
     }, /*#__PURE__*/React.createElement("div", {
@@ -62820,9 +62817,8 @@ function PolicyFormModal({
         borderRadius: 6
       }
     }, /*#__PURE__*/React.createElement("strong", null, "Effective compounding rate:"), " ", effRate.toFixed(2), "% p.a. \u2014 ", rateBreakdown), /*#__PURE__*/React.createElement("div", {
+      className: "grid-3",
       style: {
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr 1fr',
         gap: 10
       }
     }, /*#__PURE__*/React.createElement("div", {
