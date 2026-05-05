@@ -609,9 +609,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.53';
+const APP_VERSION = 'v2.4.0-rc1.54';
 const APP_VERSION_DATE = '2026-05-05';
-const APP_VERSION_NAME = 'Client name flash fix — profile.name takes precedence over stale clientName + Reconcile button';
+const APP_VERSION_NAME = 'Report cover — explicit familyGroup name respected + client name accentuated';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -68178,7 +68178,24 @@ function ReportTab() {
   // see the report contents at a glance before downloading. The 3 PDF
   // generation buttons sit above the preview as a slim action row.
   const clientHeadName = clientProfile?.name || clientName || 'this client';
-  const familyName = clientHeadName === 'this client' ? 'Your client' : clientHeadName.split(/\s+/).slice(-1)[0] + ' family';
+  // v2.4.0-rc1.54: Family name resolution — prefer the explicit
+  // clientProfile.familyGroup (what the FC types in the Family view) over
+  // a last-word-of-name derivation. Earlier code blindly took the last
+  // token of the client's name, so "Tan Mei Lian" became "The Lian family"
+  // even when the FC had explicitly named the household "TAN MEI LIAN
+  // Family". Now: if a familyGroup is set, use it verbatim; otherwise fall
+  // back to the last-name heuristic.
+  const explicitFamilyGroup = (clientProfile?.familyGroup || driveState?.familyGroup || '').trim();
+  const familyName = (() => {
+    if (explicitFamilyGroup) return explicitFamilyGroup;
+    if (clientHeadName === 'this client') return 'Your client';
+    const last = clientHeadName.split(/\s+/).slice(-1)[0];
+    return last ? 'The ' + last + ' family' : 'Your client';
+  })();
+  // useExplicitFamily=true means familyName is already a full label like
+  // "TAN MEI LIAN Family" — render it verbatim instead of wrapping with
+  // "The {familyName}" which would produce "The TAN MEI LIAN Family".
+  const useExplicitFamily = !!explicitFamilyGroup;
 
   // ── COMPUTED PREVIEW DATA — simplified versions of the dashboard's
   //    coverage / gap / retirement summaries. Not as precise as the
@@ -68413,17 +68430,30 @@ function ReportTab() {
       fontWeight: 400,
       lineHeight: 1.05
     }
-  }, "The ", familyName.replace(/^Your client$/, 'Tan Family')), /*#__PURE__*/React.createElement("div", {
+  }, useExplicitFamily ? familyName : familyName.replace(/^Your client$/, 'Your client')), clientHeadName !== 'this client' && /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 13,
-      color: INK3,
-      marginTop: 10
+      fontFamily: T_V2.serifFamily,
+      fontStyle: 'italic',
+      fontSize: 18,
+      marginTop: 14,
+      color: INK2,
+      fontWeight: 400,
+      letterSpacing: '-0.005em'
+    }
+  }, "for ", clientHeadName), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: INK4,
+      marginTop: 6,
+      letterSpacing: '0.04em',
+      textTransform: 'uppercase',
+      fontWeight: 500
     }
   }, "Prepared ", new Date().toLocaleDateString('en-SG', {
     day: 'numeric',
     month: 'long',
     year: 'numeric'
-  }), clientHeadName !== 'this client' && /*#__PURE__*/React.createElement(React.Fragment, null, " \xB7 for ", clientHeadName)), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       height: 1,
       background: RULE,
