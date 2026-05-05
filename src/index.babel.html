@@ -17379,7 +17379,11 @@ const driveClient = {
   // ── getStatus: derived from in-memory token + day-6 timestamp check ──
   getStatus() { return _driveStatus; },
 
-  // ── ensureFolder: find or create the PolicyLens/ folder in My Drive root ──
+  // ── ensureFolder: find or create the PolicyLens/ folder ──
+  // Now standardised under My Drive / CKGTools / PolicyLens / (via the
+  // shared window.ckgDriveFolders helper), with a fallback to the
+  // legacy My Drive / PolicyLens / location for standalone use OR if
+  // the shared helper hasn't loaded yet.
   // Stores the resulting folderId in localStorage. Idempotent.
   async ensureFolder() {
     // 1. Try the cached ID first
@@ -17394,17 +17398,37 @@ const driveClient = {
     } else if (cached) {
       driveLSDel(DRIVE_LS.folderId);
     }
-    // 2. Search by name in My Drive root
+    // 2. Try the shared CKGTools/PolicyLens/ helper. Wires the token
+    //    getter so the helper can fetch through our existing refresh
+    //    chain. Falls through to legacy if the helper isn't loaded
+    //    OR if it fails.
+    if (window.ckgDriveFolders && typeof window.ckgDriveFolders.ensureToolFolder === 'function') {
+      if (!window._ckgGetDriveToken) {
+        window._ckgGetDriveToken = async () => await driveClient.refreshAccessToken();
+      }
+      try {
+        const sharedId = await window.ckgDriveFolders.ensureToolFolder('policylens');
+        if (sharedId && isValidDriveFileId(sharedId)) {
+          driveLSSet(DRIVE_LS.folderId, sharedId);
+          console.log('[Drive] ✓ Using CKGTools/PolicyLens folder:', sharedId);
+          return sharedId;
+        }
+      } catch (e) {
+        console.warn('[Drive] shared folder helper failed, falling back to legacy:', e && e.message);
+      }
+    }
+    // 3. Legacy: search for PolicyLens/ in My Drive root by name
     const q = "name=" + driveQueryLiteral(DRIVE_FOLDER_NAME) + " and mimeType='application/vnd.google-apps.folder' and 'root' in parents and trashed=false";
     const searchFiles = await driveListFiles(q, 'id,name', { pageSize: 100 });
     if (searchFiles.length > 0) {
       const id = searchFiles[0].id;
       if (!isValidDriveFileId(id)) throw new Error('Drive returned an invalid PolicyLens folder id');
       driveLSSet(DRIVE_LS.folderId, id);
-      console.log('[Drive] Found existing folder:', id);
+      console.log('[Drive] Found existing folder (legacy root):', id);
       return id;
     }
-    // 3. Create it
+    // 4. Create it (legacy location — only reached when the shared
+    //    helper is unavailable AND no legacy folder exists)
     const createResp = await _driveFetch('https://www.googleapis.com/drive/v3/files?fields=id', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -17417,7 +17441,7 @@ const driveClient = {
     const createData = await createResp.json();
     if (!createResp.ok || !isValidDriveFileId(createData.id)) throw new Error('Drive folder create failed: ' + (createData?.error?.message || createResp.status));
     driveLSSet(DRIVE_LS.folderId, createData.id);
-    console.log('[Drive] ✓ Created PolicyLens folder:', createData.id);
+    console.log('[Drive] ✓ Created PolicyLens folder (legacy root):', createData.id);
     return createData.id;
   },
 
