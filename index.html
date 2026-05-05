@@ -609,9 +609,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.51';
+const APP_VERSION = 'v2.4.0-rc1.52';
 const APP_VERSION_DATE = '2026-05-05';
-const APP_VERSION_NAME = 'Visual Report V2 polish — header, score card, chart labels, richer policy register';
+const APP_VERSION_NAME = 'Family PDF cream rebuild + Household map regrouped + Merge clients in family view';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -25408,6 +25408,9 @@ function ClientsTab() {
   const [bulkBusy, setBulkBusy] = useState(null);
   const [showNewClient, setShowNewClient] = useState(false);
   const [clientsGuardOpen, setClientsGuardOpen] = useState(false);
+  // v2.4.0-rc1.52: family-view merge modal — source client + open flag
+  const [familyMergeOpen, setFamilyMergeOpen] = useState(false);
+  const [familyMergeSource, setFamilyMergeSource] = useState(null);
   useEffect(() => {
     const load = async () => {
       const states = await PolicyDB.getAllDriveStates().catch(() => []);
@@ -26324,7 +26327,35 @@ function ClientsTab() {
         borderRadius: 999,
         padding: '4px 8px'
       }
-    }, questions.length, " owner check", questions.length === 1 ? '' : 's')), /*#__PURE__*/React.createElement("button", {
+    }, questions.length, " owner check", questions.length === 1 ? '' : 's')), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 6,
+        flexShrink: 0
+      }
+    }, group.clients.length >= 2 && /*#__PURE__*/React.createElement("button", {
+      onClick: () => {
+        const src = group.clients[0];
+        if (!src) return;
+        setFamilyMergeSource({
+          clientId: src.clientId,
+          name: getProfileForClient(src)?.name || src.clientName || ''
+        });
+        setFamilyMergeOpen(true);
+      },
+      style: {
+        padding: '6px 10px',
+        fontSize: 10,
+        fontWeight: 600,
+        borderRadius: 7,
+        background: 'var(--bg2)',
+        color: 'var(--text2)',
+        border: '1px solid var(--border)',
+        cursor: 'pointer',
+        flexShrink: 0,
+        whiteSpace: 'nowrap'
+      }
+    }, "Merge\u2026"), /*#__PURE__*/React.createElement("button", {
       onClick: () => {
         const first = group.clients[0];
         if (first) openClientView(first.clientId, 'dashboard');
@@ -26337,9 +26368,10 @@ function ClientsTab() {
         background: 'var(--gold-dim)',
         color: 'var(--gold)',
         border: '1px solid color-mix(in oklch, var(--gold) 35%, transparent)',
-        flexShrink: 0
+        flexShrink: 0,
+        cursor: 'pointer'
       }
-    }, "Open review")), questions.length > 0 && /*#__PURE__*/React.createElement("div", {
+    }, "Open review"))), questions.length > 0 && /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'center',
@@ -26407,55 +26439,88 @@ function ClientsTab() {
         fontSize: 9,
         color: 'var(--text3)'
       }
-    }, relationRows.length, " relationship signal", relationRows.length === 1 ? '' : 's')), relationRows.length > 0 ? /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'grid',
-        gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit,minmax(240px,1fr))',
-        gap: 6
-      }
-    }, relationRows.map(row => /*#__PURE__*/React.createElement("div", {
-      key: row.key,
-      title: row.detail,
-      style: {
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0,1fr) auto minmax(0,1fr)',
-        alignItems: 'center',
-        gap: 6,
-        fontSize: 10,
-        color: 'var(--text2)',
-        border: '1px solid rgba(255,255,255,.07)',
-        background: 'rgba(255,255,255,.025)',
-        borderRadius: 8,
-        padding: '6px 8px',
-        minWidth: 0
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-        fontWeight: 700
-      }
-    }, row.from), /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: 9,
-        color: row.tone,
-        border: '1px solid var(--border)',
-        borderRadius: 999,
-        padding: '2px 6px',
-        whiteSpace: 'nowrap'
-      }
-    }, row.relation), /*#__PURE__*/React.createElement("span", {
-      style: {
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap'
-      }
-    }, row.to)))) : /*#__PURE__*/React.createElement("div", {
+    }, relationRows.length, " relationship signal", relationRows.length === 1 ? '' : 's')), relationRows.length > 0 ? (() => {
+      const groups = new Map();
+      relationRows.forEach(row => {
+        const key = (row.from || '') + '||' + (row.relation || '');
+        if (!groups.has(key)) groups.set(key, {
+          from: row.from,
+          relation: row.relation,
+          tone: row.tone,
+          items: []
+        });
+        groups.get(key).items.push({
+          to: row.to,
+          detail: row.detail
+        });
+      });
+      const arr = Array.from(groups.values()).sort((a, b) => {
+        const order = {
+          'owns': 0,
+          'life assured': 1,
+          'pays': 2,
+          'beneficiary': 3
+        };
+        const ar = order[a.relation] != null ? order[a.relation] : 9;
+        const br = order[b.relation] != null ? order[b.relation] : 9;
+        if (ar !== br) return ar - br;
+        return (a.from || '').localeCompare(b.from || '');
+      });
+      return /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 5
+        }
+      }, arr.map((g, gi) => /*#__PURE__*/React.createElement("div", {
+        key: g.from + '|' + g.relation + '|' + gi,
+        title: g.items.map(i => i.to + (i.detail ? ' (' + i.detail + ')' : '')).join('\n'),
+        style: {
+          display: 'grid',
+          gridTemplateColumns: 'minmax(120px,200px) auto minmax(0,1fr)',
+          alignItems: 'center',
+          gap: 8,
+          fontSize: 10,
+          color: 'var(--text2)',
+          border: '1px solid var(--border)',
+          background: 'var(--bg)',
+          borderRadius: 8,
+          padding: '6px 10px',
+          minWidth: 0
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontWeight: 700,
+          color: 'var(--text)',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }
+      }, g.from), /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 9,
+          fontWeight: 600,
+          color: g.tone,
+          border: '1px solid ' + g.tone,
+          borderRadius: 999,
+          padding: '2px 7px',
+          whiteSpace: 'nowrap',
+          background: 'color-mix(in oklch, ' + g.tone + ' 8%, transparent)'
+        }
+      }, g.relation, g.items.length > 1 ? ' · ' + g.items.length : ''), /*#__PURE__*/React.createElement("span", {
+        style: {
+          minWidth: 0,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          color: 'var(--text2)'
+        }
+      }, g.items.length === 1 ? g.items[0].to : g.items.slice(0, 3).map(it => it.to).join(' · ') + (g.items.length > 3 ? ' · +' + (g.items.length - 3) + ' more' : '')))));
+    })() : /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 10,
         color: 'var(--text3)',
-        border: '1px dashed rgba(255,255,255,.09)',
+        border: '1px dashed var(--border)',
         borderRadius: 8,
         padding: '8px'
       }
@@ -27183,6 +27248,14 @@ function ClientsTab() {
       setShowNewClient(true);
     },
     currentClientName: clientName
+  }), /*#__PURE__*/React.createElement(MergeClientModal, {
+    open: familyMergeOpen && !!familyMergeSource,
+    sourceClientId: familyMergeSource?.clientId,
+    sourceName: familyMergeSource?.name,
+    onClose: () => {
+      setFamilyMergeOpen(false);
+      setFamilyMergeSource(null);
+    }
   }));
 }
 function MergeClientModal({
@@ -66464,23 +66537,239 @@ function ReportTab() {
       const doc = new jsPDF('p', 'mm', 'a4');
       const W = 210,
         H = 297,
-        M = 14,
-        CW = W - 2 * M;
-      const NAVY = [11, 15, 26],
-        NAVY2 = [23, 31, 46],
-        GOLD = [212, 169, 106],
-        CREAM = [232, 220, 200],
-        MID = [160, 154, 144],
-        WHITE = [255, 255, 255],
-        TEAL = [91, 168, 160],
-        RED = [220, 90, 80],
-        LIGHT = [247, 243, 236],
-        DARK = [45, 45, 45];
+        M = 10,
+        CW = W - M * 2;
       const today = new Date().toLocaleDateString('en-SG', {
         day: 'numeric',
         month: 'long',
         year: 'numeric'
       });
+
+      // v2.4.0-rc1.52 — Family Visual Report rebuilt to match the V2 individual
+      // PDF theme (cream paper + coral accents). Replaces the old dark
+      // navy/gold layout that crashed on `doc.setTextColor(GOLD_OR_WHITE)`
+      // because GOLD/WHITE are RGB tuples and setTextColor needed them
+      // spread: doc.setTextColor(...arr).
+      const T = {
+        bg: [251, 244, 234],
+        surface: [255, 248, 239],
+        surface2: [255, 251, 246],
+        recessed: [243, 234, 223],
+        border: [229, 216, 202],
+        text: [47, 36, 28],
+        text2: [93, 80, 70],
+        text3: [142, 126, 112],
+        primary: [232, 88, 67],
+        primarySoft: [255, 224, 216],
+        danger: [217, 87, 69],
+        dangerSoft: [255, 224, 218],
+        warn: [217, 154, 50],
+        warnSoft: [255, 237, 196],
+        success: [116, 185, 137],
+        successSoft: [221, 241, 226],
+        sky: [126, 182, 217],
+        skySoft: [222, 239, 248],
+        lavender: [183, 160, 216],
+        lavenderSoft: [236, 229, 248],
+        sun: [242, 201, 76],
+        sunSoft: [255, 244, 204],
+        sage: [145, 191, 154],
+        sageSoft: [226, 242, 229],
+        white: [255, 255, 255]
+      };
+
+      // ─── Helpers (mirrored from V2 individual PDF for consistency) ───
+      const inactiveStatuses = new Set(['matured', 'surrendered', 'lapsed']);
+      const isInactive = pol => inactiveStatuses.has(String(pol.status || '').toLowerCase());
+      const isSinglePremium = pol => !!(pol.premSingle || pol.premiumStructure === 'Single Premium' || pol.premFrequency === 'single');
+      const n = v => {
+        if (v === null || v === undefined || v === '') return 0;
+        if (typeof v === 'number') return Number.isFinite(v) ? v : 0;
+        const x = parseFloat(String(v).replace(/[^0-9.-]/g, ''));
+        return Number.isFinite(x) ? x : 0;
+      };
+      const money = (value, opts = {}) => {
+        const valueN = Math.round(n(value));
+        const sign = valueN < 0 ? '-' : '';
+        const abs = Math.abs(valueN);
+        const suffix = opts.suffix || '';
+        if (opts.full) return sign + 'S$' + abs.toLocaleString('en-SG') + suffix;
+        if (abs >= 1000000) return sign + 'S$' + (abs / 1000000).toFixed(abs >= 10000000 ? 0 : 1).replace(/\.0$/, '') + 'M' + suffix;
+        if (abs >= 1000) return sign + 'S$' + Math.round(abs / 1000).toLocaleString('en-SG') + 'k' + suffix;
+        return sign + 'S$' + abs.toLocaleString('en-SG') + suffix;
+      };
+      const safe = (s, max = 48) => {
+        const out = String(s || '').replace(/\s+/g, ' ').trim();
+        return out.length > max ? out.slice(0, max - 1) + '…' : out;
+      };
+      const split = (s, w) => doc.splitTextToSize(String(s || ''), w);
+      const setFont = (family = 'helvetica', style = 'normal', size = 8, color = T.text) => {
+        doc.setFont(family, style);
+        doc.setFontSize(size);
+        doc.setTextColor(...color);
+      };
+      const text = (s, x, y, opts = {}) => {
+        setFont(opts.family || 'helvetica', opts.style || 'normal', opts.size || 8, opts.color || T.text);
+        if (opts.maxW) {
+          const lines = split(s, opts.maxW).slice(0, opts.maxLines || 99);
+          doc.text(lines, x, y, opts.align ? {
+            align: opts.align
+          } : undefined);
+          return lines.length * (opts.lineH || 4);
+        }
+        doc.text(String(s), x, y, opts.align ? {
+          align: opts.align
+        } : undefined);
+        return opts.lineH || 4;
+      };
+      const label = (s, x, y, color = T.text3) => text(String(s).toUpperCase(), x, y, {
+        size: 6.4,
+        style: 'bold',
+        color
+      });
+      const card = (x, y, w, h, fill = T.surface, stroke = T.border, r = 3) => {
+        doc.setFillColor(...fill);
+        doc.setDrawColor(...stroke);
+        doc.setLineWidth(0.2);
+        doc.roundedRect(x, y, w, h, r, r, 'FD');
+      };
+      const pill = (s, x, y, tone = 'primary', opts = {}) => {
+        const m = {
+          primary: [T.primarySoft, T.primary],
+          danger: [T.dangerSoft, T.danger],
+          success: [T.successSoft, T.success],
+          warn: [T.warnSoft, T.warn],
+          sky: [T.skySoft, T.sky],
+          ghost: [T.recessed, T.text2]
+        }[tone] || [T.primarySoft, T.primary];
+        setFont('helvetica', 'bold', opts.size || 6, m[1]);
+        const w = opts.w || Math.max(15, doc.getTextWidth(String(s)) + 5);
+        const h = opts.h || 5.2;
+        doc.setFillColor(...m[0]);
+        doc.setDrawColor(...m[0]);
+        doc.roundedRect(x, y, w, h, h / 2, h / 2, 'FD');
+        doc.text(String(s), x + w / 2, y + h * 0.7, {
+          align: 'center'
+        });
+        return w;
+      };
+      const pageBg = () => {
+        doc.setFillColor(...T.bg);
+        doc.rect(0, 0, W, H, 'F');
+        doc.setFillColor(...T.primarySoft);
+        doc.circle(W + 10, -8, 38, 'F');
+      };
+      const pageHeader = (sectionN, title, subtitle) => {
+        pageBg();
+        label('POLICYLENS', M, 8, T.primary);
+        text('Family portfolio review', M + 25, 8, {
+          size: 6.4,
+          color: T.text3
+        });
+        text(today, W - M, 8, {
+          size: 7,
+          color: T.text2,
+          align: 'right',
+          style: 'italic'
+        });
+        text(subtitle || '', W / 2, 15, {
+          size: 7.2,
+          color: T.text2,
+          align: 'center'
+        });
+        doc.setDrawColor(...T.border);
+        doc.setLineWidth(0.16);
+        doc.line(M, 18.5, W - M, 18.5);
+        if (sectionN) {
+          setFont('helvetica', 'bold', 6.4, T.primary);
+          doc.text(String(sectionN).padStart(2, '0'), M, 25);
+          text(title, M + 8, 25, {
+            family: 'times',
+            style: 'bold',
+            size: 13,
+            color: T.text
+          });
+        } else {
+          text(title, M, 25, {
+            family: 'times',
+            style: 'bold',
+            size: 13,
+            color: T.text
+          });
+        }
+      };
+      const kpi = (x, y, w, h, title, value, note, color = T.primary) => {
+        card(x, y, w, h, T.surface, T.border, 3);
+        doc.setFillColor(...color);
+        doc.circle(x + w - 4, y + 4, 2, 'F');
+        label(title, x + 3, y + 5);
+        text(value, x + 3, y + 13, {
+          family: 'times',
+          style: 'bold',
+          size: 11,
+          color: T.text
+        });
+        if (note) text(note, x + 3, y + h - 3, {
+          size: 5.8,
+          color: T.text3,
+          maxW: w - 6,
+          maxLines: 1
+        });
+      };
+      const tableRow = (x, y, widths, values, opts = {}) => {
+        const h = opts.h || 7.4;
+        const fill = opts.header ? T.recessed : opts.alt ? T.surface2 : T.surface;
+        doc.setFillColor(...fill);
+        doc.setDrawColor(...T.border);
+        doc.setLineWidth(0.12);
+        doc.rect(x, y, widths.reduce((s, w) => s + w, 0), h, 'FD');
+        let cx = x;
+        values.forEach((v, i) => {
+          const w = widths[i];
+          const cellPadL = 2,
+            cellPadR = 2;
+          const align = opts.align && opts.align[i] || 'left';
+          const tx = align === 'right' ? cx + w - cellPadR : align === 'center' ? cx + w / 2 : cx + cellPadL;
+          const sty = opts.header ? 'bold' : opts.styles && opts.styles[i] || 'normal';
+          const sz = opts.header ? 5.6 : opts.sizes && opts.sizes[i] || 6.6;
+          const col = opts.header ? T.text3 : opts.colors && opts.colors[i] || T.text2;
+          text(v == null ? '' : String(v), tx, y + h * 0.66, {
+            size: sz,
+            style: sty,
+            color: col,
+            align,
+            maxW: w - cellPadL - cellPadR,
+            maxLines: 1
+          });
+          cx += w;
+        });
+      };
+      const footer = () => {
+        const pages = doc.getNumberOfPages();
+        for (let i = 1; i <= pages; i++) {
+          doc.setPage(i);
+          doc.setDrawColor(...T.border);
+          doc.setLineWidth(0.15);
+          doc.line(M, H - 9, W - M, H - 9);
+          text('PolicyLens · Family Visual · Confidential', M, H - 5, {
+            size: 5.6,
+            color: T.text3
+          });
+          if (advisorName) text(advisorName + (advisorCompany ? ' · ' + advisorCompany : ''), W / 2, H - 5, {
+            size: 5.6,
+            color: T.text3,
+            align: 'center'
+          });
+          text(i + ' / ' + pages, W - M, H - 5, {
+            size: 5.6,
+            style: 'bold',
+            color: T.primary,
+            align: 'right'
+          });
+        }
+      };
+
+      // ─── Family data assembly ───
       const states = await PolicyDB.getAllDriveStates().catch(() => []);
       const allPols = await dbGetAll('policies').catch(() => []);
       const profiles = {};
@@ -66494,8 +66783,8 @@ function ReportTab() {
         name: clientName || ''
       };
       const activeFamily = String(clientProfile?.familyGroup || driveState?.familyGroup || '').trim();
-      const activeFamilyKey = normalizeName(activeFamily);
-      let members = states.filter(ds => activeFamilyKey && normalizeName(profiles[ds.clientId]?.familyGroup || ds.familyGroup || '') === activeFamilyKey);
+      const activeFamilyKey = typeof normalizeName === 'function' ? normalizeName(activeFamily) : activeFamily.toLowerCase();
+      let members = states.filter(ds => activeFamilyKey && (typeof normalizeName === 'function' ? normalizeName(profiles[ds.clientId]?.familyGroup || ds.familyGroup || '') : String(profiles[ds.clientId]?.familyGroup || ds.familyGroup || '').toLowerCase()) === activeFamilyKey);
       if (!members.length && activeClientId) {
         const activeState = states.find(ds => ds.clientId === activeClientId) || {
           clientId: activeClientId,
@@ -66510,15 +66799,19 @@ function ReportTab() {
         const profile = profiles[ds.clientId] || {
           name: ds.clientName || ''
         };
-        const memberPolicies = allPols.filter(pol => pol.clientId === ds.clientId);
+        const memberPolicies = (allPols || []).filter(pol => pol && pol.clientId === ds.clientId && !isInactive(pol));
+        const memberRecurring = memberPolicies.filter(pol => !isSinglePremium(pol));
         return {
           ds,
           profile,
           name: profile.name || ds.clientName || 'Untitled',
-          age: getProfileAge(profile),
+          age: typeof getProfileAge === 'function' ? getProfileAge(profile) : null,
+          gender: profile.gender || '',
           policies: memberPolicies,
-          annualPremium: memberPolicies.reduce((s, pol) => s + annualizedPremium(pol), 0),
-          sumAssured: memberPolicies.reduce((s, pol) => s + (parseFloat(pol.sumAssured) || 0), 0)
+          recurring: memberRecurring,
+          annualPremium: memberRecurring.reduce((s, pol) => s + annualizedPremium(pol), 0),
+          sumAssured: memberPolicies.reduce((s, pol) => s + n(pol.sumAssured), 0),
+          insurers: new Set(memberPolicies.map(p => String(p.insurer || '').trim()).filter(Boolean)).size
         };
       }).sort((a, b) => a.name.localeCompare(b.name));
       const familyPolicies = memberRows.flatMap(m => m.policies.map(pol => ({
@@ -66526,137 +66819,98 @@ function ReportTab() {
         _memberName: m.name
       })));
       const totalAnnualPrem = memberRows.reduce((s, m) => s + m.annualPremium, 0);
-      const totalSA = familyPolicies.reduce((s, pol) => s + (parseFloat(pol.sumAssured) || 0), 0);
-      const fmtShort = n => {
-        n = Number(n) || 0;
-        if (n >= 1000000) return '$' + (n / 1000000).toFixed(1) + 'M';
-        if (n >= 1000) return '$' + Math.round(n / 1000) + 'k';
-        return '$' + Math.round(n).toLocaleString();
-      };
-      const header = (title, subtitle) => {
-        doc.setFillColor(...NAVY);
-        doc.rect(0, 0, W, 18, 'F');
-        doc.setFillColor(...GOLD);
-        doc.rect(0, 17.5, W, .6, 'F');
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(12);
-        doc.setTextColor(...GOLD);
-        doc.text(title, M, 11);
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(7.5);
-        doc.setTextColor(...MID);
-        doc.text(subtitle || familyName, M, 15);
-        doc.setFontSize(7);
-        doc.text(today, W - M, 11, {
-          align: 'right'
+      const totalSA = memberRows.reduce((s, m) => s + m.sumAssured, 0);
+      const totalInsurers = new Set(familyPolicies.map(p => String(p.insurer || '').trim()).filter(Boolean)).size;
+      const familyMeta = memberRows.length + ' members · ' + familyPolicies.length + ' policies';
+
+      // ─────────────────────────────────────────────────────────────────
+      // PAGE 1 — Family overview
+      // ─────────────────────────────────────────────────────────────────
+      pageHeader(1, 'Family overview', familyName + ' · ' + familyMeta);
+
+      // Top: Family hero card with name + diagnosis
+      card(M, 30, CW, 36, T.surface, T.border, 4);
+      label('Household', M + 5, 38);
+      text(familyName, M + 5, 50, {
+        family: 'times',
+        style: 'bold',
+        size: 20,
+        color: T.text
+      });
+      const eldest = memberRows.reduce((m, r) => m == null || r.age != null && r.age > (m.age || 0) ? r : m, null);
+      const youngest = memberRows.reduce((m, r) => m == null || r.age != null && r.age < (m.age || 999) ? r : m, null);
+      const ageSpan = eldest && youngest && eldest !== youngest && eldest.age != null && youngest.age != null ? youngest.age + '-' + eldest.age : eldest?.age != null ? String(eldest.age) : '—';
+      text('Ages: ' + ageSpan + '   ·   ' + memberRows.length + ' member' + (memberRows.length === 1 ? '' : 's') + '   ·   ' + totalInsurers + ' insurer' + (totalInsurers === 1 ? '' : 's'), M + 5, 60, {
+        size: 8,
+        color: T.text2,
+        maxW: CW - 10,
+        maxLines: 1
+      });
+
+      // KPI strip — 4 cards
+      const kpiY1 = 72,
+        kpiH1 = 26,
+        kpiW1 = (CW - 3 * 3) / 4;
+      const kpis = [['Members', String(memberRows.length), 'in household', T.lavender], ['Active policies', String(familyPolicies.length), totalInsurers + ' insurers', T.sky], ['Annual premium', money(totalAnnualPrem), 'family total', T.sun], ['Sum assured', money(totalSA), 'family total', T.primary]];
+      kpis.forEach((k, i) => kpi(M + i * (kpiW1 + 3), kpiY1, kpiW1, kpiH1, k[0], k[1], k[2], k[3]));
+
+      // Diagnosis
+      const diagY = kpiY1 + kpiH1 + 6;
+      card(M, diagY, CW, 24, T.surface, T.border, 3);
+      label('Family diagnosis', M + 5, diagY + 7);
+      const eldestPol = eldest ? eldest.policies.length + ' policies, ' + money(eldest.sumAssured) + ' SA' : 'no policies';
+      const concentratedRisk = (() => {
+        const max = Math.max(0, ...memberRows.map(m => m.sumAssured));
+        const total = totalSA || 1;
+        const top = memberRows.find(m => m.sumAssured === max && max > 0);
+        if (!top || total <= 0) return null;
+        const pct = Math.round(max / total * 100);
+        if (pct < 60 || memberRows.length < 2) return null;
+        return top.name + ' carries ' + pct + '% of household sum assured — review concentration risk for the rest of the family.';
+      })();
+      const diagSentences = [memberRows.length + ' member' + (memberRows.length === 1 ? '' : 's') + ' across ' + familyPolicies.length + ' polic' + (familyPolicies.length === 1 ? 'y' : 'ies') + ' totalling ' + money(totalSA) + ' of cover at ' + money(totalAnnualPrem) + ' / yr.', eldest && eldest.age != null ? eldest.name + (eldest === youngest ? '' : ' (eldest at age ' + eldest.age + ')') + ' has ' + eldestPol + '.' : null, concentratedRisk].filter(Boolean).join(' ');
+      text(diagSentences, M + 5, diagY + 13, {
+        size: 7.6,
+        color: T.text2,
+        maxW: CW - 10,
+        maxLines: 3,
+        lineH: 4.2
+      });
+
+      // Members table
+      const memTblY = diagY + 24 + 8;
+      label('Family members', M, memTblY);
+      const memCols = [44, 14, 22, 32, 32, CW - 44 - 14 - 22 - 32 - 32];
+      tableRow(M, memTblY + 3, memCols, ['Member', 'Age', 'Policies', 'Annual premium', 'Sum assured', 'Insurers'], {
+        header: true,
+        h: 6
+      });
+      memberRows.forEach((m, i) => {
+        tableRow(M, memTblY + 9 + i * 7.4, memCols, [m.name, m.age != null ? String(m.age) : '—', String(m.policies.length), money(m.annualPremium), money(m.sumAssured), String(m.insurers)], {
+          alt: i % 2 === 1,
+          h: 7.4,
+          align: ['left', 'center', 'center', 'right', 'right', 'center'],
+          styles: ['bold', null, null, null, null, null],
+          colors: [T.text, T.text3, T.text2, T.text2, T.text, T.text3],
+          sizes: [7, 6.4, 6.4, 6.4, 6.6, 6.4]
         });
-      };
-      const addFooters = () => {
-        const pages = doc.getNumberOfPages();
-        for (let i = 2; i <= pages; i++) {
-          doc.setPage(i);
-          doc.setFillColor(...GOLD);
-          doc.rect(M, H - 12, CW, .4, 'F');
-          doc.setFont('helvetica', 'normal');
-          doc.setFontSize(7);
-          doc.setTextColor(...MID);
-          doc.text('PolicyLens Family Visual Report - Confidential', M, H - 7);
-          if (advisorName) doc.text(advisorName + (advisorCompany ? ' - ' + advisorCompany : ''), W / 2, H - 7, {
-            align: 'center'
-          });
-          doc.setTextColor(...GOLD);
-          doc.text(String(i) + ' / ' + pages, W - M, H - 7, {
-            align: 'right'
-          });
-        }
-      };
-      doc.setFillColor(...NAVY);
-      doc.rect(0, 0, W, H, 'F');
-      doc.setFillColor(...GOLD);
-      doc.rect(0, 0, 5, H, 'F');
-      doc.setFillColor(25, 33, 52);
-      doc.circle(W + 10, -10, 92, 'F');
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8);
-      doc.setTextColor(...GOLD);
-      doc.text('POLICYLENS', M + 14, 38);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(7);
-      doc.setTextColor(...MID);
-      doc.text('FAMILY INSURANCE PORTFOLIO REVIEW', M + 14, 44);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(30);
-      doc.setTextColor(...WHITE);
-      doc.text(String(familyName || 'Family Portfolio').toUpperCase().slice(0, 24), M + 14, 88);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(10);
-      doc.setTextColor(...CREAM);
-      doc.text(memberRows.length + ' family members - ' + familyPolicies.length + ' policies - ' + today, M + 14, 100);
-      const kpis = [['MEMBERS', String(memberRows.length)], ['POLICIES', String(familyPolicies.length)], ['ANNUAL PREMIUM', fmtShort(totalAnnualPrem) + '/yr'], ['SUM ASSURED', fmtShort(totalSA)]];
-      kpis.forEach((k, i) => {
-        const x = M + 14 + i * 42;
-        doc.setFillColor(...NAVY2);
-        doc.roundedRect(x, 128, 36, 24, 2, 2, 'F');
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(5.8);
-        doc.setTextColor(...MID);
-        doc.text(k[0], x + 4, 136);
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(11);
-        doc.setTextColor(i === 2 ? GOLD : WHITE);
-        doc.text(k[1], x + 4, 146);
       });
-      if (advisorName) {
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8);
-        doc.setTextColor(...MID);
-        doc.text('Prepared by ' + advisorName + (advisorCompany ? ' - ' + advisorCompany : ''), M + 14, 178);
-      }
+      // Total row
+      const totalRowY = memTblY + 9 + memberRows.length * 7.4;
+      tableRow(M, totalRowY, memCols, ['Family total', '', '', money(totalAnnualPrem), money(totalSA), String(totalInsurers)], {
+        header: true,
+        h: 7,
+        align: ['left', 'center', 'center', 'right', 'right', 'center'],
+        styles: ['bold', null, null, 'bold', 'bold', 'bold']
+      });
+
+      // ─────────────────────────────────────────────────────────────────
+      // PAGE 2 — Policy distribution
+      // ─────────────────────────────────────────────────────────────────
       doc.addPage();
-      header('FAMILY DASHBOARD', familyName);
-      let y = 30;
-      const cardW = (CW - 6) / 3;
-      [['Annual Premium', fmtShort(totalAnnualPrem) + '/yr', GOLD], ['Family Coverage', fmtShort(totalSA), WHITE], ['Review Scope', memberRows.length + ' members', TEAL]].forEach((c, i) => {
-        const x = M + i * (cardW + 3);
-        doc.setFillColor(...NAVY2);
-        doc.roundedRect(x, y, cardW, 24, 2, 2, 'F');
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(6);
-        doc.setTextColor(...MID);
-        doc.text(c[0].toUpperCase(), x + 4, y + 7);
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(13);
-        doc.setTextColor(...c[2]);
-        doc.text(c[1], x + 4, y + 18);
-      });
-      y += 36;
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(10);
-      doc.setTextColor(...GOLD);
-      doc.text('Members', M, y);
-      y += 6;
-      memberRows.forEach(m => {
-        if (y > 255) {
-          doc.addPage();
-          header('FAMILY DASHBOARD', familyName);
-          y = 30;
-        }
-        doc.setFillColor(...LIGHT);
-        doc.roundedRect(M, y, CW, 18, 2, 2, 'F');
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(9);
-        doc.setTextColor(...NAVY);
-        doc.text(m.name.slice(0, 34), M + 4, y + 7);
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(7);
-        doc.setTextColor(...DARK);
-        const meta = [m.age != null ? 'Age ' + m.age : 'Age not set', m.policies.length + ' policies', fmtShort(m.annualPremium) + '/yr premium', fmtShort(m.sumAssured) + ' SA'];
-        doc.text(meta.join('   -   '), M + 4, y + 14);
-        y += 22;
-      });
-      doc.addPage();
-      header('POLICY DISTRIBUTION', familyName);
-      y = 30;
+      pageHeader(2, 'Policy distribution', familyName + ' · ' + familyMeta);
+
+      // By category (left) + By member (right)
       const byCat = {};
       familyPolicies.forEach(pol => {
         const key = pol.category || 'other';
@@ -66667,88 +66921,258 @@ function ReportTab() {
         };
         byCat[key].count++;
         byCat[key].prem += annualizedPremium(pol);
-        byCat[key].sa += parseFloat(pol.sumAssured) || 0;
+        byCat[key].sa += n(pol.sumAssured);
       });
-      Object.entries(byCat).sort((a, b) => b[1].prem - a[1].prem).forEach(([cat, row]) => {
-        if (y > 260) {
-          doc.addPage();
-          header('POLICY DISTRIBUTION', familyName);
-          y = 30;
-        }
-        doc.setFillColor(...NAVY2);
-        doc.roundedRect(M, y, CW, 9, 1.5, 1.5, 'F');
-        doc.setFillColor(...GOLD);
-        doc.rect(M, y + 8.4, CW, .4, 'F');
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(8.5);
-        doc.setTextColor(...GOLD);
-        doc.text(cat.toUpperCase(), M + 5, y + 6);
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(7);
-        doc.setTextColor(...CREAM);
-        doc.text(row.count + ' policies - ' + fmtShort(row.prem) + '/yr - ' + fmtShort(row.sa) + ' SA', W - M - 4, y + 6, {
-          align: 'right'
+      const catNames = {
+        protection: 'Protection',
+        health: 'Health & Medical',
+        retirement: 'Retirement',
+        savings: 'Endowment & Savings',
+        investment: 'Investment',
+        maternity: 'Maternity',
+        other: 'Other'
+      };
+      const catColors = {
+        protection: T.sky,
+        health: T.danger,
+        retirement: T.sun,
+        savings: T.sage,
+        investment: T.lavender,
+        maternity: T.lavender,
+        other: T.text3
+      };
+      const catEntries = Object.entries(byCat).sort((a, b) => b[1].prem - a[1].prem);
+      const catW = CW * 0.5 - 2,
+        memW = CW * 0.5 - 2,
+        memX = M + catW + 4;
+      label('By category', M, 30);
+      const catCols = [38, 12, 18, 22, catW - 38 - 12 - 18 - 22];
+      tableRow(M, 33, catCols, ['Category', '#', 'Share', 'Annual', 'Sum assured'], {
+        header: true,
+        h: 6
+      });
+      catEntries.forEach(([cat, row], i) => {
+        const sharePct = totalAnnualPrem > 0 ? Math.round(row.prem / totalAnnualPrem * 100) : 0;
+        tableRow(M, 39 + i * 7.4, catCols, [catNames[cat] || cat, String(row.count), sharePct + '%', money(row.prem), money(row.sa)], {
+          alt: i % 2 === 1,
+          h: 7.4,
+          align: ['left', 'center', 'center', 'right', 'right'],
+          styles: ['bold', null, null, null, null],
+          colors: [T.text, T.text3, T.text3, T.text2, T.text2],
+          sizes: [6.6, 6.4, 6.4, 6.4, 6.4]
         });
-        y += 13;
+        // Color dot in left padding gutter
+        doc.setFillColor(...(catColors[cat] || T.primary));
+        doc.circle(M + 3, 39 + i * 7.4 + 3.7, 1.0, 'F');
       });
-      memberRows.forEach(m => {
+      label('By member', memX, 30);
+      const memSubCols = [40, 14, 22, memW - 40 - 14 - 22];
+      tableRow(memX, 33, memSubCols, ['Member', '#', 'Annual', 'Sum assured'], {
+        header: true,
+        h: 6
+      });
+      memberRows.forEach((m, i) => {
+        tableRow(memX, 39 + i * 7.4, memSubCols, [m.name, String(m.policies.length), money(m.annualPremium), money(m.sumAssured)], {
+          alt: i % 2 === 1,
+          h: 7.4,
+          align: ['left', 'center', 'right', 'right'],
+          styles: ['bold', null, null, null],
+          colors: [T.text, T.text3, T.text2, T.text],
+          sizes: [6.6, 6.4, 6.4, 6.6]
+        });
+      });
+
+      // Bottom: stacked premium bar by category
+      const stackY = Math.max(39 + catEntries.length * 7.4, 39 + memberRows.length * 7.4) + 12;
+      if (stackY < 240) {
+        label('Premium share by category', M, stackY);
+        const stackBarY = stackY + 4,
+          stackBarH = 8,
+          stackBarW = CW;
+        let xCursor = M;
+        catEntries.forEach(([cat, row]) => {
+          const segW = totalAnnualPrem > 0 ? row.prem / totalAnnualPrem * stackBarW : 0;
+          if (segW > 0) {
+            doc.setFillColor(...(catColors[cat] || T.primary));
+            doc.rect(xCursor, stackBarY, segW, stackBarH, 'F');
+            // Inline label if there's room
+            if (segW > 22) {
+              text(catNames[cat] || cat, xCursor + 2, stackBarY + 5.5, {
+                size: 5.4,
+                style: 'bold',
+                color: T.white
+              });
+            }
+            xCursor += segW;
+          }
+        });
+        // Legend strip below
+        let lgX = M;
+        catEntries.forEach(([cat, row]) => {
+          const lblText = (catNames[cat] || cat) + '  ' + money(row.prem);
+          doc.setFillColor(...(catColors[cat] || T.primary));
+          doc.rect(lgX, stackBarY + stackBarH + 3, 2.5, 2.5, 'F');
+          text(lblText, lgX + 3.5, stackBarY + stackBarH + 5, {
+            size: 5.6,
+            color: T.text2
+          });
+          lgX += 3.5 + doc.getTextWidth(lblText) + 5;
+          if (lgX > W - M - 30) lgX = M; // wrap
+        });
+      }
+
+      // ─────────────────────────────────────────────────────────────────
+      // PAGE 3+ — Per-member policy detail (one page per member with policies)
+      // ─────────────────────────────────────────────────────────────────
+      const RIDER_CODE = {
+        death: 'D',
+        tpd: 'TPD',
+        ci: 'CI',
+        eci: 'ECI',
+        di: 'DI',
+        accidental: 'PA',
+        accident: 'PA',
+        pa: 'PA',
+        premium_waiver: 'WP',
+        waiver: 'WP',
+        wp: 'WP',
+        terminal_illness: 'TI',
+        terminal: 'TI',
+        ti: 'TI',
+        enhanced_living: 'ECI'
+      };
+      const riderShort = rd => RIDER_CODE[(rd.type || '').toLowerCase().replace(/[^a-z_]/g, '')] || (rd.type || '').toUpperCase().slice(0, 3);
+      memberRows.forEach((m, mIdx) => {
+        const sectionN = 3 + mIdx;
         doc.addPage();
-        header(m.name.toUpperCase().slice(0, 38), familyName);
-        y = 30;
+        pageHeader(sectionN, m.name, familyName + ' · member detail');
+
+        // Member summary strip
+        const msY = 30,
+          msH = 22,
+          msW = (CW - 3 * 3) / 4;
+        const memberKpis = [['Age', m.age != null ? String(m.age) : '—', m.gender || '', T.lavender], ['Policies', String(m.policies.length), m.insurers + ' insurers', T.sky], ['Annual premium', money(m.annualPremium), 'recurring', T.sun], ['Sum assured', money(m.sumAssured), 'across all policies', T.primary]];
+        memberKpis.forEach((k, i) => kpi(M + i * (msW + 3), msY, msW, msH, k[0], k[1], k[2], k[3]));
         if (!m.policies.length) {
-          doc.setFont('helvetica', 'normal');
-          doc.setFontSize(10);
-          doc.setTextColor(...MID);
-          doc.text('No policies currently stored under this family member.', M, y);
+          card(M, msY + msH + 8, CW, 30, T.surface, T.border, 3);
+          text('No policies currently on file for ' + m.name + '.', M + 5, msY + msH + 22, {
+            size: 9,
+            color: T.text3,
+            fontStyle: 'italic'
+          });
           return;
         }
-        m.policies.sort((a, b) => (a.category || '').localeCompare(b.category || '') || (a.insurer || '').localeCompare(b.insurer || ''));
-        m.policies.forEach(pol => {
-          if (y > 258) {
+
+        // Policies table — same 2-line-row structure as individual PDF
+        const polTblY = msY + msH + 8;
+        const polCols = [62, 22, 22, 22, 18, 16, CW - 62 - 22 - 22 - 22 - 18 - 16];
+        const drawPolHeader = y => {
+          tableRow(M, y, polCols, ['Insurer · product', 'Type', 'Cover', 'Premium', 'Prem end', 'Method', 'Riders'], {
+            header: true,
+            h: 6
+          });
+          return y + 6;
+        };
+        const ROW_H = 11;
+        let polY = drawPolHeader(polTblY);
+
+        // Sort by category, then insurer
+        const sorted = [...m.policies].sort((a, b) => (a.category || '').localeCompare(b.category || '') || (a.insurer || '').localeCompare(b.insurer || ''));
+        sorted.forEach((pol, i) => {
+          if (polY + ROW_H > 268) {
             doc.addPage();
-            header(m.name.toUpperCase().slice(0, 38), familyName);
-            y = 30;
+            pageHeader(sectionN, m.name + ' (continued)', familyName + ' · member detail');
+            polY = drawPolHeader(30);
           }
-          doc.setFillColor(252, 250, 246);
-          doc.roundedRect(M, y, CW, 24, 2, 2, 'F');
-          doc.setDrawColor(...GOLD);
-          doc.setLineWidth(.15);
-          doc.roundedRect(M, y, CW, 24, 2, 2, 'S');
-          doc.setFont('helvetica', 'bold');
-          doc.setFontSize(6.5);
-          doc.setTextColor(...GOLD);
-          doc.text((pol.insurer || 'UNKNOWN').toUpperCase().slice(0, 28), M + 5, y + 5.5);
-          doc.setFont('helvetica', 'bold');
-          doc.setFontSize(10);
-          doc.setTextColor(...NAVY);
-          doc.text(String(pol.productName || pol.policyName || 'Unnamed policy').slice(0, 58), M + 5, y + 12);
-          doc.setFont('helvetica', 'normal');
-          doc.setFontSize(7);
-          doc.setTextColor(...DARK);
-          const ownerLine = 'Owner: ' + (pol.policyOwner || m.name) + (pol.lifeInsured ? ' - Life: ' + pol.lifeInsured : '');
-          doc.text(ownerLine.slice(0, 90), M + 5, y + 18);
-          doc.setFont('helvetica', 'bold');
-          doc.setFontSize(8);
-          doc.setTextColor(...GOLD);
-          doc.text(fmtShort(annualizedPremium(pol)) + '/yr', W - M - 5, y + 8, {
+          const fillC = i % 2 === 1 ? T.surface2 : T.surface;
+          doc.setFillColor(...fillC);
+          doc.setDrawColor(...T.border);
+          doc.setLineWidth(0.12);
+          doc.rect(M, polY, CW, ROW_H, 'FD');
+
+          // Build row content
+          const productLine = [pol.insurer || '—', pol.productName || pol.policyName || pol.subType || 'Policy'].filter(Boolean).join(' · ');
+          const cover = n(pol.sumAssured) > 0 ? money(pol.sumAssured) : '—';
+          const prem = isSinglePremium(pol) ? n(pol.annualPremium) ? money(pol.annualPremium) + ' lump' : 'Single' : annualizedPremium(pol) > 0 ? money(annualizedPremium(pol)) : '—';
+          const premEnd = pol.premEndAge ? 'age ' + pol.premEndAge : pol.premTerm ? pol.premTerm + 'y' : '—';
+          const method = pol.paymentMethod ? safe(pol.paymentMethod, 14) : '—';
+          const riderCodes = (pol.riders || []).map(riderShort).filter(Boolean).slice(0, 5).join(' ');
+          const startAge = parseInt(pol.premStartAge) || parseInt(pol.ageAtEntry);
+          const yearsHeld = m.age != null && startAge && m.age >= startAge ? m.age - startAge : null;
+          const policyNum = pol.policyNumber ? '#' + safe(String(pol.policyNumber), 14) : '';
+          const status = pol.status && pol.status !== 'inforce' ? safe(String(pol.status).charAt(0).toUpperCase() + String(pol.status).slice(1), 14) : '';
+          const subType = safe(pol.subType || '', 22);
+          const flags = [];
+          if (pol.notes && String(pol.notes).trim()) flags.push('✦ note');
+          if (pol.financed) flags.push('$ financed');
+          if (pol.lifeInsured && pol.policyOwner && String(pol.lifeInsured).trim() !== String(pol.policyOwner).trim()) flags.push('LA ' + safe(pol.lifeInsured, 14));
+          const sublineParts = [policyNum, subType, yearsHeld != null ? yearsHeld + 'y in force' : null, status, ...flags].filter(Boolean);
+          const subline = sublineParts.join(' · ');
+          let cx = M;
+          text(productLine, cx + 2, polY + 4.6, {
+            size: 6.4,
+            style: 'bold',
+            color: T.text,
+            maxW: polCols[0] - 4,
+            maxLines: 1
+          });
+          if (subline) text(subline, cx + 2, polY + 8.8, {
+            size: 5.4,
+            color: T.text3,
+            maxW: polCols[0] - 4,
+            maxLines: 1
+          });
+          cx += polCols[0];
+          text(safe(pol.subType || '—', 14), cx + 2, polY + 6.6, {
+            size: 5.8,
+            color: T.text3,
+            maxW: polCols[1] - 4,
+            maxLines: 1
+          });
+          cx += polCols[1];
+          text(cover, cx + polCols[2] - 2, polY + 6.6, {
+            size: 6.4,
+            color: T.text2,
             align: 'right'
           });
-          doc.setFont('helvetica', 'normal');
-          doc.setFontSize(7);
-          doc.setTextColor(...DARK);
-          doc.text(pol.sumAssured ? fmtShort(pol.sumAssured) + ' SA' : pol.subType || '', W - M - 5, y + 17, {
+          cx += polCols[2];
+          text(prem, cx + polCols[3] - 2, polY + 6.6, {
+            size: 6.4,
+            color: T.text2,
             align: 'right'
           });
-          y += 28;
+          cx += polCols[3];
+          text(premEnd, cx + polCols[4] / 2, polY + 6.6, {
+            size: 5.8,
+            color: T.text3,
+            align: 'center'
+          });
+          cx += polCols[4];
+          text(method, cx + 2, polY + 6.6, {
+            size: 5.6,
+            color: T.text3,
+            maxW: polCols[5] - 4,
+            maxLines: 1
+          });
+          cx += polCols[5];
+          text(riderCodes || '—', cx + 2, polY + 6.6, {
+            size: 5.8,
+            style: 'bold',
+            color: T.primary,
+            maxW: polCols[6] - 4,
+            maxLines: 1
+          });
+          polY += ROW_H;
         });
       });
-      addFooters();
-      doc.save('PolicyLens_Family_Visual_Report_' + String(familyName || 'Family').replace(/\s+/g, '_') + '_' + new Date().toISOString().slice(0, 10) + '.pdf');
+      footer();
+      doc.save('PolicyLens_Family_Visual_Report_' + String(familyName || 'Family').replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '') + '_' + new Date().toISOString().slice(0, 10) + '.pdf');
     } catch (e) {
       console.error('[Family Visual PDF] Error:', e);
       toast('Family visual report error: ' + e.message, 'error', 6000);
+    } finally {
+      setGeneratingFamilyVisual(false);
     }
-    setGeneratingFamilyVisual(false);
   };
   const generate = async () => {
     setGenerating(true);
