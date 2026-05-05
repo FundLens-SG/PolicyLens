@@ -612,9 +612,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.58';
+const APP_VERSION = 'v2.4.0-rc1.59';
 const APP_VERSION_DATE = '2026-05-06';
-const APP_VERSION_NAME = 'Mobile-responsive sweep — Profile, Policies, modals, routing cockpit collapse on phones';
+const APP_VERSION_NAME = 'Visual report dialX crash fix + family/member hero shrink-to-fit + dashboard ledger mobile cards';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -41870,6 +41870,96 @@ function Dashboard() {
       const sa = parseFloat(pol.sumAssured) || 0;
       const prem = parseFloat(pol.annualPremium) || 0;
       const riderChips = (pol.riders || []).map(r => r.type || r.riderName || '').filter(Boolean).slice(0, 3);
+      // v2.4.0-rc1.59: on mobile we render a stacked 2-row card per
+      // policy instead of a 5-col grid (which jammed "S$600,000"
+      // and "S$72/yr" together into "S$600,000S$6/yr" — column
+      // widths were ~50px each on a 380px phone).
+      if (isMobile) {
+        return /*#__PURE__*/React.createElement("div", {
+          key: pol.id,
+          style: {
+            padding: '12px 18px',
+            borderTop: `1px solid ${T.hair}`,
+            fontSize: 13
+          }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: {
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'baseline',
+            gap: 10
+          }
+        }, /*#__PURE__*/React.createElement("span", {
+          style: {
+            color: T.text,
+            fontWeight: 600,
+            minWidth: 0,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
+          }
+        }, pol.insurer || '—'), /*#__PURE__*/React.createElement("span", {
+          style: {
+            color: T.text2,
+            fontVariantNumeric: 'tabular-nums',
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
+            fontSize: 12.5
+          }
+        }, prem > 0 ? `S$${prem.toLocaleString()}/yr` : /*#__PURE__*/React.createElement("span", {
+          style: {
+            color: T.text4
+          }
+        }, "\u2014"))), /*#__PURE__*/React.createElement("div", {
+          style: {
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'baseline',
+            gap: 10,
+            marginTop: 3
+          }
+        }, /*#__PURE__*/React.createElement("span", {
+          style: {
+            color: T.text2,
+            minWidth: 0,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            fontSize: 12
+          }
+        }, pol.productName || pol.policyName || '—'), /*#__PURE__*/React.createElement("span", {
+          style: {
+            color: T.text2,
+            fontVariantNumeric: 'tabular-nums',
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
+            fontSize: 12
+          }
+        }, sa > 0 ? `SA S$${sa.toLocaleString()}` : /*#__PURE__*/React.createElement("span", {
+          style: {
+            color: T.text4
+          }
+        }, "SA \u2014"))), riderChips.length > 0 && /*#__PURE__*/React.createElement("div", {
+          style: {
+            display: 'flex',
+            gap: 4,
+            flexWrap: 'wrap',
+            marginTop: 6
+          }
+        }, riderChips.map((r, i) => /*#__PURE__*/React.createElement("span", {
+          key: i,
+          style: {
+            fontSize: 9.5,
+            padding: '2px 7px',
+            background: T.primaryDim,
+            color: T.primary,
+            borderRadius: 999,
+            fontWeight: 600,
+            textTransform: 'uppercase',
+            letterSpacing: '0.04em'
+          }
+        }, r))));
+      }
       return /*#__PURE__*/React.createElement("div", {
         key: pol.id,
         style: {
@@ -41878,7 +41968,8 @@ function Dashboard() {
           alignItems: 'center',
           padding: '14px 24px',
           borderTop: `1px solid ${T.hair}`,
-          fontSize: 13
+          fontSize: 13,
+          gap: 10
         }
       }, /*#__PURE__*/React.createElement("span", {
         style: {
@@ -41898,7 +41989,10 @@ function Dashboard() {
       }, pol.productName || pol.policyName || '—'), /*#__PURE__*/React.createElement("span", {
         style: {
           color: T.text2,
-          fontVariantNumeric: 'tabular-nums'
+          fontVariantNumeric: 'tabular-nums',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
         }
       }, sa > 0 ? `S$${sa.toLocaleString()}` : /*#__PURE__*/React.createElement("span", {
         style: {
@@ -41907,7 +42001,10 @@ function Dashboard() {
       }, "\u2014")), /*#__PURE__*/React.createElement("span", {
         style: {
           color: T.text2,
-          fontVariantNumeric: 'tabular-nums'
+          fontVariantNumeric: 'tabular-nums',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
         }
       }, prem > 0 ? `S$${prem.toLocaleString()}/yr` : /*#__PURE__*/React.createElement("span", {
         style: {
@@ -65698,7 +65795,7 @@ function ReportTab() {
       eyebrow('Protection score · ' + scoreLabel, dialCX - dialR, dialCY + dialR * 2 + 28, T.ink3);
       // Diagnosis text
       const diagX = dialCX + dialR + 40,
-        diagW = CW - (dialX - M);
+        diagW = CW - (diagX - M);
       eyebrow('Diagnosis', diagX, dialCY + 8, T.ink3);
       const diagSentences = [clientLabel + ' holds ' + activePolicies.length + ' active polic' + (activePolicies.length === 1 ? 'y' : 'ies') + ' providing ' + money(totalCoverage) + ' of cover.', weakest.length ? weakest.slice(0, 3).map(r => r.short).join(', ') + ' ' + (weakest.length === 1 ? 'is' : 'are') + ' below industry guideline.' : 'Coverage tracks well against LIA recommendations across all areas.', coverage.hasISP ? 'Hospitalisation' + (coverage.add > 0 ? ' and Personal Accident are appropriately covered.' : ' is appropriately covered.') : 'Hospitalisation cover is not yet detected.', retirement.desired > 0 ? 'Retirement at ' + retirementAge + ' covers ' + retPct + '% of the inflation-adjusted ' + money(retirement.desired, {
         suffix: '/mo'
@@ -66917,15 +67014,27 @@ function ReportTab() {
         size: 14,
         color: T.ink2
       });
-      // Family name in Fraunces italic 56pt ink (NOT coral — coral reserved for warning)
-      text(familyName, M, MY + 168, {
+      // v2.4.0-rc1.59: shrink-to-fit hero so long household names like
+      // "TAN MEI LIAN Family" don't clip past the right margin. Probe
+      // text width at the natural 56pt and step down until it fits CW.
+      let famHeroSize = SZ.cover_h1 + 14; // 56pt natural
+      setFont(FONT.serif, 'bolditalic', famHeroSize, T.ink);
+      while (famHeroSize > 28 && doc.getTextWidth(String(familyName)) > CW - 4) {
+        famHeroSize -= 2;
+        setFont(FONT.serif, 'bolditalic', famHeroSize, T.ink);
+      }
+      const famHeroY = MY + 168 - Math.max(0, (SZ.cover_h1 + 14 - famHeroSize) * 0.4);
+      text(familyName, M, famHeroY, {
         family: FONT.serif,
         style: 'bolditalic',
-        size: SZ.cover_h1 + 14,
-        color: T.ink
+        size: famHeroSize,
+        color: T.ink,
+        maxW: CW,
+        maxLines: 2,
+        lineH: famHeroSize * 1.05
       });
-      // Family meta
-      text(familyMeta, M, MY + 200, {
+      // Family meta — push down if hero wrapped
+      text(familyMeta, M, MY + 200 + (famHeroSize > 38 ? 0 : 4), {
         family: FONT.sans,
         style: 'normal',
         size: SZ.body_lg,
@@ -67609,12 +67718,25 @@ function ReportTab() {
           opacity: 1
         }));
 
+        // v2.4.0-rc1.59: shrink-to-fit member name so long names like
+        // "Chan Chung Yin" don't bleed into the 3 KPI cards on the right.
+        // The name area is the left 42% of the card (panel up to memKpiX0).
+        const isEmpty = m.policies.length === 0 || m.sumAssured < 50000;
+        const nameMaxW = isEmpty ? CW - 48 : CW * 0.42 - 24;
+        let nameSize = SZ.kpi_number; // 28pt natural
+        setFont(FONT.serif, 'bold', nameSize, T.ink);
+        while (nameSize > 16 && doc.getTextWidth(String(m.name)) > nameMaxW) {
+          nameSize -= 1;
+          setFont(FONT.serif, 'bold', nameSize, T.ink);
+        }
         // Left third: name + meta
         text(m.name, M + 24, heroY + 42, {
           family: FONT.serif,
           style: 'bold',
-          size: SZ.kpi_number,
-          color: T.ink
+          size: nameSize,
+          color: T.ink,
+          maxW: nameMaxW,
+          maxLines: 1
         });
         text([m.age != null ? 'age ' + m.age : 'age —', m.gender || ''].filter(Boolean).join(' · '), M + 24, heroY + 62, {
           size: SZ.body_lg,
@@ -67622,7 +67744,6 @@ function ReportTab() {
         });
 
         // Right two-thirds: 3 inline KPIs (or single coverage-gap card if empty)
-        const isEmpty = m.policies.length === 0 || m.sumAssured < 50000;
         if (!isEmpty) {
           const memKpiY = heroY + 14,
             memKpiH = 80,
