@@ -17552,6 +17552,66 @@ if (typeof window !== 'undefined') window.driveClient = driveClient;
 function getSB() {
   return window._SB || null;
 }
+
+// ── Save-state tracking for the ckg leave-guard ─────────────────────
+// PolicyLens auto-saves on every state change, so "dirty" really means
+// "there's an in-flight save we're about to abandon" or "the last save
+// failed and we haven't recovered." Both states warrant a prompt.
+let _ckgPendingSaves = 0;
+let _ckgFailedSaves = 0;
+function _ckgSaveStarted() {
+  _ckgPendingSaves++;
+}
+function _ckgSaveOk() {
+  _ckgPendingSaves = Math.max(0, _ckgPendingSaves - 1);
+  _ckgFailedSaves = 0;
+}
+function _ckgSaveFailed() {
+  _ckgPendingSaves = Math.max(0, _ckgPendingSaves - 1);
+  _ckgFailedSaves++;
+}
+function _ckgIsRepoDirty() {
+  return _ckgPendingSaves > 0 || _ckgFailedSaves > 0;
+}
+
+// Register the leave-guard once, as soon as window.ckgRegisterLeaveGuard
+// is available. The middleware ships the guard as a deferred script so
+// it loads before this module runs in the typical case.
+(function _ckgRegisterPolicyLensGuard() {
+  function tryRegister() {
+    if (typeof window.ckgRegisterLeaveGuard !== 'function') return false;
+    window.ckgRegisterLeaveGuard({
+      isDirty: _ckgIsRepoDirty,
+      describe: () => ({
+        title: _ckgFailedSaves > 0 ? 'Save failed' : 'Saving your last edit',
+        message: _ckgFailedSaves > 0 ? 'Your last edit could not be saved to the cloud. Retry the save or leave anyway (the change may be lost)?' : 'A cloud save is still in flight. Wait briefly so it lands, or leave anyway?',
+        primaryLabel: _ckgFailedSaves > 0 ? 'Retry save' : 'Wait & save',
+        primaryAction: async () => {
+          // Give in-flight saves up to 3 seconds to settle. Retries
+          // happen on the next state change — there's no client-side
+          // queue to flush here.
+          const deadline = Date.now() + 3000;
+          while (_ckgIsRepoDirty() && Date.now() < deadline) {
+            await new Promise(r => setTimeout(r, 200));
+          }
+        },
+        secondaryLabel: 'Leave anyway',
+        secondaryAction: () => {
+          _ckgPendingSaves = 0;
+          _ckgFailedSaves = 0;
+        }
+      })
+    });
+    return true;
+  }
+  if (!tryRegister()) {
+    // Guard script may load after us; retry briefly.
+    let tries = 0;
+    const iv = setInterval(() => {
+      if (tryRegister() || ++tries > 20) clearInterval(iv);
+    }, 250);
+  }
+})();
 async function sbRepoLoad() {
   const s = getSB();
   if (!s) return null;
@@ -17577,11 +17637,18 @@ async function sbRepoLoad() {
   }
 }
 async function sbRepoSave(item) {
+  _ckgSaveStarted();
   try {
     const s = getSB();
-    if (!s) return false;
+    if (!s) {
+      _ckgSaveFailed();
+      return false;
+    }
     const uid = window._user?.id;
-    if (!uid) return false; // RLS will reject without user_id
+    if (!uid) {
+      _ckgSaveFailed();
+      return false;
+    } // RLS will reject without user_id
     const email = window._user?.email || '';
     const {
       error
@@ -17599,10 +17666,14 @@ async function sbRepoSave(item) {
     // of the same policy are silent no-ops.
     if (!error) {
       trackPolicyScanned(item).catch(() => {});
+      _ckgSaveOk();
+    } else {
+      _ckgSaveFailed();
     }
     return !error;
   } catch (e) {
     console.warn('[Repo] Save failed:', e.message);
+    _ckgSaveFailed();
     return false;
   }
 }
