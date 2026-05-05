@@ -609,9 +609,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.55';
-const APP_VERSION_DATE = '2026-05-05';
-const APP_VERSION_NAME = 'Visual Report PDF V3 — pt units, doubled type, 7-page magazine layout per spec';
+const APP_VERSION = 'v2.4.0-rc1.56';
+const APP_VERSION_DATE = '2026-05-06';
+const APP_VERSION_NAME = 'Family Visual Report V3 — concentration map, empty-member variant, plural & em-dash fixes';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -65696,7 +65696,7 @@ function ReportTab() {
       const kpis = [{
         label: 'Insured value',
         value: money(totalCoverage),
-        caption: activePolicies.length + ' policies',
+        caption: activePolicies.length + ' polic' + (activePolicies.length === 1 ? 'y' : 'ies'),
         color: T.sky,
         spark: [0.6, 0.65, 0.72, 0.78, 0.85, 0.9, 0.95, 1].map(v => v * (totalCoverage || 1))
       }, {
@@ -65708,7 +65708,7 @@ function ReportTab() {
       }, {
         label: 'Active policies',
         value: String(activePolicies.length),
-        caption: activeInsurers + ' insurers',
+        caption: activeInsurers + ' insurer' + (activeInsurers === 1 ? '' : 's'),
         color: T.lavender,
         spark: [activePolicies.length * 0.5, activePolicies.length * 0.6, activePolicies.length * 0.7, activePolicies.length * 0.8, activePolicies.length * 0.9, activePolicies.length * 0.95, activePolicies.length * 0.97, activePolicies.length]
       }, {
@@ -66541,63 +66541,113 @@ function ReportTab() {
     try {
       const advisorName = ((await dbGet('settings', 'advisorName').catch(() => null))?.value || '').trim();
       const advisorCompany = ((await dbGet('settings', 'advisorCompany').catch(() => null))?.value || '').trim();
+      const advisorMAS = ((await dbGet('settings', 'advisorMAS').catch(() => null))?.value || '').trim();
+      const advisorEmail = ((await dbGet('settings', 'advisorEmail').catch(() => null))?.value || '').trim();
+      const advisorPhone = ((await dbGet('settings', 'advisorPhone').catch(() => null))?.value || '').trim();
       const jsPDF = await ensureReportPdfEngine();
-      const doc = new jsPDF('p', 'mm', 'a4');
-      const W = 210,
-        H = 297,
-        M = 10,
-        CW = W - M * 2;
+      const doc = new jsPDF({
+        unit: 'pt',
+        format: 'a4',
+        orientation: 'p'
+      });
+
+      // v2.4.0-rc1.56 — Family Visual Report V3 per FAMILY_PDF_REPORT_FIX.md.
+      //   - pt units to match spec (M=56pt = 20mm sides, 64pt = 22mm top/bottom)
+      //   - REPORT_TOKENS palette + REPORT_TYPE scale (body ≥ 9pt, KPI ≥ 28pt)
+      //   - 7-page plan: cover / overview / concentration map / distribution
+      //     / member detail (1 page each) / next steps + sign-off
+      //   - Bug fixes: pluralization helper, dash() for empty values, em-dash
+      //     in concentration sentence, defensive charSpace=0, riders as chips,
+      //     wider product column with 2-line wrap, no '& note placeholder leak,
+      //     coverage-gap empty-state for under-covered members.
+      const W = 595.28,
+        H = 841.89,
+        M = 56,
+        MY = 64,
+        CW = W - M * 2,
+        GUTTER = 12,
+        R = 14;
       const today = new Date().toLocaleDateString('en-SG', {
         day: 'numeric',
         month: 'long',
         year: 'numeric'
       });
-
-      // v2.4.0-rc1.52 — Family Visual Report rebuilt to match the V2 individual
-      // PDF theme (cream paper + coral accents). Replaces the old dark
-      // navy/gold layout that crashed on `doc.setTextColor(GOLD_OR_WHITE)`
-      // because GOLD/WHITE are RGB tuples and setTextColor needed them
-      // spread: doc.setTextColor(...arr).
       const T = {
-        bg: [251, 244, 234],
-        surface: [255, 248, 239],
-        surface2: [255, 251, 246],
-        recessed: [243, 234, 223],
-        border: [229, 216, 202],
-        text: [47, 36, 28],
-        text2: [93, 80, 70],
-        text3: [142, 126, 112],
-        primary: [232, 88, 67],
-        primarySoft: [255, 224, 216],
-        danger: [217, 87, 69],
-        dangerSoft: [255, 224, 218],
-        warn: [217, 154, 50],
+        paper: [250, 246, 238],
+        card: [245, 239, 227],
+        cardSoft: [237, 227, 210],
+        hairline: [220, 208, 189],
+        white: [255, 255, 255],
+        ink: [46, 37, 25],
+        ink2: [86, 70, 54],
+        ink3: [139, 122, 102],
+        ink4: [181, 168, 146],
+        primary: [232, 88, 65],
+        primarySoft: [251, 231, 225],
+        primaryDim: [248, 211, 198],
+        protection: [232, 88, 65],
+        savings: [125, 179, 137],
+        health: [232, 165, 165],
+        investment: [157, 143, 217],
+        retirement: [232, 193, 112],
+        // Member identity colors — assigned in roster order per spec
+        memberColors: [[232, 88, 65], [125, 179, 137], [157, 143, 217], [232, 165, 165], [232, 193, 112], [91, 163, 208]],
+        good: [91, 170, 117],
+        goodSoft: [221, 241, 226],
+        warn: [232, 184, 92],
         warnSoft: [255, 237, 196],
-        success: [116, 185, 137],
-        successSoft: [221, 241, 226],
+        bad: [212, 96, 77],
+        badSoft: [255, 224, 218],
         sky: [126, 182, 217],
         skySoft: [222, 239, 248],
-        lavender: [183, 160, 216],
-        lavenderSoft: [236, 229, 248],
-        sun: [242, 201, 76],
-        sunSoft: [255, 244, 204],
-        sage: [145, 191, 154],
+        sage: [125, 179, 137],
         sageSoft: [226, 242, 229],
-        white: [255, 255, 255]
+        lavender: [157, 143, 217],
+        lavenderSoft: [236, 229, 248],
+        sun: [232, 193, 112],
+        sunSoft: [255, 244, 204]
+      };
+      const SZ = {
+        cover_h1: 42,
+        page_h1: 22,
+        page_eyebrow: 8,
+        kpi_number: 28,
+        kpi_unit: 12,
+        body_lg: 11,
+        body: 9,
+        table: 8.5,
+        caption: 7.5,
+        footer: 7
+      };
+      const FONT = {
+        serif: 'times',
+        sans: 'helvetica',
+        mono: 'courier'
       };
 
-      // ─── Helpers (mirrored from V2 individual PDF for consistency) ───
+      // ─── Helpers ───
       const inactiveStatuses = new Set(['matured', 'surrendered', 'lapsed']);
       const isInactive = pol => inactiveStatuses.has(String(pol.status || '').toLowerCase());
       const isSinglePremium = pol => !!(pol.premSingle || pol.premiumStructure === 'Single Premium' || pol.premFrequency === 'single');
-      const n = v => {
+      const num = v => {
         if (v === null || v === undefined || v === '') return 0;
         if (typeof v === 'number') return Number.isFinite(v) ? v : 0;
         const x = parseFloat(String(v).replace(/[^0-9.-]/g, ''));
         return Number.isFinite(x) ? x : 0;
       };
+      const clamp = (v, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, v));
+      // v2.4.0-rc1.56 — Pluralization helper. Replaces patterns like
+      // `${n} insurers` which read "1 insurers" when n===1.
+      const pl = (n, s) => n + ' ' + s + (n === 1 ? '' : 's');
+      // v2.4.0-rc1.56 — Empty-value placeholder. Returns "—" for null /
+      // undefined / 0 (where 0 is implausible — age, sum assured, etc.),
+      // otherwise returns the formatted value.
+      const dash = (v, formatter) => {
+        if (v == null || v === '' || typeof v === 'number' && v === 0) return '—';
+        return formatter ? formatter(v) : String(v);
+      };
       const money = (value, opts = {}) => {
-        const valueN = Math.round(n(value));
+        const valueN = Math.round(num(value));
         const sign = valueN < 0 ? '-' : '';
         const abs = Math.abs(valueN);
         const suffix = opts.suffix || '';
@@ -66606,173 +66656,154 @@ function ReportTab() {
         if (abs >= 1000) return sign + 'S$' + Math.round(abs / 1000).toLocaleString('en-SG') + 'k' + suffix;
         return sign + 'S$' + abs.toLocaleString('en-SG') + suffix;
       };
-      const safe = (s, max = 48) => {
+      const safe = (s, max = 64) => {
         const out = String(s || '').replace(/\s+/g, ' ').trim();
         return out.length > max ? out.slice(0, max - 1) + '…' : out;
       };
-      const split = (s, w) => doc.splitTextToSize(String(s || ''), w);
-      const setFont = (family = 'helvetica', style = 'normal', size = 8, color = T.text) => {
+      const setFont = (family = FONT.sans, style = 'normal', size = SZ.body, color = T.ink) => {
         doc.setFont(family, style);
         doc.setFontSize(size);
         doc.setTextColor(...color);
       };
+      // v2.4.0-rc1.56 — All text() calls reset charSpace=0 to defend against
+      // any prior call that set tracking and didn't restore. Spec called this
+      // out as the root cause of "I n t e g r a t e d   S h i e l d" gibberish.
       const text = (s, x, y, opts = {}) => {
-        setFont(opts.family || 'helvetica', opts.style || 'normal', opts.size || 8, opts.color || T.text);
+        setFont(opts.family || FONT.sans, opts.style || 'normal', opts.size || SZ.body, opts.color || T.ink);
+        const drawOpts = {};
+        if (opts.align) drawOpts.align = opts.align;
+        drawOpts.charSpace = opts.charSpace != null ? opts.charSpace : 0;
         if (opts.maxW) {
-          const lines = split(s, opts.maxW).slice(0, opts.maxLines || 99);
-          doc.text(lines, x, y, opts.align ? {
-            align: opts.align
-          } : undefined);
-          return lines.length * (opts.lineH || 4);
+          const lines = doc.splitTextToSize(String(s || ''), opts.maxW).slice(0, opts.maxLines || 99);
+          doc.text(lines, x, y, drawOpts);
+          return lines.length * (opts.lineH || (opts.size || SZ.body) * 1.35);
         }
-        doc.text(String(s), x, y, opts.align ? {
-          align: opts.align
-        } : undefined);
-        return opts.lineH || 4;
+        doc.text(String(s == null ? '' : s), x, y, drawOpts);
+        return (opts.size || SZ.body) * 1.35;
       };
-      const label = (s, x, y, color = T.text3) => text(String(s).toUpperCase(), x, y, {
-        size: 6.4,
-        style: 'bold',
-        color
-      });
-      const card = (x, y, w, h, fill = T.surface, stroke = T.border, r = 3) => {
+      const eyebrow = (s, x, y, color = T.ink3) => {
+        setFont(FONT.sans, 'bold', SZ.page_eyebrow, color);
+        doc.text(String(s).toUpperCase(), x, y, {
+          charSpace: 0.6
+        });
+      };
+      const card = (x, y, w, h, fill = T.card, stroke = T.hairline, radius = R, opts = {}) => {
         doc.setFillColor(...fill);
         doc.setDrawColor(...stroke);
-        doc.setLineWidth(0.2);
-        doc.roundedRect(x, y, w, h, r, r, 'FD');
+        doc.setLineWidth(opts.lineWidth || 0.4);
+        doc.roundedRect(x, y, w, h, radius, radius, opts.style || 'FD');
       };
       const pill = (s, x, y, tone = 'primary', opts = {}) => {
         const m = {
           primary: [T.primarySoft, T.primary],
-          danger: [T.dangerSoft, T.danger],
-          success: [T.successSoft, T.success],
+          danger: [T.badSoft, T.bad],
+          success: [T.goodSoft, T.good],
           warn: [T.warnSoft, T.warn],
           sky: [T.skySoft, T.sky],
-          ghost: [T.recessed, T.text2]
+          ghost: [T.cardSoft, T.ink3]
         }[tone] || [T.primarySoft, T.primary];
-        setFont('helvetica', 'bold', opts.size || 6, m[1]);
-        const w = opts.w || Math.max(15, doc.getTextWidth(String(s)) + 5);
-        const h = opts.h || 5.2;
+        const sz = opts.size || 7.5;
+        setFont(FONT.sans, 'bold', sz, m[1]);
+        const pw = opts.w || Math.max(28, doc.getTextWidth(String(s)) + 12);
+        const ph = opts.h || sz + 7;
         doc.setFillColor(...m[0]);
         doc.setDrawColor(...m[0]);
-        doc.roundedRect(x, y, w, h, h / 2, h / 2, 'FD');
-        doc.text(String(s), x + w / 2, y + h * 0.7, {
-          align: 'center'
+        doc.roundedRect(x, y, pw, ph, ph / 2, ph / 2, 'FD');
+        setFont(FONT.sans, 'bold', sz, m[1]);
+        doc.text(String(s), x + pw / 2, y + ph * 0.7, {
+          align: 'center',
+          charSpace: 0
         });
-        return w;
+        return pw;
+      };
+      // Small chip for riders (matches spec: cardSoft bg, ink2 text, 5pt radius, 7pt font)
+      const chip = (s, x, y, opts = {}) => {
+        const sz = opts.size || 7;
+        setFont(FONT.sans, 'normal', sz, T.ink2);
+        const cw = doc.getTextWidth(String(s)) + 8;
+        const ch = sz + 4;
+        doc.setFillColor(...T.cardSoft);
+        doc.setDrawColor(...T.cardSoft);
+        doc.roundedRect(x, y, cw, ch, 5, 5, 'FD');
+        doc.text(String(s), x + cw / 2, y + ch * 0.72, {
+          align: 'center',
+          charSpace: 0
+        });
+        return cw;
+      };
+      const decorativeBlob = (cx, cy, baseR = 200, color = T.primary) => {
+        const layers = [[baseR, 0.04], [baseR * 0.9, 0.06], [baseR * 0.75, 0.08], [baseR * 0.55, 0.10], [baseR * 0.35, 0.14]];
+        layers.forEach(([r, a]) => {
+          const g = doc.GState ? doc.GState({
+            opacity: a
+          }) : null;
+          if (g) doc.setGState(g);
+          doc.setFillColor(...color);
+          doc.circle(cx, cy, r, 'F');
+        });
+        if (doc.GState) doc.setGState(doc.GState({
+          opacity: 1
+        }));
       };
       const pageBg = () => {
-        doc.setFillColor(...T.bg);
+        doc.setFillColor(...T.paper);
         doc.rect(0, 0, W, H, 'F');
-        doc.setFillColor(...T.primarySoft);
-        doc.circle(W + 10, -8, 38, 'F');
+        decorativeBlob(W + 30, -30, 220, T.primary);
+        decorativeBlob(-50, H + 40, 180, T.sun);
       };
-      const pageHeader = (sectionN, title, subtitle) => {
-        pageBg();
-        label('POLICYLENS', M, 8, T.primary);
-        text('Family portfolio review', M + 25, 8, {
-          size: 6.4,
-          color: T.text3
+      const sectionBand = (label, accent = T.primary) => {
+        doc.setFillColor(...accent);
+        doc.rect(0, 0, W, 24, 'F');
+        setFont(FONT.sans, 'bold', SZ.page_eyebrow, T.white);
+        doc.text(String(label).toUpperCase(), M, 16, {
+          charSpace: 0.7
         });
-        text(today, W - M, 8, {
-          size: 7,
-          color: T.text2,
+        setFont(FONT.mono, 'normal', 7, T.white);
+        doc.text(today, W - M, 16, {
           align: 'right',
-          style: 'italic'
+          charSpace: 0
         });
-        text(subtitle || '', W / 2, 15, {
-          size: 7.2,
-          color: T.text2,
-          align: 'center'
-        });
-        doc.setDrawColor(...T.border);
-        doc.setLineWidth(0.16);
-        doc.line(M, 18.5, W - M, 18.5);
-        if (sectionN) {
-          setFont('helvetica', 'bold', 6.4, T.primary);
-          doc.text(String(sectionN).padStart(2, '0'), M, 25);
-          text(title, M + 8, 25, {
-            family: 'times',
-            style: 'bold',
-            size: 13,
-            color: T.text
-          });
-        } else {
-          text(title, M, 25, {
-            family: 'times',
-            style: 'bold',
-            size: 13,
-            color: T.text
-          });
-        }
+        doc.setDrawColor(...T.hairline);
+        doc.setLineWidth(0.4);
+        doc.line(M, 36, W - M, 36);
       };
-      const kpi = (x, y, w, h, title, value, note, color = T.primary) => {
-        card(x, y, w, h, T.surface, T.border, 3);
+      const lensMark = (cx, cy, r = 4, color = T.primary) => {
         doc.setFillColor(...color);
-        doc.circle(x + w - 4, y + 4, 2, 'F');
-        label(title, x + 3, y + 5);
-        text(value, x + 3, y + 13, {
-          family: 'times',
-          style: 'bold',
-          size: 11,
-          color: T.text
-        });
-        if (note) text(note, x + 3, y + h - 3, {
-          size: 5.8,
-          color: T.text3,
-          maxW: w - 6,
-          maxLines: 1
-        });
+        doc.circle(cx, cy, r, 'F');
+        doc.setFillColor(...T.paper);
+        doc.circle(cx, cy, r * 0.45, 'F');
       };
-      const tableRow = (x, y, widths, values, opts = {}) => {
-        const h = opts.h || 7.4;
-        const fill = opts.header ? T.recessed : opts.alt ? T.surface2 : T.surface;
-        doc.setFillColor(...fill);
-        doc.setDrawColor(...T.border);
-        doc.setLineWidth(0.12);
-        doc.rect(x, y, widths.reduce((s, w) => s + w, 0), h, 'FD');
-        let cx = x;
-        values.forEach((v, i) => {
-          const w = widths[i];
-          const cellPadL = 2,
-            cellPadR = 2;
-          const align = opts.align && opts.align[i] || 'left';
-          const tx = align === 'right' ? cx + w - cellPadR : align === 'center' ? cx + w / 2 : cx + cellPadL;
-          const sty = opts.header ? 'bold' : opts.styles && opts.styles[i] || 'normal';
-          const sz = opts.header ? 5.6 : opts.sizes && opts.sizes[i] || 6.6;
-          const col = opts.header ? T.text3 : opts.colors && opts.colors[i] || T.text2;
-          text(v == null ? '' : String(v), tx, y + h * 0.66, {
-            size: sz,
-            style: sty,
-            color: col,
-            align,
-            maxW: w - cellPadL - cellPadR,
-            maxLines: 1
-          });
-          cx += w;
+      // SVG-drawn warning triangle (per spec working rules: no emoji codepoints)
+      const warnIcon = (cx, cy, size = 14, color) => {
+        const c = color || T.warn;
+        const h = size,
+          w = size * 1.05;
+        doc.setFillColor(...c);
+        doc.triangle(cx - w / 2, cy + h / 2, cx + w / 2, cy + h / 2, cx, cy - h / 2, 'F');
+        // Exclamation
+        setFont(FONT.sans, 'bold', size * 0.65, T.white);
+        doc.text('!', cx, cy + h / 2 - 2, {
+          align: 'center',
+          charSpace: 0
         });
       };
       const footer = () => {
         const pages = doc.getNumberOfPages();
         for (let i = 1; i <= pages; i++) {
           doc.setPage(i);
-          doc.setDrawColor(...T.border);
-          doc.setLineWidth(0.15);
-          doc.line(M, H - 9, W - M, H - 9);
-          text('PolicyLens · Family Visual · Confidential', M, H - 5, {
-            size: 5.6,
-            color: T.text3
+          doc.setDrawColor(...T.hairline);
+          doc.setLineWidth(0.4);
+          doc.line(M, H - MY + 22, W - M, H - MY + 22);
+          lensMark(M + 4, H - MY + 32, 3.5, T.primary);
+          setFont(FONT.sans, 'normal', SZ.footer - 0.5, T.ink3);
+          const ident = 'PolicyLens · ' + (familyName || 'Family') + ' · Confidential · For Financial Consultant Use' + (advisorName ? '   ·   ' + advisorName : '');
+          doc.text(ident, M + 12, H - MY + 35, {
+            charSpace: 0
           });
-          if (advisorName) text(advisorName + (advisorCompany ? ' · ' + advisorCompany : ''), W / 2, H - 5, {
-            size: 5.6,
-            color: T.text3,
-            align: 'center'
-          });
-          text(i + ' / ' + pages, W - M, H - 5, {
-            size: 5.6,
-            style: 'bold',
-            color: T.primary,
-            align: 'right'
+          setFont(FONT.mono, 'bold', SZ.footer, T.primary);
+          doc.text(i + ' / ' + pages, W - M, H - MY + 35, {
+            align: 'right',
+            charSpace: 0
           });
         }
       };
@@ -66803,7 +66834,7 @@ function ReportTab() {
       }
       if (!members.length) throw new Error('No family clients found. Assign a family group in Clients > Family first.');
       const familyName = activeFamily || members[0]?.familyGroup || (clientName ? clientName + ' Family' : 'Family Portfolio');
-      const memberRows = members.map(ds => {
+      const memberRows = members.map((ds, idx) => {
         const profile = profiles[ds.clientId] || {
           name: ds.clientName || ''
         };
@@ -66812,13 +66843,15 @@ function ReportTab() {
         return {
           ds,
           profile,
-          name: profile.name || ds.clientName || 'Untitled',
+          name: (profile.name || ds.clientName || 'Untitled').trim(),
           age: typeof getProfileAge === 'function' ? getProfileAge(profile) : null,
           gender: profile.gender || '',
+          colorIdx: idx % T.memberColors.length,
+          color: T.memberColors[idx % T.memberColors.length],
           policies: memberPolicies,
           recurring: memberRecurring,
           annualPremium: memberRecurring.reduce((s, pol) => s + annualizedPremium(pol), 0),
-          sumAssured: memberPolicies.reduce((s, pol) => s + n(pol.sumAssured), 0),
+          sumAssured: memberPolicies.reduce((s, pol) => s + num(pol.sumAssured), 0),
           insurers: new Set(memberPolicies.map(p => String(p.insurer || '').trim()).filter(Boolean)).size
         };
       }).sort((a, b) => a.name.localeCompare(b.name));
@@ -66829,96 +66862,458 @@ function ReportTab() {
       const totalAnnualPrem = memberRows.reduce((s, m) => s + m.annualPremium, 0);
       const totalSA = memberRows.reduce((s, m) => s + m.sumAssured, 0);
       const totalInsurers = new Set(familyPolicies.map(p => String(p.insurer || '').trim()).filter(Boolean)).size;
-      const familyMeta = memberRows.length + ' members · ' + familyPolicies.length + ' policies';
+      const familyMeta = pl(memberRows.length, 'member') + ' · ' + pl(familyPolicies.length, 'policy').replace('policys', 'policies') + ' · ' + pl(totalInsurers, 'insurer');
+
+      // Concentration analysis
+      const maxMember = memberRows.reduce((m, r) => m == null || r.sumAssured > m.sumAssured ? r : m, null);
+      const maxShare = maxMember && totalSA > 0 ? maxMember.sumAssured / totalSA : 0;
+      const isConcentrated = memberRows.length > 1 && maxShare > 0.7;
+
+      // Underprotected member detection — used for empty-state variant
+      const underprotectedMembers = memberRows.filter(m => m.sumAssured < 50000 && memberRows.length > 1);
 
       // ─────────────────────────────────────────────────────────────────
-      // PAGE 1 — Family overview
+      // PAGE 1 — Family Cover
       // ─────────────────────────────────────────────────────────────────
-      pageHeader(1, 'Family overview', familyName + ' · ' + familyMeta);
-
-      // Top: Family hero card with name + diagnosis
-      card(M, 30, CW, 36, T.surface, T.border, 4);
-      label('Household', M + 5, 38);
-      text(familyName, M + 5, 50, {
-        family: 'times',
+      pageBg();
+      lensMark(M, MY - 20, 5, T.primary);
+      text('PolicyLens', M + 11, MY - 16, {
+        family: FONT.serif,
         style: 'bold',
-        size: 20,
-        color: T.text
+        size: 13,
+        color: T.ink
       });
-      const eldest = memberRows.reduce((m, r) => m == null || r.age != null && r.age > (m.age || 0) ? r : m, null);
-      const youngest = memberRows.reduce((m, r) => m == null || r.age != null && r.age < (m.age || 999) ? r : m, null);
-      const ageSpan = eldest && youngest && eldest !== youngest && eldest.age != null && youngest.age != null ? youngest.age + '-' + eldest.age : eldest?.age != null ? String(eldest.age) : '—';
-      text('Ages: ' + ageSpan + '   ·   ' + memberRows.length + ' member' + (memberRows.length === 1 ? '' : 's') + '   ·   ' + totalInsurers + ' insurer' + (totalInsurers === 1 ? '' : 's'), M + 5, 60, {
-        size: 8,
-        color: T.text2,
-        maxW: CW - 10,
-        maxLines: 1
+      setFont(FONT.mono, 'normal', SZ.footer + 1, T.ink3);
+      doc.text(today, W - M, MY - 16, {
+        align: 'right',
+        charSpace: 0
       });
-
-      // KPI strip — 4 cards
-      const kpiY1 = 72,
-        kpiH1 = 26,
-        kpiW1 = (CW - 3 * 3) / 4;
-      const kpis = [['Members', String(memberRows.length), 'in household', T.lavender], ['Active policies', String(familyPolicies.length), totalInsurers + ' insurers', T.sky], ['Annual premium', money(totalAnnualPrem), 'family total', T.sun], ['Sum assured', money(totalSA), 'family total', T.primary]];
-      kpis.forEach((k, i) => kpi(M + i * (kpiW1 + 3), kpiY1, kpiW1, kpiH1, k[0], k[1], k[2], k[3]));
-
-      // Diagnosis
-      const diagY = kpiY1 + kpiH1 + 6;
-      card(M, diagY, CW, 24, T.surface, T.border, 3);
-      label('Family diagnosis', M + 5, diagY + 7);
-      const eldestPol = eldest ? eldest.policies.length + ' policies, ' + money(eldest.sumAssured) + ' SA' : 'no policies';
-      const concentratedRisk = (() => {
-        const max = Math.max(0, ...memberRows.map(m => m.sumAssured));
-        const total = totalSA || 1;
-        const top = memberRows.find(m => m.sumAssured === max && max > 0);
-        if (!top || total <= 0) return null;
-        const pct = Math.round(max / total * 100);
-        if (pct < 60 || memberRows.length < 2) return null;
-        return top.name + ' carries ' + pct + '% of household sum assured — review concentration risk for the rest of the family.';
-      })();
-      const diagSentences = [memberRows.length + ' member' + (memberRows.length === 1 ? '' : 's') + ' across ' + familyPolicies.length + ' polic' + (familyPolicies.length === 1 ? 'y' : 'ies') + ' totalling ' + money(totalSA) + ' of cover at ' + money(totalAnnualPrem) + ' / yr.', eldest && eldest.age != null ? eldest.name + (eldest === youngest ? '' : ' (eldest at age ' + eldest.age + ')') + ' has ' + eldestPol + '.' : null, concentratedRisk].filter(Boolean).join(' ');
-      text(diagSentences, M + 5, diagY + 13, {
-        size: 7.6,
-        color: T.text2,
-        maxW: CW - 10,
-        maxLines: 3,
-        lineH: 4.2
+      eyebrow('Family portfolio review', M, MY + 76, T.ink3);
+      text('Prepared for the', M, MY + 106, {
+        family: FONT.sans,
+        style: 'normal',
+        size: 14,
+        color: T.ink2
+      });
+      // Family name in Fraunces italic 56pt ink (NOT coral — coral reserved for warning)
+      text(familyName, M, MY + 168, {
+        family: FONT.serif,
+        style: 'bolditalic',
+        size: SZ.cover_h1 + 14,
+        color: T.ink
+      });
+      // Family meta
+      text(familyMeta, M, MY + 200, {
+        family: FONT.sans,
+        style: 'normal',
+        size: SZ.body_lg,
+        color: T.ink2
       });
 
-      // Members table
-      const memTblY = diagY + 24 + 8;
-      label('Family members', M, memTblY);
-      const memCols = [44, 14, 22, 32, 32, CW - 44 - 14 - 22 - 32 - 32];
-      tableRow(M, memTblY + 3, memCols, ['Member', 'Age', 'Policies', 'Annual premium', 'Sum assured', 'Insurers'], {
-        header: true,
-        h: 6
+      // Household coverage card — page's only weighty card surface
+      const hcY = MY + 246,
+        hcH = 130;
+      card(M, hcY, CW, hcH, T.card, T.hairline, R, {
+        lineWidth: 0.5
+      });
+      // Two columns: SA + Premium
+      eyebrow('Household coverage', M + 24, hcY + 30, T.ink3);
+      // Sum Assured
+      text(dash(totalSA, money), M + 24, hcY + 80, {
+        family: FONT.serif,
+        style: 'bold',
+        size: 48,
+        color: T.ink
+      });
+      text('total sum assured', M + 24, hcY + 100, {
+        family: FONT.sans,
+        style: 'normal',
+        size: SZ.body,
+        color: T.ink3
+      });
+      // Annual Premium
+      text(dash(totalAnnualPrem, money) + ' / yr', M + CW / 2 + 12, hcY + 80, {
+        family: FONT.serif,
+        style: 'bold',
+        size: 32,
+        color: T.ink
+      });
+      text('in premium', M + CW / 2 + 12, hcY + 100, {
+        family: FONT.sans,
+        style: 'normal',
+        size: SZ.body,
+        color: T.ink3
+      });
+
+      // Concentration warning — if applicable, on cover (per spec)
+      if (isConcentrated) {
+        const wY = hcY + hcH + 24;
+        warnIcon(M + 12, wY + 8, 14, T.primary);
+        text(Math.round(maxShare * 100) + '% of household cover sits with one member.', M + 30, wY + 6, {
+          family: FONT.sans,
+          style: 'bold',
+          size: SZ.body_lg,
+          color: T.primary
+        });
+        text('See page 3.', M + 30, wY + 22, {
+          family: FONT.sans,
+          style: 'normal',
+          size: SZ.body,
+          color: T.ink3
+        });
+      }
+
+      // Advisor block
+      const advY = H - MY - 80;
+      doc.setDrawColor(...T.hairline);
+      doc.setLineWidth(0.4);
+      doc.line(M, advY, M + 80, advY);
+      eyebrow('Prepared by', M, advY + 18, T.ink3);
+      lensMark(M, advY + 36, 4, T.primary);
+      const advisorLine = advisorName || 'Your advisor';
+      text(advisorLine + (advisorMAS ? ' · MAS Rep #' + advisorMAS : ''), M + 9, advY + 39, {
+        family: FONT.sans,
+        style: 'bold',
+        size: SZ.body_lg,
+        color: T.ink
+      });
+      const contactBits = [advisorEmail, advisorPhone].filter(Boolean).join(' · ');
+      if (contactBits || advisorCompany) {
+        text(advisorCompany ? advisorCompany + (contactBits ? ' · ' + contactBits : '') : contactBits, M + 9, advY + 56, {
+          family: FONT.sans,
+          style: 'normal',
+          size: SZ.body,
+          color: T.ink3
+        });
+      }
+
+      // ─────────────────────────────────────────────────────────────────
+      // PAGE 2 — Family overview
+      // ─────────────────────────────────────────────────────────────────
+      doc.addPage();
+      pageBg();
+      sectionBand('01 · Family overview', T.primary);
+      eyebrow('At a glance', M, MY - 20, T.ink3);
+
+      // 4-KPI strip
+      const kpiY = MY,
+        kpiH = 100,
+        kpiW = (CW - GUTTER * 3) / 4;
+      const kpis = [{
+        label: 'Members',
+        value: String(memberRows.length),
+        caption: 'in household',
+        color: T.ink3
+      }, {
+        label: 'Active policies',
+        value: dash(familyPolicies.length, String),
+        caption: pl(totalInsurers, 'insurer'),
+        color: T.protection
+      }, {
+        label: 'Annual premium',
+        value: dash(totalAnnualPrem, money),
+        caption: 'family total',
+        color: T.savings
+      }, {
+        label: 'Sum assured',
+        value: dash(totalSA, money),
+        caption: 'family total',
+        color: T.investment
+      }];
+      kpis.forEach((k, i) => {
+        const x = M + i * (kpiW + GUTTER);
+        card(x, kpiY, kpiW, kpiH, T.card, T.hairline, 12);
+        const g = doc.GState ? doc.GState({
+          opacity: 0.18
+        }) : null;
+        if (g) doc.setGState(g);
+        doc.setFillColor(...k.color);
+        doc.circle(x + kpiW - 14, kpiY + 14, 16, 'F');
+        if (doc.GState) doc.setGState(doc.GState({
+          opacity: 1
+        }));
+        eyebrow(k.label, x + 14, kpiY + 22, T.ink3);
+        text(k.value, x + 14, kpiY + 56, {
+          family: FONT.serif,
+          style: 'bold',
+          size: SZ.kpi_number,
+          color: T.ink
+        });
+        text(k.caption, x + 14, kpiY + kpiH - 14, {
+          size: SZ.body,
+          color: T.ink3,
+          maxW: kpiW - 28,
+          maxLines: 1
+        });
+      });
+
+      // Family diagnosis card — em-dash before "review concentration risk"
+      const diagY = kpiY + kpiH + 20,
+        diagH = 90;
+      card(M, diagY, CW, diagH, T.cardSoft, T.hairline, R);
+      eyebrow('Family diagnosis', M + 24, diagY + 26, T.ink3);
+      const diagSentences = [];
+      diagSentences.push(pl(memberRows.length, 'member') + ' across ' + pl(familyPolicies.length, 'policy').replace('policys', 'policies') + ' totalling ' + dash(totalSA, money) + ' of cover at ' + dash(totalAnnualPrem, money) + ' / yr.');
+      if (isConcentrated && maxMember) {
+        // v2.4.0-rc1.56 — Em-dash joins the concentration fact to the recommendation
+        // (per spec bug #7). Was a hard line break that read as a fragment.
+        diagSentences.push(maxMember.name + ' carries ' + Math.round(maxShare * 100) + '% of household sum assured — review concentration risk for the rest of the family.');
+      }
+      if (totalAnnualPrem > 0 && memberRows.length > 1) {
+        const topPaymer = memberRows.reduce((m, r) => m == null || r.annualPremium > m.annualPremium ? r : m, null);
+        const premShare = topPaymer && totalAnnualPrem > 0 ? Math.round(topPaymer.annualPremium / totalAnnualPrem * 100) : 0;
+        if (premShare > 70) diagSentences.push(topPaymer.name + ' funds ' + premShare + '% of recurring premium.');
+      }
+      text(diagSentences.join(' '), M + 24, diagY + 50, {
+        family: FONT.sans,
+        style: 'normal',
+        size: SZ.body_lg,
+        color: T.ink2,
+        maxW: CW - 48,
+        maxLines: 4,
+        lineH: 16
+      });
+
+      // Roster table
+      const rosterY = diagY + diagH + 20;
+      eyebrow('Family members', M, rosterY, T.ink3);
+      const rosterCols = [180, 50, 60, 90, 90, CW - 180 - 50 - 60 - 90 - 90];
+      const drawRosterRow = (yy, cells, opts = {}) => {
+        const fill = opts.header ? T.cardSoft : opts.alt ? T.card : T.paper;
+        const total = opts.total ? T.card : null;
+        doc.setFillColor(...(total || fill));
+        doc.setDrawColor(...T.hairline);
+        doc.setLineWidth(0.3);
+        doc.rect(M, yy, CW, opts.h || 24, 'FD');
+        let cx = M;
+        cells.forEach((c, i) => {
+          const w = rosterCols[i];
+          const align = opts.align && opts.align[i] || 'left';
+          const tx = align === 'right' ? cx + w - 8 : cx + (i === 0 && c?.dot ? 18 : 8);
+          const sty = opts.header ? 'bold' : opts.total ? 'bold' : opts.styles && opts.styles[i] || 'normal';
+          const sz = opts.header ? SZ.caption : SZ.table;
+          const col = opts.header ? T.ink3 : T.ink2;
+          // First column with member dot
+          if (i === 0 && c && typeof c === 'object' && c.dot) {
+            doc.setFillColor(...c.dot);
+            doc.circle(cx + 12, yy + (opts.h || 24) / 2, 3, 'F');
+            text(c.label, tx, yy + (opts.h || 24) * 0.65, {
+              family: FONT.sans,
+              style: sty,
+              size: sz,
+              color: opts.total ? T.ink : T.ink,
+              align,
+              maxW: w - 24,
+              maxLines: 1
+            });
+          } else {
+            text(c == null ? '' : String(c), tx, yy + (opts.h || 24) * 0.65, {
+              family: FONT.sans,
+              style: sty,
+              size: sz,
+              color: opts.total ? T.ink : col,
+              align,
+              maxW: w - 16,
+              maxLines: 1
+            });
+          }
+          cx += w;
+        });
+      };
+      drawRosterRow(rosterY + 6, ['Member', 'Age', 'Policies', 'Annual premium', 'Sum assured', 'Insurers'], {
+        header: true
       });
       memberRows.forEach((m, i) => {
-        tableRow(M, memTblY + 9 + i * 7.4, memCols, [m.name, m.age != null ? String(m.age) : '—', String(m.policies.length), money(m.annualPremium), money(m.sumAssured), String(m.insurers)], {
+        drawRosterRow(rosterY + 30 + i * 24, [{
+          dot: m.color,
+          label: m.name
+        }, dash(m.age, String), dash(m.policies.length, String), dash(m.annualPremium, money), dash(m.sumAssured, money), pl(m.insurers, 'insurer')], {
           alt: i % 2 === 1,
-          h: 7.4,
-          align: ['left', 'center', 'center', 'right', 'right', 'center'],
-          styles: ['bold', null, null, null, null, null],
-          colors: [T.text, T.text3, T.text2, T.text2, T.text, T.text3],
-          sizes: [7, 6.4, 6.4, 6.4, 6.6, 6.4]
+          align: ['left', 'center', 'center', 'right', 'right', 'left']
         });
       });
       // Total row
-      const totalRowY = memTblY + 9 + memberRows.length * 7.4;
-      tableRow(M, totalRowY, memCols, ['Family total', '', '', money(totalAnnualPrem), money(totalSA), String(totalInsurers)], {
-        header: true,
-        h: 7,
-        align: ['left', 'center', 'center', 'right', 'right', 'center'],
-        styles: ['bold', null, null, 'bold', 'bold', 'bold']
+      drawRosterRow(rosterY + 30 + memberRows.length * 24, ['Family total', '', String(familyPolicies.length), money(totalAnnualPrem), money(totalSA), pl(totalInsurers, 'insurer')], {
+        total: true,
+        h: 26,
+        align: ['left', 'center', 'center', 'right', 'right', 'left']
       });
 
       // ─────────────────────────────────────────────────────────────────
-      // PAGE 2 — Policy distribution
+      // PAGE 3 — Concentration & Coverage Map (NEW per spec)
       // ─────────────────────────────────────────────────────────────────
       doc.addPage();
-      pageHeader(2, 'Policy distribution', familyName + ' · ' + familyMeta);
+      pageBg();
+      sectionBand('02 · Coverage balance', T.primary);
+      eyebrow('Where the household cover sits', M, MY - 20, T.ink3);
+      text('Sum assured share by member — and where the gaps are.', M, MY, {
+        size: SZ.body_lg,
+        color: T.ink2
+      });
 
-      // By category (left) + By member (right)
+      // Concentration donut
+      const donutR = 90,
+        donutCX = M + donutR + 20,
+        donutCY = MY + 28 + donutR;
+      // Track
+      doc.setFillColor(...T.cardSoft);
+      doc.circle(donutCX, donutCY, donutR, 'F');
+      // Center hole
+      doc.setFillColor(...T.paper);
+      doc.circle(donutCX, donutCY, donutR * 0.62, 'F');
+      // Arc segments per member
+      let runningAngle = -Math.PI / 2;
+      memberRows.forEach(m => {
+        const share = totalSA > 0 ? m.sumAssured / totalSA : 0;
+        if (share <= 0) return;
+        const sweep = share * 2 * Math.PI;
+        // Approximate arc with thick polyline of triangles
+        const segs = Math.max(8, Math.ceil(sweep * 24));
+        for (let i = 0; i < segs; i++) {
+          const a1 = runningAngle + sweep * i / segs;
+          const a2 = runningAngle + sweep * (i + 1) / segs;
+          doc.setFillColor(...m.color);
+          // Two triangles forming a quad from inner-radius to outer-radius
+          const ri = donutR * 0.62,
+            ro = donutR;
+          doc.triangle(donutCX + Math.cos(a1) * ri, donutCY + Math.sin(a1) * ri, donutCX + Math.cos(a1) * ro, donutCY + Math.sin(a1) * ro, donutCX + Math.cos(a2) * ro, donutCY + Math.sin(a2) * ro, 'F');
+          doc.triangle(donutCX + Math.cos(a1) * ri, donutCY + Math.sin(a1) * ri, donutCX + Math.cos(a2) * ro, donutCY + Math.sin(a2) * ro, donutCX + Math.cos(a2) * ri, donutCY + Math.sin(a2) * ri, 'F');
+        }
+        runningAngle += sweep;
+      });
+      // Center label — concentration % (max share)
+      const centerColor = isConcentrated ? T.primary : T.ink;
+      text(Math.round(maxShare * 100) + '%', donutCX, donutCY + 6, {
+        family: FONT.serif,
+        style: 'bold',
+        size: 32,
+        color: centerColor,
+        align: 'center'
+      });
+      text('top member', donutCX, donutCY + 22, {
+        family: FONT.sans,
+        style: 'normal',
+        size: SZ.caption,
+        color: T.ink3,
+        align: 'center'
+      });
+
+      // Donut legend on the right
+      const legX = donutCX + donutR + 50,
+        legW = M + CW - legX;
+      eyebrow('Sum-assured share', legX, donutCY - donutR + 4, T.ink3);
+      memberRows.forEach((m, i) => {
+        const ly = donutCY - donutR + 24 + i * 30;
+        doc.setFillColor(...m.color);
+        doc.circle(legX + 6, ly + 4, 4, 'F');
+        text(m.name, legX + 18, ly + 6, {
+          family: FONT.sans,
+          style: 'bold',
+          size: SZ.body,
+          color: T.ink,
+          maxW: legW - 30 - 80,
+          maxLines: 1
+        });
+        const share = totalSA > 0 ? Math.round(m.sumAssured / totalSA * 100) : 0;
+        text(share + '%', legX + legW - 4, ly + 6, {
+          family: FONT.serif,
+          style: 'bold',
+          size: SZ.body_lg,
+          color: m.color,
+          align: 'right'
+        });
+        text(money(m.sumAssured), legX + legW - 4, ly + 18, {
+          family: FONT.sans,
+          size: SZ.caption,
+          color: T.ink3,
+          align: 'right'
+        });
+        // Mini bar
+        doc.setFillColor(...T.cardSoft);
+        doc.rect(legX + 18, ly + 13, legW - 30 - 60, 3, 'F');
+        if (share > 0) {
+          doc.setFillColor(...m.color);
+          doc.rect(legX + 18, ly + 13, (legW - 30 - 60) * (share / 100), 3, 'F');
+        }
+      });
+
+      // Coverage gap callout — only if there's an underprotected member
+      const calloutY = donutCY + donutR + 30;
+      if (underprotectedMembers.length > 0 && isConcentrated) {
+        const gap = underprotectedMembers[0];
+        const recAge = gap.age || 42;
+        const indicativePremium = Math.max(45, Math.round(20 + (recAge - 30) * 1.8));
+        card(M, calloutY, CW, 96, T.primarySoft, T.primaryDim, R, {
+          lineWidth: 0.6
+        });
+        // Coral left border 4pt
+        doc.setFillColor(...T.primary);
+        doc.rect(M, calloutY, 4, 96, 'F');
+        warnIcon(M + 22, calloutY + 18, 14, T.primary);
+        text('Coverage concentration', M + 42, calloutY + 22, {
+          family: FONT.serif,
+          style: 'bold',
+          size: SZ.page_h1 - 4,
+          color: T.primary
+        });
+        const gapText = gap.name + ' (age ' + (gap.age || '—') + ') holds ' + (gap.sumAssured > 0 ? 'only ' + money(gap.sumAssured) + ' in' : 'zero life') + ' cover. In the event of ' + (maxMember ? maxMember.name : 'the primary cover-holder') + '\'s death or disability, the household has limited replacement income from insurance. Recommend baseline term cover sized to ~10× annual contribution.';
+        text(gapText, M + 42, calloutY + 44, {
+          size: SZ.body_lg,
+          color: T.ink2,
+          maxW: CW - 60,
+          maxLines: 3,
+          lineH: 14
+        });
+        text('Indicative term life S$500k to age 65 ≈ ' + money(indicativePremium) + '/month at age ' + recAge + ' non-smoker.', M + 42, calloutY + 88, {
+          family: FONT.mono,
+          size: SZ.caption,
+          color: T.primary
+        });
+      }
+
+      // Per-member adequacy mini cards
+      const adequacyY = calloutY + (underprotectedMembers.length > 0 && isConcentrated ? 116 : 0) + 12;
+      eyebrow('Coverage adequacy by member', M, adequacyY, T.ink3);
+      const cards = memberRows.slice(0, 4);
+      const adW = (CW - GUTTER * (cards.length - 1)) / cards.length;
+      cards.forEach((m, i) => {
+        const x = M + i * (adW + GUTTER);
+        const adH = 80;
+        card(x, adequacyY + 8, adW, adH, T.card, T.hairline, 12);
+        // Member dot + name
+        doc.setFillColor(...m.color);
+        doc.circle(x + 12, adequacyY + 22, 4, 'F');
+        text(m.name, x + 24, adequacyY + 25, {
+          family: FONT.sans,
+          style: 'bold',
+          size: SZ.body,
+          color: T.ink,
+          maxW: adW - 32,
+          maxLines: 1
+        });
+        // Score = share of household cover (proxy for adequacy index)
+        const adScore = totalSA > 0 ? Math.round(m.sumAssured / totalSA * 100) : 0;
+        const scoreTone = adScore >= 30 ? T.good : adScore >= 10 ? T.warn : T.bad;
+        text(adScore + '%', x + 12, adequacyY + 56, {
+          family: FONT.serif,
+          style: 'bold',
+          size: 24,
+          color: scoreTone
+        });
+        text('share of household cover', x + 12, adequacyY + 72, {
+          size: SZ.caption,
+          color: T.ink3
+        });
+      });
+
+      // ─────────────────────────────────────────────────────────────────
+      // PAGE 4 — Distribution by category
+      // ─────────────────────────────────────────────────────────────────
+      doc.addPage();
+      pageBg();
+      sectionBand('03 · Policy distribution', T.primary);
+
+      // By category aggregation
       const byCat = {};
       familyPolicies.forEach(pol => {
         const key = pol.category || 'other';
@@ -66929,7 +67324,7 @@ function ReportTab() {
         };
         byCat[key].count++;
         byCat[key].prem += annualizedPremium(pol);
-        byCat[key].sa += n(pol.sumAssured);
+        byCat[key].sa += num(pol.sumAssured);
       });
       const catNames = {
         protection: 'Protection',
@@ -66941,96 +67336,215 @@ function ReportTab() {
         other: 'Other'
       };
       const catColors = {
-        protection: T.sky,
-        health: T.danger,
-        retirement: T.sun,
-        savings: T.sage,
-        investment: T.lavender,
-        maternity: T.lavender,
-        other: T.text3
+        protection: T.protection,
+        health: T.health,
+        retirement: T.retirement,
+        savings: T.savings,
+        investment: T.investment,
+        maternity: T.health,
+        other: T.ink4
       };
       const catEntries = Object.entries(byCat).sort((a, b) => b[1].prem - a[1].prem);
-      const catW = CW * 0.5 - 2,
-        memW = CW * 0.5 - 2,
-        memX = M + catW + 4;
-      label('By category', M, 30);
-      const catCols = [38, 12, 18, 22, catW - 38 - 12 - 18 - 22];
-      tableRow(M, 33, catCols, ['Category', '#', 'Share', 'Annual', 'Sum assured'], {
-        header: true,
-        h: 6
+
+      // Stacked horizontal bar
+      const sbY = MY,
+        sbH = 36;
+      doc.setFillColor(...T.cardSoft);
+      doc.roundedRect(M, sbY, CW, sbH, 6, 6, 'F');
+      let cursorX = M;
+      catEntries.forEach(([cat, row]) => {
+        const segW = totalAnnualPrem > 0 ? row.prem / totalAnnualPrem * CW : 0;
+        if (segW > 0) {
+          doc.setFillColor(...(catColors[cat] || T.protection));
+          doc.rect(cursorX, sbY, segW, sbH, 'F');
+          if (segW > 70) {
+            const pct = Math.round(row.prem / totalAnnualPrem * 100);
+            text((catNames[cat] || cat) + ' · ' + pct + '%', cursorX + 6, sbY + 16, {
+              family: FONT.sans,
+              style: 'bold',
+              size: SZ.caption,
+              color: T.white
+            });
+            text(money(row.prem), cursorX + 6, sbY + 28, {
+              family: FONT.serif,
+              style: 'bold',
+              size: SZ.body,
+              color: T.white
+            });
+          }
+          cursorX += segW;
+        }
+      });
+      doc.setDrawColor(...T.hairline);
+      doc.setLineWidth(0.4);
+      doc.roundedRect(M, sbY, CW, sbH, 6, 6, 'S');
+
+      // Legend
+      const sbLegY = sbY + sbH + 16;
+      let lgX = M;
+      catEntries.forEach(([cat, row]) => {
+        doc.setFillColor(...(catColors[cat] || T.protection));
+        doc.rect(lgX, sbLegY, 4, 4, 'F');
+        const lblTxt = (catNames[cat] || cat) + '  ' + money(row.prem);
+        text(lblTxt, lgX + 8, sbLegY + 4, {
+          family: FONT.sans,
+          style: 'normal',
+          size: SZ.body,
+          color: T.ink2
+        });
+        lgX += 8 + doc.getTextWidth(lblTxt) + 18;
+        if (lgX > W - M - 60) lgX = M;
+      });
+
+      // Two-column tables: BY CATEGORY (left), BY MEMBER (right)
+      const tblY = sbLegY + 28;
+      const colW = (CW - GUTTER) / 2;
+
+      // BY CATEGORY
+      eyebrow('By category', M, tblY, T.ink3);
+      const cCols = [80, 40, 100, colW - 80 - 40 - 100];
+      const drawCatRow = (yy, cells, opts = {}) => {
+        const fill = opts.header ? T.cardSoft : opts.warn ? T.badSoft : opts.alt ? T.card : T.paper;
+        doc.setFillColor(...fill);
+        doc.setDrawColor(...T.hairline);
+        doc.setLineWidth(0.3);
+        doc.rect(M, yy, colW, opts.h || 22, 'FD');
+        let cx = M;
+        cells.forEach((c, i) => {
+          const w = cCols[i];
+          const align = opts.align && opts.align[i] || 'left';
+          const tx = align === 'right' ? cx + w - 8 : cx + (i === 0 && c?.dot ? 22 : 8);
+          if (i === 0 && c && typeof c === 'object' && c.dot) {
+            doc.setFillColor(...c.dot);
+            doc.circle(cx + 14, yy + (opts.h || 22) / 2, 3, 'F');
+            text(c.label, tx, yy + (opts.h || 22) * 0.65, {
+              family: FONT.sans,
+              style: opts.header ? 'bold' : 'bold',
+              size: opts.header ? SZ.caption : SZ.table,
+              color: opts.header ? T.ink3 : T.ink,
+              align,
+              maxW: w - 24,
+              maxLines: 1
+            });
+          } else {
+            text(c == null ? '' : String(c), tx, yy + (opts.h || 22) * 0.65, {
+              family: FONT.sans,
+              style: opts.header ? 'bold' : 'normal',
+              size: opts.header ? SZ.caption : SZ.table,
+              color: opts.header ? T.ink3 : T.ink2,
+              align,
+              maxW: w - 16,
+              maxLines: 1
+            });
+          }
+          cx += w;
+        });
+      };
+      drawCatRow(tblY + 8, ['Category', '#', 'Annual', 'Sum assured'], {
+        header: true
       });
       catEntries.forEach(([cat, row], i) => {
         const sharePct = totalAnnualPrem > 0 ? Math.round(row.prem / totalAnnualPrem * 100) : 0;
-        tableRow(M, 39 + i * 7.4, catCols, [catNames[cat] || cat, String(row.count), sharePct + '%', money(row.prem), money(row.sa)], {
+        drawCatRow(tblY + 30 + i * 22, [{
+          dot: catColors[cat] || T.ink4,
+          label: catNames[cat] || cat
+        }, String(row.count), money(row.prem), money(row.sa)], {
           alt: i % 2 === 1,
-          h: 7.4,
-          align: ['left', 'center', 'center', 'right', 'right'],
-          styles: ['bold', null, null, null, null],
-          colors: [T.text, T.text3, T.text3, T.text2, T.text2],
-          sizes: [6.6, 6.4, 6.4, 6.4, 6.4]
+          align: ['left', 'center', 'right', 'right']
         });
-        // Color dot in left padding gutter
-        doc.setFillColor(...(catColors[cat] || T.primary));
-        doc.circle(M + 3, 39 + i * 7.4 + 3.7, 1.0, 'F');
       });
-      label('By member', memX, 30);
-      const memSubCols = [40, 14, 22, memW - 40 - 14 - 22];
-      tableRow(memX, 33, memSubCols, ['Member', '#', 'Annual', 'Sum assured'], {
-        header: true,
-        h: 6
+      // Health gap insight — render a "—" warn row if no health category present
+      if (!byCat.health) {
+        const hRowY = tblY + 30 + catEntries.length * 22;
+        drawCatRow(hRowY, [{
+          dot: T.bad,
+          label: 'Health & Medical'
+        }, '—', '—', '—'], {
+          warn: true,
+          align: ['left', 'center', 'right', 'right']
+        });
+      }
+
+      // BY MEMBER
+      const memX = M + colW + GUTTER;
+      eyebrow('By member', memX, tblY, T.ink3);
+      const mCols = [colW * 0.5, colW * 0.2, colW * 0.3];
+      const drawMemRow = (yy, cells, opts = {}) => {
+        const fill = opts.header ? T.cardSoft : opts.alt ? T.card : T.paper;
+        doc.setFillColor(...fill);
+        doc.setDrawColor(...T.hairline);
+        doc.setLineWidth(0.3);
+        doc.rect(memX, yy, colW, opts.h || 22, 'FD');
+        let cx = memX;
+        cells.forEach((c, i) => {
+          const w = mCols[i];
+          const align = opts.align && opts.align[i] || 'left';
+          const tx = align === 'right' ? cx + w - 8 : cx + (i === 0 && c?.dot ? 22 : 8);
+          if (i === 0 && c && typeof c === 'object' && c.dot) {
+            doc.setFillColor(...c.dot);
+            doc.circle(cx + 14, yy + (opts.h || 22) / 2, 3, 'F');
+            text(c.label, tx, yy + (opts.h || 22) * 0.65, {
+              family: FONT.sans,
+              style: 'bold',
+              size: opts.header ? SZ.caption : SZ.table,
+              color: opts.header ? T.ink3 : T.ink,
+              align,
+              maxW: w - 24,
+              maxLines: 1
+            });
+          } else {
+            text(c == null ? '' : String(c), tx, yy + (opts.h || 22) * 0.65, {
+              family: FONT.sans,
+              style: opts.header ? 'bold' : 'normal',
+              size: opts.header ? SZ.caption : SZ.table,
+              color: opts.header ? T.ink3 : T.ink2,
+              align,
+              maxW: w - 16,
+              maxLines: 1
+            });
+          }
+          cx += w;
+        });
+      };
+      drawMemRow(tblY + 8, ['Member', 'Annual', 'Sum assured'], {
+        header: true
       });
       memberRows.forEach((m, i) => {
-        tableRow(memX, 39 + i * 7.4, memSubCols, [m.name, String(m.policies.length), money(m.annualPremium), money(m.sumAssured)], {
+        drawMemRow(tblY + 30 + i * 22, [{
+          dot: m.color,
+          label: m.name
+        }, dash(m.annualPremium, money), dash(m.sumAssured, money)], {
           alt: i % 2 === 1,
-          h: 7.4,
-          align: ['left', 'center', 'right', 'right'],
-          styles: ['bold', null, null, null],
-          colors: [T.text, T.text3, T.text2, T.text],
-          sizes: [6.6, 6.4, 6.4, 6.6]
+          align: ['left', 'right', 'right']
         });
       });
 
-      // Bottom: stacked premium bar by category
-      const stackY = Math.max(39 + catEntries.length * 7.4, 39 + memberRows.length * 7.4) + 12;
-      if (stackY < 240) {
-        label('Premium share by category', M, stackY);
-        const stackBarY = stackY + 4,
-          stackBarH = 8,
-          stackBarW = CW;
-        let xCursor = M;
-        catEntries.forEach(([cat, row]) => {
-          const segW = totalAnnualPrem > 0 ? row.prem / totalAnnualPrem * stackBarW : 0;
-          if (segW > 0) {
-            doc.setFillColor(...(catColors[cat] || T.primary));
-            doc.rect(xCursor, stackBarY, segW, stackBarH, 'F');
-            // Inline label if there's room
-            if (segW > 22) {
-              text(catNames[cat] || cat, xCursor + 2, stackBarY + 5.5, {
-                size: 5.4,
-                style: 'bold',
-                color: T.white
-              });
-            }
-            xCursor += segW;
-          }
+      // Insight strip (full-width primarySoft)
+      const insightY = tblY + 30 + Math.max(catEntries.length + (byCat.health ? 0 : 1), memberRows.length) * 22 + 24;
+      const insights = [];
+      if (!byCat.health) insights.push('No health & medical coverage on file across the household. Confirm whether MediShield Life base cover is in place.');
+      if (isConcentrated && maxMember) insights.push('Cover heavily concentrated on ' + maxMember.name + ' — consider adding baseline cover for other members.');
+      if (insights.length === 0 && totalAnnualPrem > 0 && memberRows.length > 1) {
+        insights.push('Family premium is balanced across categories. Continue reviewing rider terms and assumptions annually.');
+      }
+      if (insights.length > 0) {
+        const insightH = 18 + insights.length * 18;
+        card(M, insightY, CW, insightH, T.primarySoft, T.primaryDim, R, {
+          lineWidth: 0.5
         });
-        // Legend strip below
-        let lgX = M;
-        catEntries.forEach(([cat, row]) => {
-          const lblText = (catNames[cat] || cat) + '  ' + money(row.prem);
-          doc.setFillColor(...(catColors[cat] || T.primary));
-          doc.rect(lgX, stackBarY + stackBarH + 3, 2.5, 2.5, 'F');
-          text(lblText, lgX + 3.5, stackBarY + stackBarH + 5, {
-            size: 5.6,
-            color: T.text2
+        eyebrow('Insight', M + 18, insightY + 18, T.primary);
+        insights.forEach((s, i) => {
+          text('· ' + s, M + 56, insightY + 18 + i * 18, {
+            size: SZ.body,
+            color: T.ink2,
+            maxW: CW - 70,
+            maxLines: 1
           });
-          lgX += 3.5 + doc.getTextWidth(lblText) + 5;
-          if (lgX > W - M - 30) lgX = M; // wrap
         });
       }
 
       // ─────────────────────────────────────────────────────────────────
-      // PAGE 3+ — Per-member policy detail (one page per member with policies)
+      // PAGES 5+ — Member detail (one per member)
       // ─────────────────────────────────────────────────────────────────
       const RIDER_CODE = {
         death: 'D',
@@ -67051,128 +67565,469 @@ function ReportTab() {
       };
       const riderShort = rd => RIDER_CODE[(rd.type || '').toLowerCase().replace(/[^a-z_]/g, '')] || (rd.type || '').toUpperCase().slice(0, 3);
       memberRows.forEach((m, mIdx) => {
-        const sectionN = 3 + mIdx;
+        const sectionN = 4 + mIdx;
         doc.addPage();
-        pageHeader(sectionN, m.name, familyName + ' · member detail');
+        pageBg();
+        sectionBand(String(sectionN).padStart(2, '0') + ' · ' + m.name, m.color);
 
-        // Member summary strip
-        const msY = 30,
-          msH = 22,
-          msW = (CW - 3 * 3) / 4;
-        const memberKpis = [['Age', m.age != null ? String(m.age) : '—', m.gender || '', T.lavender], ['Policies', String(m.policies.length), m.insurers + ' insurers', T.sky], ['Annual premium', money(m.annualPremium), 'recurring', T.sun], ['Sum assured', money(m.sumAssured), 'across all policies', T.primary]];
-        memberKpis.forEach((k, i) => kpi(M + i * (msW + 3), msY, msW, msH, k[0], k[1], k[2], k[3]));
-        if (!m.policies.length) {
-          card(M, msY + msH + 8, CW, 30, T.surface, T.border, 3);
-          text('No policies currently on file for ' + m.name + '.', M + 5, msY + msH + 22, {
-            size: 9,
-            color: T.text3,
-            fontStyle: 'italic'
+        // Member hero card
+        const heroY = MY,
+          heroH = 110;
+        card(M, heroY, CW, heroH, T.card, T.hairline, R, {
+          lineWidth: 0.5
+        });
+        // Tinted blob top-right
+        const g = doc.GState ? doc.GState({
+          opacity: 0.18
+        }) : null;
+        if (g) doc.setGState(g);
+        doc.setFillColor(...m.color);
+        doc.circle(M + CW - 30, heroY + 30, 50, 'F');
+        if (doc.GState) doc.setGState(doc.GState({
+          opacity: 1
+        }));
+
+        // Left third: name + meta
+        text(m.name, M + 24, heroY + 42, {
+          family: FONT.serif,
+          style: 'bold',
+          size: SZ.kpi_number,
+          color: T.ink
+        });
+        text([m.age != null ? 'age ' + m.age : 'age —', m.gender || ''].filter(Boolean).join(' · '), M + 24, heroY + 62, {
+          size: SZ.body_lg,
+          color: T.ink3
+        });
+
+        // Right two-thirds: 3 inline KPIs (or single coverage-gap card if empty)
+        const isEmpty = m.policies.length === 0 || m.sumAssured < 50000;
+        if (!isEmpty) {
+          const memKpiY = heroY + 14,
+            memKpiH = 80,
+            memKpiW = (CW * 0.55 - GUTTER * 2) / 3;
+          const memKpiX0 = M + CW * 0.45;
+          [['Policies', String(m.policies.length), pl(m.insurers, 'insurer'), m.color], ['Annual premium', dash(m.annualPremium, money), 'recurring', T.savings], ['Sum assured', dash(m.sumAssured, money), 'across all policies', T.investment]].forEach((k, i) => {
+            const kx = memKpiX0 + i * (memKpiW + GUTTER);
+            card(kx, memKpiY, memKpiW, memKpiH, T.paper, T.hairline, 10);
+            eyebrow(k[0], kx + 12, memKpiY + 18, T.ink3);
+            text(k[1], kx + 12, memKpiY + 48, {
+              family: FONT.serif,
+              style: 'bold',
+              size: 20,
+              color: T.ink
+            });
+            text(k[2], kx + 12, memKpiY + 66, {
+              size: SZ.caption,
+              color: T.ink3,
+              maxW: memKpiW - 24,
+              maxLines: 1
+            });
           });
-          return;
         }
 
-        // Policies table — same 2-line-row structure as individual PDF
-        const polTblY = msY + msH + 8;
-        const polCols = [62, 22, 22, 22, 18, 16, CW - 62 - 22 - 22 - 22 - 18 - 16];
-        const drawPolHeader = y => {
-          tableRow(M, y, polCols, ['Insurer · product', 'Type', 'Cover', 'Premium', 'Prem end', 'Method', 'Riders'], {
-            header: true,
-            h: 6
+        // 2pt member-color rule + 1-line diagnosis below hero card
+        const diagBY = heroY + heroH + 8;
+        doc.setFillColor(...m.color);
+        doc.rect(M, diagBY, CW, 2, 'F');
+        const memDiagText = isEmpty ? 'No active life cover on file — see coverage gap card below.' : m.sumAssured > totalSA * 0.6 && memberRows.length > 1 ? 'Carries the bulk of household cover. Consider rebalancing some Whole Life premium toward family-protection term.' : 'Individual cover detected. Review rider terms, premium-end ages, and beneficiary nominations.';
+        text(memDiagText, M, diagBY + 18, {
+          size: SZ.body,
+          color: T.ink2,
+          fontStyle: 'italic'
+        });
+
+        // Empty-member variant: replace ledger with Coverage Gap card + recommended coverage table
+        if (isEmpty) {
+          // Coverage Gap card
+          const cgY = diagBY + 32,
+            cgH = 100;
+          card(M, cgY, CW, cgH, T.badSoft, T.bad, R, {
+            lineWidth: 0.6
           });
-          return y + 6;
-        };
-        const ROW_H = 11;
-        let polY = drawPolHeader(polTblY);
+          warnIcon(M + 22, cgY + 22, 16, T.bad);
+          text('No life cover on file', M + 48, cgY + 28, {
+            family: FONT.serif,
+            style: 'bold',
+            size: SZ.page_h1,
+            color: T.bad
+          });
+          const householdLine = (maxMember ? maxMember.name + ' currently carries ' + Math.round(maxShare * 100) + '% of household cover. ' : '') + 'In the event of household income loss, ' + m.name + ' would have no insurance-funded replacement income. ' + 'Recommend a baseline term cover sized to ~10× annual contribution.';
+          text(householdLine, M + 48, cgY + 50, {
+            size: SZ.body_lg,
+            color: T.ink2,
+            maxW: CW - 64,
+            maxLines: 3,
+            lineH: 14
+          });
 
-        // Sort by category, then insurer
-        const sorted = [...m.policies].sort((a, b) => (a.category || '').localeCompare(b.category || '') || (a.insurer || '').localeCompare(b.insurer || ''));
-        sorted.forEach((pol, i) => {
-          if (polY + ROW_H > 268) {
-            doc.addPage();
-            pageHeader(sectionN, m.name + ' (continued)', familyName + ' · member detail');
-            polY = drawPolHeader(30);
-          }
-          const fillC = i % 2 === 1 ? T.surface2 : T.surface;
-          doc.setFillColor(...fillC);
-          doc.setDrawColor(...T.border);
-          doc.setLineWidth(0.12);
-          doc.rect(M, polY, CW, ROW_H, 'FD');
+          // Recommended coverage table
+          const rcY = cgY + cgH + 24;
+          eyebrow('Recommended coverage', M, rcY, T.ink3);
+          const recAge = m.age || 42;
+          const baseTermPremium = Math.max(45, Math.round(20 + (recAge - 30) * 1.8));
+          const recommendations = [['Term Life', 'S$500k to age 65', '≈ ' + money(baseTermPremium) + '/month'], ['Disability Income', 'S$3,000/month to age 65', '≈ ' + money(Math.round(baseTermPremium * 0.7)) + '/month'], ['Critical Illness', 'S$300k to age 65', '≈ ' + money(Math.round(baseTermPremium * 1.3)) + '/month']];
+          const rcCols = [180, 220, CW - 180 - 220];
+          const drawRecRow = (yy, cells, opts = {}) => {
+            const fill = opts.header ? T.cardSoft : opts.alt ? T.card : T.paper;
+            doc.setFillColor(...fill);
+            doc.setDrawColor(...T.hairline);
+            doc.setLineWidth(0.3);
+            doc.rect(M, yy, CW, opts.h || 24, 'FD');
+            let cx = M;
+            cells.forEach((c, i) => {
+              const w = rcCols[i];
+              text(c, cx + 8, yy + (opts.h || 24) * 0.65, {
+                family: FONT.sans,
+                style: opts.header ? 'bold' : i === 2 ? 'bold' : 'normal',
+                size: opts.header ? SZ.caption : SZ.body,
+                color: opts.header ? T.ink3 : i === 2 ? T.bad : T.ink2,
+                maxW: w - 16,
+                maxLines: 1
+              });
+              cx += w;
+            });
+          };
+          drawRecRow(rcY + 8, ['Type', 'Recommended SA', 'Indicative premium'], {
+            header: true
+          });
+          recommendations.forEach((row, i) => {
+            drawRecRow(rcY + 32 + i * 24, row, {
+              alt: i % 2 === 1
+            });
+          });
+          text('Indicative premiums for non-smoker at age ' + recAge + '. Confirm with insurer quote before recommendation.', M, rcY + 32 + recommendations.length * 24 + 16, {
+            family: FONT.mono,
+            size: SZ.caption,
+            color: T.ink3
+          });
+          return; // Skip ledger
+        }
 
-          // Build row content
-          const productLine = [pol.insurer || '—', pol.productName || pol.policyName || pol.subType || 'Policy'].filter(Boolean).join(' · ');
-          const cover = n(pol.sumAssured) > 0 ? money(pol.sumAssured) : '—';
-          const prem = isSinglePremium(pol) ? n(pol.annualPremium) ? money(pol.annualPremium) + ' lump' : 'Single' : annualizedPremium(pol) > 0 ? money(annualizedPremium(pol)) : '—';
-          const premEnd = pol.premEndAge ? 'age ' + pol.premEndAge : pol.premTerm ? pol.premTerm + 'y' : '—';
-          const method = pol.paymentMethod ? safe(pol.paymentMethod, 14) : '—';
-          const riderCodes = (pol.riders || []).map(riderShort).filter(Boolean).slice(0, 5).join(' ');
-          const startAge = parseInt(pol.premStartAge) || parseInt(pol.ageAtEntry);
-          const yearsHeld = m.age != null && startAge && m.age >= startAge ? m.age - startAge : null;
-          const policyNum = pol.policyNumber ? '#' + safe(String(pol.policyNumber), 14) : '';
-          const status = pol.status && pol.status !== 'inforce' ? safe(String(pol.status).charAt(0).toUpperCase() + String(pol.status).slice(1), 14) : '';
-          const subType = safe(pol.subType || '', 22);
-          const flags = [];
-          if (pol.notes && String(pol.notes).trim()) flags.push('✦ note');
-          if (pol.financed) flags.push('$ financed');
-          if (pol.lifeInsured && pol.policyOwner && String(pol.lifeInsured).trim() !== String(pol.policyOwner).trim()) flags.push('LA ' + safe(pol.lifeInsured, 14));
-          const sublineParts = [policyNum, subType, yearsHeld != null ? yearsHeld + 'y in force' : null, status, ...flags].filter(Boolean);
-          const subline = sublineParts.join(' · ');
+        // Policy ledger — 2-line rows with rider chips, no truncation
+        const ledY = diagBY + 32;
+        eyebrow('Policy ledger · grouped by category', M, ledY, T.ink3);
+        const polCols = [170, 70, 60, 50, 50, 40, CW - 170 - 70 - 60 - 50 - 50 - 40];
+        const drawPolHeader = yy => {
+          doc.setFillColor(...T.cardSoft);
+          doc.setDrawColor(...T.hairline);
+          doc.setLineWidth(0.3);
+          doc.rect(M, yy, CW, 18, 'FD');
+          const headers = ['Insurer · product', 'Type', 'Cover', 'Premium', 'Prem end', 'Method', 'Riders'];
           let cx = M;
-          text(productLine, cx + 2, polY + 4.6, {
-            size: 6.4,
+          headers.forEach((h, i) => {
+            const align = i === 2 || i === 3 ? 'right' : 'left';
+            const tx = align === 'right' ? cx + polCols[i] - 6 : cx + 6;
+            text(h, tx, yy + 12, {
+              family: FONT.sans,
+              style: 'bold',
+              size: SZ.caption,
+              color: T.ink3,
+              align
+            });
+            cx += polCols[i];
+          });
+          return yy + 18;
+        };
+        let polY = drawPolHeader(ledY + 8);
+        const ROW_H = 30;
+        // Group by category, with category-colored dot on group header
+        const memCats = {};
+        m.policies.forEach(pol => {
+          const k = pol.category || 'other';
+          if (!memCats[k]) memCats[k] = [];
+          memCats[k].push(pol);
+        });
+        const memCatOrder = ['protection', 'health', 'retirement', 'savings', 'investment', 'maternity', 'other'];
+        memCatOrder.forEach(cat => {
+          const arr = memCats[cat];
+          if (!arr || !arr.length) return;
+          if (polY + 18 > H - MY - 40) return;
+          // Group header
+          doc.setFillColor(...T.paper);
+          doc.setDrawColor(...T.hairline);
+          doc.setLineWidth(0.2);
+          doc.rect(M, polY, CW, 18, 'FD');
+          doc.setFillColor(...(catColors[cat] || T.ink4));
+          doc.circle(M + 8, polY + 9, 3, 'F');
+          text(catNames[cat] || cat, M + 16, polY + 12, {
+            family: FONT.sans,
             style: 'bold',
-            color: T.text,
-            maxW: polCols[0] - 4,
-            maxLines: 1
+            size: SZ.body,
+            color: T.ink
           });
-          if (subline) text(subline, cx + 2, polY + 8.8, {
-            size: 5.4,
-            color: T.text3,
-            maxW: polCols[0] - 4,
-            maxLines: 1
-          });
-          cx += polCols[0];
-          text(safe(pol.subType || '—', 14), cx + 2, polY + 6.6, {
-            size: 5.8,
-            color: T.text3,
-            maxW: polCols[1] - 4,
-            maxLines: 1
-          });
-          cx += polCols[1];
-          text(cover, cx + polCols[2] - 2, polY + 6.6, {
-            size: 6.4,
-            color: T.text2,
+          text(arr.length + ' polic' + (arr.length === 1 ? 'y' : 'ies'), W - M - 6, polY + 12, {
+            family: FONT.sans,
+            size: SZ.caption,
+            color: T.ink3,
             align: 'right'
           });
-          cx += polCols[2];
-          text(prem, cx + polCols[3] - 2, polY + 6.6, {
-            size: 6.4,
-            color: T.text2,
-            align: 'right'
+          polY += 18;
+          arr.forEach((pol, i) => {
+            if (polY + ROW_H > H - MY - 40) return;
+            const fillC = i % 2 === 1 ? T.card : T.paper;
+            doc.setFillColor(...fillC);
+            doc.setDrawColor(...T.hairline);
+            doc.setLineWidth(0.2);
+            doc.rect(M, polY, CW, ROW_H, 'FD');
+
+            // Build content
+            const insurerProduct = (pol.insurer || '—') + ' · ' + (pol.productName || pol.policyName || pol.subType || 'Policy');
+            const typeText = safe(pol.subType || '—', 28);
+            const sa = num(pol.sumAssured) > 0 ? money(pol.sumAssured) : '—';
+            const prem = isSinglePremium(pol) ? num(pol.annualPremium) ? money(pol.annualPremium) + ' lump' : 'Single' : annualizedPremium(pol) > 0 ? money(annualizedPremium(pol)) : '—';
+            const premEnd = pol.premEndAge ? 'age ' + pol.premEndAge : pol.premTerm ? pol.premTerm + 'y' : '—';
+            const method = pol.paymentMethod ? safe(pol.paymentMethod, 12) : '—';
+            const riderList = (pol.riders || []).map(riderShort).filter(Boolean).slice(0, 4);
+            // Subtitle: policy # · type · years in force · note
+            const startAge = parseInt(pol.premStartAge) || parseInt(pol.ageAtEntry);
+            const yearsHeld = m.age != null && startAge && m.age >= startAge ? m.age - startAge : null;
+            const subtitleParts = [pol.policyNumber ? '#' + safe(String(pol.policyNumber), 14) : null, yearsHeld != null ? yearsHeld + 'y in force' : null, pol.notes && String(pol.notes).trim() ? safe(String(pol.notes).trim(), 28) : null].filter(Boolean);
+            const subtitle = subtitleParts.join(' · ');
+
+            // Render
+            let cx = M;
+            // Col 1: Insurer · Product (2-line wrap allowed)
+            text(insurerProduct, cx + 6, polY + 12, {
+              family: FONT.sans,
+              style: 'bold',
+              size: SZ.body,
+              color: T.ink,
+              maxW: polCols[0] - 12,
+              maxLines: 2,
+              lineH: 11
+            });
+            if (subtitle) {
+              text(subtitle, cx + 6, polY + ROW_H - 8, {
+                family: FONT.sans,
+                size: SZ.caption,
+                color: T.ink3,
+                maxW: polCols[0] - 12,
+                maxLines: 1
+              });
+            }
+            cx += polCols[0];
+            // Col 2: Type (2-line)
+            text(typeText, cx + 6, polY + 14, {
+              size: SZ.table,
+              color: T.ink2,
+              maxW: polCols[1] - 12,
+              maxLines: 2,
+              lineH: 10
+            });
+            cx += polCols[1];
+            // Col 3: Cover (right)
+            text(sa, cx + polCols[2] - 6, polY + 14, {
+              family: FONT.serif,
+              style: 'bold',
+              size: SZ.body,
+              color: T.ink,
+              align: 'right'
+            });
+            cx += polCols[2];
+            // Col 4: Premium (right)
+            text(prem, cx + polCols[3] - 6, polY + 14, {
+              family: FONT.serif,
+              size: SZ.body,
+              color: T.ink2,
+              align: 'right'
+            });
+            cx += polCols[3];
+            // Col 5: Prem end
+            text(premEnd, cx + polCols[4] / 2, polY + 14, {
+              size: SZ.caption,
+              color: T.ink3,
+              align: 'center'
+            });
+            cx += polCols[4];
+            // Col 6: Method
+            text(method, cx + 6, polY + 14, {
+              size: SZ.caption,
+              color: T.ink3,
+              maxW: polCols[5] - 12,
+              maxLines: 1
+            });
+            cx += polCols[5];
+            // Col 7: Riders as chips
+            let rx = cx + 4;
+            riderList.forEach(rd => {
+              if (rx + 22 > cx + polCols[6]) return;
+              const cw = chip(rd, rx, polY + 9, {
+                size: 6.5
+              });
+              rx += cw + 2;
+            });
+            polY += ROW_H;
           });
-          cx += polCols[3];
-          text(premEnd, cx + polCols[4] / 2, polY + 6.6, {
-            size: 5.8,
-            color: T.text3,
-            align: 'center'
-          });
-          cx += polCols[4];
-          text(method, cx + 2, polY + 6.6, {
-            size: 5.6,
-            color: T.text3,
-            maxW: polCols[5] - 4,
-            maxLines: 1
-          });
-          cx += polCols[5];
-          text(riderCodes || '—', cx + 2, polY + 6.6, {
-            size: 5.8,
-            style: 'bold',
-            color: T.primary,
-            maxW: polCols[6] - 4,
-            maxLines: 1
-          });
-          polY += ROW_H;
         });
       });
+
+      // ─────────────────────────────────────────────────────────────────
+      // FINAL PAGE — Family next steps + sign-off
+      // ─────────────────────────────────────────────────────────────────
+      doc.addPage();
+      pageBg();
+      sectionBand(String(4 + memberRows.length).padStart(2, '0') + ' · Next steps', T.primary);
+
+      // Three tiered cards
+      const critItems = [];
+      const reviewItems = [];
+      const confirmItems = [];
+      // Critical: under-protected member
+      if (underprotectedMembers.length > 0) {
+        const u = underprotectedMembers[0];
+        const recAge = u.age || 42;
+        const recPremium = Math.max(45, Math.round(20 + (recAge - 30) * 1.8));
+        critItems.push({
+          label: 'Add baseline term life on ' + u.name,
+          detail: 'S$500k to age 65, indicative premium ≈ ' + money(recPremium) + '/month'
+        });
+      }
+      // Review: concentration of WL on top member
+      if (isConcentrated && maxMember) {
+        const wlPolicies = maxMember.policies.filter(pol => /whole life|whole-life|whole_life/i.test(pol.subType || ''));
+        if (wlPolicies.length >= 2) {
+          const wlSA = wlPolicies.reduce((s, pol) => s + num(pol.sumAssured), 0);
+          const wlPrem = wlPolicies.reduce((s, pol) => s + annualizedPremium(pol), 0);
+          reviewItems.push({
+            label: maxMember.name + '\'s whole-life concentration',
+            detail: pl(wlPolicies.length, 'whole-life policy').replace('policys', 'policies') + ' totalling ' + money(wlSA) + ' SA + ' + money(wlPrem) + '/yr premium. Consider partial conversion.'
+          });
+        }
+      }
+      // Confirm: MediShield Life across members
+      if (!byCat.health) {
+        confirmItems.push({
+          label: 'MediShield Life status',
+          detail: 'No Integrated Shield Plan on file across the household. Confirm base ML cover for each member.'
+        });
+      }
+      // Confirm: under-protected if not already in critical
+      memberRows.forEach(m => {
+        if (m.sumAssured < 50000 && !underprotectedMembers.includes(m)) {
+          confirmItems.push({
+            label: 'No IP rider on file for ' + m.name,
+            detail: 'Confirm whether a private hospital plan is held outside this profile.'
+          });
+        }
+      });
+      if (!critItems.length && !reviewItems.length && !confirmItems.length) {
+        confirmItems.push({
+          label: 'Annual review cadence',
+          detail: 'Confirm assumptions and rider terms each year.'
+        });
+      }
+      const actCardH = 180,
+        actGap = 14;
+      const drawTier = (yy, level, accent, items, labelColor) => {
+        card(M, yy, CW, actCardH, T.paper, T.hairline, 12);
+        doc.setFillColor(...accent);
+        doc.rect(M, yy, 5, actCardH, 'F');
+        text(level, M + 24, yy + 26, {
+          family: FONT.serif,
+          style: 'bold',
+          size: 16,
+          color: labelColor
+        });
+        text(pl(items.length, 'item'), W - M - 16, yy + 26, {
+          size: SZ.body,
+          color: T.ink3,
+          align: 'right'
+        });
+        items.slice(0, 3).forEach((it, i) => {
+          const iy = yy + 56 + i * 38;
+          doc.setDrawColor(...T.ink4);
+          doc.setLineWidth(0.5);
+          doc.roundedRect(M + 24, iy - 10, 12, 12, 2, 2, 'S');
+          text(it.label, M + 44, iy, {
+            family: FONT.sans,
+            style: 'bold',
+            size: SZ.body_lg,
+            color: T.ink,
+            maxW: CW - 60,
+            maxLines: 1
+          });
+          text(it.detail, M + 44, iy + 14, {
+            size: SZ.body,
+            color: T.ink2,
+            maxW: CW - 60,
+            maxLines: 2,
+            lineH: 12
+          });
+        });
+        if (!items.length) {
+          text('No items in this tier — coverage is in line with guideline.', M + 44, yy + 70, {
+            size: SZ.body,
+            color: T.ink3,
+            fontStyle: 'italic'
+          });
+        }
+      };
+      drawTier(MY, 'CRITICAL — Discuss this review', T.primary, critItems, T.primary);
+      drawTier(MY + actCardH + actGap, 'REVIEW — Top-up recommended', T.warn, reviewItems, T.warn);
+      drawTier(MY + 2 * (actCardH + actGap), 'CONFIRM — Verify assumptions', T.sky, confirmItems, T.sky);
+
+      // Sign-off block
+      const signY = MY + 3 * (actCardH + actGap) + 4;
+      const remainingH = H - MY - signY;
+      if (remainingH >= 130) {
+        card(M, signY, CW, 124, T.paper, T.hairline, 12);
+        text('Advisor', M + 24, signY + 26, {
+          family: FONT.sans,
+          style: 'bold',
+          size: SZ.body,
+          color: T.ink3
+        });
+        doc.setDrawColor(...T.ink3);
+        doc.setLineWidth(0.5);
+        doc.line(M + 24, signY + 56, M + CW / 2 - 24, signY + 56);
+        text('Signature', M + 24, signY + 70, {
+          size: SZ.caption,
+          color: T.ink4
+        });
+        text(advisorName || 'Advisor name', M + 24, signY + 88, {
+          family: FONT.sans,
+          style: 'bold',
+          size: SZ.body_lg,
+          color: T.ink
+        });
+        text(advisorMAS ? 'MAS Rep #' + advisorMAS : 'MAS Rep ID', M + 24, signY + 104, {
+          size: SZ.body,
+          color: T.ink3
+        });
+        // Right column
+        const cx = M + CW / 2 + 12;
+        text('Family acknowledgement', cx, signY + 26, {
+          family: FONT.sans,
+          style: 'bold',
+          size: SZ.body,
+          color: T.ink3
+        });
+        doc.line(cx, signY + 56, M + CW - 24, signY + 56);
+        text('Signature', cx, signY + 70, {
+          size: SZ.caption,
+          color: T.ink4
+        });
+        text(memberRows[0]?.name || 'Family member', cx, signY + 88, {
+          family: FONT.sans,
+          style: 'bold',
+          size: SZ.body_lg,
+          color: T.ink
+        });
+        text('I have reviewed the above with my advisor.', cx, signY + 104, {
+          size: SZ.body,
+          color: T.ink3,
+          maxW: CW / 2 - 24,
+          maxLines: 1
+        });
+        // Disclaimer
+        text('This report is illustrative and does not constitute financial advice. Projections rely on saved profile data, policy inputs, LIA-recommended multipliers, and the firm\'s default inflation rate. Confirm policy benefits, riders, exclusions, and CPF assumptions before any recommendation.', M + 24, signY + 116, {
+          size: SZ.footer,
+          color: T.ink3,
+          maxW: CW - 48,
+          maxLines: 2,
+          lineH: 9
+        });
+      }
       footer();
       doc.save('PolicyLens_Family_Visual_Report_' + String(familyName || 'Family').replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '') + '_' + new Date().toISOString().slice(0, 10) + '.pdf');
     } catch (e) {
