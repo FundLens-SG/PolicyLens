@@ -602,9 +602,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.63';
+const APP_VERSION = 'v2.4.0-rc1.64';
 const APP_VERSION_DATE = '2026-05-06';
-const APP_VERSION_NAME = 'Header Save button now explicit: 💾 Save checkpoint (was vague "⌘ Save")';
+const APP_VERSION_NAME = 'Mobile header compaction (Save + New client → icon-only) + household map row stacks vertically on phones';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -23531,21 +23531,45 @@ function ClientsTab() {
             });
             return (
               <div style={{display:'flex',flexDirection:'column',gap:5}}>
-                {arr.map((g, gi) => (
-                  <div key={g.from + '|' + g.relation + '|' + gi}
-                    title={g.items.map(i => i.to + (i.detail ? ' (' + i.detail + ')' : '')).join('\n')}
-                    style={{display:'grid',gridTemplateColumns:'minmax(120px,200px) auto minmax(0,1fr)',alignItems:'center',gap:8,fontSize:10,color:'var(--text2)',border:'1px solid var(--border)',background:'var(--bg)',borderRadius:8,padding:'6px 10px',minWidth:0}}>
-                    <span style={{fontWeight:700,color:'var(--text)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{g.from}</span>
-                    <span style={{fontSize:9,fontWeight:600,color:g.tone,border:'1px solid '+g.tone,borderRadius:999,padding:'2px 7px',whiteSpace:'nowrap',background:'color-mix(in oklch, '+g.tone+' 8%, transparent)'}}>
-                      {g.relation}{g.items.length > 1 ? ' · ' + g.items.length : ''}
-                    </span>
-                    <span style={{minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',color:'var(--text2)'}}>
-                      {g.items.length === 1
-                        ? g.items[0].to
-                        : g.items.slice(0, 3).map(it => it.to).join(' · ') + (g.items.length > 3 ? ' · +' + (g.items.length - 3) + ' more' : '')}
-                    </span>
-                  </div>
-                ))}
+                {arr.map((g, gi) => {
+                  // v2.4.0-rc1.64: on mobile the 3-col grid (name / chip /
+                  // products) collapses the products column to ~10px because
+                  // the name column locks at minmax(120px,200px). Stack
+                  // vertically: row 1 = name + chip, row 2 = products.
+                  const itemsLine = g.items.length === 1
+                    ? g.items[0].to
+                    : g.items.slice(0, 3).map(it => it.to).join(' · ') + (g.items.length > 3 ? ' · +' + (g.items.length - 3) + ' more' : '');
+                  if (isMobile) {
+                    return (
+                      <div key={g.from + '|' + g.relation + '|' + gi}
+                        title={g.items.map(i => i.to + (i.detail ? ' (' + i.detail + ')' : '')).join('\n')}
+                        style={{display:'flex',flexDirection:'column',gap:4,fontSize:10,color:'var(--text2)',border:'1px solid var(--border)',background:'var(--bg)',borderRadius:8,padding:'7px 10px',minWidth:0}}>
+                        <div style={{display:'flex',alignItems:'center',gap:8,minWidth:0}}>
+                          <span style={{fontWeight:700,color:'var(--text)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',minWidth:0,flex:'1 1 auto'}}>{g.from}</span>
+                          <span style={{fontSize:9,fontWeight:600,color:g.tone,border:'1px solid '+g.tone,borderRadius:999,padding:'2px 7px',whiteSpace:'nowrap',background:'color-mix(in oklch, '+g.tone+' 8%, transparent)',flexShrink:0}}>
+                            {g.relation}{g.items.length > 1 ? ' · ' + g.items.length : ''}
+                          </span>
+                        </div>
+                        <span style={{minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',color:'var(--text3)',fontSize:10}}>
+                          → {itemsLine}
+                        </span>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div key={g.from + '|' + g.relation + '|' + gi}
+                      title={g.items.map(i => i.to + (i.detail ? ' (' + i.detail + ')' : '')).join('\n')}
+                      style={{display:'grid',gridTemplateColumns:'minmax(120px,200px) auto minmax(0,1fr)',alignItems:'center',gap:8,fontSize:10,color:'var(--text2)',border:'1px solid var(--border)',background:'var(--bg)',borderRadius:8,padding:'6px 10px',minWidth:0}}>
+                      <span style={{fontWeight:700,color:'var(--text)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{g.from}</span>
+                      <span style={{fontSize:9,fontWeight:600,color:g.tone,border:'1px solid '+g.tone,borderRadius:999,padding:'2px 7px',whiteSpace:'nowrap',background:'color-mix(in oklch, '+g.tone+' 8%, transparent)'}}>
+                        {g.relation}{g.items.length > 1 ? ' · ' + g.items.length : ''}
+                      </span>
+                      <span style={{minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',color:'var(--text2)'}}>
+                        {itemsLine}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             );
           })() : (
@@ -24249,8 +24273,10 @@ function Header() {
           }}>
           <PLMark T={T} size={isMobile ? 22 : 28} />
           <div style={{ textAlign: 'left' }}>
+            {/* v2.4.0-rc1.64: smaller wordmark on mobile so logo group fits
+                cleanly next to the avatar pill and 3 action buttons. */}
             <div style={{
-              fontFamily: T.serifFamily, fontSize: isMobile ? 17 : 22,
+              fontFamily: T.serifFamily, fontSize: isMobile ? 15 : 22,
               color: T.text, letterSpacing: '-0.02em', lineHeight: 1, fontWeight: 400,
             }}>PolicyLens</div>
             {!isMobile && <div style={{
@@ -24305,16 +24331,21 @@ function Header() {
           display: 'flex', alignItems: 'center',
           gap: 8, flexShrink: 0,
         }}>
-          {/* + New client (ghost pill) */}
+          {/* + New client (ghost pill on desktop, icon-only on mobile) */}
+          {/* v2.4.0-rc1.64: matches Save button — icon-only 32x32 circle on
+              mobile so the row of header chrome stops eating the tab bar. */}
           <button onClick={() => setNewClientGuardOpen(true)}
-            title="New Client"
+            title="New client"
             style={{
               background: 'transparent', color: T.text2,
               border: '1px solid ' + T.border,
-              height: 32, padding: '0 14px',
-              borderRadius: 999, fontSize: 12.5, fontWeight: 500,
+              height: 32,
+              width: isMobile ? 32 : undefined,
+              padding: isMobile ? 0 : '0 14px',
+              borderRadius: 999, fontSize: isMobile ? 16 : 12.5, fontWeight: 500,
               cursor: 'pointer', display: 'inline-flex',
-              alignItems: 'center', gap: 4,
+              alignItems: 'center', justifyContent: 'center',
+              gap: 4,
               fontFamily: T.sansFamily, flexShrink: 0,
               whiteSpace: 'nowrap',
               transition: T.motion ? 'all 180ms ease' : 'none',
@@ -24322,12 +24353,11 @@ function Header() {
 
           {/* Save checkpoint (ghost pill, opens CheckpointSavePopover) */}
           {/* v2.4.0-rc1.63: button copy was just "⌘ Save" which was vague —
-              users couldn't tell what was being saved (the file? the
-              policy? the whole client?) and the ⌘ glyph misleads Windows
-              users. New copy is explicit ("Save checkpoint") with a
-              floppy icon, and the keyboard hint moves to the tooltip
-              with platform-appropriate phrasing. Disabled state now
-              tells the FC why the button is greyed out. */}
+              users couldn't tell what was being saved.
+              v2.4.0-rc1.64: on mobile we collapse to an icon-only 32x32
+              circle so the header row doesn't push the tab bar off the
+              right edge of narrow phones. Desktop still shows the full
+              "💾 Save checkpoint" pill so the action stays self-explanatory. */}
           <div style={{ position: 'relative', display: 'inline-block' }}>
             <button ref={saveButtonRef}
               onClick={() => setSaveOpen(o => !o)} disabled={!activeClientId}
@@ -24338,17 +24368,20 @@ function Header() {
                 background: activeClientId ? T.primarySoft : 'transparent',
                 color: activeClientId ? T.primary : T.text3,
                 border: '1px solid ' + (activeClientId ? T.primaryDim : T.border),
-                height: 32, padding: '0 14px',
+                height: 32,
+                width: isMobile ? 32 : undefined,
+                padding: isMobile ? 0 : '0 14px',
                 borderRadius: 999, fontSize: 12.5, fontWeight: 600,
                 cursor: activeClientId ? 'pointer' : 'not-allowed',
                 opacity: activeClientId ? 1 : 0.55,
-                display: 'inline-flex', alignItems: 'center', gap: 6,
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                gap: 6,
                 fontFamily: T.sansFamily, flexShrink: 0,
                 whiteSpace: 'nowrap',
                 transition: T.motion ? 'all 180ms ease' : 'none',
               }}>
               <span style={{ fontSize: 13, lineHeight: 1 }} aria-hidden="true">💾</span>
-              <span>{isMobile ? 'Save' : 'Save checkpoint'}</span>
+              {!isMobile && <span>Save checkpoint</span>}
             </button>
             <CheckpointSavePopover open={saveOpen} onClose={() => setSaveOpen(false)}
               clientId={activeClientId} anchorRef={saveButtonRef} />
