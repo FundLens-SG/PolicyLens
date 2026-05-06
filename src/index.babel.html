@@ -602,9 +602,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.62';
+const APP_VERSION = 'v2.4.0-rc1.63';
 const APP_VERSION_DATE = '2026-05-06';
-const APP_VERSION_NAME = 'Visual Report V4 — landscape advisory board: bullet diagnosis, inflation bridge, strategy groups, 2-line policy register';
+const APP_VERSION_NAME = 'Header Save button now explicit: 💾 Save checkpoint (was vague "⌘ Save")';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -24321,22 +24321,35 @@ function Header() {
             }}>{isMobile ? '+' : '+ New client'}</button>
 
           {/* Save checkpoint (ghost pill, opens CheckpointSavePopover) */}
+          {/* v2.4.0-rc1.63: button copy was just "⌘ Save" which was vague —
+              users couldn't tell what was being saved (the file? the
+              policy? the whole client?) and the ⌘ glyph misleads Windows
+              users. New copy is explicit ("Save checkpoint") with a
+              floppy icon, and the keyboard hint moves to the tooltip
+              with platform-appropriate phrasing. Disabled state now
+              tells the FC why the button is greyed out. */}
           <div style={{ position: 'relative', display: 'inline-block' }}>
             <button ref={saveButtonRef}
               onClick={() => setSaveOpen(o => !o)} disabled={!activeClientId}
-              title="Save checkpoint (Cmd+S)"
+              title={activeClientId
+                ? 'Save a named checkpoint of this client (Ctrl+S / Cmd+S)'
+                : 'Pick a client first to save a checkpoint'}
               style={{
-                background: 'transparent', color: T.text2,
-                border: '1px solid ' + T.border,
+                background: activeClientId ? T.primarySoft : 'transparent',
+                color: activeClientId ? T.primary : T.text3,
+                border: '1px solid ' + (activeClientId ? T.primaryDim : T.border),
                 height: 32, padding: '0 14px',
-                borderRadius: 999, fontSize: 12.5, fontWeight: 500,
+                borderRadius: 999, fontSize: 12.5, fontWeight: 600,
                 cursor: activeClientId ? 'pointer' : 'not-allowed',
-                opacity: activeClientId ? 1 : 0.4,
-                display: 'inline-flex', alignItems: 'center', gap: 4,
+                opacity: activeClientId ? 1 : 0.55,
+                display: 'inline-flex', alignItems: 'center', gap: 6,
                 fontFamily: T.sansFamily, flexShrink: 0,
                 whiteSpace: 'nowrap',
                 transition: T.motion ? 'all 180ms ease' : 'none',
-              }}>{isMobile ? '⌘S' : '⌘ Save'}</button>
+              }}>
+              <span style={{ fontSize: 13, lineHeight: 1 }} aria-hidden="true">💾</span>
+              <span>{isMobile ? 'Save' : 'Save checkpoint'}</span>
+            </button>
             <CheckpointSavePopover open={saveOpen} onClose={() => setSaveOpen(false)}
               clientId={activeClientId} anchorRef={saveButtonRef} />
           </div>

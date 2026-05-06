@@ -612,9 +612,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.62';
+const APP_VERSION = 'v2.4.0-rc1.63';
 const APP_VERSION_DATE = '2026-05-06';
-const APP_VERSION_NAME = 'Visual Report V4 — landscape advisory board: bullet diagnosis, inflation bridge, strategy groups, 2-line policy register';
+const APP_VERSION_NAME = 'Header Save button now explicit: 💾 Save checkpoint (was vague "⌘ Save")';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -28242,27 +28242,33 @@ function Header() {
     ref: saveButtonRef,
     onClick: () => setSaveOpen(o => !o),
     disabled: !activeClientId,
-    title: "Save checkpoint (Cmd+S)",
+    title: activeClientId ? 'Save a named checkpoint of this client (Ctrl+S / Cmd+S)' : 'Pick a client first to save a checkpoint',
     style: {
-      background: 'transparent',
-      color: T.text2,
-      border: '1px solid ' + T.border,
+      background: activeClientId ? T.primarySoft : 'transparent',
+      color: activeClientId ? T.primary : T.text3,
+      border: '1px solid ' + (activeClientId ? T.primaryDim : T.border),
       height: 32,
       padding: '0 14px',
       borderRadius: 999,
       fontSize: 12.5,
-      fontWeight: 500,
+      fontWeight: 600,
       cursor: activeClientId ? 'pointer' : 'not-allowed',
-      opacity: activeClientId ? 1 : 0.4,
+      opacity: activeClientId ? 1 : 0.55,
       display: 'inline-flex',
       alignItems: 'center',
-      gap: 4,
+      gap: 6,
       fontFamily: T.sansFamily,
       flexShrink: 0,
       whiteSpace: 'nowrap',
       transition: T.motion ? 'all 180ms ease' : 'none'
     }
-  }, isMobile ? '⌘S' : '⌘ Save'), /*#__PURE__*/React.createElement(CheckpointSavePopover, {
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 13,
+      lineHeight: 1
+    },
+    "aria-hidden": "true"
+  }, "\uD83D\uDCBE"), /*#__PURE__*/React.createElement("span", null, isMobile ? 'Save' : 'Save checkpoint')), /*#__PURE__*/React.createElement(CheckpointSavePopover, {
     open: saveOpen,
     onClose: () => setSaveOpen(false),
     clientId: activeClientId,
