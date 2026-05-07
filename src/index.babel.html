@@ -602,9 +602,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.78';
+const APP_VERSION = 'v2.4.0-rc1.79';
 const APP_VERSION_DATE = '2026-05-08';
-const APP_VERSION_NAME = 'Family report polish: policy register alignment + full remarks, scorecard plain-English context, headline/subline split, editorial section numbers';
+const APP_VERSION_NAME = 'Individual report polish: planning-gaps columns rebalanced, inflation-bridge redesigned, name/meta spacing fixed, individual policy register full remarks';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -45248,6 +45248,14 @@ function ReportTab() {
         // Age and gender drop into a muted tail beside the name so they
         // support rather than compete. Compressed to fit in the original
         // 22mm header band so content cards at y=30 are not affected.
+        // v2.4.0-rc1.79 — name + meta layout fixed.
+        // Was: meta tail "   ·   age 42  ·  Male" rendered right after the
+        // name, but pdfSafe trims leading whitespace AND converts · → "-",
+        // so the rendered string was "- age 42 - Male" glued to "Yin"
+        // with zero space between (visible bug: "Chan Chung Yin- age 42").
+        // Now: meta is rendered with an explicit 6mm gap from the name's
+        // right edge, with a small text4 dot drawn as the visual separator
+        // (the dot is a circle, not a glyph — pdfSafe can't strip it).
         const cleanGender = (p.gender || '').trim();
         text('Specially prepared for', W/2, 12, {
           size: 5.4, color: T.text3, style: 'italic', align: 'center', charSpace: 0.4
@@ -45259,10 +45267,16 @@ function ReportTab() {
           setFont('times','bold',10,T.text);
           return doc.getTextWidth(pdfSafe(clientLabel));
         })();
+        // Visual separator dot — drawn as a real circle so cleanPdfText
+        // can never strip it.
+        const sepX = W/2 + nameW/2 + 4;
+        doc.setFillColor(...T.text4);
+        doc.circle(sepX, 15.4, 0.7, 'F');
+        // Meta tail — no leading separator (the dot above does that work).
         const metaTailParts = ['age ' + currentAge];
-        if (cleanGender) metaTailParts.push(cleanGender);
-        const metaTail = '   ·   ' + metaTailParts.join('  ·  ');
-        text(metaTail, W/2 + nameW/2, 16.5, {size:6.2, color:T.text3, style:'normal', charSpace: 0.3});
+        if (cleanGender) metaTailParts.push(cleanGender.toLowerCase());
+        const metaTail = metaTailParts.join('  ·  ');
+        text(metaTail, sepX + 2.5, 16.5, {size:6.2, color:T.text3, style:'normal', charSpace: 0.3});
         // Hairline
         doc.setDrawColor(...T.border); doc.setLineWidth(0.16); doc.line(M, 19, W-M, 19);
         // Section number + title — restored to y=25 so content cards at y=30 keep their gap
@@ -45326,38 +45340,70 @@ function ReportTab() {
       // V5 polish: arrows are DRAWN (line + triangle) via drawConnectorArrow
       // instead of being typed text "->" which sometimes rendered weirdly in
       // jsPDF's Helvetica. Subcaption beneath explains the bridge intent.
+      // v2.4.0-rc1.79 — INFLATION BRIDGE redesigned for clearer hierarchy.
+      // Was 3 same-sized pills (today / process / future) with 2 thin arrows
+      // — the eye couldn't tell which numbers mattered most. Now: 2
+      // emphasised endpoint pills (start coral, end danger-coral) flanking
+      // a single bold arrow with the growth-rate process rendered as
+      // muted italic ABOVE the arrow. The reader sees the two big numbers
+      // first; the rate is supporting context.
       const drawInflationBridge = (x, y, w, segs, opts={}) => {
-        const h = opts.h || 18;
+        const h = opts.h || 22;
         card(x, y, w, h, T.surface, T.border, 4);
         label('Inflation bridge', x + 5, y + 5);
-        const subcaption = opts.subcaption || "Lifestyle target is inflated from today's dollars to retirement age.";
-        text(subcaption, x + 5, y + h - 3.4, {
-          size: 5.8, color: T.text3, fontStyle: 'italic',
+        const segCount = segs.length;
+        // Caption row — combines the WHY and the growth-rate process
+        const subcaption = opts.subcaption || "Today's lifestyle becomes more expensive each year.";
+        text(subcaption, x + 5, y + h - 3.2, {
+          size: 5.4, color: T.text3, fontStyle: 'italic',
           maxW: w - 10, maxLines: 1
         });
-        // Designed segments live in the area below the title and above the subcaption.
-        const titleReserve = 32;
-        const segArea = w - titleReserve - 10;
-        const arrowW = 8;
-        const segCount = segs.length;
-        const segW = (segArea - arrowW * (segCount - 1)) / segCount;
-        const segY = y + 8;
-        const segH = h - 14;
-        let cx = x + titleReserve;
-        segs.forEach((s, i) => {
+        // Two-pill bridge with single bold arrow between them
+        if (segCount === 3) {
+          const startVal = segs[0];
+          const middleVal = segs[1];   // "grows at X% per year for Y years"
+          const endVal = segs[2];
+          const pillH = 8;
+          const pillY = y + 8;
+          // Measure pill widths (text + 14mm padding for breathing room)
+          font('helvetica', 'bold', 9, T.primary);
+          const startPillW = doc.getTextWidth(pdfSafe(startVal)) + 14;
+          font('helvetica', 'bold', 9, T.danger);
+          const endPillW = doc.getTextWidth(pdfSafe(endVal)) + 14;
+          const arrowW = 22;  // wider arrow zone for the process label
+          const totalW = startPillW + arrowW + endPillW;
+          const startX = x + (w - totalW) / 2;
+          // Start pill (coral)
           doc.setFillColor(...T.primarySoft); doc.setDrawColor(...T.primarySoft);
-          doc.roundedRect(cx, segY, segW, segH, segH/2, segH/2, 'FD');
-          text(s, cx + segW / 2, segY + segH * 0.65, {
-            size: 7.6, style: i === 0 || i === segCount - 1 ? 'bold' : 'normal',
-            color: T.primary, align: 'center', maxW: segW - 4, maxLines: 1
+          doc.roundedRect(startX, pillY, startPillW, pillH, pillH/2, pillH/2, 'FD');
+          text(startVal, startX + startPillW/2, pillY + pillH*0.68, {
+            size: 9, style: 'bold', color: T.primary, align: 'center'
           });
-          cx += segW;
-          if (i < segCount - 1) {
-            // Drawn arrow — line + triangle. No text glyph.
-            drawConnectorArrow(cx + 1, segY + segH/2, cx + arrowW - 1, T.primary);
-            cx += arrowW;
-          }
-        });
+          // Arrow zone — process label above + bold arrow line below
+          const arrowZoneX = startX + startPillW;
+          const arrowMidY = pillY + pillH/2;
+          // Process label (muted italic) sits 2mm above the arrow
+          text(middleVal, arrowZoneX + arrowW/2, arrowMidY - 1.5, {
+            size: 5.2, color: T.text3, style: 'italic', align: 'center', maxW: arrowW + 4, maxLines: 1
+          });
+          // Bold arrow line + triangle, slightly thicker than V2
+          doc.setDrawColor(...T.text3); doc.setLineWidth(0.5);
+          doc.line(arrowZoneX + 1, arrowMidY + 1.2, arrowZoneX + arrowW - 2, arrowMidY + 1.2);
+          doc.setFillColor(...T.text3);
+          doc.triangle(
+            arrowZoneX + arrowW - 2, arrowMidY - 0.4,
+            arrowZoneX + arrowW - 2, arrowMidY + 2.8,
+            arrowZoneX + arrowW + 0.5, arrowMidY + 1.2,
+            'F'
+          );
+          // End pill (danger soft + danger ink)
+          const endX = arrowZoneX + arrowW;
+          doc.setFillColor(...T.dangerSoft); doc.setDrawColor(...T.dangerSoft);
+          doc.roundedRect(endX, pillY, endPillW, pillH, pillH/2, pillH/2, 'FD');
+          text(endVal, endX + endPillW/2, pillY + pillH*0.68, {
+            size: 9, style: 'bold', color: T.danger, align: 'center'
+          });
+        }
       };
 
       // drawStrategyGroup — page 4 right-hand grouped card.
@@ -45385,20 +45431,28 @@ function ReportTab() {
         return h;
       };
 
-      // drawPolicyDetailRow — page 5 two-line policy entry. Higher row height
-      // (16-18mm) so policy number + status + remarks have proper estate.
-      // Returns the height consumed.
+      // drawPolicyDetailRow — page 5 policy entry.
+      // v2.4.0-rc1.79: remarks now wrap to up to 2 lines spanning the full
+      // row width (was clipped at 1 line with "..." truncation). Row height
+      // auto-grows from 14mm (no remarks) → 18mm (1-line remarks) → 22mm
+      // (2-line remarks). Headers/data align cleanly via opts.cols.
       const drawPolicyDetailRow = (x, y, w, p, opts={}) => {
         const cols = opts.cols || [78, 24, 24, 24, 18, 18, w - 78 - 24 - 24 - 24 - 18 - 18];
         const alt = !!opts.alt;
-        // Determine if we have remarks → tall row, else medium row
-        const hasRemarks = !!(p.remarks || p.notes);
-        const rowH = hasRemarks ? 18 : 14;
+        const remarksText = String(p.remarks || p.notes || '').trim();
+        const hasRemarks = !!remarksText;
+        // Pre-wrap remarks to up to 2 lines so we know the height
+        const remarksLabel = 'Remarks: ';
+        setFont('helvetica', 'bold', 5.6, T.text3);
+        const remLblW = doc.getTextWidth(remarksLabel);
+        const remarkLines = hasRemarks
+          ? doc.splitTextToSize(pdfSafe(remarksText), w - 6 - remLblW).slice(0, 2)
+          : [];
+        const rowH = remarkLines.length > 1 ? 22 : (hasRemarks ? 18 : 14);
         // Background
         doc.setFillColor(...(alt ? T.surface2 : T.surface));
         doc.setDrawColor(...T.border); doc.setLineWidth(0.12);
         doc.rect(x, y, w, rowH, 'FD');
-        // Top line — same as before, vertically positioned at y+5
         const topY = y + 5;
         let cx = x;
         text(p.productLine, cx + 2, topY, { size: 7.2, style: 'bold', color: T.text, maxW: cols[0] - 4, maxLines: 1 });
@@ -45413,21 +45467,20 @@ function ReportTab() {
         cx += cols[4];
         text(p.method || '-', cx + 2, topY, { size: 6, color: T.text3, maxW: cols[5] - 4, maxLines: 1 });
         cx += cols[5];
-        // Riders pill-style on the rightmost column
+        // Riders column — no "Riders:" prefix (column header already says it)
         text(p.riders || '-', cx + 2, topY, { size: 6.4, style: 'bold', color: T.primary, maxW: cols[6] - 4, maxLines: 1 });
         // Subline — policy number / status / years in force on left
         const subY = y + 9.6;
         if (p.subline) {
           text(p.subline, x + 2, subY, { size: 5.6, color: T.text3, maxW: cols[0] + cols[1] - 4, maxLines: 1 });
         }
-        // Remarks on its own line below
+        // Remarks: bold prefix + wrapped lines spanning full row width
         if (hasRemarks) {
-          const remarksLabel = 'Remarks: ';
           setFont('helvetica', 'bold', 5.6, T.text3);
-          const lblW = doc.getTextWidth(remarksLabel);
-          text(remarksLabel, x + 2, y + 14.4, { size: 5.6, style: 'bold', color: T.text3 });
-          text(p.remarks || p.notes || '', x + 2 + lblW, y + 14.4, {
-            size: 5.6, color: T.text2, maxW: w - 6 - lblW, maxLines: 1
+          doc.text(remarksLabel, x + 2, y + 14.4);
+          setFont('helvetica', 'normal', 5.6, T.text2);
+          remarkLines.forEach((ln, i) => {
+            doc.text(pdfSafe(ln), x + 2 + remLblW, y + 14.4 + i * 4);
           });
         }
         return rowH;
@@ -45799,13 +45852,20 @@ function ReportTab() {
       const gapW = 158, focusW = CW - gapW - 4, focusX = M + gapW + 4;
 
       // Left: Top 4 planning gaps
+      // v2.4.0-rc1.79 — column widths rebalanced. Was [8, 50, 30, 30, 30, 10]
+      // which truncated "Rank" → "Ran", "Priority" → "Priorit", and clipped
+      // the "Critical" pill on the right. Header alignment now matches the
+      // data row (center / left / right / right / right / center) so the
+      // numeric columns line up cleanly with their values below.
       label('Top 4 planning gaps', M, lowerY);
-      const gapWidths = [8, 50, 30, 30, 30, gapW - 8 - 50 - 30 - 30 - 30];
-      tableRow(M, lowerY + 3, gapWidths, ['Rank', 'Area', 'Current', 'Target', 'Gap', 'Priority'], { header: true, h: 6 });
+      const gapAlign = ['center', 'left', 'right', 'right', 'right', 'center'];
+      const gapWidths = [12, 44, 26, 26, 26, gapW - 12 - 44 - 26 - 26 - 26];
+      tableRow(M, lowerY + 3, gapWidths, ['Rank', 'Area', 'Current', 'Target', 'Gap', 'Priority'],
+        { header: true, h: 6, align: gapAlign });
       top4.forEach((g, i) => {
         tableRow(M, lowerY + 9 + i * 7.4, gapWidths,
           [String(g.rank), g.area, g.cur, g.tgt, g.gap, { kind: 'chip', text: g.tone[2], tone: g.tone[0] }],
-          { alt: i % 2 === 1, align: ['center', 'left', 'right', 'right', 'right', 'center'], styles: [null, 'bold', null, null, 'bold', null], colors: [T.text3, T.text, T.text2, T.text3, T.danger, null] });
+          { alt: i % 2 === 1, align: gapAlign, styles: [null, 'bold', null, null, 'bold', null], colors: [T.text3, T.text, T.text2, T.text3, T.danger, null] });
       });
 
       // Right: Priority focus areas board — numbered rows with topic + reason
@@ -46471,7 +46531,9 @@ function ReportTab() {
             if (pol.lifeInsured && pol.policyOwner && String(pol.lifeInsured).trim() !== String(pol.policyOwner).trim()) {
               bits.push('LA: ' + safe(pol.lifeInsured, 18));
             }
-            return bits.length ? safe(bits.join(' - '), 110) : '';
+            // v2.4.0-rc1.79: removed 110-char truncation so client-facing
+            // remarks show in full (drawPolicyDetailRow now wraps to 2 lines).
+            return bits.length ? bits.join(' - ') : '';
           })();
 
           const productLine = [pol.insurer || '-', pol.productName || pol.policyName || pol.subType || 'Policy'].filter(Boolean).join(' - ');
@@ -46503,7 +46565,9 @@ function ReportTab() {
 
           const consumed = drawPolicyDetailRow(M, invY, CW, {
             productLine, type, cover, premium: prem, premEnd, method,
-            riders: riderCodes ? 'Riders: ' + riderCodes : '-',
+            // v2.4.0-rc1.79: column header already says "Riders" — no
+            // need for the redundant "Riders:" prefix on every row.
+            riders: riderCodes || '-',
             subline, remarks, notes: ''
           }, { alt: i % 2 === 1, cols: polCols });
           invY += consumed;
