@@ -602,9 +602,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.64';
-const APP_VERSION_DATE = '2026-05-06';
-const APP_VERSION_NAME = 'Mobile header compaction (Save + New client → icon-only) + household map row stacks vertically on phones';
+const APP_VERSION = 'v2.4.0-rc1.65';
+const APP_VERSION_DATE = '2026-05-07';
+const APP_VERSION_NAME = 'Family Visual Report V2 hardfix — share bar, gap panel, continuation pages, remarks layout, note artifacts';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -46595,15 +46595,24 @@ function ReportTab() {
       };
 
       const policyRemarks = (pol) => {
+        // v2.4.0-rc1.65 hardfix: legacy data sometimes has pol.notes === "note"
+        // (a placeholder from an old import path) which was leaking into
+        // the rendered PDF as the literal word "note". Strip leading
+        // "note:" / bare "note" / "& note" artifacts before falling back
+        // to category-specific copy.
         const raw = pol.remarks || pol.notes || pol.advisorNotes || pol.summary || '';
-        const cleaned = cleanPdfText(raw).replace(/^note:?\s*/i,'');
-        if (cleaned) return safe(cleaned, 86);
+        let cleaned = cleanPdfText(raw)
+          .replace(/^note:?\s*/i, '')
+          .replace(/^&\s*note\s*/i, '')
+          .trim();
+        if (/^note$/i.test(cleaned)) cleaned = '';
+        if (cleaned) return safe(cleaned, 140);
         const bits = [];
         if (pol.category === 'health') bits.push(pol.hasRider ? 'rider detected' : 'confirm rider terms');
-        if (pol.paymentMethod) bits.push('payment: ' + pol.paymentMethod);
+        if (pol.paymentMethod && !/^cash$/i.test(pol.paymentMethod)) bits.push('payment: ' + pol.paymentMethod);
         if (pol.category === 'investment') bits.push('investment-linked or portfolio asset - confirm risk and liquidity');
-        if (pol.category === 'savings') bits.push('savings/endowment plan - confirm maturity and cash value');
-        return safe(bits.join('; '), 86);
+        if (pol.category === 'savings') bits.push('savings / endowment plan - confirm maturity and cash value');
+        return safe(bits.join('; '), 140);
       };
 
       const drawMiniTableHeader = (x,y,w,cols) => {
@@ -46614,6 +46623,9 @@ function ReportTab() {
       };
 
       const drawFamilyMemberRow = (x,y,w,m,idx) => {
+        // v2.4.0-rc1.65 hardfix: share bar was 28mm wide starting at x+151 in
+        // a 165mm-wide card, so a 100% bar overflowed the right edge by 14mm.
+        // New geometry keeps bar + percent both inside the row width.
         const fill = idx % 2 ? T.tableAlt : T.surface;
         card(x,y,w,12,fill,T.border,1.5);
         write(m.name,x+4,y+7,{size:7.1,style:'bold',color:T.text,maxW:54,maxLines:1});
@@ -46622,27 +46634,56 @@ function ReportTab() {
         write(money(m.annualPremium),x+112,y+7,{size:6.7,color:T.text2,align:'right'});
         write(money(m.sumAssured,{blankZero:true}),x+144,y+7,{size:6.7,color:T.text2,align:'right'});
         const coverShare = totalSA ? Math.round(m.sumAssured / totalSA * 100) : 0;
-        drawGapBar(x+151,y+4,28,3,coverShare, m.sumAssured > 0 ? T.primary : T.border2);
-        write(coverShare + '%', x+w-4, y+7, {size:6.2,style:'bold',color:m.sumAssured > 0 ? T.primary : T.text3,align:'right'});
+        // Bar 9mm wide tucked into share column right side; percent ends at x+w-3
+        const barW = Math.max(8, Math.min(14, w - 158));
+        const pctText = coverShare + '%';
+        setFont('helvetica','bold',6.2, m.sumAssured > 0 ? T.primary : T.text3);
+        const pctW = doc.getTextWidth(cleanPdfText(pctText));
+        const pctRightX = x + w - 3;
+        const barEndX = pctRightX - pctW - 2;
+        const barX = barEndX - barW;
+        drawGapBar(barX, y+4.4, barW, 2.6, coverShare, m.sumAssured > 0 ? T.primary : T.border2);
+        write(pctText, pctRightX, y+7, {size:6.2,style:'bold',color:m.sumAssured > 0 ? T.primary : T.text3,align:'right'});
       };
 
       const drawPolicyDetailRow = (x,y,w,pol,idx) => {
+        // v2.4.0-rc1.65 hardfix: 2-line readable detail block.
+        // Top line  = product (bold, wide left) + Type + Cover + Premium + Prem-end + Method + Riders
+        // Bottom line = #policy + status + years (left ~80mm) | Remarks: ... (rest of row)
+        // Previously remarks were squeezed into the same 67mm right column
+        // as the riders chip, so long copy ("Vivolife is a limited-pay
+        // participating whole life plan from Income Insurance Limited
+        // providing...") got truncated mid-sentence.
         const fill = idx % 2 ? T.tableAlt : T.surface;
         card(x,y,w,17,fill,T.border,1.2);
         const product = safe([pol.insurer, pol.productName || pol.policyName || pol.planName || pol.subType || 'Policy'].filter(Boolean).join(' - '), 56);
         write(product,x+3,y+5.4,{size:6.4,style:'bold',color:T.text,maxW:78,maxLines:1});
-        write(policyStatusLine(pol),x+3,y+11.3,{size:5.4,color:T.text3,maxW:76,maxLines:1});
 
-        write(policyType(pol),x+84,y+7.2,{size:5.9,color:T.text2,maxW:28,maxLines:1});
-        write(policyCover(pol) > 0 ? money(policyCover(pol)) : '-',x+116,y+7.2,{size:6.1,style:'bold',color:T.text2,align:'right'});
+        // Top-line cells (Type / Cover / Premium / Prem end / Method / Riders)
+        write(policyType(pol),x+84,y+5.4,{size:5.9,color:T.text2,maxW:28,maxLines:1});
+        write(policyCover(pol) > 0 ? money(policyCover(pol)) : '-',x+116,y+5.4,{size:6.1,style:'bold',color:T.text2,align:'right'});
         const prem = isSinglePremium(pol) ? (n(pol.annualPremium) ? money(n(pol.annualPremium)) + ' single' : 'single') : (policyAnnual(pol) ? money(policyAnnual(pol)) + '/yr' : '-');
-        write(prem,x+146,y+7.2,{size:5.9,color:T.text2,align:'right'});
-        write(policyPremEnd(pol),x+167,y+7.2,{size:5.8,color:T.text2,align:'center'});
-        write(safe(pol.paymentMethod || '-',16),x+188,y+7.2,{size:5.8,color:T.text2,align:'center'});
+        write(prem,x+146,y+5.4,{size:5.9,color:T.text2,align:'right'});
+        write(policyPremEnd(pol),x+167,y+5.4,{size:5.8,color:T.text2,align:'center'});
+        write(safe(pol.paymentMethod || '-',16),x+188,y+5.4,{size:5.8,color:T.text2,align:'center'});
+        const codes = riderCodes(pol);
+        if (codes && codes !== '-') {
+          write('Riders: ' + codes, x+206, y+5.4, {size:5.6,style:'bold',color:T.primary,maxW:w-210,maxLines:1});
+        }
 
-        write('Riders: ' + riderCodes(pol),x+206,y+5.4,{size:5.6,style:'bold',color:T.primary,maxW:w-210,maxLines:1});
+        // Bottom line — status (left, ~80mm) + Remarks taking the rest
+        const status = policyStatusLine(pol);
         const remark = policyRemarks(pol);
-        if (remark) write('Remarks: ' + remark,x+206,y+11.4,{size:5.2,color:T.text3,maxW:w-210,maxLines:1});
+        write(status, x+3, y+11.6, {size:5.4,color:T.text3,maxW:78,maxLines:1});
+        if (remark) {
+          // Measure status width so remarks start just after, with min
+          // padding so short status + long remarks gets max horizontal estate.
+          setFont('helvetica','normal',5.4,T.text3);
+          const statusActualW = doc.getTextWidth(cleanPdfText(status));
+          const remarkX = x + Math.max(85, 5 + statusActualW + 8);
+          const remarkMaxW = w - (remarkX - x) - 4;
+          write('Remarks: ' + remark, remarkX, y+11.6, {size:5.4,color:T.text3,maxW:remarkMaxW,maxLines:1});
+        }
       };
 
       // Data load.
@@ -46820,32 +46861,73 @@ function ReportTab() {
         write('A balanced household review should consider both cover amount and who depends on whom for income.',M+5,136,{size:6.3,color:T.text3,maxW:160,maxLines:2});
       }
 
-      card(M+186,48,91,105,uncoveredMembers.length ? T.dangerSoft : T.successSoft,uncoveredMembers.length ? T.dangerSoft : T.successSoft,4);
+      // v2.4.0-rc1.65 hardfix: this panel was 105mm tall with ~80% empty
+      // space (just one big number + one sentence + tiny pill). Shrunk to
+      // 60mm and packed with member-by-member gap detail. Baseline rec
+      // guide moved up to fill the freed real estate.
+      card(M+186,48,91,60,uncoveredMembers.length ? T.dangerSoft : T.successSoft,uncoveredMembers.length ? T.dangerSoft : T.successSoft,4);
       label(uncoveredMembers.length ? 'Coverage gap alert' : 'Coverage balance note',M+191,58,uncoveredMembers.length ? T.danger : T.success);
-      write(uncoveredMembers.length ? String(uncoveredMembers.length) : '0',M+191,77,{family:'times',style:'bold',size:24,color:uncoveredMembers.length ? T.danger : T.success});
-      write(uncoveredMembers.length ? 'member(s) with no active life cover detected' : 'members without active life cover',M+209,72,{size:6.8,color:T.text2,maxW:60,maxLines:2});
-      const gapText = uncoveredMembers.length
-        ? uncoveredMembers.map(m=>m.name).join(', ') + ' should be reviewed for baseline term life, disability income and CI cover.'
-        : 'No full life-cover gap detected from available data. Confirm sum assured, beneficiaries and rider details.';
-      write(gapText,M+191,92,{size:7,color:T.text2,maxW:78,maxLines:4,lineH:3.8});
+      write(String(uncoveredMembers.length),M+191,72,{family:'times',style:'bold',size:18,color:uncoveredMembers.length ? T.danger : T.success});
+      write(uncoveredMembers.length === 1 ? 'member needs cover' : (uncoveredMembers.length ? 'members need cover' : 'all members covered'),M+208,71,{size:6.4,color:T.text2,maxW:65,maxLines:1});
+      // Per-member gap list, capped to 3 lines
+      const gapMembers = uncoveredMembers.length ? uncoveredMembers : memberRows.filter(m => m.sumAssured < totalSA * 0.1);
+      let gapY = 80;
+      gapMembers.slice(0,3).forEach((m) => {
+        doc.setFillColor(...(uncoveredMembers.length ? T.danger : T.warn));
+        doc.circle(M+193, gapY-1.4, 0.9, 'F');
+        write(m.name, M+196, gapY, {size:6.1,style:'bold',color:T.text,maxW:46,maxLines:1});
+        write(m.sumAssured > 0 ? money(m.sumAssured) + ' cover' : 'no cover', M+186+87, gapY, {size:5.8,color:uncoveredMembers.length ? T.danger : T.text3, align:'right'});
+        gapY += 6;
+      });
+      if (gapMembers.length === 0) {
+        write('All members carry baseline life cover. Review rider terms and beneficiary nominations annually.', M+191, 80, {size:6.2,color:T.text2,maxW:80,maxLines:3,lineH:3.6});
+      }
       if (uncoveredMembers.length) {
-        pill('Priority',M+191,134,'danger',{w:28});
-        write('start with baseline term cover',M+224,138,{size:6.1,color:T.text2,maxW:50,maxLines:1});
+        pill('Action: start baseline term life',M+191,gapY+2,'danger',{w:80,h:5,size:5});
       }
 
-      card(M,162,CW,26,T.surface,T.border,3.5);
-      label('Baseline recommendation guide',M+5,172);
+      // Baseline recommendation guide — moved up to y=114 (was y=162) to
+      // close the visual gap between the two top cards and the bottom rec.
+      card(M+186,114,91,39,T.surface,T.border,3.5);
+      label('Baseline recommendation guide',M+191,124);
       const guide = [
-        ['Term life','S$500k to age 65','family income replacement'],
-        ['Disability income','S$3k/mo to age 65','monthly income protection'],
+        ['Term life','S$500k to age 65','income replacement'],
+        ['Disability income','S$3k/mo to 65','monthly protection'],
         ['Critical illness','S$300k to age 65','recovery capital']
       ];
-      const gW = (CW-14)/3;
       guide.forEach((g,i)=>{
-        const x = M+5+i*(gW+4);
-        write(g[0],x,181,{size:6.4,style:'bold',color:T.text});
-        write(g[1],x+44,181,{size:6.4,style:'bold',color:T.primary});
-        write(g[2],x,187,{size:5.7,color:T.text3,maxW:gW-4,maxLines:1});
+        const ry = 132 + i * 7;
+        write(g[0],M+191,ry,{size:6.2,style:'bold',color:T.text});
+        write(g[1],M+186+87,ry,{size:6.1,style:'bold',color:T.primary,align:'right'});
+        write(g[2],M+191,ry+3.4,{size:5.4,color:T.text3});
+      });
+
+      // v2.4.0-rc1.65 hardfix: bottom band fills the freed real estate
+      // (baseline rec guide moved into right column above) with a
+      // compact household thesis summary keyed to the gap data.
+      card(M,160,CW,28,T.surface,T.border,3.5);
+      label('Household coverage thesis',M+5,170);
+      const thesisLines = (() => {
+        const out = [];
+        if (uncoveredMembers.length) {
+          out.push('Critical: ' + uncoveredMembers.map(m => m.name).join(', ') + ' has no active life cover and should be the first review priority.');
+        }
+        if (topCoverShare >= 70 && topCoverMember) {
+          out.push('Cover concentration: ' + topCoverShare + '% of household sum assured sits with ' + topCoverMember.name + ' — review rebalancing toward family-protection term life.');
+        }
+        if (topPremShare >= 60 && topPremMember) {
+          out.push('Payer concentration: ' + topPremMember.name + ' funds ' + topPremShare + '% of recurring premium — confirm affordability and payer-risk mitigation.');
+        }
+        if (out.length === 0) {
+          out.push('Household cover is reasonably distributed and premium load is balanced. Annual review should validate dependency assumptions and rider terms.');
+        }
+        return out.slice(0,3);
+      })();
+      thesisLines.forEach((s,i) => {
+        const dotColor = i === 0 && uncoveredMembers.length ? T.danger : (i === 0 && topCoverShare >= 70 ? T.warn : T.primary);
+        doc.setFillColor(...dotColor);
+        doc.circle(M+8, 178 + i*4 - 1.2, 1.0, 'F');
+        write(s, M+12, 178 + i*4, {size:6.2,color:T.text2,maxW:CW-18,maxLines:1});
       });
 
       // Page 3 - Premium and category distribution.
@@ -46913,6 +46995,18 @@ function ReportTab() {
       const renderMemberPage = (m, continued=false) => {
         doc.addPage();
         drawHeader(sectionNo, continued ? m.name + ' - continued' : m.name, (m.age != null ? 'Age ' + m.age : 'Age not set') + (m.gender ? ' - ' + m.gender : '') + ' - ' + m.activePolicies.length + ' active policies');
+        // v2.4.0-rc1.65 hardfix: continuation pages no longer redraw the
+        // big Member-snapshot + Review-note cards — they're identical to
+        // page N-1 and waste 48mm of vertical space. Skip straight to the
+        // policy ledger header. A compact one-liner reminds the reader
+        // they're still on this member.
+        if (continued) {
+          card(M,48,CW,9,T.surface,T.border,2);
+          doc.setFillColor(...T.primary);
+          doc.roundedRect(M,48,2,9,1,1,'F');
+          write(m.name + ' - continued from previous page',M+6,54,{size:6.4,style:'bold',color:T.text2,maxW:CW-12,maxLines:1});
+          return 62;
+        }
         card(M,48,75,39,T.surface,T.border,4);
         label('Member snapshot',M+5,58);
         write(String(m.activePolicies.length),M+5,73,{family:'times',style:'bold',size:18,color:T.text});
