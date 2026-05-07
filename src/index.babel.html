@@ -602,9 +602,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.67';
+const APP_VERSION = 'v2.4.0-rc1.68';
 const APP_VERSION_DATE = '2026-05-07';
-const APP_VERSION_NAME = 'V5 polish — drawn-arrow inflation bridge, client wording (Review summary / Review queue / Funding method), category page-break rules, no note artifacts';
+const APP_VERSION_NAME = 'Family Visual Report typographic refit — SZ/ACCENT system, scorecard 3-cell grid, gap alert tone-down, member snapshot 3-col, continued pages share section #';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -46451,6 +46451,29 @@ function ReportTab() {
         white:[255,255,255]
       };
 
+      // v2.4.0-rc1.65 — locked typographic scale + per-card-type accent
+      // mapping. Replaces the ~11 inline font sizes and rainbow accents
+      // that had accumulated across the family generator. ALL text
+      // henceforth uses one of these 5 sizes; NO new sizes added inline.
+      const SZ = {
+        hero: 15,        // page hero, member name (Times bold)
+        kpi: 13,         // big numbers (Times bold)
+        body: 7,         // tables, descriptions (Helv)
+        eyebrow: 6,      // uppercase labels (Helv bold +0.06em)
+        caption: 5.4     // tile sub-text, footer (Helv)
+      };
+      // ACCENT: each card type gets ONE colour. Bullets / dots / status
+      // pills inside the card use the SAME accent — no rainbow within a
+      // single component.
+      const ACCENT = {
+        cost: T.sun,            // premium / cost cards
+        cover: T.primary,       // sum-assured / cover cards
+        risk: T.danger,         // concentration / gap cards
+        insight: T.lavender,    // informational cards
+        action: T.primary,      // action queues / CTAs
+        meta: T.text3           // neutral data tiles (KPI strip)
+      };
+
       const today = new Date().toLocaleDateString('en-SG',{day:'numeric',month:'long',year:'numeric'});
       const inactiveStatuses = new Set(['matured','surrendered','lapsed','cancelled','terminated']);
 
@@ -46585,13 +46608,16 @@ function ReportTab() {
         }
       };
 
-      const drawMetricTile = (x,y,w,h,lbl,value,sub,color=T.primary) => {
+      // v2.4.0-rc1.65: standardised on SZ.kpi/SZ.caption so every KPI tile
+      // across the report uses the same 13pt value + 5.4pt grey descriptor.
+      // Accent dot colour is the only per-tile variation.
+      const drawMetricTile = (x,y,w,h,lbl,value,sub,color=ACCENT.cover) => {
         card(x,y,w,h,T.surface,T.border,3.5);
         doc.setFillColor(...color);
         doc.circle(x+w-6.5,y+6.2,3.4,'F');
         label(lbl,x+4,y+8);
-        write(value,x+4,y+18,{family:'times',style:'bold',size:12.5,color:T.text});
-        if (sub) write(sub,x+4,y+h-4.2,{size:5.4,color:T.text3,maxW:w-8,maxLines:1});
+        write(value,x+4,y+18,{family:'times',style:'bold',size:SZ.kpi,color:T.text,maxW:w-8,maxLines:1});
+        if (sub) write(sub,x+4,y+h-4.2,{size:SZ.caption,color:T.text3,maxW:w-8,maxLines:1});
       };
 
       const drawGapBar = (x,y,w,h,percent,color=T.primary) => {
@@ -46903,15 +46929,50 @@ function ReportTab() {
       drawBulletLine(M+5,75,'Total recurring premium is ' + money(totalAnnualPrem,{full:true}) + '/yr for ' + money(totalSA) + ' of cover.',T.sun);
       drawBulletLine(M+5,84,topCoverMember ? topCoverShare + '% of household cover sits with ' + topCoverMember.name + '.' : 'Coverage concentration cannot be assessed.', topCoverShare >= 80 ? T.danger : T.success);
 
+      // v2.4.0-rc1.65 FAMILY SCORECARD — rebuilt as a clean 3-cell equal
+      // grid with vertical hairline dividers. Was 3 metrics at 3 different
+      // sizes (17pt / 14pt / 14pt), one floating "Review" pill anchored
+      // only to the first metric. Now: each cell is a peer (eyebrow ↑
+      // value ↑ status pill ↓), 13pt Times bold for all values, hairline
+      // dividers between cells.
       card(M+162,48,115,38,T.surface,T.border,4);
-      label('Family scorecard',M+167,57);
-      write(String(topCoverShare) + '%',M+167,72,{family:'times',style:'bold',size:17,color:topCoverShare >= 80 ? T.danger : T.success});
-      write('cover concentration',M+195,72,{size:6.2,color:T.text3});
-      pill(concentrationStatus,M+167,78,concentrationTone,{w:39,h:5.2,size:5});
-      write('Uncovered members',M+224,66,{size:5.8,color:T.text3,align:'right'});
-      write(String(uncoveredMembers.length),M+246,76,{family:'times',style:'bold',size:14,color:uncoveredMembers.length ? T.danger : T.success,align:'right'});
-      write('Top premium payer share',M+267,66,{size:5.8,color:T.text3,align:'right'});
-      write(String(topPremShare) + '%',M+267,76,{family:'times',style:'bold',size:14,color:topPremShare >= 70 ? T.warn : T.text,align:'right'});
+      label('Family scorecard',M+167,53);
+      const sc3W = (115 - 8) / 3;  // 3 equal cells inside the card padding
+      const scCells = [
+        {
+          label: 'Cover concentration',
+          value: String(topCoverShare) + '%',
+          tone: topCoverShare >= 80 ? T.danger : topCoverShare >= 60 ? T.warn : T.success,
+          pill: concentrationStatus,
+          pillTone: concentrationTone
+        },
+        {
+          label: 'Uncovered',
+          value: String(uncoveredMembers.length) + (uncoveredMembers.length === 1 ? ' member' : ' members'),
+          tone: uncoveredMembers.length ? T.danger : T.success,
+          pill: uncoveredMembers.length ? 'Action' : 'Covered',
+          pillTone: uncoveredMembers.length ? 'danger' : 'success'
+        },
+        {
+          label: 'Top premium payer',
+          value: String(topPremShare) + '%',
+          tone: topPremShare >= 70 ? T.warn : T.text,
+          pill: topPremShare >= 70 ? 'Concentrated' : 'Balanced',
+          pillTone: topPremShare >= 70 ? 'warn' : 'success'
+        }
+      ];
+      scCells.forEach((c, i) => {
+        const cx = M + 167 + i * sc3W;
+        // Vertical divider between cells
+        if (i > 0) {
+          doc.setDrawColor(...T.border);
+          doc.setLineWidth(0.15);
+          doc.line(cx - 1, 56, cx - 1, 84);
+        }
+        label(c.label, cx, 60);
+        write(c.value, cx, 72, {family:'times', style:'bold', size:SZ.kpi, color:c.tone, maxW:sc3W-2, maxLines:1});
+        pill(c.pill, cx, 76, c.pillTone, {w: sc3W - 4, h:5, size:4.6});
+      });
 
       const kW = (CW - 12) / 5;
       [
@@ -46982,25 +47043,33 @@ function ReportTab() {
       // space (just one big number + one sentence + tiny pill). Shrunk to
       // 60mm and packed with member-by-member gap detail. Baseline rec
       // guide moved up to fill the freed real estate.
-      card(M+186,48,91,60,uncoveredMembers.length ? T.dangerSoft : T.successSoft,uncoveredMembers.length ? T.dangerSoft : T.successSoft,4);
-      label(uncoveredMembers.length ? 'Coverage gap alert' : 'Coverage balance note',M+191,58,uncoveredMembers.length ? T.danger : T.success);
-      write(String(uncoveredMembers.length),M+191,72,{family:'times',style:'bold',size:18,color:uncoveredMembers.length ? T.danger : T.success});
-      write(uncoveredMembers.length === 1 ? 'member needs cover' : (uncoveredMembers.length ? 'members need cover' : 'all members covered'),M+208,71,{size:6.4,color:T.text2,maxW:65,maxLines:1});
+      // v2.4.0-rc1.65 COVERAGE GAP ALERT — toned down from full pink
+      // dangerSoft fill to a calm cream surface with a coral rail on the
+      // left edge. Red is reserved for the count + the action chip only,
+      // so it stands out instead of competing with the rest of the page.
+      const gapCardHasGap = uncoveredMembers.length > 0;
+      const gapAccent = gapCardHasGap ? ACCENT.risk : ACCENT.cover;
+      card(M+186,48,91,60,T.surface,T.border,4);
+      doc.setFillColor(...gapAccent); doc.roundedRect(M+186,48,1.6,60,0.8,0.8,'F');
+      label(gapCardHasGap ? 'Coverage gap alert' : 'Coverage balance', M+192, 58, gapAccent);
+      write(String(uncoveredMembers.length), M+192, 72, {family:'times', style:'bold', size:SZ.kpi+3, color: gapCardHasGap ? T.danger : T.success});
+      write(uncoveredMembers.length === 1 ? 'member needs cover' : (gapCardHasGap ? 'members need cover' : 'all members covered'), M+208, 71, {size:SZ.body, color:T.text2, maxW:65, maxLines:1});
       // Per-member gap list, capped to 3 lines
-      const gapMembers = uncoveredMembers.length ? uncoveredMembers : memberRows.filter(m => m.sumAssured < totalSA * 0.1);
+      const gapMembers = gapCardHasGap ? uncoveredMembers : memberRows.filter(m => m.sumAssured < totalSA * 0.1);
       let gapY = 80;
       gapMembers.slice(0,3).forEach((m) => {
-        doc.setFillColor(...(uncoveredMembers.length ? T.danger : T.warn));
+        doc.setFillColor(...(gapCardHasGap ? gapAccent : T.warn));
         doc.circle(M+193, gapY-1.4, 0.9, 'F');
-        write(m.name, M+196, gapY, {size:6.1,style:'bold',color:T.text,maxW:46,maxLines:1});
-        write(m.sumAssured > 0 ? money(m.sumAssured) + ' cover' : 'no cover', M+186+87, gapY, {size:5.8,color:uncoveredMembers.length ? T.danger : T.text3, align:'right'});
+        write(m.name, M+196, gapY, {size:SZ.body, style:'bold', color:T.text, maxW:46, maxLines:1});
+        write(m.sumAssured > 0 ? money(m.sumAssured) + ' cover' : 'no cover', M+186+87, gapY, {size:SZ.caption, color: gapCardHasGap ? T.danger : T.text3, align:'right'});
         gapY += 6;
       });
       if (gapMembers.length === 0) {
-        write('All members carry baseline life cover. Review rider terms and beneficiary nominations annually.', M+191, 80, {size:6.2,color:T.text2,maxW:80,maxLines:3,lineH:3.6});
+        write('All members carry baseline life cover. Review rider terms and beneficiary nominations annually.', M+192, 80, {size:SZ.body, color:T.text2, maxW:80, maxLines:3, lineH:3.6});
       }
-      if (uncoveredMembers.length) {
-        pill('Action: start baseline term life',M+191,gapY+2,'danger',{w:80,h:5,size:5});
+      if (gapCardHasGap) {
+        // Action chip — primary CTA pill anchored left, not bottom-right
+        pill('Recommend baseline term life',M+192, gapY+2, 'danger', {w:80, h:5, size:SZ.caption});
       }
 
       // Baseline recommendation guide — moved up to y=114 (was y=162) to
@@ -47083,15 +47152,22 @@ function ReportTab() {
       drawMiniTableHeader(M+148,65,124,[{label:'Member',x:2},{label:'Premium',x:66},{label:'Cover',x:96},{label:'Payer share',x:110}]);
       let my = 73;
       memberRows.slice(0,6).forEach((m,idx)=>{
+        // v2.4.0-rc1.65 — taller row (16mm) so the cover-share gauge has
+        // its own band BELOW the data row instead of bleeding across the
+        // premium/cover columns. Gauge spans the data width only.
         const pshare = totalAnnualPrem ? Math.round(m.annualPremium/totalAnnualPrem*100) : 0;
         const cshare = totalSA ? Math.round(m.sumAssured/totalSA*100) : 0;
-        card(M+148,my,124,13,idx%2?T.tableAlt:T.surface,T.border,1);
-        write(m.name,M+152,my+7,{size:6.4,style:'bold',color:T.text,maxW:54,maxLines:1});
-        write(money(m.annualPremium),M+226,my+7,{size:6.1,color:T.text2,align:'right'});
-        write(money(m.sumAssured,{blankZero:true}),M+255,my+7,{size:6.1,color:T.text2,align:'right'});
-        write(pshare + '%',M+272,my+7,{size:6.1,style:'bold',color:pshare>=70?T.warn:T.text2,align:'right'});
-        drawGapBar(M+152,my+9.5,54,2,cshare,cshare===0?T.border2:T.primary);
-        my += 13;
+        const rowH = 16;
+        card(M+148,my,124,rowH,idx%2?T.tableAlt:T.surface,T.border,1);
+        write(m.name,M+152,my+7,{size:SZ.body,style:'bold',color:T.text,maxW:54,maxLines:1});
+        write(money(m.annualPremium),M+226,my+7,{size:SZ.body,color:T.text2,align:'right'});
+        write(money(m.sumAssured,{blankZero:true}),M+255,my+7,{size:SZ.body,color:T.text2,align:'right'});
+        write(pshare + '%',M+272,my+7,{size:SZ.body,style:'bold',color:pshare>=70?T.warn:T.text2,align:'right'});
+        // Cover-share gauge: thin 1.4mm strip on its own row at y+12.4,
+        // spanning the inner card width minus padding so it never enters
+        // the data columns above. Light coral on filled, hairline on empty.
+        drawGapBar(M+152,my+12.4,118,1.4,cshare,cshare===0?T.border2:T.primary);
+        my += rowH;
       });
 
       card(M,154,CW,34,T.surface,T.border,3.5);
@@ -47108,10 +47184,20 @@ function ReportTab() {
       });
 
       // Member detail pages.
+      // v2.4.0-rc1.65: continuation pages no longer eat a section number.
+      // Each member owns ONE section (04, 05, 06...) — additional pages
+      // for the same member append "(page 2)" to the title and keep the
+      // same section number. This fixes the TOC reading
+      //   "04 Chan Chung Yin / 05 Chan Chung Yin - continued / 06 ..."
+      // which made it look like Chan was 2 different members.
       let sectionNo = 4;
+      let memberPageNo = 1;
       const renderMemberPage = (m, continued=false) => {
         doc.addPage();
-        drawHeader(sectionNo, continued ? m.name + ' - continued' : m.name, (m.age != null ? 'Age ' + m.age : 'Age not set') + (m.gender ? ' - ' + m.gender : '') + ' - ' + m.activePolicies.length + ' active policies');
+        if (continued) memberPageNo++;
+        else memberPageNo = 1;
+        const pageSuffix = continued ? ' (page ' + memberPageNo + ')' : '';
+        drawHeader(sectionNo, m.name + pageSuffix, (m.age != null ? 'Age ' + m.age : 'Age not set') + (m.gender ? ' - ' + m.gender : '') + ' - ' + m.activePolicies.length + ' active policies');
         // v2.4.0-rc1.65 hardfix: continuation pages no longer redraw the
         // big Member-snapshot + Review-note cards — they're identical to
         // page N-1 and waste 48mm of vertical space. Skip straight to the
@@ -47131,25 +47217,68 @@ function ReportTab() {
           write(meta,M+6,58.6,{size:5.6,color:T.text3,maxW:CW-12,maxLines:1});
           return 64;
         }
-        card(M,48,75,39,T.surface,T.border,4);
-        label('Member snapshot',M+5,58);
-        write(String(m.activePolicies.length),M+5,73,{family:'times',style:'bold',size:18,color:T.text});
-        write('active policies',M+23,72,{size:6.2,color:T.text3});
-        write(money(m.annualPremium) + '/yr premium',M+5,82,{size:6.4,color:T.text2});
-        write(money(m.sumAssured,{blankZero:true}) + ' cover',M+42,82,{size:6.4,color:T.text2});
+        // v2.4.0-rc1.65 MEMBER SNAPSHOT — rebuilt as a 3-column horizontal
+        // layout so the card actually earns its 75x39mm footprint. Was
+        // a hero "9" + 2 stranded dollar values with a 50% empty void.
+        // Now: policies | premium | cover, all peers, all same size.
+        card(M,48,113,39,T.surface,T.border,4);
+        // Coral rail anchors the card to the member-color theme
+        doc.setFillColor(...ACCENT.cover); doc.roundedRect(M,48,1.6,39,0.8,0.8,'F');
+        label('Member snapshot',M+6,58);
+        // Three peer values, evenly spaced
+        const cellW = (113 - 6) / 3;
+        const cells = [
+          [String(m.activePolicies.length), 'active policies'],
+          [money(m.annualPremium), 'premium / yr'],
+          [money(m.sumAssured,{blankZero:true}), 'sum assured']
+        ];
+        cells.forEach(([val, lbl], i) => {
+          const cx = M + 6 + i * cellW;
+          write(val, cx, 73, {family:'times', style:'bold', size:SZ.kpi, color:T.text});
+          write(lbl, cx, 80, {size:SZ.caption, color:T.text3, maxW: cellW - 4, maxLines:1});
+        });
+        // Slim concentration insight at the bottom of the card
+        const concPct = totalSA ? Math.round(m.sumAssured/totalSA*100) : 0;
+        const concLine = m.sumAssured <= 0
+          ? 'No life cover detected'
+          : concPct + '% of family cover concentration';
+        write(concLine, M+6, 86.4, {size:SZ.caption, color:T.text3, style:'italic', maxW: 113-12, maxLines:1});
 
-        card(M+81,48,196,39,m.sumAssured <= 0 ? T.dangerSoft : T.surface,T.border,4);
-        label(m.sumAssured <= 0 ? 'Gap note' : 'Review note',M+86,58,m.sumAssured <= 0 ? T.danger : T.text3);
-        const note = m.sumAssured <= 0
-          ? 'No active life cover is detected for this member. Start with baseline term life, disability income and CI sizing before adding savings or investment plans.'
-          : (m.name + ' carries ' + (totalSA ? Math.round(m.sumAssured/totalSA*100) : 0) + '% of family cover. Confirm whether this matches the household dependency and income-contribution profile.');
-        write(note,M+86,68,{size:7,color:T.text2,maxW:185,maxLines:3,lineH:4});
+        // v2.4.0-rc1.65 REVIEW/GAP NOTE — slim callout BAND, not a panel.
+        // Was a 196x39mm card holding one sentence with massive vertical
+        // void below. Now: 13mm-tall band with leading rail + ⓘ glyph,
+        // sentence beside. Half the height, full message density.
+        const noteIsGap = m.sumAssured <= 0;
+        const noteAccent = noteIsGap ? ACCENT.risk : ACCENT.insight;
+        const noteSoft = noteIsGap ? T.dangerSoft : T.lavenderSoft;
+        const noteH = 39;  // keep card height for layout symmetry
+        card(M+119,48,158,noteH,T.surface,T.border,4);
+        doc.setFillColor(...noteAccent); doc.roundedRect(M+119,48,1.6,noteH,0.8,0.8,'F');
+        label(noteIsGap ? 'Gap note' : 'Review note', M+125, 58, noteAccent);
+        // Info circle as a leading visual anchor
+        doc.setFillColor(...noteAccent);
+        doc.circle(M+128, 67, 1.6, 'F');
+        setFont('helvetica','bold', 5.6, T.surface);
+        doc.text('i', M+128, 68, {align:'center'});
+        const note = noteIsGap
+          ? 'No active life cover detected. Start with baseline term life, disability income and CI sizing before adding savings or investment plans.'
+          : (m.name + ' carries ' + concPct + '% of family cover. Confirm whether this matches household dependency and income contribution.');
+        write(note, M+133, 68.5, {size:SZ.body, color:T.text2, maxW: 158-18, maxLines:4, lineH:4.2});
+        // Soft tinted background for the note area only (keeps card surface neutral)
+        if (noteIsGap) {
+          // Add a slim accent strip at the bottom of the note for emphasis
+          doc.setFillColor(...noteSoft);
+          doc.roundedRect(M+125, 80, 158-12, 5, 1.5, 1.5, 'F');
+          write('Action: start baseline term life, disability income and CI', M+128, 83.5, {size:SZ.caption, style:'bold', color:noteAccent, maxW: 158-18, maxLines:1});
+        }
         return 96;
       };
 
       memberRows.forEach((m) => {
+        // v2.4.0-rc1.65: sectionNo is bumped ONCE per member at the END of
+        // their detail block. Continuation pages keep the same section
+        // number with a "(page N)" suffix on the title.
         let y = renderMemberPage(m,false);
-        sectionNo++;
 
         if (!m.activePolicies.length) {
           card(M,y,CW,36,T.surface,T.border,4);
@@ -47160,6 +47289,7 @@ function ReportTab() {
             write(r[0],x,y+21,{size:6.5,style:'bold',color:T.text});
             write(r[1],x+45,y+21,{size:6.5,style:'bold',color:T.primary});
           });
+          sectionNo++;
           return;
         }
 
@@ -47196,14 +47326,15 @@ function ReportTab() {
 
         groupEntries.forEach(([cat,pols]) => {
           // Block-level guard: header + first policy row must fit together.
+          // v2.4.0-rc1.65: continuation pages no longer increment sectionNo —
+          // they share the member's section number with a (page N) suffix.
           const minBlock = requiredCategoryHeight(pols[0]);
-          if (!hasSpace(y, minBlock)) { y = renderMemberPage(m,true); sectionNo++; }
+          if (!hasSpace(y, minBlock)) { y = renderMemberPage(m,true); }
           drawFamilyCatBand(cat, pols, false);
           pols.forEach((pol,idx)=>{
             const rowH = policyRowHeight(pol);
             if (!hasSpace(y, rowH)) {
               y = renderMemberPage(m,true);
-              sectionNo++;
               drawFamilyCatBand(cat, pols, true);
             }
             drawPolicyDetailRow(M,y,CW,pol,idx);
@@ -47211,6 +47342,8 @@ function ReportTab() {
           });
           y += 4;
         });
+        // Member fully rendered — bump section number once for the next member.
+        sectionNo++;
       });
 
       // Final next steps page.
