@@ -602,9 +602,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.71';
-const APP_VERSION_DATE = '2026-05-07';
-const APP_VERSION_NAME = 'PDF polish: dollar overflow on coverage map, snapshot caption clipping, lifestyle-target pill, top-right date editorial restyling';
+const APP_VERSION = 'v2.4.0-rc1.72';
+const APP_VERSION_DATE = '2026-05-08';
+const APP_VERSION_NAME = 'Hotfix: family PDF pdfSafe ReferenceError + perma-alias so V4 helper names (pdfSafe / setFont) cannot break the family generator again';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -46545,6 +46545,12 @@ function ReportTab() {
           .replace(/\s+/g, ' ')
           .trim();
       };
+      // v2.4.0-rc1.72 PERMA-FIX: defensive alias so future copy-paste
+      // from the V4 single-client generator (which names this helper
+      // `pdfSafe`) doesn't throw ReferenceError. Both names now reach
+      // the same impl. Mirrors the `setFont = font` alias added in
+      // rc1.69 for the exact same class of bug.
+      const pdfSafe = cleanPdfText;
 
       const n = (v) => {
         if (v === null || v === undefined || v === '') return 0;
@@ -46645,8 +46651,13 @@ function ReportTab() {
         const dateStr = today.toUpperCase();
         write(dateStr, W-M, 11, {size:5.8, color:T.text3, align:'right', style:'bold', charSpace: 0.6});
         // Tiny dot to the left of the date for editorial anchoring
-        setFont('helvetica','bold', 5.8, T.text3);
-        const dateW = doc.getTextWidth(pdfSafe(dateStr));
+        // v2.4.0-rc1.72 hotfix: family generator's sanitizer is named
+        // `cleanPdfText`, not `pdfSafe`. The bare `pdfSafe(dateStr)` call
+        // here threw ReferenceError and killed the whole PDF render. The
+        // perma-alias added below makes both names resolve to the same
+        // implementation so this cannot happen again.
+        font('helvetica','bold', 5.8, T.text3);
+        const dateW = doc.getTextWidth(cleanPdfText(dateStr));
         doc.setFillColor(...T.text4);
         doc.circle(W - M - dateW - 5, 9.6, 0.6, 'F');
         write(familyName, W/2, 20, {size:7.6, color:T.text2, align:'center'});
