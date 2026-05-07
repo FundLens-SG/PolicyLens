@@ -602,9 +602,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.75';
+const APP_VERSION = 'v2.4.0-rc1.76';
 const APP_VERSION_DATE = '2026-05-08';
-const APP_VERSION_NAME = 'Both reports — header alignment, client-voice copy throughout, "Specially Prepared for X" premium treatment, Title Case titles';
+const APP_VERSION_NAME = 'Family report — tightened MEMBER SNAPSHOT / WHAT WE NOTICED / WHAT STANDS OUT cards (kill 30-50% empty card void)';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -47418,10 +47418,13 @@ function ReportTab() {
         my += rowH;
       });
 
-      card(M,154,CW,34,T.surface,T.border,3.5);
-      label('What stands out',M+5,165);
-      // v2.4.0-rc1.75: insight bullets rewritten as observations the
-      // client can read on their own — softer, less audit-language.
+      // v2.4.0-rc1.76 — card tightened from 34mm → 20mm. Was content at
+      // y=165-177 in a card ending y=188 (10mm of empty void at the
+      // bottom). Now content packs neatly: label at y=160, bullets at
+      // y=170, card closes at y=174.
+      card(M,154,CW,20,T.surface,T.border,3.5);
+      label('What stands out',M+5,160);
+      // Client-voice insight bullets.
       const insights = [
         topCoverMember ? topCoverMember.name + ' currently holds ' + topCoverShare + '% of all the family cover.' : 'We need more details to see how cover is shared.',
         topPremMember ? topPremMember.name + ' pays for ' + topPremShare + '% of all family premiums.' : 'We need more details to see who funds which policy.',
@@ -47429,8 +47432,8 @@ function ReportTab() {
       ];
       insights.forEach((s,i)=>{
         const x = M+5+i*((CW-10)/3+3);
-        doc.setFillColor(...[T.primary,T.sun,T.lavender][i]); doc.circle(x+2,175,1.3,'F');
-        write(s,x+6,177,{size:6.5,color:T.text2,maxW:(CW-18)/3,maxLines:2,lineH:3.4});
+        doc.setFillColor(...[T.primary,T.sun,T.lavender][i]); doc.circle(x+2,170,1.3,'F');
+        write(s,x+6,171.5,{size:6.5,color:T.text2,maxW:(CW-18)/3,maxLines:2,lineH:3.4});
       });
 
       // Member detail pages.
@@ -47467,19 +47470,16 @@ function ReportTab() {
           write(meta,M+6,58.6,{size:5.6,color:T.text3,maxW:CW-12,maxLines:1});
           return 64;
         }
-        // v2.4.0-rc1.65 MEMBER SNAPSHOT — rebuilt as a 3-column horizontal
-        // layout so the card actually earns its 75x39mm footprint. Was
-        // a hero "9" + 2 stranded dollar values with a 50% empty void.
-        // Now: policies | premium | cover, all peers, all same size.
-        // v2.4.0-rc1.71: card height 39 → 44 so the concentration caption
-        // at the bottom has proper breathing room (was clipping the card
-        // border at y=86.4 in a card ending at y=87).
-        const snapH = 44;
-        card(M,48,113,snapH,T.surface,T.border,4);
-        // Coral rail anchors the card to the member-color theme
-        doc.setFillColor(...ACCENT.cover); doc.roundedRect(M,48,1.6,snapH,0.8,0.8,'F');
-        label('Member snapshot',M+6,58);
-        // Three peer values, evenly spaced
+        // v2.4.0-rc1.76: tightened both top cards from 44mm → 32mm to kill
+        // the 30-50% empty void below their content (visible to the user
+        // in screenshots). Content packs neatly: label / values / divider /
+        // caption all stack with proper rhythm and the card border closes
+        // 3mm below the caption baseline.
+        const snapH = 32;
+        const snapTop = 48;
+        card(M,snapTop,113,snapH,T.surface,T.border,4);
+        doc.setFillColor(...ACCENT.cover); doc.roundedRect(M,snapTop,1.6,snapH,0.8,0.8,'F');
+        label('Member snapshot', M+6, snapTop+5);
         const cellW = (113 - 6) / 3;
         const cells = [
           [String(m.activePolicies.length), 'active policies'],
@@ -47488,55 +47488,42 @@ function ReportTab() {
         ];
         cells.forEach(([val, lbl], i) => {
           const cx = M + 6 + i * cellW;
-          write(val, cx, 73, {family:'times', style:'bold', size:SZ.kpi, color:T.text});
-          write(lbl, cx, 80, {size:SZ.caption, color:T.text3, maxW: cellW - 4, maxLines:1});
+          write(val, cx, snapTop + 16, {family:'times', style:'bold', size:SZ.kpi, color:T.text});
+          write(lbl, cx, snapTop + 21.5, {size:SZ.caption, color:T.text3, maxW: cellW - 4, maxLines:1});
         });
-        // Slim concentration insight at the bottom of the card — divider
-        // above and 4mm of breathing room below the baseline.
         const concPct = totalSA ? Math.round(m.sumAssured/totalSA*100) : 0;
         const concLine = m.sumAssured <= 0
           ? 'No life cover detected'
           : concPct + '% of family cover concentration';
         doc.setDrawColor(...T.border); doc.setLineWidth(0.12);
-        doc.line(M+6, 84.5, M+113-6, 84.5);
-        write(concLine, M+6, 89, {size:SZ.caption, color:T.text3, style:'italic', maxW: 113-12, maxLines:1});
+        doc.line(M+6, snapTop + 25, M+113-6, snapTop + 25);
+        write(concLine, M+6, snapTop + 29, {size:SZ.caption, color:T.text3, style:'italic', maxW: 113-12, maxLines:1});
 
-        // v2.4.0-rc1.65 REVIEW/GAP NOTE — slim callout BAND, not a panel.
-        // Was a 196x39mm card holding one sentence with massive vertical
-        // void below. Now: 13mm-tall band with leading rail + ⓘ glyph,
-        // sentence beside. Half the height, full message density.
+        // REVIEW / GAP NOTE — same height as MEMBER SNAPSHOT (32mm) for
+        // visual symmetry. Wraps the sentence over up to 3 lines so it
+        // fills the card without bottom void.
         const noteIsGap = m.sumAssured <= 0;
         const noteAccent = noteIsGap ? ACCENT.risk : ACCENT.insight;
         const noteSoft = noteIsGap ? T.dangerSoft : T.lavenderSoft;
-        const noteH = 44;  // matches MEMBER SNAPSHOT height (rc1.71)
-        card(M+119,48,158,noteH,T.surface,T.border,4);
-        doc.setFillColor(...noteAccent); doc.roundedRect(M+119,48,1.6,noteH,0.8,0.8,'F');
-        label(noteIsGap ? 'What is missing' : 'What we noticed', M+125, 58, noteAccent);
-        // Info circle as a leading visual anchor
-        // v2.4.0-rc1.69 hotfix: family generator's font helper is `font(...)`,
-        // not `setFont(...)`. Calling setFont here threw ReferenceError and
-        // killed the whole PDF render mid-page.
+        const noteH = 32;
+        card(M+119,snapTop,158,noteH,T.surface,T.border,4);
+        doc.setFillColor(...noteAccent); doc.roundedRect(M+119,snapTop,1.6,noteH,0.8,0.8,'F');
+        label(noteIsGap ? 'What is missing' : 'What we noticed', M+125, snapTop+5, noteAccent);
         doc.setFillColor(...noteAccent);
-        doc.circle(M+128, 67, 1.6, 'F');
-        font('helvetica','bold', 5.6, T.surface);
-        doc.text('i', M+128, 68, {align:'center'});
-        // v2.4.0-rc1.75 — client voice (no "baseline sizing", "household
-        // dependency", "income contribution" jargon). Reads as a friendly
-        // observation the client can act on.
+        doc.circle(M+128, snapTop+13, 1.5, 'F');
+        font('helvetica','bold', 5.4, T.surface);
+        doc.text('i', M+128, snapTop+13.6, {align:'center'});
         const note = noteIsGap
           ? 'No life cover is showing for ' + m.name + ' yet. Worth looking at term life, disability income and critical illness — at sizes that fit your situation — before any savings or investment plans.'
           : (m.name + " currently holds " + concPct + "% of the family's life cover. Worth checking that this matches who depends on whose income, and what would happen financially if that ever changed.");
-        write(note, M+133, 68.5, {size:SZ.body, color:T.text2, maxW: 158-18, maxLines:4, lineH:4.2});
-        // Soft tinted background for the note area only (keeps card surface neutral)
+        write(note, M+133, snapTop+13.5, {size:SZ.body, color:T.text2, maxW: 158-18, maxLines:3, lineH:3.8});
         if (noteIsGap) {
-          // Add a slim accent strip at the bottom of the note for emphasis
+          // Slim accent action strip at the bottom of the note
           doc.setFillColor(...noteSoft);
-          doc.roundedRect(M+125, 80, 158-12, 5, 1.5, 1.5, 'F');
-          write('Action: start baseline term life, disability income and CI', M+128, 83.5, {size:SZ.caption, style:'bold', color:noteAccent, maxW: 158-18, maxLines:1});
+          doc.roundedRect(M+125, snapTop+25, 158-12, 4.4, 1.2, 1.2, 'F');
+          write('Action: start baseline term life, disability income and CI', M+128, snapTop+28, {size:SZ.caption, style:'bold', color:noteAccent, maxW: 158-18, maxLines:1});
         }
-        // v2.4.0-rc1.71: returns 100 (was 96) since card height grew from
-        // 39 to 44mm. Categories below now have 4mm more breathing room.
-        return 100;
+        return snapTop + snapH + 4;  // y handover for next block (cards down 4mm of gap)
       };
 
       memberRows.forEach((m) => {
