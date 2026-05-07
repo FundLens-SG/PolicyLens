@@ -612,9 +612,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.74';
+const APP_VERSION = 'v2.4.0-rc1.75';
 const APP_VERSION_DATE = '2026-05-08';
-const APP_VERSION_NAME = 'Hotfix: Visual PDF T.text4 ReferenceError + palette parity perma-fix so cross-generator copy-paste cannot crash';
+const APP_VERSION_NAME = 'Both reports — header alignment, client-voice copy throughout, "Specially Prepared for X" premium treatment, Title Case titles';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -65496,15 +65496,17 @@ function ReportTab() {
       //     gender treated as metadata badges with lighter weight
       const pageHeader = (sectionN, title) => {
         pageBg();
-        label('POLICYLENS', M, 8, T.primary);
-        text('Insurance portfolio review', M + 25, 8, {
+        label('POLICYLENS', M, 7, T.primary);
+        // v2.4.0-rc1.75: capitalised — Title Case so it reads as a proper
+        // document title, matching the family report's header treatment.
+        text('Insurance Portfolio Review', M + 25, 7, {
           size: 6.4,
           color: T.text3,
           style: 'normal'
         });
         // Date — uppercase tracked metadata stamp with leading dot
         const dateStr = today.toUpperCase();
-        text(dateStr, W - M, 8, {
+        text(dateStr, W - M, 7, {
           size: 5.8,
           color: T.text3,
           align: 'right',
@@ -65514,26 +65516,36 @@ function ReportTab() {
         setFont('helvetica', 'bold', 5.8, T.text3);
         const dateW = doc.getTextWidth(pdfSafe(dateStr));
         doc.setFillColor(...T.text4);
-        doc.circle(W - M - dateW - 4, 6.5, 0.6, 'F');
-        // Centered client meta — name reads in Times bold (premium voice),
-        // age + gender drop into a muted tracked tail so they support
-        // rather than compete with the name.
+        doc.circle(W - M - dateW - 4, 5.5, 0.6, 'F');
+        // v2.4.0-rc1.75 — premium "Specially Prepared for" treatment.
+        // Two-line vertical pair: italic "Specially prepared for" prefix
+        // in muted text3, followed by the client name in Times bold.
+        // Age and gender drop into a muted tail beside the name so they
+        // support rather than compete. Compressed to fit in the original
+        // 22mm header band so content cards at y=30 are not affected.
         const cleanGender = (p.gender || '').trim();
-        text(clientLabel, W / 2, 15, {
+        text('Specially prepared for', W / 2, 12, {
+          size: 5.4,
+          color: T.text3,
+          style: 'italic',
+          align: 'center',
+          charSpace: 0.4
+        });
+        text(clientLabel, W / 2, 16.5, {
           family: 'times',
           style: 'bold',
-          size: 9.2,
+          size: 10,
           color: T.text,
           align: 'center'
         });
         const nameW = (() => {
-          setFont('times', 'bold', 9.2, T.text);
+          setFont('times', 'bold', 10, T.text);
           return doc.getTextWidth(pdfSafe(clientLabel));
         })();
         const metaTailParts = ['age ' + currentAge];
         if (cleanGender) metaTailParts.push(cleanGender);
-        const metaTail = '  ·  ' + metaTailParts.join('  ·  ');
-        text(metaTail, W / 2 + nameW / 2, 15, {
+        const metaTail = '   ·   ' + metaTailParts.join('  ·  ');
+        text(metaTail, W / 2 + nameW / 2, 16.5, {
           size: 6.2,
           color: T.text3,
           style: 'normal',
@@ -65542,8 +65554,8 @@ function ReportTab() {
         // Hairline
         doc.setDrawColor(...T.border);
         doc.setLineWidth(0.16);
-        doc.line(M, 18.5, W - M, 18.5);
-        // Section number + title
+        doc.line(M, 19, W - M, 19);
+        // Section number + title — restored to y=25 so content cards at y=30 keep their gap
         if (sectionN) {
           setFont('helvetica', 'bold', 6.4, T.primary);
           doc.text(String(sectionN).padStart(2, '0'), M, 25);
@@ -67624,47 +67636,52 @@ function ReportTab() {
       };
       const drawHeader = (sectionNo, title, subtitle = '') => {
         drawBg();
-        write('POLICYLENS', M, 11, {
+        write('POLICYLENS', M, 9, {
           size: 6.5,
           style: 'bold',
           color: T.primary
         });
-        write('Family portfolio review', M + 38, 11, {
+        // v2.4.0-rc1.75: capitalised — was "Family portfolio review",
+        // now Title Case so it reads as a proper document title.
+        write('Family Portfolio Review', M + 38, 9, {
           size: 6.2,
           color: T.text3
         });
-        // v2.4.0-rc1.71: date polished — was sentence-case sans 6.2pt in
-        // text2 dark grey, which read as a darker orphan on the right
-        // while the left-side eyebrow used lighter text3. Now uppercase
-        // tracked at 5.8pt in text3 to pair visually with the eyebrow,
-        // and bracketed by hairline dots so it reads as a deliberate
-        // metadata stamp rather than a floating string.
         const dateStr = today.toUpperCase();
-        write(dateStr, W - M, 11, {
+        write(dateStr, W - M, 9, {
           size: 5.8,
           color: T.text3,
           align: 'right',
           style: 'bold',
           charSpace: 0.6
         });
-        // Tiny dot to the left of the date for editorial anchoring
-        // v2.4.0-rc1.72 hotfix: family generator's sanitizer is named
-        // `cleanPdfText`, not `pdfSafe`. The bare `pdfSafe(dateStr)` call
-        // here threw ReferenceError and killed the whole PDF render. The
-        // perma-alias added below makes both names resolve to the same
-        // implementation so this cannot happen again.
         font('helvetica', 'bold', 5.8, T.text3);
         const dateW = doc.getTextWidth(cleanPdfText(dateStr));
         doc.setFillColor(...T.text4);
-        doc.circle(W - M - dateW - 5, 9.6, 0.6, 'F');
-        write(familyName, W / 2, 20, {
-          size: 7.6,
-          color: T.text2,
+        doc.circle(W - M - dateW - 5, 7.6, 0.6, 'F');
+        // v2.4.0-rc1.75 — premium "Specially Prepared for X Family"
+        // treatment replacing the bare "TAN MEI LIAN Family" centred
+        // string. Two-line vertical pair: small italic prefix in muted
+        // text3, followed by family name in Times bold. Compressed
+        // vertically so the original section title position (y=37) is
+        // preserved and downstream content cards at y=48 are unaffected.
+        write('Specially prepared for', W / 2, 14.5, {
+          size: 5.4,
+          color: T.text3,
+          style: 'italic',
+          align: 'center',
+          charSpace: 0.4
+        });
+        write(familyName, W / 2, 19.5, {
+          family: 'times',
+          style: 'bold',
+          size: 9.4,
+          color: T.text,
           align: 'center'
         });
         doc.setDrawColor(...T.border);
         doc.setLineWidth(0.2);
-        doc.line(M, 25, W - M, 25);
+        doc.line(M, 23.5, W - M, 23.5);
         write(String(sectionNo).padStart(2, '0'), M, 37, {
           size: 6.3,
           style: 'bold',
@@ -67849,23 +67866,44 @@ function ReportTab() {
         if (pol.category === 'savings') bits.push('savings / endowment plan - confirm maturity and cash value');
         return safe(bits.join('; '), 140);
       };
+
+      // v2.4.0-rc1.75: drawMiniTableHeader now accepts `align` per column so
+      // numeric headers (Premium, Cover, Share) can right-align to match
+      // the right-aligned dollar values beneath them. Was always
+      // left-aligned, which produced visible header/data drift in the
+      // FAMILY MEMBERS and BY MEMBER tables.
       const drawMiniTableHeader = (x, y, w, cols) => {
         doc.setFillColor(...T.tableHead);
         doc.setDrawColor(...T.border);
         doc.rect(x, y, w, 8, 'FD');
-        cols.forEach(c => label(c.label, x + c.x, y + 5.6));
+        cols.forEach(c => {
+          const align = c.align || 'left';
+          if (align === 'left') {
+            label(c.label, x + c.x, y + 5.6);
+          } else {
+            font('helvetica', 'bold', 5.8, T.text3);
+            doc.text(cleanPdfText(String(c.label).toUpperCase()), x + c.x, y + 5.6, {
+              align,
+              charSpace: 0.4
+            });
+          }
+        });
       };
       const drawFamilyMemberRow = (x, y, w, m, idx) => {
-        // v2.4.0-rc1.65 hardfix: share bar was 28mm wide starting at x+151 in
-        // a 165mm-wide card, so a 100% bar overflowed the right edge by 14mm.
-        // New geometry keeps bar + percent both inside the row width.
+        // v2.4.0-rc1.75: column geometry redrawn so headers right-align with
+        // their right-aligned data, and the share-bar gauge sits cleanly
+        // INSIDE the SHARE column (instead of straddling the boundary
+        // between COVER and SHARE). New positions match the header definition
+        // at the call site:
+        //   Member 4 / Age 66 (c) / Pol 82 (c) / Premium 116 (r) /
+        //   Cover 138 (r) / Bar 143-158 / Share-pct 163 (r)
         const fill = idx % 2 ? T.tableAlt : T.surface;
         card(x, y, w, 12, fill, T.border, 1.5);
         write(m.name, x + 4, y + 7, {
           size: 7.1,
           style: 'bold',
           color: T.text,
-          maxW: 54,
+          maxW: 58,
           maxLines: 1
         });
         write(m.age != null ? String(m.age) : '-', x + 66, y + 7, {
@@ -67878,28 +67916,28 @@ function ReportTab() {
           color: T.text2,
           align: 'center'
         });
-        write(money(m.annualPremium), x + 112, y + 7, {
+        write(money(m.annualPremium), x + 116, y + 7, {
           size: 6.7,
           color: T.text2,
           align: 'right'
         });
         write(money(m.sumAssured, {
           blankZero: true
-        }), x + 144, y + 7, {
+        }), x + 138, y + 7, {
           size: 6.7,
           color: T.text2,
           align: 'right'
         });
         const coverShare = totalSA ? Math.round(m.sumAssured / totalSA * 100) : 0;
-        // Bar 9mm wide tucked into share column right side; percent ends at x+w-3
-        const barW = Math.max(8, Math.min(14, w - 158));
         const pctText = coverShare + '%';
-        // V2 family generator's font helper is `font(...)`, not `setFont(...)`.
+        const pctRightX = x + w - 3;
         font('helvetica', 'bold', 6.2, m.sumAssured > 0 ? T.primary : T.text3);
         const pctW = doc.getTextWidth(cleanPdfText(pctText));
-        const pctRightX = x + w - 3;
+        // Bar lives entirely inside the SHARE column: from x+143 (4mm gap
+        // after cover dollar end at x+138) to where percent label begins.
+        const barX = x + 143;
         const barEndX = pctRightX - pctW - 2;
-        const barX = barEndX - barW;
+        const barW = Math.max(6, barEndX - barX);
         drawGapBar(barX, y + 4.4, barW, 2.6, coverShare, m.sumAssured > 0 ? T.primary : T.border2);
         write(pctText, pctRightX, y + 7, {
           size: 6.2,
@@ -68081,32 +68119,36 @@ function ReportTab() {
         return top ? top[0] : 'varied';
       })();
       const nextSteps = [];
-      // V5 wording: client-facing, evergreen action titles.
+      // v2.4.0-rc1.75 — copy rewritten in client voice. Was advisor-jargon
+      // ("baseline life cover", "rebalance cover concentration", "payer
+      // concentration", "ward class and rider terms"). Now reads as a
+      // client take-home document — what to do, why it matters, what
+      // we'll talk about together.
       uncoveredMembers.forEach(m => {
         nextSteps.push({
           priority: 'Critical',
           tone: 'danger',
-          action: 'Add baseline life cover for ' + m.name,
-          why: 'Baseline cover not recorded.',
-          discussion: 'Term life, disability income and CI baseline sizing.'
+          action: 'Add life cover for ' + m.name,
+          why: m.name + ' currently has no life cover on file.',
+          discussion: 'Right-sized term life, disability income and critical illness for your family situation.'
         });
       });
       if (topCoverShare >= 80 && topCoverMember) {
         nextSteps.push({
           priority: 'High',
           tone: 'danger',
-          action: 'Rebalance cover concentration',
-          why: topCoverShare + '% of household cover sits with ' + topCoverMember.name + '.',
-          discussion: 'Add baseline cover for other household members.'
+          action: "Spread the family's life cover",
+          why: 'Right now ' + topCoverShare + '% of the cover sits with ' + topCoverMember.name + '.',
+          discussion: 'Add starter cover for the other family members so the household does not depend on one life.'
         });
       }
       if (topPremShare >= 60 && topPremMember) {
         nextSteps.push({
           priority: 'Review',
           tone: 'warn',
-          action: 'Review payer concentration',
-          why: topPremMember.name + ' funds ' + topPremShare + '% of recurring premium.',
-          discussion: 'Affordability and premium runway.'
+          action: 'Look at who pays which policy',
+          why: topPremMember.name + ' is funding ' + topPremShare + "% of the family's monthly premiums.",
+          discussion: 'Make sure no one is carrying too much premium load if circumstances change.'
         });
       }
       if (catRows.length) {
@@ -68114,17 +68156,17 @@ function ReportTab() {
         nextSteps.push({
           priority: 'Review',
           tone: 'warn',
-          action: 'Review portfolio mix',
-          why: categoryLabel(largestCat.cat) + ' uses ' + money(largestCat.prem) + '/yr of premium.',
-          discussion: 'Protection first, then savings and investment allocation.'
+          action: 'Check the protection mix',
+          why: 'Most premium goes to ' + categoryLabel(largestCat.cat) + ' (' + money(largestCat.prem) + '/yr).',
+          discussion: 'Make sure protection (life, disability, illness) is in place before adding more savings and investments.'
         });
       }
       nextSteps.push({
         priority: 'Confirm',
         tone: 'sky',
-        action: 'Confirm ward class and rider terms',
-        why: 'Medical plans and riders need benefit confirmation.',
-        discussion: 'Ward class, rider, deductible and co-insurance.'
+        action: 'Check your hospital plan',
+        why: 'Confirm which ward class your plan covers and what your share of any bill would be.',
+        discussion: 'Ward type, rider, deductible and co-insurance — what you would actually pay out-of-pocket in a claim.'
       });
 
       // Page 1 - Family executive review.
@@ -68194,24 +68236,32 @@ function ReportTab() {
       }) + '/mo', T.sun], ['Sum assured', money(totalSA), 'family total', T.primary], ['Cover concentration', String(topCoverShare) + '%', topCoverMember ? 'top insured member' : 'n/a', topCoverShare >= 80 ? T.danger : T.success]].forEach((m, i) => drawMetricTile(M + i * (kW + 3), 94, kW, 25, m[0], m[1], m[2], m[3]));
       card(M, 128, 175, 50, T.surface, T.border, 3.5);
       label('Family members', M + 5, 138);
+      // v2.4.0-rc1.75: numeric headers right-aligned at the same x as the
+      // data right-edge beneath. SHARE column header centred over its bar+%
+      // band (which spans x+143..x+162 inside the card).
       drawMiniTableHeader(M + 5, 143, 165, [{
         label: 'Member',
-        x: 2
+        x: 4
       }, {
         label: 'Age',
-        x: 66
+        x: 66,
+        align: 'center'
       }, {
         label: 'Pol',
-        x: 80
+        x: 82,
+        align: 'center'
       }, {
         label: 'Premium',
-        x: 112
+        x: 116,
+        align: 'right'
       }, {
         label: 'Cover',
-        x: 143
+        x: 138,
+        align: 'right'
       }, {
         label: 'Share',
-        x: 157
+        x: 162,
+        align: 'right'
       }]);
       let fy = 151;
       memberRows.slice(0, 4).forEach((m, idx) => {
@@ -68222,9 +68272,14 @@ function ReportTab() {
         size: 5.6,
         color: T.text3
       });
+
+      // v2.4.0-rc1.75: this report is for CLIENT to read on their own.
+      // Section name + bullets rewritten in plain English, no advisor
+      // jargon ("baseline cover", "concentration", "ward class", "payer
+      // risk"). Each bullet now reads as a client-facing observation.
       card(M + 183, 128, 94, 50, T.surface, T.border, 3.5);
-      label('Advisor focus areas', M + 188, 138);
-      const focus = [uncoveredMembers.length ? 'Baseline cover for ' + uncoveredMembers.map(m => m.name).slice(0, 2).join(', ') : 'No fully uncovered member detected', topCoverShare >= 80 ? 'Coverage concentration on ' + topCoverMember.name : 'Coverage is reasonably distributed', 'Confirm ward class, rider and deductible terms', 'Review premium mix and payer risk'];
+      label('What we will discuss', M + 188, 138);
+      const focus = [uncoveredMembers.length ? uncoveredMembers.map(m => m.name).slice(0, 2).join(' & ') + ' need life cover' : 'Every member has life cover in place', topCoverShare >= 80 && topCoverMember ? 'Most family cover sits with ' + topCoverMember.name : 'Cover is shared across the family', 'Hospital plan: which ward and what is included', 'Premium mix: who pays which policy'];
       let fx = M + 188,
         fyy = 148;
       focus.forEach((s, i) => {
@@ -68241,14 +68296,16 @@ function ReportTab() {
         });
         fyy += 9;
       });
+
+      // v2.4.0-rc1.75: meeting strip rewritten in client voice.
       const tagY = 185;
       card(M, tagY, CW, 11, T.primarySoft, T.primarySoft, 3);
-      write('Meeting focus', M + 5, tagY + 7, {
+      write('Top priorities', M + 5, tagY + 7, {
         size: 6.2,
         style: 'bold',
         color: T.primary
       });
-      const tags = [uncoveredMembers.length ? 'Critical: ' + uncoveredMembers.length + ' member(s) without life cover' : 'Keep: baseline cover present', 'Review: ' + topCoverShare + '% cover concentration', 'Confirm: payment methods and medical riders'];
+      const tags = [uncoveredMembers.length ? 'Critical: ' + uncoveredMembers.length + (uncoveredMembers.length === 1 ? ' member needs life cover' : ' members need life cover') : 'Keep: every member has life cover', topCoverShare >= 70 ? 'Review: spread the family’s cover' : 'Keep: cover is shared across the family', 'Confirm: hospital plan and how each policy is paid'];
       let tx = M + 42;
       tags.forEach(t => {
         tx += pill(t, tx, tagY + 2, 'ghost', {
@@ -68491,18 +68548,27 @@ function ReportTab() {
       });
       card(M + 143, 48, 134, 95, T.surface, T.border, 4);
       label('By member - premium and cover', M + 148, 58);
+      // v2.4.0-rc1.75: numeric column headers right-aligned at the same
+      // x as their right-aligned data values, eliminating the visible
+      // header-vs-data drift in the previous left-aligned layout.
+      // Headers right-aligned at the same x as the data right-edges below.
+      // "Share" instead of "Payer share" so the longer label doesn't collide
+      // with COVER header — same convention as the FAMILY MEMBERS table.
       drawMiniTableHeader(M + 148, 65, 124, [{
         label: 'Member',
         x: 2
       }, {
         label: 'Premium',
-        x: 66
+        x: 78,
+        align: 'right'
       }, {
         label: 'Cover',
-        x: 96
+        x: 107,
+        align: 'right'
       }, {
-        label: 'Payer share',
-        x: 110
+        label: 'Share',
+        x: 124,
+        align: 'right'
       }]);
       let my = 73;
       memberRows.slice(0, 6).forEach((m, idx) => {
@@ -68545,8 +68611,10 @@ function ReportTab() {
         my += rowH;
       });
       card(M, 154, CW, 34, T.surface, T.border, 3.5);
-      label('Distribution insights', M + 5, 165);
-      const insights = [topCoverMember ? topCoverShare + '% of cover sits with ' + topCoverMember.name + '.' : 'Cover distribution needs more data.', topPremMember ? topPremShare + '% of recurring premium is funded by ' + topPremMember.name + '.' : 'Premium payer concentration needs more data.', catRows[0] ? categoryLabel(catRows[0].cat) + ' is the largest premium category at ' + money(catRows[0].prem) + '/yr.' : 'No category data available.'];
+      label('What stands out', M + 5, 165);
+      // v2.4.0-rc1.75: insight bullets rewritten as observations the
+      // client can read on their own — softer, less audit-language.
+      const insights = [topCoverMember ? topCoverMember.name + ' currently holds ' + topCoverShare + '% of all the family cover.' : 'We need more details to see how cover is shared.', topPremMember ? topPremMember.name + ' pays for ' + topPremShare + '% of all family premiums.' : 'We need more details to see who funds which policy.', catRows[0] ? 'Most premium (' + money(catRows[0].prem) + '/yr) goes to ' + categoryLabel(catRows[0].cat) + ' policies.' : 'We need more category details to comment.'];
       insights.forEach((s, i) => {
         const x = M + 5 + i * ((CW - 10) / 3 + 3);
         doc.setFillColor(...[T.primary, T.sun, T.lavender][i]);
@@ -68665,7 +68733,7 @@ function ReportTab() {
         card(M + 119, 48, 158, noteH, T.surface, T.border, 4);
         doc.setFillColor(...noteAccent);
         doc.roundedRect(M + 119, 48, 1.6, noteH, 0.8, 0.8, 'F');
-        label(noteIsGap ? 'Gap note' : 'Review note', M + 125, 58, noteAccent);
+        label(noteIsGap ? 'What is missing' : 'What we noticed', M + 125, 58, noteAccent);
         // Info circle as a leading visual anchor
         // v2.4.0-rc1.69 hotfix: family generator's font helper is `font(...)`,
         // not `setFont(...)`. Calling setFont here threw ReferenceError and
@@ -68676,7 +68744,10 @@ function ReportTab() {
         doc.text('i', M + 128, 68, {
           align: 'center'
         });
-        const note = noteIsGap ? 'No active life cover detected. Start with baseline term life, disability income and CI sizing before adding savings or investment plans.' : m.name + ' carries ' + concPct + '% of family cover. Confirm whether this matches household dependency and income contribution.';
+        // v2.4.0-rc1.75 — client voice (no "baseline sizing", "household
+        // dependency", "income contribution" jargon). Reads as a friendly
+        // observation the client can act on.
+        const note = noteIsGap ? 'No life cover is showing for ' + m.name + ' yet. Worth looking at term life, disability income and critical illness — at sizes that fit your situation — before any savings or investment plans.' : m.name + " currently holds " + concPct + "% of the family's life cover. Worth checking that this matches who depends on whose income, and what would happen financially if that ever changed.";
         write(note, M + 133, 68.5, {
           size: SZ.body,
           color: T.text2,
@@ -68807,29 +68878,32 @@ function ReportTab() {
       });
 
       // Final next steps page.
+      // v2.4.0-rc1.75: section + thesis + table headers rewritten in
+      // client voice. Was advisor-jargon ("Meeting thesis", "Review queue",
+      // "Discussion", "coverage concentration", "baseline protection").
       doc.addPage();
-      drawHeader(sectionNo, 'Family action plan', 'Prioritised actions for the household review.');
+      drawHeader(sectionNo, "What we'll work on next", 'A simple priority order for the changes we recommend.');
       card(M, 48, CW, 27, T.primarySoft, T.primarySoft, 4);
-      label('Meeting thesis', M + 5, 58, T.primary);
-      const thesis = uncoveredMembers.length ? 'The main family risk is coverage concentration: ' + topCoverShare + '% of cover sits with ' + (topCoverMember?.name || 'one member') + ', while ' + uncoveredMembers.length + ' member(s) need baseline protection.' : 'Family cover is present across members. The next review should validate dependency assumptions, rider terms and premium payer risk.';
+      label('Where we focus first', M + 5, 58, T.primary);
+      const thesis = uncoveredMembers.length ? "The biggest priority is to spread protection across the family. Most cover currently sits with " + (topCoverMember?.name || 'one member') + " (" + topCoverShare + "%), and " + uncoveredMembers.length + (uncoveredMembers.length === 1 ? ' member has' : ' members have') + " no life cover yet — we'll close those gaps first." : "Cover is in place for everyone in the family. The next review will look at whether the amounts still match your situation, and whether the premium payer split still makes sense.";
       write(thesis, M + 5, 68, {
         size: 8,
         color: T.text2,
         maxW: CW - 10,
         maxLines: 2
       });
-      label('Review queue', M, 88);
+      label('Action plan', M, 88);
       drawMiniTableHeader(M, 93, CW, [{
         label: 'Priority',
         x: 3
       }, {
-        label: 'Action',
+        label: 'What to do',
         x: 34
       }, {
-        label: 'Why',
+        label: 'Why it matters',
         x: 120
       }, {
-        label: 'Discussion',
+        label: "What we'll talk about",
         x: 202
       }]);
       let ay = 101;
