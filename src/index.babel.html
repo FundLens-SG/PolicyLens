@@ -602,9 +602,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.68';
+const APP_VERSION = 'v2.4.0-rc1.69';
 const APP_VERSION_DATE = '2026-05-07';
-const APP_VERSION_NAME = 'Family Visual Report typographic refit — SZ/ACCENT system, scorecard 3-cell grid, gap alert tone-down, member snapshot 3-col, continued pages share section #';
+const APP_VERSION_NAME = 'Hotfix: family PDF setFont ReferenceError + perma-alias so future copy-paste from V4 cannot break';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -46530,6 +46530,10 @@ function ReportTab() {
         doc.setFontSize(size);
         doc.setTextColor(...color);
       };
+      // v2.4.0-rc1.69 PERMA-FIX: defensive alias so future copy-paste from
+      // the single-client V4 generator (which names this helper `setFont`)
+      // doesn't throw ReferenceError. Both names now reach the same impl.
+      const setFont = font;
 
       const write = (s,x,y,opts={}) => {
         const str = cleanPdfText(s);
@@ -47256,9 +47260,12 @@ function ReportTab() {
         doc.setFillColor(...noteAccent); doc.roundedRect(M+119,48,1.6,noteH,0.8,0.8,'F');
         label(noteIsGap ? 'Gap note' : 'Review note', M+125, 58, noteAccent);
         // Info circle as a leading visual anchor
+        // v2.4.0-rc1.69 hotfix: family generator's font helper is `font(...)`,
+        // not `setFont(...)`. Calling setFont here threw ReferenceError and
+        // killed the whole PDF render mid-page.
         doc.setFillColor(...noteAccent);
         doc.circle(M+128, 67, 1.6, 'F');
-        setFont('helvetica','bold', 5.6, T.surface);
+        font('helvetica','bold', 5.6, T.surface);
         doc.text('i', M+128, 68, {align:'center'});
         const note = noteIsGap
           ? 'No active life cover detected. Start with baseline term life, disability income and CI sizing before adding savings or investment plans.'
