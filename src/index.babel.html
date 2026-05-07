@@ -602,9 +602,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.70';
+const APP_VERSION = 'v2.4.0-rc1.71';
 const APP_VERSION_DATE = '2026-05-07';
-const APP_VERSION_NAME = 'Mobile: full client name now shown in the top dark CKG strip; cream Header avatar pill drops the truncated label';
+const APP_VERSION_NAME = 'PDF polish: dollar overflow on coverage map, snapshot caption clipping, lifestyle-target pill, top-right date editorial restyling';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -46014,11 +46014,26 @@ function ReportTab() {
 
       // V5: client-friendly direct labels.
       text('Expected income from CPF and policies', chartX, chartY - 2.5, { size: 5.8, style: 'bold', color: T.text2 });
+      // v2.4.0-rc1.71: lifestyle-target label was right-aligned at the
+      // very last data point with no background, so it overlapped the
+      // line and the chart's right border at steep inflation slopes.
+      // Now: anchored to the chart's TOP-RIGHT inside the safe area,
+      // with a soft danger pill so it reads cleanly over the gridlines
+      // regardless of where the line ends.
       const lastRow = tlRows[tlRows.length - 1];
       if (lastRow) {
-        const lblY = Math.max(chartY + 4, yAt(n(lastRow.desired)) - 2);
-        text('Lifestyle target (+' + (retirement.inflation || inflPct).toFixed(1) + '% p.a.)',
-          xAt(lastRow.age) - 1, lblY, { size: 5.6, style: 'bold', color: T.danger, align: 'right' });
+        const lblText = 'Lifestyle target (+' + (retirement.inflation || inflPct).toFixed(1) + '% p.a.)';
+        setFont('helvetica','bold', 5.6, T.danger);
+        const lblTextW = doc.getTextWidth(pdfSafe(lblText));
+        const lblPad = 2.5;
+        const lblPillW = lblTextW + lblPad * 2;
+        const lblPillH = 4.2;
+        // Anchor to top-right inside the chart safe area (3mm from edge)
+        const lblPillX = chartX + chartW - lblPillW - 3;
+        const lblPillY = chartY + 1.5;
+        doc.setFillColor(...T.dangerSoft); doc.setDrawColor(...T.dangerSoft);
+        doc.roundedRect(lblPillX, lblPillY, lblPillW, lblPillH, lblPillH/2, lblPillH/2, 'FD');
+        text(lblText, lblPillX + lblPad, lblPillY + 3, { size: 5.6, style: 'bold', color: T.danger });
       }
 
       // Retirement age vertical marker (lavender dashed)
@@ -46621,7 +46636,19 @@ function ReportTab() {
         drawBg();
         write('POLICYLENS', M, 11, {size:6.5, style:'bold', color:T.primary});
         write('Family portfolio review', M+38, 11, {size:6.2, color:T.text3});
-        write(today, W-M, 11, {size:6.2, color:T.text2, align:'right'});
+        // v2.4.0-rc1.71: date polished — was sentence-case sans 6.2pt in
+        // text2 dark grey, which read as a darker orphan on the right
+        // while the left-side eyebrow used lighter text3. Now uppercase
+        // tracked at 5.8pt in text3 to pair visually with the eyebrow,
+        // and bracketed by hairline dots so it reads as a deliberate
+        // metadata stamp rather than a floating string.
+        const dateStr = today.toUpperCase();
+        write(dateStr, W-M, 11, {size:5.8, color:T.text3, align:'right', style:'bold', charSpace: 0.6});
+        // Tiny dot to the left of the date for editorial anchoring
+        setFont('helvetica','bold', 5.8, T.text3);
+        const dateW = doc.getTextWidth(pdfSafe(dateStr));
+        doc.setFillColor(...T.text4);
+        doc.circle(W - M - dateW - 5, 9.6, 0.6, 'F');
         write(familyName, W/2, 20, {size:7.6, color:T.text2, align:'center'});
         doc.setDrawColor(...T.border);
         doc.setLineWidth(0.2);
@@ -47060,15 +47087,21 @@ function ReportTab() {
 
       card(M,48,178,105,T.surface,T.border,4);
       label('Sum-assured share by member',M+5,58);
-      const barX = M+52, barW = 100;
+      // v2.4.0-rc1.71: dollar value position fixed. Was barX+barW+33 = M+185
+      // which is OUTSIDE the card's right edge (M+178), causing "S$1.7M" to
+      // visually float past the card border. Now anchored 4mm from the
+      // card's right edge with align:'right'. Bar width also trimmed so
+      // the % chip and dollar value have proper breathing room.
+      const barX = M+50, barW = 88;
+      const dollarX = M + 178 - 4;
       let by = 70;
       memberRows.forEach((m,idx)=>{
         const share = totalSA ? Math.round(m.sumAssured/totalSA*100) : 0;
         const color = idx === 0 ? T.primary : [T.sage,T.sky,T.lavender,T.sun][idx%4];
-        write(m.name,M+5,by,{size:7,style:'bold',color:T.text,maxW:45,maxLines:1});
+        write(m.name,M+5,by,{size:SZ.body,style:'bold',color:T.text,maxW:43,maxLines:1});
         drawGapBar(barX,by-4,barW,4.2,share,color);
-        write(share + '%',barX+barW+8,by,{size:7,style:'bold',color:share === 0 ? T.danger : color});
-        write(money(m.sumAssured,{blankZero:true}),barX+barW+33,by,{size:6.4,color:T.text3,align:'right'});
+        write(share + '%',barX+barW+6,by,{size:SZ.body,style:'bold',color:share === 0 ? T.danger : color});
+        write(money(m.sumAssured,{blankZero:true}),dollarX,by,{size:SZ.caption,color:T.text3,align:'right'});
         by += 14;
       });
       if (memberRows.length <= 2) {
@@ -47257,9 +47290,13 @@ function ReportTab() {
         // layout so the card actually earns its 75x39mm footprint. Was
         // a hero "9" + 2 stranded dollar values with a 50% empty void.
         // Now: policies | premium | cover, all peers, all same size.
-        card(M,48,113,39,T.surface,T.border,4);
+        // v2.4.0-rc1.71: card height 39 → 44 so the concentration caption
+        // at the bottom has proper breathing room (was clipping the card
+        // border at y=86.4 in a card ending at y=87).
+        const snapH = 44;
+        card(M,48,113,snapH,T.surface,T.border,4);
         // Coral rail anchors the card to the member-color theme
-        doc.setFillColor(...ACCENT.cover); doc.roundedRect(M,48,1.6,39,0.8,0.8,'F');
+        doc.setFillColor(...ACCENT.cover); doc.roundedRect(M,48,1.6,snapH,0.8,0.8,'F');
         label('Member snapshot',M+6,58);
         // Three peer values, evenly spaced
         const cellW = (113 - 6) / 3;
@@ -47273,12 +47310,15 @@ function ReportTab() {
           write(val, cx, 73, {family:'times', style:'bold', size:SZ.kpi, color:T.text});
           write(lbl, cx, 80, {size:SZ.caption, color:T.text3, maxW: cellW - 4, maxLines:1});
         });
-        // Slim concentration insight at the bottom of the card
+        // Slim concentration insight at the bottom of the card — divider
+        // above and 4mm of breathing room below the baseline.
         const concPct = totalSA ? Math.round(m.sumAssured/totalSA*100) : 0;
         const concLine = m.sumAssured <= 0
           ? 'No life cover detected'
           : concPct + '% of family cover concentration';
-        write(concLine, M+6, 86.4, {size:SZ.caption, color:T.text3, style:'italic', maxW: 113-12, maxLines:1});
+        doc.setDrawColor(...T.border); doc.setLineWidth(0.12);
+        doc.line(M+6, 84.5, M+113-6, 84.5);
+        write(concLine, M+6, 89, {size:SZ.caption, color:T.text3, style:'italic', maxW: 113-12, maxLines:1});
 
         // v2.4.0-rc1.65 REVIEW/GAP NOTE — slim callout BAND, not a panel.
         // Was a 196x39mm card holding one sentence with massive vertical
@@ -47287,7 +47327,7 @@ function ReportTab() {
         const noteIsGap = m.sumAssured <= 0;
         const noteAccent = noteIsGap ? ACCENT.risk : ACCENT.insight;
         const noteSoft = noteIsGap ? T.dangerSoft : T.lavenderSoft;
-        const noteH = 39;  // keep card height for layout symmetry
+        const noteH = 44;  // matches MEMBER SNAPSHOT height (rc1.71)
         card(M+119,48,158,noteH,T.surface,T.border,4);
         doc.setFillColor(...noteAccent); doc.roundedRect(M+119,48,1.6,noteH,0.8,0.8,'F');
         label(noteIsGap ? 'Gap note' : 'Review note', M+125, 58, noteAccent);
@@ -47310,7 +47350,9 @@ function ReportTab() {
           doc.roundedRect(M+125, 80, 158-12, 5, 1.5, 1.5, 'F');
           write('Action: start baseline term life, disability income and CI', M+128, 83.5, {size:SZ.caption, style:'bold', color:noteAccent, maxW: 158-18, maxLines:1});
         }
-        return 96;
+        // v2.4.0-rc1.71: returns 100 (was 96) since card height grew from
+        // 39 to 44mm. Categories below now have 4mm more breathing room.
+        return 100;
       };
 
       memberRows.forEach((m) => {
