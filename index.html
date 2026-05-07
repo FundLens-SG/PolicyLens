@@ -612,9 +612,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.72';
+const APP_VERSION = 'v2.4.0-rc1.73';
 const APP_VERSION_DATE = '2026-05-08';
-const APP_VERSION_NAME = 'Hotfix: family PDF pdfSafe ReferenceError + perma-alias so V4 helper names (pdfSafe / setFont) cannot break the family generator again';
+const APP_VERSION_NAME = 'Individual report client-facing polish: plain-English priority/tags, premium header, lifted lifestyle pill, clearer inflation bridge, full-figure income mix';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -65473,6 +65473,14 @@ function ReportTab() {
       //                 ·  Date pill (right, italic, ringed for emphasis)
       //   Row 2 (y=15): Client meta (center, slightly larger and softer)
       //   Hairline at y=18.5 separates the header band from page content.
+      // v2.4.0-rc1.73: header polish — was sentence-cased mixed weights
+      // ("Chan Chung Yin - age 42 - Male" + italic date) which read as
+      // a database string, not a premium report. Now:
+      //   • POLICYLENS eyebrow + "Insurance portfolio review" muted
+      //   • Date stamp uppercase tracked + small dot anchor (matches
+      //     editorial breadcrumb style, no longer floats orphaned)
+      //   • Client meta uses Geist mono uppercase tracked, age and
+      //     gender treated as metadata badges with lighter weight
       const pageHeader = (sectionN, title) => {
         pageBg();
         label('POLICYLENS', M, 8, T.primary);
@@ -65481,19 +65489,42 @@ function ReportTab() {
           color: T.text3,
           style: 'normal'
         });
-        // Date — italic on right, with subtle dot leader so it reads as report metadata
-        text(today, W - M, 8, {
-          size: 7,
-          color: T.text2,
+        // Date — uppercase tracked metadata stamp with leading dot
+        const dateStr = today.toUpperCase();
+        text(dateStr, W - M, 8, {
+          size: 5.8,
+          color: T.text3,
           align: 'right',
-          style: 'italic'
+          style: 'bold',
+          charSpace: 0.6
         });
-        // Centered client meta (row 2)
-        const meta = [clientLabel, 'age ' + currentAge, p.gender].filter(Boolean).join(' · ');
-        text(meta, W / 2, 15, {
-          size: 7.2,
-          color: T.text2,
+        setFont('helvetica', 'bold', 5.8, T.text3);
+        const dateW = doc.getTextWidth(pdfSafe(dateStr));
+        doc.setFillColor(...T.text4);
+        doc.circle(W - M - dateW - 4, 6.5, 0.6, 'F');
+        // Centered client meta — name reads in Times bold (premium voice),
+        // age + gender drop into a muted tracked tail so they support
+        // rather than compete with the name.
+        const cleanGender = (p.gender || '').trim();
+        text(clientLabel, W / 2, 15, {
+          family: 'times',
+          style: 'bold',
+          size: 9.2,
+          color: T.text,
           align: 'center'
+        });
+        const nameW = (() => {
+          setFont('times', 'bold', 9.2, T.text);
+          return doc.getTextWidth(pdfSafe(clientLabel));
+        })();
+        const metaTailParts = ['age ' + currentAge];
+        if (cleanGender) metaTailParts.push(cleanGender);
+        const metaTail = '  ·  ' + metaTailParts.join('  ·  ');
+        text(metaTail, W / 2 + nameW / 2, 15, {
+          size: 6.2,
+          color: T.text3,
+          style: 'normal',
+          charSpace: 0.3
         });
         // Hairline
         doc.setDrawColor(...T.border);
@@ -66390,51 +66421,63 @@ function ReportTab() {
       });
 
       // Right: Priority focus areas board — numbered rows with topic + reason
+      // v2.4.0-rc1.73: rewritten for client-facing read-alone delivery.
+      // Was advisor-jargon (e.g. "missing income replacement", "recovery
+      // capital below target"). Now plain English the client can parse
+      // without a glossary.
       label('Priority focus areas', focusX, lowerY);
-      // Build 5 prioritised items with reasons
       const focusItems = (() => {
         const out = [];
         const seen = new Set();
+        // Per-key plain-English topic (left of the row, bolded)
+        const topicFor = {
+          di: 'Disability income',
+          ci: 'Critical illness',
+          eci: 'Early-stage critical illness',
+          death: 'Life cover',
+          tpd: 'Permanent disability'
+        };
+        // Per-key plain-English reason (right of the row, muted)
         const reasonFor = {
-          di: 'missing income replacement',
-          ci: 'recovery capital below target',
-          eci: 'early-stage cover below target',
-          death: 'family income replacement gap',
-          tpd: 'permanent capital reserve gap'
+          di: 'no monthly income if you cannot work',
+          ci: 'cover for major illness is below recommendation',
+          eci: 'limited cover for early-stage diagnoses',
+          death: "family income replacement falls short",
+          tpd: 'reserve capital falls short if work permanently stops'
         };
         weakest.slice(0, 5).forEach(r => {
           if (seen.has(r.key)) return;
           out.push({
-            topic: r.short,
+            topic: topicFor[r.key] || r.short,
             reason: reasonFor[r.key] || 'below recommended cover'
           });
           seen.add(r.key);
         });
         if (retPct < 80 && out.length < 5 && !seen.has('ret')) {
           out.push({
-            topic: 'Retirement',
-            reason: 'large lifestyle funding gap'
+            topic: 'Retirement income',
+            reason: 'projected income falls below desired lifestyle'
           });
           seen.add('ret');
         }
         if (!coverage.hasISP && out.length < 5 && !seen.has('hosp')) {
           out.push({
-            topic: 'Hospitalisation',
-            reason: 'no Integrated Shield Plan detected'
+            topic: 'Hospital plan',
+            reason: 'no integrated hospital plan detected on file'
           });
           seen.add('hosp');
         }
         if (premiumRatio > 15 && out.length < 5 && !seen.has('prem')) {
           out.push({
-            topic: 'Premium runway',
-            reason: 'load is ' + premiumRatio + '% of income'
+            topic: 'Premium load',
+            reason: 'premiums use ' + premiumRatio + '% of your income'
           });
           seen.add('prem');
         }
         // Pad with healthy items if list is short
         while (out.length < 5) out.push({
           topic: 'Annual review',
-          reason: 'verify assumptions and rider terms'
+          reason: 'confirm assumptions and rider terms each year'
         });
         return out.slice(0, 5);
       })();
@@ -66468,19 +66511,22 @@ function ReportTab() {
       });
 
       // ── Bottom strip: 3 advisory tags (Keep / Confirm / Review) ──
+      // v2.4.0-rc1.73: rewritten for client read-alone language. Was
+      // technical (ISP, PA, "rider terms and exclusions"). Now uses
+      // plain English the client can parse without glossary.
       const tagY = lowerY + 9 + Math.max(top4.length * 7.4, focusItems.length * focusRowH + 6) + 6;
       const advTags = [{
         tone: 'success',
         label: 'Keep',
-        body: coverage.hasISP ? 'ISP detected' : activePolicies.length + ' active polic' + (activePolicies.length === 1 ? 'y' : 'ies')
+        body: coverage.hasISP ? 'Hospital plan in place' : activePolicies.length + ' active polic' + (activePolicies.length === 1 ? 'y' : 'ies') + ' on file'
       }, {
         tone: 'warn',
         label: 'Confirm',
-        body: coverage.add > 0 ? 'PA / rider details' : 'Personal accident status'
+        body: coverage.add > 0 ? 'Personal accident benefits and rider terms' : 'Personal accident cover status'
       }, {
         tone: 'sky',
         label: 'Review',
-        body: continuingAfterRet > 0 ? continuingAfterRet + ' policies payable after ' + retirementAge : 'rider terms and exclusions'
+        body: continuingAfterRet > 0 ? continuingAfterRet + ' polic' + (continuingAfterRet === 1 ? 'y still pays' : 'ies still pay') + ' premium after age ' + retirementAge : 'rider terms and policy exclusions'
       }];
       const advTagW = (CW - 2 * 2) / 3;
       advTags.forEach((t, i) => {
@@ -66647,15 +66693,21 @@ function ReportTab() {
         });
       });
 
-      // V5 inflation bridge — taller, segments with drawn-arrow connectors
-      // and a subcaption beneath that reads as a designed band.
+      // v2.4.0-rc1.73 inflation bridge — clearer client-facing language:
+      //   • Full S$ figures (no "k" compression)
+      //   • "per year" instead of "p.a." jargon
+      //   • Connecting word in middle reads as a sentence
+      //   • Subcaption explains WHY the bridge exists (in plain English)
       const inflY = diagY + diagH + 5;
       drawInflationBridge(M, inflY, CW, [money(retirement.baseLifestyleToday, {
-        suffix: '/mo today'
-      }), (retirement.inflation || inflPct).toFixed(1) + '% p.a. for ' + yearsToRet + ' years', money(retirement.desired, {
-        suffix: '/mo at age ' + retirementAge
+        full: true,
+        suffix: '/month today'
+      }), 'grows at ' + (retirement.inflation || inflPct).toFixed(1) + '% per year for ' + yearsToRet + ' years', money(retirement.desired, {
+        full: true,
+        suffix: '/month at age ' + retirementAge
       })], {
-        h: 18
+        h: 18,
+        subcaption: "Today's lifestyle becomes more expensive each year, so the income you'll need at retirement is higher than what you spend now."
       });
 
       // Main content — chart left (182mm) + income source mix right (89mm)
@@ -66767,17 +66819,21 @@ function ReportTab() {
       // Now: anchored to the chart's TOP-RIGHT inside the safe area,
       // with a soft danger pill so it reads cleanly over the gridlines
       // regardless of where the line ends.
+      // v2.4.0-rc1.73: lifestyle-target pill moved ABOVE the plot area
+      // entirely — was sitting INSIDE the chart at chartY+1.5, which the
+      // rising curve passed through at steep inflation slopes. Now
+      // anchored 5mm above the top gridline so the pill never collides
+      // with the curve regardless of where it terminates.
       const lastRow = tlRows[tlRows.length - 1];
       if (lastRow) {
-        const lblText = 'Lifestyle target (+' + (retirement.inflation || inflPct).toFixed(1) + '% p.a.)';
+        const lblText = 'Lifestyle target (+' + (retirement.inflation || inflPct).toFixed(1) + '% per year)';
         setFont('helvetica', 'bold', 5.6, T.danger);
         const lblTextW = doc.getTextWidth(pdfSafe(lblText));
         const lblPad = 2.5;
         const lblPillW = lblTextW + lblPad * 2;
         const lblPillH = 4.2;
-        // Anchor to top-right inside the chart safe area (3mm from edge)
-        const lblPillX = chartX + chartW - lblPillW - 3;
-        const lblPillY = chartY + 1.5;
+        const lblPillX = chartX + chartW - lblPillW - 1;
+        const lblPillY = chartY - 5.5;
         doc.setFillColor(...T.dangerSoft);
         doc.setDrawColor(...T.dangerSoft);
         doc.roundedRect(lblPillX, lblPillY, lblPillW, lblPillH, lblPillH / 2, lblPillH / 2, 'FD');
@@ -66875,10 +66931,13 @@ function ReportTab() {
       });
 
       // Below: clean 2-column list
+      // v2.4.0-rc1.73: full figures (e.g. "S$6,000/month") instead of
+      // compressed shorthand ("S$6k/mo") so the client can read the
+      // numbers without doing mental arithmetic. Same applies to the
+      // Total row below.
       let sy = compY + compH + 5;
       const listLineH = 6;
       sources.forEach(s => {
-        // Color bullet
         doc.setFillColor(...s[2]);
         doc.circle(srcCardX + 6, sy + 2, 1.1, 'F');
         text(s[0], srcCardX + 9, sy + 2.6, {
@@ -66886,7 +66945,8 @@ function ReportTab() {
           color: T.text
         });
         text(money(s[1], {
-          suffix: '/mo'
+          full: true,
+          suffix: '/month'
         }), srcCardX + srcCardW - 4, sy + 2.6, {
           size: 6.4,
           color: T.text2,
@@ -66905,7 +66965,8 @@ function ReportTab() {
         color: T.text
       });
       text(money(retTotal, {
-        suffix: '/mo'
+        full: true,
+        suffix: '/month'
       }), srcCardX + srcCardW - 4, sy, {
         family: 'times',
         style: 'bold',
