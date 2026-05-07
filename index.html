@@ -612,9 +612,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.69';
+const APP_VERSION = 'v2.4.0-rc1.70';
 const APP_VERSION_DATE = '2026-05-07';
-const APP_VERSION_NAME = 'Hotfix: family PDF setFont ReferenceError + perma-alias so future copy-paste from V4 cannot break';
+const APP_VERSION_NAME = 'Mobile: full client name now shown in the top dark CKG strip; cream Header avatar pill drops the truncated label';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -1367,9 +1367,24 @@ function PLSuiteStrip() {
     style: {
       color: STRIP.crumbStrong
     }
-  }, clientName))), /*#__PURE__*/React.createElement("div", {
+  }, clientName))), isMobile && clientName && /*#__PURE__*/React.createElement("span", {
     style: {
-      marginLeft: 'auto',
+      flex: '1 1 auto',
+      minWidth: 0,
+      textAlign: 'center',
+      fontFamily: STRIP.sansFamily,
+      fontSize: 11.5,
+      fontWeight: 500,
+      color: 'rgba(244, 241, 232, 0.85)',
+      letterSpacing: '0.01em',
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      padding: '0 8px'
+    }
+  }, clientName), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginLeft: isMobile && clientName ? 0 : 'auto',
       display: 'inline-flex',
       alignItems: 'center',
       gap: 6,
@@ -28210,24 +28225,25 @@ function Header() {
     }
   }), clientName && /*#__PURE__*/React.createElement("button", {
     onClick: () => setTab('clients'),
-    title: "Switch client",
+    title: isMobile ? 'Switch client (' + clientName + ')' : 'Switch client',
     style: {
       display: 'flex',
       alignItems: 'center',
-      gap: 10,
-      padding: '4px 12px 4px 4px',
-      background: T.bg2,
-      border: '1px solid ' + T.border,
+      gap: isMobile ? 0 : 10,
+      padding: isMobile ? 0 : '4px 12px 4px 4px',
+      background: isMobile ? 'transparent' : T.bg2,
+      border: isMobile ? 'none' : '1px solid ' + T.border,
       borderRadius: 999,
       cursor: 'pointer',
       minWidth: 0,
       fontFamily: T.sansFamily,
+      flexShrink: 0,
       transition: T.motion ? 'border-color 180ms ease' : 'none'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      width: 28,
-      height: 28,
+      width: isMobile ? 32 : 28,
+      height: isMobile ? 32 : 28,
       borderRadius: 999,
       background: 'linear-gradient(135deg, ' + T.primary + ', ' + T.lavender + ')',
       color: 'white',
@@ -28235,10 +28251,11 @@ function Header() {
       alignItems: 'center',
       justifyContent: 'center',
       fontFamily: T.serifFamily,
-      fontSize: 14,
+      fontSize: isMobile ? 15 : 14,
+      fontWeight: 500,
       flexShrink: 0
     }
-  }, initial), /*#__PURE__*/React.createElement("div", {
+  }, initial), !isMobile && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     style: {
       textAlign: 'left',
       minWidth: 0
@@ -28252,9 +28269,9 @@ function Header() {
       whiteSpace: 'nowrap',
       overflow: 'hidden',
       textOverflow: 'ellipsis',
-      maxWidth: isMobile ? 90 : 200
+      maxWidth: 200
     }
-  }, clientName), !isMobile && tierLabel && /*#__PURE__*/React.createElement("div", {
+  }, clientName), tierLabel && /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 10.5,
       color: T.text3,
@@ -28267,7 +28284,7 @@ function Header() {
       fontSize: 11,
       flexShrink: 0
     }
-  }, "\u25BE")), /*#__PURE__*/React.createElement("div", {
+  }, "\u25BE"))), /*#__PURE__*/React.createElement("div", {
     style: {
       marginLeft: 'auto',
       display: 'flex',

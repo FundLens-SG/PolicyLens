@@ -602,9 +602,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.69';
+const APP_VERSION = 'v2.4.0-rc1.70';
 const APP_VERSION_DATE = '2026-05-07';
-const APP_VERSION_NAME = 'Hotfix: family PDF setFont ReferenceError + perma-alias so future copy-paste from V4 cannot break';
+const APP_VERSION_NAME = 'Mobile: full client name now shown in the top dark CKG strip; cream Header avatar pill drops the truncated label';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -1025,7 +1025,28 @@ function PLSuiteStrip() {
           </span>
         )}
 
-        <div style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+        {/* v2.4.0-rc1.70: on mobile the breadcrumb is hidden — the empty
+            middle space gets the active client name instead. The cream
+            PolicyLens nav can no longer fit the full name (it truncates
+            to "C..."), so surfacing it up here keeps the FC anchored on
+            who they're working with without needing to tap the avatar
+            pill. Same Geist sans, lighter cream weight, ellipsis on
+            overflow. Centered between the CKG pill and Drive indicator. */}
+        {isMobile && clientName && (
+          <span style={{
+            flex: '1 1 auto',
+            minWidth: 0,
+            textAlign: 'center',
+            fontFamily: STRIP.sansFamily,
+            fontSize: 11.5, fontWeight: 500,
+            color: 'rgba(244, 241, 232, 0.85)',
+            letterSpacing: '0.01em',
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            padding: '0 8px',
+          }}>{clientName}</span>
+        )}
+
+        <div style={{ marginLeft: isMobile && clientName ? 0 : 'auto', display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
           <span style={{
             width: 7, height: 7, borderRadius: 999,
             background: driveIndicator.color,
@@ -24289,33 +24310,44 @@ function Header() {
         {!isMobile && <div style={{ width: 1, height: 30, background: T.hair, flexShrink: 0 }} />}
 
         {/* Client switcher pill — gradient avatar + name + tier subline + chevron */}
+        {/* v2.4.0-rc1.70: on mobile we now surface the full client name up
+            in the dark CKG strip (PLSuiteStrip), so this pill drops its
+            truncated "C..." text label and renders as just the gradient
+            avatar circle — a clean tap-target for switching client. The
+            full name + tier are still shown on desktop. */}
         {clientName && (
-          <button onClick={() => setTab('clients')} title="Switch client"
+          <button onClick={() => setTab('clients')} title={isMobile ? ('Switch client (' + clientName + ')') : 'Switch client'}
             style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: '4px 12px 4px 4px',
-              background: T.bg2, border: '1px solid ' + T.border,
+              display: 'flex', alignItems: 'center',
+              gap: isMobile ? 0 : 10,
+              padding: isMobile ? 0 : '4px 12px 4px 4px',
+              background: isMobile ? 'transparent' : T.bg2,
+              border: isMobile ? 'none' : ('1px solid ' + T.border),
               borderRadius: 999, cursor: 'pointer', minWidth: 0,
-              fontFamily: T.sansFamily,
+              fontFamily: T.sansFamily, flexShrink: 0,
               transition: T.motion ? 'border-color 180ms ease' : 'none',
             }}>
             <div style={{
-              width: 28, height: 28, borderRadius: 999,
+              width: isMobile ? 32 : 28, height: isMobile ? 32 : 28, borderRadius: 999,
               background: 'linear-gradient(135deg, ' + T.primary + ', ' + T.lavender + ')',
               color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontFamily: T.serifFamily, fontSize: 14, flexShrink: 0,
+              fontFamily: T.serifFamily, fontSize: isMobile ? 15 : 14, fontWeight: 500, flexShrink: 0,
             }}>{initial}</div>
-            <div style={{ textAlign: 'left', minWidth: 0 }}>
-              <div style={{
-                fontSize: 13, color: T.text, fontWeight: 600, lineHeight: 1.1,
-                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                maxWidth: isMobile ? 90 : 200,
-              }}>{clientName}</div>
-              {!isMobile && tierLabel && <div style={{
-                fontSize: 10.5, color: T.text3, marginTop: 1,
-              }}>{tierLabel}</div>}
-            </div>
-            <span style={{ marginLeft: 4, color: T.text4, fontSize: 11, flexShrink: 0 }}>▾</span>
+            {!isMobile && (
+              <>
+                <div style={{ textAlign: 'left', minWidth: 0 }}>
+                  <div style={{
+                    fontSize: 13, color: T.text, fontWeight: 600, lineHeight: 1.1,
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    maxWidth: 200,
+                  }}>{clientName}</div>
+                  {tierLabel && <div style={{
+                    fontSize: 10.5, color: T.text3, marginTop: 1,
+                  }}>{tierLabel}</div>}
+                </div>
+                <span style={{ marginLeft: 4, color: T.text4, fontSize: 11, flexShrink: 0 }}>▾</span>
+              </>
+            )}
           </button>
         )}
 
