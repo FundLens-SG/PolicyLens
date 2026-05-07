@@ -612,9 +612,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.66';
+const APP_VERSION = 'v2.4.0-rc1.67';
 const APP_VERSION_DATE = '2026-05-07';
-const APP_VERSION_NAME = 'Hotfix: setFont → font in family hardfix (V2 helper is font(), not setFont)';
+const APP_VERSION_NAME = 'V5 polish — drawn-arrow inflation bridge, client wording (Review summary / Review queue / Funding method), category page-break rules, no note artifacts';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -65348,7 +65348,11 @@ function ReportTab() {
       // garbage like '"H'. pdfSafe normalises every string going to doc.text()
       // or doc.getTextWidth() to ASCII equivalents. Wraps every helper that
       // touches user copy: safe(), text(), label(), pill().
-      const pdfSafe = s => String(s == null ? '' : s).replace(/ /g, ' ').replace(/≈/g, '~').replace(/×/g, 'x').replace(/[–—]/g, '-').replace(/…/g, '...').replace(/[•·]/g, '-').replace(/→/g, '->').replace(/[‘’]/g, "'").replace(/[“”]/g, '"');
+      // v2.4.0-rc1.67 V5 polish: pdfSafe also kills 'note' placeholder
+      // leaks (legacy import data) and rewrites "MediSave detected" jargon
+      // to client copy. Aliased as cleanPdfText for V5 spec naming.
+      const pdfSafe = s => String(s == null ? '' : s).replace(/[ ]/g, ' ').replace(/[‘’‚‛]/g, "'").replace(/[“”„‟]/g, '"').replace(/[–—−]/g, '-').replace(/[•·]/g, '-').replace(/[←-⇿]/g, '->').replace(/[×]/g, 'x').replace(/[≈]/g, '~').replace(/[…]/g, '...').replace(/[​-‍﻿]/g, '').replace(/['"]?&?\s*note/gi, '').replace(/MediSave detected/gi, 'MediSave funding applies').replace(/Medisave detected/gi, 'MediSave funding applies').replace(/\s+/g, ' ').trim();
+      const cleanPdfText = pdfSafe;
       const safe = (s, max = 48) => {
         const out = pdfSafe(String(s || '').replace(/\s+/g, ' ').trim());
         return out.length > max ? out.slice(0, max - 1) + '...' : out;
@@ -65414,6 +65418,31 @@ function ReportTab() {
           doc.setFillColor(...color);
           doc.roundedRect(x, y, Math.max(h, w * pVal / 100), h, h / 2, h / 2, 'F');
         }
+      };
+      // v2.4.0-rc1.67 V5 polish: drawn connector arrow for the inflation bridge
+      // (replaces text-based "->" arrows that occasionally rendered as garbage
+      // in jsPDF's built-in fonts).
+      const drawConnectorArrow = (x1, y, x2, color = T.text3) => {
+        doc.setDrawColor(...color);
+        doc.setLineWidth(0.35);
+        doc.line(x1, y, x2 - 2.2, y);
+        doc.setFillColor(...color);
+        doc.triangle(x2 - 2.2, y - 1.2, x2 - 2.2, y + 1.2, x2, y, 'F');
+      };
+      // V5: page-break helpers for the policy register so a category header
+      // never appears at the bottom of a page without at least one row beneath.
+      const PAGE_BOTTOM = H - 18;
+      const hasSpace = (y, needed) => y + needed <= PAGE_BOTTOM;
+      const policyRowHeight = policy => {
+        const remarkSrc = policy.remarks || policy.note || policy.notes || policy.advisorNotes || policy.summary || policy.description || '';
+        const cleaned = pdfSafe(remarkSrc);
+        const hasRemarks = cleaned && cleaned.length > 0;
+        const hasRiders = Array.isArray(policy.riders) && policy.riders.length > 0;
+        return hasRemarks || hasRiders ? 12 : 9;
+      };
+      const requiredCategoryHeight = firstPolicy => {
+        // Category band (7) + table header (6) + first policy row.
+        return 7 + 6 + (firstPolicy ? policyRowHeight(firstPolicy) : 9);
       };
       const pageBg = () => {
         doc.setFillColor(...T.bg);
@@ -65545,28 +65574,38 @@ function ReportTab() {
         });
       };
 
-      // drawInflationBridge — clean three-segment band:
-      //   "S$20k/mo today  ->  2.8% p.a. x 23 yrs  ->  S$38k/mo at age 65"
-      // Renders as a single band with three pill-like segments and ASCII arrows.
+      // drawInflationBridge — V5 designed three-segment band:
+      //   [S$20k/mo today]  -->  [2.8% p.a. for 23 years]  -->  [S$38k/mo at age 65]
+      // V5 polish: arrows are DRAWN (line + triangle) via drawConnectorArrow
+      // instead of being typed text "->" which sometimes rendered weirdly in
+      // jsPDF's Helvetica. Subcaption beneath explains the bridge intent.
       const drawInflationBridge = (x, y, w, segs, opts = {}) => {
-        const h = opts.h || 12;
-        card(x, y, w, h, T.surface, T.border, 3);
-        // "Inflation bridge" eyebrow on the left
-        const titleW = 28;
-        label('Inflation bridge', x + 4, y + 5);
-        const segStart = x + titleW + 2;
-        const segArea = w - titleW - 6;
-        const arrowW = 6;
+        const h = opts.h || 18;
+        card(x, y, w, h, T.surface, T.border, 4);
+        label('Inflation bridge', x + 5, y + 5);
+        const subcaption = opts.subcaption || "Lifestyle target is inflated from today's dollars to retirement age.";
+        text(subcaption, x + 5, y + h - 3.4, {
+          size: 5.8,
+          color: T.text3,
+          fontStyle: 'italic',
+          maxW: w - 10,
+          maxLines: 1
+        });
+        // Designed segments live in the area below the title and above the subcaption.
+        const titleReserve = 32;
+        const segArea = w - titleReserve - 10;
+        const arrowW = 8;
         const segCount = segs.length;
         const segW = (segArea - arrowW * (segCount - 1)) / segCount;
-        let cx = segStart;
+        const segY = y + 8;
+        const segH = h - 14;
+        let cx = x + titleReserve;
         segs.forEach((s, i) => {
-          // Segment pill
           doc.setFillColor(...T.primarySoft);
           doc.setDrawColor(...T.primarySoft);
-          doc.roundedRect(cx, y + 2.5, segW, h - 5, 2, 2, 'FD');
-          text(s, cx + segW / 2, y + h * 0.62, {
-            size: 7.2,
+          doc.roundedRect(cx, segY, segW, segH, segH / 2, segH / 2, 'FD');
+          text(s, cx + segW / 2, segY + segH * 0.65, {
+            size: 7.6,
             style: i === 0 || i === segCount - 1 ? 'bold' : 'normal',
             color: T.primary,
             align: 'center',
@@ -65575,12 +65614,8 @@ function ReportTab() {
           });
           cx += segW;
           if (i < segCount - 1) {
-            text('->', cx + arrowW / 2, y + h * 0.62, {
-              size: 7.2,
-              style: 'bold',
-              color: T.text3,
-              align: 'center'
-            });
+            // Drawn arrow — line + triangle. No text glyph.
+            drawConnectorArrow(cx + 1, segY + segH / 2, cx + arrowW - 1, T.primary);
             cx += arrowW;
           }
         });
@@ -65718,8 +65753,7 @@ function ReportTab() {
         return rowH;
       };
 
-      // cleanPdfText — alias for pdfSafe (V4 spec asks for this name).
-      const cleanPdfText = pdfSafe;
+      // cleanPdfText alias defined alongside pdfSafe above (V5 spec name).
 
       // Compact table helper — single line per row, alternating fills, optional headers + chips
       const tableRow = (x, y, widths, values, opts = {}) => {
@@ -66219,33 +66253,48 @@ function ReportTab() {
       // Coloured rail on the left for hierarchy
       doc.setFillColor(...T.primary);
       doc.roundedRect(M, 30, 1.6, 38, 0.8, 0.8, 'F');
-      label('Portfolio diagnosis', M + 5, 35);
+      label('Review summary', M + 5, 35);
       // Build the four punchy lines (replaces the paragraph soup)
+      // V5 polish: 4 client-facing review summary lines.
       const diagLines = (() => {
         const arr = [];
         const polCount = activePolicies.length;
+        // Line 1 — current portfolio
         if (polCount > 0) {
-          arr.push(polCount + ' active polic' + (polCount === 1 ? 'y' : 'ies') + ' provide ' + money(totalCoverage) + ' of cover.');
+          arr.push('Current portfolio: ' + polCount + ' polic' + (polCount === 1 ? 'y' : 'ies') + ', ' + money(totalCoverage) + ' cover, ' + money(totalAnnualPrem, {
+            suffix: '/yr'
+          }) + ' premium.');
         } else {
-          arr.push('No active policies on file.');
+          arr.push('No active policies on file yet.');
         }
+        // Line 2 — main protection gaps (client-facing wording)
         if (weakest.length) {
-          const tags = weakest.slice(0, 4).map(r => r.short).join(', ');
-          arr.push('Main gaps: ' + tags + '.');
+          const gapNames = weakest.slice(0, 3).map(r => {
+            if (r.key === 'di') return 'disability income';
+            if (r.key === 'ci') return 'critical illness';
+            if (r.key === 'eci') return 'early-stage CI';
+            if (r.key === 'death') return 'family income replacement';
+            if (r.key === 'tpd') return 'TPD reserve';
+            return r.label.toLowerCase();
+          });
+          arr.push('Main protection gaps: ' + gapNames.join(', ') + '.');
         } else {
-          arr.push('Coverage tracks well against LIA recommendations.');
+          arr.push('Coverage tracks well against industry guidelines.');
         }
+        // Line 3 — retirement
         if (retirement.desired > 0) {
-          arr.push('Retirement income at ' + retirementAge + ' covers ' + retPct + '% of the inflation-adjusted target.');
+          arr.push('Retirement: expected income at ' + retirementAge + ' covers ' + retPct + '% of the inflation-adjusted target.');
+        } else {
+          arr.push('Retirement target not yet captured for this client.');
         }
-        // Final orchestration line — recommend a review order
+        // Line 4 — review order, client-facing
         const orderBits = [];
         if (weakest.find(r => r.key === 'di')) orderBits.push('protect income');
-        if (weakest.find(r => r.key === 'ci' || r.key === 'eci')) orderBits.push('strengthen CI');
-        if (retPct < 70) orderBits.push('address retirement cashflow');
+        if (weakest.find(r => r.key === 'ci' || r.key === 'eci')) orderBits.push('strengthen recovery capital');
+        if (retPct < 70 && retirement.desired > 0) orderBits.push('build retirement cash flow');
         if (!orderBits.length && premiumRatio > 15) orderBits.push('review premium runway');
         if (!orderBits.length) orderBits.push('confirm rider terms and assumptions annually');
-        arr.push('Review order: ' + orderBits.join(', then ') + '.');
+        arr.push('First review: ' + orderBits.join(', then ') + '.');
         return arr.slice(0, 4);
       })();
       diagLines.forEach((ln, i) => {
@@ -66256,15 +66305,15 @@ function ReportTab() {
         });
       });
 
-      // ── Right: Portfolio score summary as 2x2 mini-grid ──
+      // ── Right: Review scorecard as 2x2 mini-grid ──
       const scX = M + diagW + 5,
         scY = 30;
       card(scX, scY, scoreW, 38, T.surface, T.border, 4);
       // Coloured rail
       doc.setFillColor(...scoreTone);
       doc.roundedRect(scX, scY, 1.6, 38, 0.8, 0.8, 'F');
-      label('Portfolio score summary', scX + 5, scY + 5);
-      drawMiniStatGrid(scX + 4, scY + 7, scoreW - 8, 30, [['Protection score', score + ' /100', scoreTone, 12], ['Status', scoreLabel, scoreTone, 8], ['Retirement coverage', retPct + '%', retPct < 70 ? T.danger : T.success, 12], ['Monthly gap', monthlyGap > 0 ? money(monthlyGap, {
+      label('Review scorecard', scX + 5, scY + 5);
+      drawMiniStatGrid(scX + 4, scY + 7, scoreW - 8, 30, [['Protection score', score + ' /100', scoreTone, 12], ['Protection status', scoreLabel, scoreTone, 8], ['Retirement target covered', retPct + '%', retPct < 70 ? T.danger : T.success, 12], ['Income gap at ' + retirementAge, monthlyGap > 0 ? money(monthlyGap, {
         suffix: '/mo'
       }) : 'On track', monthlyGap > 0 ? T.danger : T.success, 10]]);
 
@@ -66545,20 +66594,20 @@ function ReportTab() {
       doc.addPage();
       pageHeader(3, 'Retirement income gap');
 
-      // Top KPI row — 5 compact tiles using "Lifestyle today" instead of
-      // "Projected at 65" as the first item per V4 spec.
+      // V5 polish: client-facing KPI labels (Lifestyle target today / Target
+      // at 65 / Expected income at 65 / Income gap / Target covered).
       const diagY = 30,
         diagH = 18,
         diagW2 = (CW - 4 * 2) / 5;
-      const diags = [['Lifestyle today', money(retirement.baseLifestyleToday, {
+      const diags = [['Lifestyle target today', money(retirement.baseLifestyleToday, {
         suffix: '/mo'
-      }), "today's dollars", T.sage], ['Desired at ' + retirementAge, money(retirement.desired, {
+      }), "today's dollars", T.sage], ['Target at ' + retirementAge, money(retirement.desired, {
         suffix: '/mo'
-      }), 'inflation-adjusted', T.lavender], ['Projected at ' + retirementAge, money(retTotal, {
+      }), 'inflation-adjusted', T.lavender], ['Expected income at ' + retirementAge, money(retTotal, {
         suffix: '/mo'
-      }), 'monthly income', retPct < 70 ? T.danger : T.success], ['Monthly gap', money(monthlyGap, {
+      }), 'monthly income', retPct < 70 ? T.danger : T.success], ['Income gap', money(monthlyGap, {
         suffix: '/mo'
-      }), monthlyGap > 0 ? 'shortfall' : 'covered', monthlyGap > 0 ? T.danger : T.success], ['Coverage', retPct + '%', 'of target', retPct < 70 ? T.danger : T.success]];
+      }), monthlyGap > 0 ? 'shortfall' : 'covered', monthlyGap > 0 ? T.danger : T.success], ['Target covered', retPct + '%', 'of target at ' + retirementAge, retPct < 70 ? T.danger : T.success]];
       diags.forEach((d, i) => {
         const x = M + i * (diagW2 + 2);
         card(x, diagY, diagW2, diagH, T.surface, T.border, 3);
@@ -66581,18 +66630,19 @@ function ReportTab() {
         });
       });
 
-      // Inflation bridge — designed segmented band (replaces the awkward strip)
+      // V5 inflation bridge — taller, segments with drawn-arrow connectors
+      // and a subcaption beneath that reads as a designed band.
       const inflY = diagY + diagH + 5;
       drawInflationBridge(M, inflY, CW, [money(retirement.baseLifestyleToday, {
         suffix: '/mo today'
-      }), (retirement.inflation || inflPct).toFixed(1) + '% p.a. x ' + yearsToRet + ' yrs', money(retirement.desired, {
+      }), (retirement.inflation || inflPct).toFixed(1) + '% p.a. for ' + yearsToRet + ' years', money(retirement.desired, {
         suffix: '/mo at age ' + retirementAge
       })], {
-        h: 12
+        h: 18
       });
 
       // Main content — chart left (182mm) + income source mix right (89mm)
-      const mainY = inflY + 16;
+      const mainY = inflY + 22;
       const chartCardX = M,
         chartCardW = 182,
         chartCardH = 86;
@@ -66602,23 +66652,24 @@ function ReportTab() {
 
       // ── Chart card ──
       card(chartCardX, mainY, chartCardW, chartCardH, T.surface, T.border, 4);
-      // Title + subtitle (proper hierarchy)
+      // V5 polish: client-friendly title + subtitle, more top padding so
+      // the title never collides with the bars below.
       text('Retirement income projection', chartCardX + 4, mainY + 5.6, {
         family: 'times',
         style: 'bold',
         size: 9.6,
         color: T.text
       });
-      text('Projected monthly retirement income vs inflation-adjusted lifestyle target', chartCardX + 4, mainY + 9.6, {
+      text('Expected monthly income versus inflation-adjusted lifestyle target', chartCardX + 4, mainY + 9.8, {
         size: 5.8,
         color: T.text3,
         fontStyle: 'italic'
       });
 
-      // Chart geometry — bigger area, more breathing room
+      // V5: increased top padding so chart never overlaps title/subtitle.
       const chPadL = 16,
         chPadR = 12,
-        chPadT = 14,
+        chPadT = 18,
         chPadB = 12;
       const chartX = chartCardX + chPadL,
         chartY = mainY + chPadT;
@@ -66687,18 +66738,16 @@ function ReportTab() {
         };
       });
 
-      // Direct labels — bigger and clearer than V2
-      // Top-left: "Projected retirement income"
-      text('Projected retirement income', chartX, chartY - 1.5, {
+      // V5: client-friendly direct labels.
+      text('Expected income from CPF and policies', chartX, chartY - 2.5, {
         size: 5.8,
         style: 'bold',
         color: T.text2
       });
-      // End-of-line: "Desired lifestyle (+x.x% p.a.)"
       const lastRow = tlRows[tlRows.length - 1];
       if (lastRow) {
-        const lblY = Math.max(chartY + 3, yAt(n(lastRow.desired)) - 2);
-        text('Desired lifestyle (+' + (retirement.inflation || inflPct).toFixed(1) + '% p.a.)', xAt(lastRow.age) - 1, lblY, {
+        const lblY = Math.max(chartY + 4, yAt(n(lastRow.desired)) - 2);
+        text('Lifestyle target (+' + (retirement.inflation || inflPct).toFixed(1) + '% p.a.)', xAt(lastRow.age) - 1, lblY, {
           size: 5.6,
           style: 'bold',
           color: T.danger,
@@ -66751,7 +66800,7 @@ function ReportTab() {
       // Legend — at the bottom of chart card, properly spaced
       const legY = mainY + chartCardH - 4;
       let lgx = chartCardX + 6;
-      [['CPF LIFE', T.sun], ['Policy income', T.primary], ['Dividends', T.lavender], ['Other', T.sage]].forEach(([lbl, col]) => {
+      [['CPF LIFE', T.sun], ['Policy payout', T.primary], ['Dividends', T.lavender], ['Other sources', T.sage]].forEach(([lbl, col]) => {
         doc.setFillColor(...col);
         doc.rect(lgx, legY - 2.2, 2.6, 2.6, 'F');
         text(lbl, lgx + 4, legY, {
@@ -66761,9 +66810,9 @@ function ReportTab() {
         lgx += 4 + doc.getTextWidth(pdfSafe(lbl)) + 8;
       });
 
-      // ── Income source mix panel (right) ──
+      // ── Income source mix panel (right) — V5 wording ──
       card(srcCardX, mainY, srcCardW, srcCardH, T.surface, T.border, 4);
-      text('Income source mix at ' + retirementAge, srcCardX + 4, mainY + 5.6, {
+      text('Income mix at ' + retirementAge, srcCardX + 4, mainY + 5.6, {
         family: 'times',
         style: 'bold',
         size: 9.4,
@@ -66773,7 +66822,7 @@ function ReportTab() {
       // Top: small horizontal stacked composition bar
       const compY = mainY + 10,
         compH = 5;
-      const sources = [['CPF LIFE', n(retirement.cpf), T.sun], ['Policy income', n(retirement.policy), T.primary], ['Dividends', n(retirement.dividends), T.lavender], ['Other', n(retirement.other), T.sage]];
+      const sources = [['CPF LIFE', n(retirement.cpf), T.sun], ['Policy payout', n(retirement.policy), T.primary], ['Dividends', n(retirement.dividends), T.lavender], ['Other sources', n(retirement.other), T.sage]];
       const compTotal = Math.max(1, sources.reduce((s, x) => s + x[1], 0));
       const compW = srcCardW - 8;
       // Background recessed pill
@@ -66817,7 +66866,7 @@ function ReportTab() {
       doc.setLineWidth(0.18);
       doc.line(srcCardX + 4, sy + 0.5, srcCardX + srcCardW - 4, sy + 0.5);
       sy += 4;
-      text('Total', srcCardX + 9, sy, {
+      text('Total income', srcCardX + 9, sy, {
         size: 6.6,
         style: 'bold',
         color: T.text
@@ -66832,16 +66881,16 @@ function ReportTab() {
         align: 'right'
       });
 
-      // ── Bottom row: 4 lever cards (CPF / Policy payout / Drawdown source / Lifestyle target) ──
+      // ── Bottom row: 4 lever cards (V5 wording) ──
       const leverY = mainY + chartCardH + 6;
       const leverW = (CW - 3 * 2) / 4;
-      const levers = [['CPF assumptions', retirement.cpf > 0 ? money(retirement.cpf, {
+      const levers = [['CPF LIFE assumption', retirement.cpf > 0 ? money(retirement.cpf, {
         suffix: '/mo'
-      }) : 'Not set', 'Scheme · plan · start age', T.sun], ['Policy payout', retirement.policy > 0 ? money(retirement.policy, {
+      }) : 'Not set', 'Scheme, plan, start age', T.sun], ['Policy payout', retirement.policy > 0 ? money(retirement.policy, {
         suffix: '/mo'
-      }) : 'Not set', 'Annuity · drawdown', T.primary], ['Drawdown source', retirement.dividends > 0 ? money(retirement.dividends, {
+      }) : 'Not set', 'Annuity or drawdown', T.primary], ['Drawdown source', retirement.dividends > 0 ? money(retirement.dividends, {
         suffix: '/mo'
-      }) : '-', 'Dividends · withdrawal', T.lavender], ['Lifestyle target', money(retirement.baseLifestyleToday, {
+      }) : '-', 'Dividends, withdrawal', T.lavender], ['Lifestyle target', money(retirement.baseLifestyleToday, {
         suffix: '/mo'
       }), "today's dollars", T.sage]];
       levers.forEach((lv, i) => {
@@ -66870,7 +66919,7 @@ function ReportTab() {
       // PAGE 4 — Premium runway + action queue (V4 — strategic decision page)
       // ─────────────────────────────────────────────────────────────────
       doc.addPage();
-      pageHeader(4, 'Premium runway & action queue');
+      pageHeader(4, 'Premium runway and review queue');
 
       // Left chart ~62% + Right strategy panel ~38%
       const leftW = 172,
@@ -66984,12 +67033,14 @@ function ReportTab() {
       const dominantMethod = methodEntries[0];
       const usesMedisave = methodEntries.some(([m]) => /medisave/i.test(m));
       const usesCpfOA = methodEntries.some(([m]) => /cpf\s*oa|ordinary/i.test(m));
+      // V5 polish: client-facing wording — no more "Medisave detected".
+      const cashCount = methodEntries.filter(([m]) => /cash/i.test(m)).reduce((s, x) => s + x[1], 0);
       const paymentMixDesc = (() => {
-        if (!methodEntries.length) return 'Payment methods vary across portfolio.';
+        if (!methodEntries.length) return 'Funding methods vary across portfolio.';
         if (dominantMethod && dominantMethod[1] >= activePolicies.length * 0.6) {
           return dominantMethod[0] + ' (' + dominantMethod[1] + ' polic' + (dominantMethod[1] === 1 ? 'y' : 'ies') + ')';
         }
-        return 'Payment methods vary across portfolio.';
+        return 'Funding methods vary across portfolio.';
       })();
 
       // Layout: 3 grouped strategy cards stacked vertically
@@ -67000,33 +67051,49 @@ function ReportTab() {
         h: stratH,
         accent: premiumRatio > 15 ? T.danger : T.primary
       });
-      drawStrategyGroup(rightX, chartCardY + stratH + stratGap, rightW, 'Runway', [['Ending within 5 yrs', endingWithin5 + ' polic' + (endingWithin5 === 1 ? 'y' : 'ies')], ['Payable after ' + retirementAge, continuingAfterRet + ' polic' + (continuingAfterRet === 1 ? 'y' : 'ies')]], {
+      drawStrategyGroup(rightX, chartCardY + stratH + stratGap, rightW, 'Premium runway', [['Ending within 5 years', endingWithin5 + ' polic' + (endingWithin5 === 1 ? 'y' : 'ies')], ['Payable after age ' + retirementAge, continuingAfterRet + ' polic' + (continuingAfterRet === 1 ? 'y' : 'ies')]], {
         h: stratH,
         accent: continuingAfterRet > 0 ? T.warn : T.success
       });
-      drawStrategyGroup(rightX, chartCardY + 2 * (stratH + stratGap), rightW, 'Payment mix', [['Most common', paymentMixDesc], usesMedisave ? ['Medisave', 'detected'] : usesCpfOA ? ['CPF OA', 'detected'] : ['Cash methods', methodEntries.filter(([m]) => /cash/i.test(m)).reduce((s, x) => s + x[1], 0) + ' polic' + (methodEntries.length === 1 ? 'y' : 'ies')]], {
+      drawStrategyGroup(rightX, chartCardY + 2 * (stratH + stratGap), rightW, 'Funding method', [['Main method', cashCount > 0 ? 'Cash (' + cashCount + ' polic' + (cashCount === 1 ? 'y' : 'ies') + ')' : paymentMixDesc], ['Medical funding', usesMedisave ? 'MediSave where applicable' : usesCpfOA ? 'CPF OA where applicable' : 'Cash unless ISP component']], {
         h: stratH,
         accent: T.sky
       });
 
-      // ── Bottom: Action queue as strategic decision table ──
+      // ── Bottom: Review queue as strategic decision table (V5 wording) ──
       const actY = chartCardY + leftCardH + 13;
-      label('Action queue', M, actY);
-      // Sharper headlines per V4 spec — "action headline" wording
+      label('Review queue', M, actY);
+      // V5 sharpened action headlines — client-facing, evergreen, timeless.
       const sharpenAction = a => {
         const map = {
-          'Disability income': 'DI missing - protect monthly income',
-          'Critical illness': 'CI below target - strengthen recovery capital',
-          'Early CI': 'ECI below target - add early-stage protection',
-          'Death & TPD': 'Death/TPD gap - top up via efficient term',
-          'TPD': 'TPD gap - bundle with death cover',
-          'Retirement income': 'Retirement gap - build CPF + annuity + drawdown',
-          'Premium runway': 'Premium runway - review post-' + retirementAge + ' commitments',
-          'Hospitalisation': 'Hospitalisation - confirm Integrated Shield Plan',
-          'Personal accident': 'PA - confirm medical reimbursement',
-          'Annual review': 'Annual review - verify assumptions'
+          'Disability income': 'Review disability income cover',
+          'Critical illness': 'Strengthen CI recovery capital',
+          'Early CI': 'Add early-stage CI flexibility',
+          'Death & TPD': 'Review family income replacement cover',
+          'TPD': 'Pair TPD reserve with death cover',
+          'Retirement income': 'Build retirement income plan',
+          'Premium runway': 'Review premiums after age ' + retirementAge,
+          'Hospitalisation': 'Confirm Integrated Shield Plan and rider',
+          'Personal accident': 'Confirm personal accident reimbursement',
+          'Annual review': 'Confirm assumptions at annual review'
         };
         return map[a.area] || a.short;
+      };
+      // V5 client-facing reasons.
+      const sharpenReason = a => {
+        const map = {
+          'Disability income': 'Monthly income protection is missing.',
+          'Critical illness': 'CI cover is materially below target.',
+          'Early CI': 'Early-stage recovery capital is below target.',
+          'Death & TPD': 'Family income replacement is below target.',
+          'TPD': 'Permanent capital reserve is below target.',
+          'Retirement income': 'Income at ' + retirementAge + ' covers ' + retPct + '% of target.',
+          'Premium runway': continuingAfterRet + ' polic' + (continuingAfterRet === 1 ? 'y' : 'ies') + ' continue beyond retirement age.',
+          'Hospitalisation': 'Integrated Shield Plan and rider terms to confirm.',
+          'Personal accident': 'Medical reimbursement to confirm.',
+          'Annual review': 'No critical shortfall detected.'
+        };
+        return map[a.area] || a.area + '. ' + a.why;
       };
       const actCols = [18, 90, CW - 18 - 90];
       tableRow(M, actY + 3, actCols, ['Priority', 'Action', 'Why it matters'], {
@@ -67040,7 +67107,7 @@ function ReportTab() {
           kind: 'chip',
           text: a.priority,
           tone: tn
-        }, sharpenAction(a), a.area + ' - ' + a.why + ' ' + a.discuss], {
+        }, sharpenAction(a), sharpenReason(a)], {
           alt: i % 2 === 1,
           h: 9,
           align: ['center', 'left', 'left'],
@@ -67115,35 +67182,46 @@ function ReportTab() {
         });
         return y + 6;
       };
-      categoryOrder.forEach(cat => {
-        const arr = grouped[cat] || [];
-        if (!arr.length) return;
-        // Page-break guard (landscape: H=210, leave room for category band + 1 row + assumptions)
-        if (invY > 165) invY = startInventoryPage();
 
-        // Category header band — coloured rail + name + count + summary (annual premium for category)
+      // V5 polish: category page-break rule. Never draw a category header
+      // unless at least one full policy row will fit beneath it. Health &
+      // Medical specifically must start fresh if the header + first row
+      // can't fit on the current page.
+      const drawCategoryBand = (cat, arr, isContinuation = false) => {
         const catPremium = arr.reduce((s, pol) => s + (isSinglePremium(pol) ? 0 : annualizedPremium(pol)), 0);
         doc.setFillColor(...(categoryColor[cat] || T.primary));
         doc.roundedRect(M, invY, 2.4, 6, 1, 1, 'F');
-        text(categoryName[cat], M + 5, invY + 4.4, {
+        const labelText = categoryName[cat] + (isContinuation ? ' - continued' : '');
+        text(labelText, M + 5, invY + 4.4, {
           size: 8,
           style: 'bold',
           color: T.text
         });
-        const catBarX = M + 5 + doc.getTextWidth(pdfSafe(categoryName[cat])) + 6;
-        text(arr.length + ' polic' + (arr.length === 1 ? 'y' : 'ies'), catBarX, invY + 4.4, {
-          size: 6.4,
-          color: T.text3
-        });
-        if (catPremium > 0) {
-          text('Annual premium ' + money(catPremium), W - M, invY + 4.4, {
+        const catBarX = M + 5 + doc.getTextWidth(pdfSafe(labelText)) + 6;
+        if (!isContinuation) {
+          text(arr.length + ' polic' + (arr.length === 1 ? 'y' : 'ies'), catBarX, invY + 4.4, {
             size: 6.4,
-            color: T.text3,
-            align: 'right'
+            color: T.text3
           });
+          if (catPremium > 0) {
+            text('Annual premium ' + money(catPremium), W - M, invY + 4.4, {
+              size: 6.4,
+              color: T.text3,
+              align: 'right'
+            });
+          }
         }
         invY += 7;
         invY = drawPolHeader(invY);
+      };
+      categoryOrder.forEach(cat => {
+        const arr = grouped[cat] || [];
+        if (!arr.length) return;
+        // V5 page-break rule: header + table-header + first row must fit
+        // together. If they don't, start a fresh page first.
+        const minBlock = requiredCategoryHeight(arr[0]);
+        if (!hasSpace(invY, minBlock)) invY = startInventoryPage();
+        drawCategoryBand(cat, arr, false);
         arr.forEach((pol, i) => {
           // Determine remarks (used to size row)
           const remarks = (() => {
@@ -67160,7 +67238,7 @@ function ReportTab() {
               } else if (sub.includes('careshield') || sub.includes('eldershield')) {
                 bits.push('Long-term disability cover');
               }
-              if (/medisave/i.test(pol.paymentMethod || '')) bits.push('Medisave funded');
+              if (/medisave/i.test(pol.paymentMethod || '')) bits.push('MediSave funding applies');
             }
             if (pol.financed) bits.push('Premium financing');
             if (pol.excludeFromRetirement) bits.push('Off-retirement');
@@ -67189,11 +67267,13 @@ function ReportTab() {
           const sublineParts = [policyNum, yearsHeld != null ? yearsHeld + 'y in force' : null, status].filter(Boolean);
           const subline = sublineParts.join(' | ');
 
-          // Page-break guard — accounting for variable row height
-          const projectedH = remarks ? 18 : 14;
-          if (invY + projectedH > 175) {
+          // V5 page-break: row-level guard. If the projected row won't fit,
+          // start a new page AND redraw the category band as "continued"
+          // so the user never sees an orphaned table header.
+          const projectedH = remarks ? 12 : 9;
+          if (!hasSpace(invY, projectedH)) {
             invY = startInventoryPage();
-            invY = drawPolHeader(invY);
+            drawCategoryBand(cat, arr, true);
           }
           const consumed = drawPolicyDetailRow(M, invY, CW, {
             productLine,
@@ -67305,8 +67385,11 @@ function ReportTab() {
         year: 'numeric'
       });
       const inactiveStatuses = new Set(['matured', 'surrendered', 'lapsed', 'cancelled', 'terminated']);
+
+      // v2.4.0-rc1.67 V5 polish: kills 'note' placeholder leaks and rewrites
+      // "MediSave detected" jargon to client-friendly copy.
       const cleanPdfText = input => {
-        return String(input || '').replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[–—−]/g, '-').replace(/[→➡]/g, '->').replace(/[×]/g, 'x').replace(/[•·]/g, '-').replace(/[…]/g, '...').replace(/[^\x09\x0A\x0D\x20-\x7E]/g, '').replace(/\s+/g, ' ').trim();
+        return String(input == null ? '' : input).replace(/[ ]/g, ' ').replace(/[‘’‚‛]/g, "'").replace(/[“”„‟]/g, '"').replace(/[–—−]/g, '-').replace(/[•·]/g, '-').replace(/[←-⇿]/g, '->').replace(/[×]/g, 'x').replace(/[≈]/g, '~').replace(/[…]/g, '...').replace(/[​-‍﻿]/g, '').replace(/['"]?&?\s*note/gi, '').replace(/MediSave detected/gi, 'MediSave funding applies').replace(/Medisave detected/gi, 'MediSave funding applies').replace(/[^\t\n\r\x20-\x7E]/g, '').replace(/\s+/g, ' ').trim();
       };
       const n = v => {
         if (v === null || v === undefined || v === '') return 0;
@@ -67492,6 +67575,28 @@ function ReportTab() {
           maxW: 138,
           maxLines: 1
         });
+      };
+
+      // v2.4.0-rc1.67 V5: drawn connector arrow + page-break helpers
+      // shared with the individual generator (same intent, scoped here).
+      const drawConnectorArrow = (x1, y, x2, color = T.text3) => {
+        doc.setDrawColor(...color);
+        doc.setLineWidth(0.35);
+        doc.line(x1, y, x2 - 2.2, y);
+        doc.setFillColor(...color);
+        doc.triangle(x2 - 2.2, y - 1.2, x2 - 2.2, y + 1.2, x2, y, 'F');
+      };
+      const PAGE_BOTTOM = H - 14;
+      const hasSpace = (y, needed) => y + needed <= PAGE_BOTTOM;
+      const policyRowHeight = policy => {
+        const remarkSrc = policy.remarks || policy.note || policy.notes || policy.advisorNotes || policy.summary || policy.description || '';
+        const cleaned = cleanPdfText(remarkSrc);
+        const hasRemarks = cleaned && cleaned.length > 0;
+        const hasRiders = Array.isArray(policy.riders) && policy.riders.length > 0;
+        return hasRemarks || hasRiders ? 17 : 14;
+      };
+      const requiredCategoryHeight = firstPolicy => {
+        return 11 + 8 + (firstPolicy ? policyRowHeight(firstPolicy) : 14);
       };
       const statusTone = value => value >= 80 ? 'success' : value >= 45 ? 'warn' : 'danger';
       const statusText = value => value >= 80 ? 'Balanced' : value >= 45 ? 'Review' : 'Concentrated';
@@ -67802,21 +67907,22 @@ function ReportTab() {
         return top ? top[0] : 'varied';
       })();
       const nextSteps = [];
+      // V5 wording: client-facing, evergreen action titles.
       uncoveredMembers.forEach(m => {
         nextSteps.push({
           priority: 'Critical',
           tone: 'danger',
           action: 'Add baseline life cover for ' + m.name,
-          why: 'No active life cover is detected.',
-          discussion: 'Term life, DI and CI baseline sizing.'
+          why: 'Baseline cover not recorded.',
+          discussion: 'Term life, disability income and CI baseline sizing.'
         });
       });
       if (topCoverShare >= 80 && topCoverMember) {
         nextSteps.push({
           priority: 'High',
           tone: 'danger',
-          action: 'Reduce cover concentration on ' + topCoverMember.name,
-          why: topCoverShare + '% of family cover sits with one member.',
+          action: 'Rebalance cover concentration',
+          why: topCoverShare + '% of household cover sits with ' + topCoverMember.name + '.',
           discussion: 'Add baseline cover for other household members.'
         });
       }
@@ -67824,9 +67930,9 @@ function ReportTab() {
         nextSteps.push({
           priority: 'Review',
           tone: 'warn',
-          action: 'Review premium concentration',
+          action: 'Review payer concentration',
           why: topPremMember.name + ' funds ' + topPremShare + '% of recurring premium.',
-          discussion: 'Affordability, payer risk and premium runway.'
+          discussion: 'Affordability and premium runway.'
         });
       }
       if (catRows.length) {
@@ -67834,37 +67940,37 @@ function ReportTab() {
         nextSteps.push({
           priority: 'Review',
           tone: 'warn',
-          action: 'Check portfolio mix',
+          action: 'Review portfolio mix',
           why: categoryLabel(largestCat.cat) + ' uses ' + money(largestCat.prem) + '/yr of premium.',
-          discussion: 'Protection first, then savings/investment allocation.'
+          discussion: 'Protection first, then savings and investment allocation.'
         });
       }
       nextSteps.push({
         priority: 'Confirm',
         tone: 'sky',
-        action: 'Verify hospitalisation and rider terms',
+        action: 'Confirm ward class and rider terms',
         why: 'Medical plans and riders need benefit confirmation.',
-        discussion: 'ISP ward class, rider, deductible and co-insurance.'
+        discussion: 'Ward class, rider, deductible and co-insurance.'
       });
 
       // Page 1 - Family executive review.
       drawHeader(1, 'Family executive review', 'Household-level protection, premium and concentration overview.');
       card(M, 48, 156, 38, T.surface, T.border, 4);
-      label('Family diagnosis', M + 5, 57);
+      label('Household summary', M + 5, 57);
       drawBulletLine(M + 5, 66, memberRows.length + ' members hold ' + familyPolicies.length + ' active policies across ' + insurerCount + ' insurers.', T.sky);
       drawBulletLine(M + 5, 75, 'Total recurring premium is ' + money(totalAnnualPrem, {
         full: true
       }) + '/yr for ' + money(totalSA) + ' of cover.', T.sun);
       drawBulletLine(M + 5, 84, topCoverMember ? topCoverShare + '% of household cover sits with ' + topCoverMember.name + '.' : 'Coverage concentration cannot be assessed.', topCoverShare >= 80 ? T.danger : T.success);
       card(M + 162, 48, 115, 38, T.surface, T.border, 4);
-      label('Household scorecard', M + 167, 57);
+      label('Family scorecard', M + 167, 57);
       write(String(topCoverShare) + '%', M + 167, 72, {
         family: 'times',
         style: 'bold',
         size: 17,
         color: topCoverShare >= 80 ? T.danger : T.success
       });
-      write('top-member cover share', M + 195, 72, {
+      write('cover concentration', M + 195, 72, {
         size: 6.2,
         color: T.text3
       });
@@ -67885,7 +67991,7 @@ function ReportTab() {
         color: uncoveredMembers.length ? T.danger : T.success,
         align: 'right'
       });
-      write('Premium share top payer', M + 267, 66, {
+      write('Top premium payer share', M + 267, 66, {
         size: 5.8,
         color: T.text3,
         align: 'right'
@@ -67900,7 +68006,7 @@ function ReportTab() {
       const kW = (CW - 12) / 5;
       [['Members', String(memberRows.length), 'family scope', T.sky], ['Active policies', String(familyPolicies.length), insurerCount + ' insurers', T.lavender], ['Annual premium', money(totalAnnualPrem), money(totalAnnualPrem / 12, {
         full: true
-      }) + '/mo', T.sun], ['Sum assured', money(totalSA), 'family total', T.primary], ['Cover concentration', String(topCoverShare) + '%', topCoverMember ? 'top member' : 'n/a', topCoverShare >= 80 ? T.danger : T.success]].forEach((m, i) => drawMetricTile(M + i * (kW + 3), 94, kW, 25, m[0], m[1], m[2], m[3]));
+      }) + '/mo', T.sun], ['Sum assured', money(totalSA), 'family total', T.primary], ['Cover concentration', String(topCoverShare) + '%', topCoverMember ? 'top insured member' : 'n/a', topCoverShare >= 80 ? T.danger : T.success]].forEach((m, i) => drawMetricTile(M + i * (kW + 3), 94, kW, 25, m[0], m[1], m[2], m[3]));
       card(M, 128, 175, 50, T.surface, T.border, 3.5);
       label('Family members', M + 5, 138);
       drawMiniTableHeader(M + 5, 143, 165, [{
@@ -67933,7 +68039,7 @@ function ReportTab() {
       });
       card(M + 183, 128, 94, 50, T.surface, T.border, 3.5);
       label('Advisor focus areas', M + 188, 138);
-      const focus = [uncoveredMembers.length ? 'Baseline cover for ' + uncoveredMembers.map(m => m.name).slice(0, 2).join(', ') : 'No fully uncovered member detected', topCoverShare >= 80 ? 'Coverage concentration on ' + topCoverMember.name : 'Coverage is reasonably distributed', 'Confirm ISP / rider terms', 'Review premium mix and payer risk'];
+      const focus = [uncoveredMembers.length ? 'Baseline cover for ' + uncoveredMembers.map(m => m.name).slice(0, 2).join(', ') : 'No fully uncovered member detected', topCoverShare >= 80 ? 'Coverage concentration on ' + topCoverMember.name : 'Coverage is reasonably distributed', 'Confirm ward class, rider and deductible terms', 'Review premium mix and payer risk'];
       let fx = M + 188,
         fyy = 148;
       focus.forEach((s, i) => {
@@ -67957,7 +68063,7 @@ function ReportTab() {
         style: 'bold',
         color: T.primary
       });
-      const tags = [uncoveredMembers.length ? 'Critical: ' + uncoveredMembers.length + ' member(s) without life cover' : 'Keep: baseline cover present', 'Review: ' + topCoverShare + '% top-member cover share', 'Confirm: payment methods and medical riders'];
+      const tags = [uncoveredMembers.length ? 'Critical: ' + uncoveredMembers.length + ' member(s) without life cover' : 'Keep: baseline cover present', 'Review: ' + topCoverShare + '% cover concentration', 'Confirm: payment methods and medical riders'];
       let tx = M + 42;
       tags.forEach(t => {
         tx += pill(t, tx, tagY + 2, 'ghost', {
@@ -68258,17 +68364,31 @@ function ReportTab() {
         // policy ledger header. A compact one-liner reminds the reader
         // they're still on this member.
         if (continued) {
-          card(M, 48, CW, 9, T.surface, T.border, 2);
+          // V5: compact 2-line continuation header (was 1 line). Frees the
+          // page for more policy rows while still reminding the reader
+          // which member's policies they're looking at.
+          card(M, 48, CW, 12, T.surface, T.border, 2);
           doc.setFillColor(...T.primary);
-          doc.roundedRect(M, 48, 2, 9, 1, 1, 'F');
-          write(m.name + ' - continued from previous page', M + 6, 54, {
-            size: 6.4,
+          doc.roundedRect(M, 48, 2, 12, 1, 1, 'F');
+          write(m.name + ' - policies continued', M + 6, 54, {
+            size: 6.8,
             style: 'bold',
-            color: T.text2,
+            color: T.text,
             maxW: CW - 12,
             maxLines: 1
           });
-          return 62;
+          const meta = m.activePolicies.length + ' active polic' + (m.activePolicies.length === 1 ? 'y' : 'ies') + ' | ' + money(m.annualPremium, {
+            suffix: '/yr'
+          }) + ' premium' + ' | ' + money(m.sumAssured, {
+            blankZero: true
+          }) + ' cover';
+          write(meta, M + 6, 58.6, {
+            size: 5.6,
+            color: T.text3,
+            maxW: CW - 12,
+            maxLines: 1
+          });
+          return 64;
         }
         card(M, 48, 75, 39, T.surface, T.border, 4);
         label('Member snapshot', M + 5, 58);
@@ -68337,23 +68457,26 @@ function ReportTab() {
           const premB = b[1].reduce((s, p) => s + policyAnnual(p), 0);
           return premB - premA;
         });
-        groupEntries.forEach(([cat, pols]) => {
+
+        // V5 page-break rules: never orphan a category/table header.
+        // Health & Medical and any other category must start fresh if the
+        // header + first row can't fit.
+        const drawFamilyCatBand = (cat, pols, isContinuation) => {
           const groupPrem = pols.reduce((s, p) => s + policyAnnual(p), 0);
-          if (y > 172) {
-            y = renderMemberPage(m, true);
-            sectionNo++;
-          }
           doc.setFillColor(...categoryColor(cat));
           doc.roundedRect(M, y, 3, 9, 1.2, 1.2, 'F');
-          write(categoryLabel(cat), M + 6, y + 6.5, {
+          const labelText = categoryLabel(cat) + (isContinuation ? ' - continued' : '');
+          write(labelText, M + 6, y + 6.5, {
             size: 7.2,
             style: 'bold',
             color: T.text
           });
-          write(pols.length + ' polic' + (pols.length === 1 ? 'y' : 'ies') + ' - ' + money(groupPrem) + '/yr', M + 75, y + 6.5, {
-            size: 6,
-            color: T.text3
-          });
+          if (!isContinuation) {
+            write(pols.length + ' polic' + (pols.length === 1 ? 'y' : 'ies') + ' - ' + money(groupPrem) + '/yr', M + 6 + doc.getTextWidth(cleanPdfText(labelText)) + 8, y + 6.5, {
+              size: 6,
+              color: T.text3
+            });
+          }
           y += 11;
           drawMiniTableHeader(M, y, CW, [{
             label: 'Insurer / product',
@@ -68378,10 +68501,21 @@ function ReportTab() {
             x: 206
           }]);
           y += 8;
+        };
+        groupEntries.forEach(([cat, pols]) => {
+          // Block-level guard: header + first policy row must fit together.
+          const minBlock = requiredCategoryHeight(pols[0]);
+          if (!hasSpace(y, minBlock)) {
+            y = renderMemberPage(m, true);
+            sectionNo++;
+          }
+          drawFamilyCatBand(cat, pols, false);
           pols.forEach((pol, idx) => {
-            if (y > 181) {
+            const rowH = policyRowHeight(pol);
+            if (!hasSpace(y, rowH)) {
               y = renderMemberPage(m, true);
               sectionNo++;
+              drawFamilyCatBand(cat, pols, true);
             }
             drawPolicyDetailRow(M, y, CW, pol, idx);
             y += 17;
@@ -68402,7 +68536,7 @@ function ReportTab() {
         maxW: CW - 10,
         maxLines: 2
       });
-      label('Action queue', M, 88);
+      label('Review queue', M, 88);
       drawMiniTableHeader(M, 93, CW, [{
         label: 'Priority',
         x: 3
