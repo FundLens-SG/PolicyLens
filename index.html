@@ -612,9 +612,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.73';
+const APP_VERSION = 'v2.4.0-rc1.74';
 const APP_VERSION_DATE = '2026-05-08';
-const APP_VERSION_NAME = 'Individual report client-facing polish: plain-English priority/tags, premium header, lifted lifestyle pill, clearer inflation bridge, full-figure income mix';
+const APP_VERSION_NAME = 'Hotfix: Visual PDF T.text4 ReferenceError + palette parity perma-fix so cross-generator copy-paste cannot crash';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -65312,17 +65312,28 @@ function ReportTab() {
 
       // v2.4.0-rc1.50 — Visual Report V2: tighter, denser, advisory.
       // 5-page max layout, no decorative cover, no separate disclaimer page.
+      // v2.4.0-rc1.74 PERMA-FIX: palette now includes the same property
+      // names as the family generator's T (text4, border2, primaryDim,
+      // paper, tableHead, tableAlt, blush, blushSoft) so future copy-paste
+      // between the two generators cannot throw "T.x is not iterable" again.
+      // Mirrors the setFont/pdfSafe alias pattern from rc1.69 / rc1.72.
       const T = {
         bg: [251, 244, 234],
+        paper: [255, 251, 246],
         surface: [255, 248, 239],
         surface2: [255, 251, 246],
+        tableHead: [239, 229, 217],
+        tableAlt: [253, 246, 239],
         recessed: [243, 234, 223],
         border: [229, 216, 202],
+        border2: [208, 193, 175],
         text: [47, 36, 28],
         text2: [93, 80, 70],
         text3: [142, 126, 112],
+        text4: [180, 165, 145],
         primary: [232, 88, 67],
         primarySoft: [255, 224, 216],
+        primaryDim: [248, 211, 198],
         danger: [217, 87, 69],
         dangerSoft: [255, 224, 218],
         warn: [217, 154, 50],
@@ -65337,6 +65348,8 @@ function ReportTab() {
         sunSoft: [255, 244, 204],
         sage: [145, 191, 154],
         sageSoft: [226, 242, 229],
+        blush: [226, 148, 148],
+        blushSoft: [252, 229, 229],
         white: [255, 255, 255]
       };
 
