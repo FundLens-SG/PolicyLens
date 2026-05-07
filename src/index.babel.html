@@ -602,9 +602,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.65';
+const APP_VERSION = 'v2.4.0-rc1.66';
 const APP_VERSION_DATE = '2026-05-07';
-const APP_VERSION_NAME = 'Family Visual Report V2 hardfix — share bar, gap panel, continuation pages, remarks layout, note artifacts';
+const APP_VERSION_NAME = 'Hotfix: setFont → font in family hardfix (V2 helper is font(), not setFont)';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -46637,7 +46637,8 @@ function ReportTab() {
         // Bar 9mm wide tucked into share column right side; percent ends at x+w-3
         const barW = Math.max(8, Math.min(14, w - 158));
         const pctText = coverShare + '%';
-        setFont('helvetica','bold',6.2, m.sumAssured > 0 ? T.primary : T.text3);
+        // V2 family generator's font helper is `font(...)`, not `setFont(...)`.
+        font('helvetica','bold',6.2, m.sumAssured > 0 ? T.primary : T.text3);
         const pctW = doc.getTextWidth(cleanPdfText(pctText));
         const pctRightX = x + w - 3;
         const barEndX = pctRightX - pctW - 2;
@@ -46678,7 +46679,8 @@ function ReportTab() {
         if (remark) {
           // Measure status width so remarks start just after, with min
           // padding so short status + long remarks gets max horizontal estate.
-          setFont('helvetica','normal',5.4,T.text3);
+          // V2 family helper is `font(...)`, not `setFont(...)`.
+          font('helvetica','normal',5.4,T.text3);
           const statusActualW = doc.getTextWidth(cleanPdfText(status));
           const remarkX = x + Math.max(85, 5 + statusActualW + 8);
           const remarkMaxW = w - (remarkX - x) - 4;
