@@ -612,9 +612,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.77';
+const APP_VERSION = 'v2.4.0-rc1.78';
 const APP_VERSION_DATE = '2026-05-08';
-const APP_VERSION_NAME = 'Report tab: removed Classic PDF button, renamed Family PDF → Family Report and Download Visual PDF → Download Individual Report';
+const APP_VERSION_NAME = 'Family report polish: policy register alignment + full remarks, scorecard plain-English context, headline/subline split, editorial section numbers';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -67682,18 +67682,29 @@ function ReportTab() {
         doc.setDrawColor(...T.border);
         doc.setLineWidth(0.2);
         doc.line(M, 23.5, W - M, 23.5);
-        write(String(sectionNo).padStart(2, '0'), M, 37, {
-          size: 6.3,
-          style: 'bold',
+        // v2.4.0-rc1.78 — section number restyled. Was 6.3pt sans bold,
+        // visually swallowed by the 15.5pt Times title next to it. Now
+        // 14pt Times bold italic in primary coral with a thin coral rule
+        // beneath, giving it weight as an editorial section marker.
+        const numStr = String(sectionNo).padStart(2, '0');
+        write(numStr, M, 38, {
+          family: 'times',
+          style: 'bolditalic',
+          size: 14,
           color: T.primary
         });
-        write(title, M + 12, 37, {
+        font('times', 'bolditalic', 14, T.primary);
+        const numW = doc.getTextWidth(cleanPdfText(numStr));
+        // Thin coral rule under the number — editorial anchor
+        doc.setFillColor(...T.primary);
+        doc.rect(M, 40, numW, 0.6, 'F');
+        write(title, M + numW + 6, 37, {
           family: 'times',
           style: 'bold',
           size: 15.5,
           color: T.text
         });
-        if (subtitle) write(subtitle, M + 12, 44, {
+        if (subtitle) write(subtitle, M + numW + 6, 44, {
           size: 6.5,
           color: T.text3,
           maxW: 180,
@@ -67779,12 +67790,16 @@ function ReportTab() {
       };
       const PAGE_BOTTOM = H - 14;
       const hasSpace = (y, needed) => y + needed <= PAGE_BOTTOM;
+      // v2.4.0-rc1.78: row-height now matches the wrapped-remarks logic
+      // in drawPolicyDetailRow — 2-line remarks bump the row to 22mm so
+      // the page-break guard correctly reserves space.
       const policyRowHeight = policy => {
-        const remarkSrc = policy.remarks || policy.note || policy.notes || policy.advisorNotes || policy.summary || policy.description || '';
-        const cleaned = cleanPdfText(remarkSrc);
-        const hasRemarks = cleaned && cleaned.length > 0;
-        const hasRiders = Array.isArray(policy.riders) && policy.riders.length > 0;
-        return hasRemarks || hasRiders ? 17 : 14;
+        const remark = policyRemarks(policy);
+        if (!remark) return 17;
+        font('helvetica', 'bold', 5.4, T.text3);
+        const prefixW = doc.getTextWidth(cleanPdfText('Remarks: '));
+        const lines = doc.splitTextToSize(cleanPdfText(remark), CW - 88 - prefixW).slice(0, 2);
+        return lines.length > 1 ? 22 : 17;
       };
       const requiredCategoryHeight = firstPolicy => {
         return 11 + 8 + (firstPolicy ? policyRowHeight(firstPolicy) : 14);
@@ -67850,21 +67865,21 @@ function ReportTab() {
         return codes.length ? codes.join(', ') : '-';
       };
       const policyRemarks = pol => {
-        // v2.4.0-rc1.65 hardfix: legacy data sometimes has pol.notes === "note"
-        // (a placeholder from an old import path) which was leaking into
-        // the rendered PDF as the literal word "note". Strip leading
-        // "note:" / bare "note" / "& note" artifacts before falling back
-        // to category-specific copy.
+        // v2.4.0-rc1.78: removed the 140-char safe() truncation that was
+        // cutting client-facing remarks off mid-sentence ("...mem...").
+        // The drawPolicyDetailRow renderer now wraps long remarks across
+        // 2 lines with auto-grown row height, so the full sentence shows
+        // in the policy register without ellipsis.
         const raw = pol.remarks || pol.notes || pol.advisorNotes || pol.summary || '';
         let cleaned = cleanPdfText(raw).replace(/^note:?\s*/i, '').replace(/^&\s*note\s*/i, '').trim();
         if (/^note$/i.test(cleaned)) cleaned = '';
-        if (cleaned) return safe(cleaned, 140);
+        if (cleaned) return cleaned;
         const bits = [];
         if (pol.category === 'health') bits.push(pol.hasRider ? 'rider detected' : 'confirm rider terms');
         if (pol.paymentMethod && !/^cash$/i.test(pol.paymentMethod)) bits.push('payment: ' + pol.paymentMethod);
         if (pol.category === 'investment') bits.push('investment-linked or portfolio asset - confirm risk and liquidity');
         if (pol.category === 'savings') bits.push('savings / endowment plan - confirm maturity and cash value');
-        return safe(bits.join('; '), 140);
+        return bits.join('; ');
       };
 
       // v2.4.0-rc1.75: drawMiniTableHeader now accepts `align` per column so
@@ -67946,17 +67961,30 @@ function ReportTab() {
           align: 'right'
         });
       };
+
+      // v2.4.0-rc1.78: data column positions match the updated header
+      // x-coords (Cover right at x+138, Premium right at x+165, Prem end
+      // centred at x+178, Method centred at x+198, Riders left at x+206).
+      // Remarks wrap to up to 2 lines BELOW the data row spanning full
+      // row width — no more "..." truncation. Row height auto-grows from
+      // 17mm (no remarks / 1-line remarks) to 22mm (2-line remarks) so
+      // long client-facing copy is fully visible.
       const drawPolicyDetailRow = (x, y, w, pol, idx) => {
-        // v2.4.0-rc1.65 hardfix: 2-line readable detail block.
-        // Top line  = product (bold, wide left) + Type + Cover + Premium + Prem-end + Method + Riders
-        // Bottom line = #policy + status + years (left ~80mm) | Remarks: ... (rest of row)
-        // Previously remarks were squeezed into the same 67mm right column
-        // as the riders chip, so long copy ("Vivolife is a limited-pay
-        // participating whole life plan from Income Insurance Limited
-        // providing...") got truncated mid-sentence.
         const fill = idx % 2 ? T.tableAlt : T.surface;
-        card(x, y, w, 17, fill, T.border, 1.2);
         const product = safe([pol.insurer, pol.productName || pol.policyName || pol.planName || pol.subType || 'Policy'].filter(Boolean).join(' - '), 56);
+        const status = policyStatusLine(pol);
+        const remark = policyRemarks(pol);
+        // Remarks max width spans most of the row; wrap to up to 2 lines
+        const remarkX = x + 85;
+        const remarkMaxW = w - 88;
+        const remarkPrefixW = (() => {
+          font('helvetica', 'bold', 5.4, T.text3);
+          return doc.getTextWidth(cleanPdfText('Remarks: '));
+        })();
+        const remarkLines = remark ? doc.splitTextToSize(cleanPdfText(remark), remarkMaxW - remarkPrefixW).slice(0, 2) : [];
+        const remarkLineCount = remarkLines.length;
+        const rowH = remarkLineCount > 1 ? 22 : 17;
+        card(x, y, w, rowH, fill, T.border, 1.2);
         write(product, x + 3, y + 5.4, {
           size: 6.4,
           style: 'bold',
@@ -67965,38 +67993,38 @@ function ReportTab() {
           maxLines: 1
         });
 
-        // Top-line cells (Type / Cover / Premium / Prem end / Method / Riders)
+        // Top-line cells aligned with header positions
         write(policyType(pol), x + 84, y + 5.4, {
           size: 5.9,
           color: T.text2,
-          maxW: 28,
+          maxW: 50,
           maxLines: 1
         });
-        write(policyCover(pol) > 0 ? money(policyCover(pol)) : '-', x + 116, y + 5.4, {
+        write(policyCover(pol) > 0 ? money(policyCover(pol)) : '-', x + 138, y + 5.4, {
           size: 6.1,
           style: 'bold',
           color: T.text2,
           align: 'right'
         });
         const prem = isSinglePremium(pol) ? n(pol.annualPremium) ? money(n(pol.annualPremium)) + ' single' : 'single' : policyAnnual(pol) ? money(policyAnnual(pol)) + '/yr' : '-';
-        write(prem, x + 146, y + 5.4, {
+        write(prem, x + 165, y + 5.4, {
           size: 5.9,
           color: T.text2,
           align: 'right'
         });
-        write(policyPremEnd(pol), x + 167, y + 5.4, {
+        write(policyPremEnd(pol), x + 178, y + 5.4, {
           size: 5.8,
           color: T.text2,
           align: 'center'
         });
-        write(safe(pol.paymentMethod || '-', 16), x + 188, y + 5.4, {
+        write(safe(pol.paymentMethod || '-', 16), x + 198, y + 5.4, {
           size: 5.8,
           color: T.text2,
           align: 'center'
         });
         const codes = riderCodes(pol);
         if (codes && codes !== '-') {
-          write('Riders: ' + codes, x + 206, y + 5.4, {
+          write(codes, x + 206, y + 5.4, {
             size: 5.6,
             style: 'bold',
             color: T.primary,
@@ -68005,31 +68033,26 @@ function ReportTab() {
           });
         }
 
-        // Bottom line — status (left, ~80mm) + Remarks taking the rest
-        const status = policyStatusLine(pol);
-        const remark = policyRemarks(pol);
+        // Sub-line — status (left, ~80mm) + remarks (rest, up to 2 lines)
         write(status, x + 3, y + 11.6, {
           size: 5.4,
           color: T.text3,
           maxW: 78,
           maxLines: 1
         });
-        if (remark) {
-          // Measure status width so remarks start just after, with min
-          // padding so short status + long remarks gets max horizontal estate.
-          // V2 family helper is `font(...)`, not `setFont(...)`.
+        if (remarkLineCount > 0) {
+          // Render "Remarks:" prefix bold then the wrapped lines
+          font('helvetica', 'bold', 5.4, T.text3);
+          doc.text(cleanPdfText('Remarks: '), remarkX, y + 11.6);
           font('helvetica', 'normal', 5.4, T.text3);
-          const statusActualW = doc.getTextWidth(cleanPdfText(status));
-          const remarkX = x + Math.max(85, 5 + statusActualW + 8);
-          const remarkMaxW = w - (remarkX - x) - 4;
-          write('Remarks: ' + remark, remarkX, y + 11.6, {
-            size: 5.4,
-            color: T.text3,
-            maxW: remarkMaxW,
-            maxLines: 1
+          remarkLines.forEach((ln, i) => {
+            doc.text(cleanPdfText(ln), remarkX + remarkPrefixW, y + 11.6 + i * 4);
           });
         }
       };
+
+      // (policyRowHeight is defined earlier in this generator and updated
+      // alongside drawPolicyDetailRow's dynamic 17/22mm logic.)
 
       // Data load.
       const states = await PolicyDB.getAllDriveStates().catch(() => []);
@@ -68179,41 +68202,38 @@ function ReportTab() {
       }) + '/yr for ' + money(totalSA) + ' of cover.', T.sun);
       drawBulletLine(M + 5, 84, topCoverMember ? topCoverShare + '% of household cover sits with ' + topCoverMember.name + '.' : 'Coverage concentration cannot be assessed.', topCoverShare >= 80 ? T.danger : T.success);
 
-      // v2.4.0-rc1.65 FAMILY SCORECARD — rebuilt as a clean 3-cell equal
-      // grid with vertical hairline dividers. Was 3 metrics at 3 different
-      // sizes (17pt / 14pt / 14pt), one floating "Review" pill anchored
-      // only to the first metric. Now: each cell is a peer (eyebrow ↑
-      // value ↑ status pill ↓), 13pt Times bold for all values, hairline
-      // dividers between cells.
-      card(M + 162, 48, 115, 38, T.surface, T.border, 4);
+      // v2.4.0-rc1.78 FAMILY SCORECARD — labels and pills rewritten so
+      // each cell tells a self-contained story instead of dropping a
+      // raw stat. Was: COVER CONCENTRATION / 100% / "Review" pill — the
+      // reader had to mentally translate "concentration" into meaning.
+      // Now: each cell has plain-English label + value + a sub-line
+      // explaining what the value means in context.
+      const scH = 42;
+      card(M + 162, 48, 115, scH, T.surface, T.border, 4);
       label('Family scorecard', M + 167, 53);
-      const sc3W = (115 - 8) / 3; // 3 equal cells inside the card padding
+      const sc3W = (115 - 8) / 3;
       const scCells = [{
-        label: 'Cover concentration',
-        value: String(topCoverShare) + '%',
+        label: 'Where cover sits',
+        value: topCoverShare + '%',
         tone: topCoverShare >= 80 ? T.danger : topCoverShare >= 60 ? T.warn : T.success,
-        pill: concentrationStatus,
-        pillTone: concentrationTone
+        sub: topCoverMember ? 'with ' + topCoverMember.name : 'across the family'
       }, {
-        label: 'Uncovered',
-        value: String(uncoveredMembers.length) + (uncoveredMembers.length === 1 ? ' member' : ' members'),
+        label: 'Members without cover',
+        value: String(uncoveredMembers.length),
         tone: uncoveredMembers.length ? T.danger : T.success,
-        pill: uncoveredMembers.length ? 'Action' : 'Covered',
-        pillTone: uncoveredMembers.length ? 'danger' : 'success'
+        sub: uncoveredMembers.length ? uncoveredMembers[0]?.name || 'review needed' : 'all members covered'
       }, {
         label: 'Top premium payer',
-        value: String(topPremShare) + '%',
+        value: topPremShare + '%',
         tone: topPremShare >= 70 ? T.warn : T.text,
-        pill: topPremShare >= 70 ? 'Concentrated' : 'Balanced',
-        pillTone: topPremShare >= 70 ? 'warn' : 'success'
+        sub: topPremMember ? 'paid by ' + topPremMember.name : 'shared evenly'
       }];
       scCells.forEach((c, i) => {
         const cx = M + 167 + i * sc3W;
-        // Vertical divider between cells
         if (i > 0) {
           doc.setDrawColor(...T.border);
           doc.setLineWidth(0.15);
-          doc.line(cx - 1, 56, cx - 1, 84);
+          doc.line(cx - 1, 56, cx - 1, 86);
         }
         label(c.label, cx, 60);
         write(c.value, cx, 72, {
@@ -68224,10 +68244,13 @@ function ReportTab() {
           maxW: sc3W - 2,
           maxLines: 1
         });
-        pill(c.pill, cx, 76, c.pillTone, {
-          w: sc3W - 4,
-          h: 5,
-          size: 4.6
+        write(c.sub, cx, 80, {
+          size: SZ.caption,
+          color: T.text3,
+          style: 'italic',
+          maxW: sc3W - 2,
+          maxLines: 2,
+          lineH: 3.2
         });
       });
       const kW = (CW - 12) / 5;
@@ -68570,14 +68593,17 @@ function ReportTab() {
         x: 124,
         align: 'right'
       }]);
+      // v2.4.0-rc1.78 — removed the full-width "cover-share gauge" that
+      // sat below each row. It was visually confusing because the bar
+      // tracked COVER share (cshare) while the column header next to it
+      // says "Share" — i.e. PAYER share (pshare). A 100% bar next to a
+      // 71% percent label looked like a misalignment. Replaced with a
+      // tight inline gauge in the SHARE column only (matches what the
+      // column actually claims to show).
       let my = 73;
       memberRows.slice(0, 6).forEach((m, idx) => {
-        // v2.4.0-rc1.65 — taller row (16mm) so the cover-share gauge has
-        // its own band BELOW the data row instead of bleeding across the
-        // premium/cover columns. Gauge spans the data width only.
         const pshare = totalAnnualPrem ? Math.round(m.annualPremium / totalAnnualPrem * 100) : 0;
-        const cshare = totalSA ? Math.round(m.sumAssured / totalSA * 100) : 0;
-        const rowH = 16;
+        const rowH = 12;
         card(M + 148, my, 124, rowH, idx % 2 ? T.tableAlt : T.surface, T.border, 1);
         write(m.name, M + 152, my + 7, {
           size: SZ.body,
@@ -68604,10 +68630,6 @@ function ReportTab() {
           color: pshare >= 70 ? T.warn : T.text2,
           align: 'right'
         });
-        // Cover-share gauge: thin 1.4mm strip on its own row at y+12.4,
-        // spanning the inner card width minus padding so it never enters
-        // the data columns above. Light coral on filled, hairline on empty.
-        drawGapBar(M + 152, my + 12.4, 118, 1.4, cshare, cshare === 0 ? T.border2 : T.primary);
         my += rowH;
       });
 
@@ -68721,9 +68743,12 @@ function ReportTab() {
           maxLines: 1
         });
 
-        // REVIEW / GAP NOTE — same height as MEMBER SNAPSHOT (32mm) for
-        // visual symmetry. Wraps the sentence over up to 3 lines so it
-        // fills the card without bottom void.
+        // v2.4.0-rc1.78 — REVIEW/GAP note now splits into a bold
+        // headline (key fact, scannable) and a softer body sentence
+        // (the question / what to do). The reader's eye lands on the
+        // big number first, then the explanation. Was a single-paragraph
+        // sentence where the percentage and name disappeared into the
+        // text without visual emphasis.
         const noteIsGap = m.sumAssured <= 0;
         const noteAccent = noteIsGap ? ACCENT.risk : ACCENT.insight;
         const noteSoft = noteIsGap ? T.dangerSoft : T.lavenderSoft;
@@ -68738,13 +68763,23 @@ function ReportTab() {
         doc.text('i', M + 128, snapTop + 13.6, {
           align: 'center'
         });
-        const note = noteIsGap ? 'No life cover is showing for ' + m.name + ' yet. Worth looking at term life, disability income and critical illness — at sizes that fit your situation — before any savings or investment plans.' : m.name + " currently holds " + concPct + "% of the family's life cover. Worth checking that this matches who depends on whose income, and what would happen financially if that ever changed.";
-        write(note, M + 133, snapTop + 13.5, {
+        const headline = noteIsGap ? m.name + ' has no life cover yet' : m.name + ' holds ' + concPct + "% of the family's life cover";
+        const subline = noteIsGap ? 'Worth looking at term life, disability income and critical illness at sizes that fit your situation, before any savings or investment plans.' : "Worth checking that this matches who depends on whose income, and what would happen financially if that ever changed.";
+        // Bold headline (eye lands here first)
+        write(headline, M + 133, snapTop + 13.5, {
           size: SZ.body,
+          style: 'bold',
+          color: T.text,
+          maxW: 158 - 18,
+          maxLines: 1
+        });
+        // Soft subline (the explanation)
+        write(subline, M + 133, snapTop + 18.5, {
+          size: SZ.caption,
           color: T.text2,
           maxW: 158 - 18,
           maxLines: 3,
-          lineH: 3.8
+          lineH: 3.4
         });
         if (noteIsGap) {
           // Slim accent action strip at the bottom of the note
@@ -68817,6 +68852,9 @@ function ReportTab() {
             });
           }
           y += 11;
+          // v2.4.0-rc1.78: numeric columns right-aligned to match data;
+          // "Riders / remarks" → "Riders" only (remarks live on the
+          // bottom line of the row spanning the full row width).
           drawMiniTableHeader(M, y, CW, [{
             label: 'Insurer / product',
             x: 3
@@ -68825,18 +68863,22 @@ function ReportTab() {
             x: 84
           }, {
             label: 'Cover',
-            x: 111
+            x: 138,
+            align: 'right'
           }, {
             label: 'Premium',
-            x: 136
+            x: 165,
+            align: 'right'
           }, {
             label: 'Prem end',
-            x: 158
+            x: 178,
+            align: 'center'
           }, {
             label: 'Method',
-            x: 180
+            x: 198,
+            align: 'center'
           }, {
-            label: 'Riders / remarks',
+            label: 'Riders',
             x: 206
           }]);
           y += 8;
