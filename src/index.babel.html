@@ -45154,6 +45154,13 @@ function ReportTab() {
       const setFont = (family='helvetica', style='normal', size=8, color=T.text) => {
         doc.setFont(family, style); doc.setFontSize(size); doc.setTextColor(...color);
       };
+      // v2.4.0-rc1.80 PERMA-FIX: defensive alias so future copy-paste from
+      // the family generator (which names this helper `font`) doesn't throw
+      // ReferenceError. Both names now reach the same impl. Mirrors the
+      // `setFont = font` alias the family generator already has at the
+      // symmetric position. This is the symmetric counterpart that closes
+      // the loop — code using either name works in either generator.
+      const font = setFont;
       const text = (s, x, y, opts={}) => {
         setFont(opts.family || 'helvetica', opts.style || 'normal', opts.size || 8, opts.color || T.text);
         const safeStr = pdfSafe(s);
@@ -45366,9 +45373,9 @@ function ReportTab() {
           const pillH = 8;
           const pillY = y + 8;
           // Measure pill widths (text + 14mm padding for breathing room)
-          font('helvetica', 'bold', 9, T.primary);
+          setFont('helvetica', 'bold', 9, T.primary);
           const startPillW = doc.getTextWidth(pdfSafe(startVal)) + 14;
-          font('helvetica', 'bold', 9, T.danger);
+          setFont('helvetica', 'bold', 9, T.danger);
           const endPillW = doc.getTextWidth(pdfSafe(endVal)) + 14;
           const arrowW = 22;  // wider arrow zone for the process label
           const totalW = startPillW + arrowW + endPillW;
