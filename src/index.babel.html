@@ -45342,75 +45342,119 @@ function ReportTab() {
         });
       };
 
-      // drawInflationBridge — V5 designed three-segment band:
-      //   [S$20k/mo today]  -->  [2.8% p.a. for 23 years]  -->  [S$38k/mo at age 65]
-      // V5 polish: arrows are DRAWN (line + triangle) via drawConnectorArrow
-      // instead of being typed text "->" which sometimes rendered weirdly in
-      // jsPDF's Helvetica. Subcaption beneath explains the bridge intent.
-      // v2.4.0-rc1.79 — INFLATION BRIDGE redesigned for clearer hierarchy.
-      // Was 3 same-sized pills (today / process / future) with 2 thin arrows
-      // — the eye couldn't tell which numbers mattered most. Now: 2
-      // emphasised endpoint pills (start coral, end danger-coral) flanking
-      // a single bold arrow with the growth-rate process rendered as
-      // muted italic ABOVE the arrow. The reader sees the two big numbers
-      // first; the rate is supporting context.
+      // drawInflationBridge — three-pill bridge with a headline DELTA in
+      // the middle.
+      //   [S$20k today (success-tinted)]  ->  [+89% (SOLID coral)]  ->  [S$37,746 @65 (danger-tinted)]
+      // v2.4.0-rc1.81 — full redesign for high-impact scan-ability.
+      // Was: two soft-coral endpoint pills + a thin arrow with "grows at
+      // X% for Y years" jammed between them at 5.2pt — the math caption
+      // got truncated (only 22mm of width) and visually overlapped the
+      // right pill. The eye had no focal point.
+      // Now: three pills. The middle one is the headline — solid coral
+      // with white "+X%" inside — so the GROWTH is the centerpiece. The
+      // start pill is success-tinted (today, comfortable), the end pill
+      // is danger-tinted (future, expensive), reading the bridge left to
+      // right says "comfortable today -> expensive future, and here's
+      // by how much". The math caption now sits in the eyebrow next to
+      // the section label, where it has all the room it needs.
       const drawInflationBridge = (x, y, w, segs, opts={}) => {
-        const h = opts.h || 22;
+        const h = opts.h || 28;
         card(x, y, w, h, T.surface, T.border, 4);
+
+        if (segs.length !== 3) {
+          label('Inflation bridge', x + 5, y + 5);
+          return;
+        }
+        const startVal = segs[0];
+        const middleVal = segs[1];   // "grows at X% per year for Y years"
+        const endVal = segs[2];
+
+        // Parse formatted currency strings to compute the headline delta —
+        // this becomes the "+89%" badge in the centerpiece pill.
+        const parseAmt = (s) => {
+          const m = String(s).match(/[\d,]+(\.\d+)?/);
+          return m ? parseFloat(m[0].replace(/,/g, '')) : 0;
+        };
+        const startN = parseAmt(startVal);
+        const endN = parseAmt(endVal);
+        const deltaPct = startN > 0 ? Math.round((endN - startN) / startN * 100) : 0;
+        const deltaText = (deltaPct >= 0 ? '+' : '') + deltaPct + '%';
+
+        // EYEBROW (y+5): section label + math caption on one line.
+        // The math has plenty of width up here (no need to fit between pills).
         label('Inflation bridge', x + 5, y + 5);
-        const segCount = segs.length;
-        // Caption row — combines the WHY and the growth-rate process
-        const subcaption = opts.subcaption || "Today's lifestyle becomes more expensive each year.";
-        text(subcaption, x + 5, y + h - 3.2, {
-          size: 5.4, color: T.text3, fontStyle: 'italic',
-          maxW: w - 10, maxLines: 1
+        setFont('helvetica', 'bold', 6.4, T.text3);
+        const labelW = doc.getTextWidth(pdfSafe('INFLATION BRIDGE'));
+        const mathClean = String(middleVal).replace(/^grows at\s*/i, '').trim();
+        text(mathClean, x + 5 + labelW + 4, y + 5, {
+          size: 5.4, color: T.text3, style: 'italic'
         });
-        // Two-pill bridge with single bold arrow between them
-        if (segCount === 3) {
-          const startVal = segs[0];
-          const middleVal = segs[1];   // "grows at X% per year for Y years"
-          const endVal = segs[2];
-          const pillH = 8;
-          const pillY = y + 8;
-          // Measure pill widths (text + 14mm padding for breathing room)
-          setFont('helvetica', 'bold', 9, T.primary);
-          const startPillW = doc.getTextWidth(pdfSafe(startVal)) + 14;
-          setFont('helvetica', 'bold', 9, T.danger);
-          const endPillW = doc.getTextWidth(pdfSafe(endVal)) + 14;
-          const arrowW = 22;  // wider arrow zone for the process label
-          const totalW = startPillW + arrowW + endPillW;
-          const startX = x + (w - totalW) / 2;
-          // Start pill (coral)
-          doc.setFillColor(...T.primarySoft); doc.setDrawColor(...T.primarySoft);
-          doc.roundedRect(startX, pillY, startPillW, pillH, pillH/2, pillH/2, 'FD');
-          text(startVal, startX + startPillW/2, pillY + pillH*0.68, {
-            size: 9, style: 'bold', color: T.primary, align: 'center'
-          });
-          // Arrow zone — process label above + bold arrow line below
-          const arrowZoneX = startX + startPillW;
-          const arrowMidY = pillY + pillH/2;
-          // Process label (muted italic) sits 2mm above the arrow
-          text(middleVal, arrowZoneX + arrowW/2, arrowMidY - 1.5, {
-            size: 5.2, color: T.text3, style: 'italic', align: 'center', maxW: arrowW + 4, maxLines: 1
-          });
-          // Bold arrow line + triangle, slightly thicker than V2
-          doc.setDrawColor(...T.text3); doc.setLineWidth(0.5);
-          doc.line(arrowZoneX + 1, arrowMidY + 1.2, arrowZoneX + arrowW - 2, arrowMidY + 1.2);
-          doc.setFillColor(...T.text3);
+
+        // PILL ROW (y+11 to y+21): start | +DELTA | end
+        const pillH = 10;
+        const pillY = y + 11;
+        const pillCenterY = pillY + pillH/2;
+
+        setFont('times', 'bold', 11, T.success);
+        const startPillW = doc.getTextWidth(pdfSafe(startVal)) + 12;
+        setFont('helvetica', 'bold', 11, T.white);
+        const middlePillW = Math.max(20, doc.getTextWidth(pdfSafe(deltaText)) + 14);
+        setFont('times', 'bold', 11, T.danger);
+        const endPillW = doc.getTextWidth(pdfSafe(endVal)) + 12;
+
+        const gap = 9;  // arrow zone width between adjacent pills
+        const totalW = startPillW + gap + middlePillW + gap + endPillW;
+        const startX = x + (w - totalW) / 2;
+
+        // Helper: chunky arrow (line + filled triangle) in primary coral.
+        const drawArrow = (ax1, ax2, ay) => {
+          doc.setDrawColor(...T.primary); doc.setLineWidth(0.8);
+          doc.line(ax1 + 1.5, ay, ax2 - 2.6, ay);
+          doc.setFillColor(...T.primary);
           doc.triangle(
-            arrowZoneX + arrowW - 2, arrowMidY - 0.4,
-            arrowZoneX + arrowW - 2, arrowMidY + 2.8,
-            arrowZoneX + arrowW + 0.5, arrowMidY + 1.2,
+            ax2 - 2.6, ay - 1.6,
+            ax2 - 2.6, ay + 1.6,
+            ax2, ay,
             'F'
           );
-          // End pill (danger soft + danger ink)
-          const endX = arrowZoneX + arrowW;
-          doc.setFillColor(...T.dangerSoft); doc.setDrawColor(...T.dangerSoft);
-          doc.roundedRect(endX, pillY, endPillW, pillH, pillH/2, pillH/2, 'FD');
-          text(endVal, endX + endPillW/2, pillY + pillH*0.68, {
-            size: 9, style: 'bold', color: T.danger, align: 'center'
-          });
-        }
+        };
+
+        // Start pill — success-tinted (today, comfortable)
+        doc.setFillColor(...T.successSoft); doc.setDrawColor(...T.successSoft);
+        doc.roundedRect(startX, pillY, startPillW, pillH, pillH/2, pillH/2, 'FD');
+        text(startVal, startX + startPillW/2, pillY + pillH*0.68, {
+          family: 'times', size: 11, style: 'bold', color: T.success, align: 'center'
+        });
+
+        // Arrow 1 (start -> middle)
+        const midX = startX + startPillW + gap;
+        drawArrow(startX + startPillW, midX, pillCenterY);
+
+        // Middle pill — SOLID coral, white text (the headline +X% stat)
+        doc.setFillColor(...T.primary); doc.setDrawColor(...T.primary);
+        doc.roundedRect(midX, pillY, middlePillW, pillH, pillH/2, pillH/2, 'FD');
+        text(deltaText, midX + middlePillW/2, pillY + pillH*0.68, {
+          family: 'helvetica', size: 11, style: 'bold', color: T.white, align: 'center'
+        });
+
+        // Arrow 2 (middle -> end)
+        const endX = midX + middlePillW + gap;
+        drawArrow(midX + middlePillW, endX, pillCenterY);
+
+        // End pill — danger-tinted (future, expensive)
+        doc.setFillColor(...T.dangerSoft); doc.setDrawColor(...T.dangerSoft);
+        doc.roundedRect(endX, pillY, endPillW, pillH, pillH/2, pillH/2, 'FD');
+        text(endVal, endX + endPillW/2, pillY + pillH*0.68, {
+          family: 'times', size: 11, style: 'bold', color: T.danger, align: 'center'
+        });
+
+        // SUBCAPTION (y+h-4): italic explainer, allowed to wrap to 2 lines
+        // so a longer subcaption never gets cut off mid-word.
+        const subcaption = opts.subcaption || "Today's lifestyle becomes more expensive each year.";
+        text(subcaption, x + 5, y + h - 4, {
+          size: 5.4, color: T.text3, style: 'italic',
+          maxW: w - 10, maxLines: 2, lineH: 3
+        });
       };
 
       // drawStrategyGroup — page 4 right-hand grouped card.
@@ -46084,23 +46128,22 @@ function ReportTab() {
         text(d[2], x + 3, diagY + 16, { size: 5.6, color: T.text3, maxW: diagW2 - 6, maxLines: 1 });
       });
 
-      // v2.4.0-rc1.73 inflation bridge — clearer client-facing language:
-      //   • Full S$ figures (no "k" compression)
-      //   • "per year" instead of "p.a." jargon
-      //   • Connecting word in middle reads as a sentence
-      //   • Subcaption explains WHY the bridge exists (in plain English)
+      // v2.4.0-rc1.81 inflation bridge — three-pill layout with a hero
+      // "+X%" badge in the middle (see drawInflationBridge). Default h:28
+      // so the centerpiece pill has the visual weight it deserves; the
+      // math caption now sits in the eyebrow next to "INFLATION BRIDGE"
+      // (used to truncate at 22mm between the pills).
       const inflY = diagY + diagH + 5;
       drawInflationBridge(M, inflY, CW, [
         money(retirement.baseLifestyleToday, { full: true, suffix: '/month today' }),
         'grows at ' + (retirement.inflation || inflPct).toFixed(1) + '% per year for ' + yearsToRet + ' years',
         money(retirement.desired, { full: true, suffix: '/month at age ' + retirementAge })
       ], {
-        h: 18,
         subcaption: "Today's lifestyle becomes more expensive each year, so the income you'll need at retirement is higher than what you spend now."
       });
 
       // Main content — chart left (182mm) + income source mix right (89mm)
-      const mainY = inflY + 22;
+      const mainY = inflY + 32;
       const chartCardX = M, chartCardW = 182, chartCardH = 86;
       const srcCardX = M + chartCardW + 6, srcCardW = CW - chartCardW - 6, srcCardH = chartCardH;
 
