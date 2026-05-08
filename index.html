@@ -67554,7 +67554,9 @@ function ReportTab() {
         });
       });
       footer();
-      doc.save('PolicyLens_Visual_Report_' + clientLabel.replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '') + '_' + new Date().toISOString().slice(0, 10) + '.pdf');
+      // v2.4.0-rc1.82 — user-facing filename: "<Name> Individual Executive Review.pdf"
+      const fileNameSafe = clientLabel.replace(/[\\\/:*?"<>|]/g, '').replace(/\s+/g, ' ').trim() || 'Client';
+      doc.save(fileNameSafe + ' Individual Executive Review.pdf');
     } catch (e) {
       console.error('[Visual PDF] Error:', e);
       toast('Visual report generation error: ' + e.message, 'error', 6000);
@@ -69093,7 +69095,11 @@ function ReportTab() {
         lineH: 3.5
       });
       drawFooters();
-      doc.save('PolicyLens_Family_Visual_Report_' + familyName.replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '') + '_' + new Date().toISOString().slice(0, 10) + '.pdf');
+      // v2.4.0-rc1.82 — user-facing filename: "<Family Name> Family Executive Review.pdf"
+      // Strip a trailing " Family" if present so "Tan Mei Lian Family"
+      // doesn't render as "Tan Mei Lian Family Family Executive Review.pdf".
+      const familyBaseSafe = familyName.replace(/\s+Family\s*$/i, '').replace(/[\\\/:*?"<>|]/g, '').replace(/\s+/g, ' ').trim() || 'Family';
+      doc.save(familyBaseSafe + ' Family Executive Review.pdf');
     } catch (e) {
       console.error('[Family Visual PDF] Error:', e);
       toast('Family visual report generation error: ' + e.message, 'error', 6000);
