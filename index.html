@@ -68870,6 +68870,13 @@ function ReportTab() {
       // the right-aligned dollar values beneath them. Was always
       // left-aligned, which produced visible header/data drift in the
       // FAMILY MEMBERS and BY MEMBER tables.
+      // v2.4.0-rc1.95 — right/center-aligned headers no longer apply
+      // charSpace. The 0.4mm letter-spacing was throwing off jsPDF's
+      // right-edge positioning calculation, making header right-edges
+      // visually drift left of their right-aligned data values below.
+      // Left-aligned headers keep the spacing for editorial feel (via the
+      // shared label() helper in the engine, which already handles tracking
+      // consistently).
       const drawMiniTableHeader = (x, y, w, cols) => {
         doc.setFillColor(...T.tableHead);
         doc.setDrawColor(...T.border);
@@ -68880,9 +68887,10 @@ function ReportTab() {
             label(c.label, x + c.x, y + 5.6);
           } else {
             font('helvetica', 'bold', 5.8, T.text3);
+            // No charSpace — right/center align positioning depends on
+            // accurate text-width measurement which charSpace breaks.
             doc.text(cleanPdfText(String(c.label).toUpperCase()), x + c.x, y + 5.6, {
-              align,
-              charSpace: 0.4
+              align
             });
           }
         });
@@ -69615,40 +69623,31 @@ function ReportTab() {
       });
       card(M + 143, 48, 134, 95, T.surface, T.border, 4);
       label('By member - premium and cover', M + 148, 58);
-      // v2.4.0-rc1.75: numeric column headers right-aligned at the same
-      // x as their right-aligned data values, eliminating the visible
-      // header-vs-data drift in the previous left-aligned layout.
-      // Headers right-aligned at the same x as the data right-edges below.
-      // "Share" instead of "Payer share" so the longer label doesn't collide
-      // with COVER header — same convention as the FAMILY MEMBERS table.
+      // v2.4.0-rc1.95 — column geometry redrawn from scratch with EVEN
+      // gaps between right-anchored numeric columns. Was [2,78,107,124]
+      // giving 76/29/17 gaps — left the table feeling lopsided + the
+      // SHARE column kissed the card right edge with no padding. Now:
+      //   Member (l, 0-50) | Premium (r, 50-78) | Cover (r, 78-100) | Share (r, 100-124)
+      // Right-anchors at +76 / +98 / +122 with 2mm cell-edge padding.
+      // Combined with the rc1.95 drawMiniTableHeader fix (drop charSpace
+      // on right-aligned headers) the header right-edges now align
+      // pixel-perfect with their data right-edges.
       drawMiniTableHeader(M + 148, 65, 124, [{
         label: 'Member',
         x: 2
       }, {
         label: 'Premium',
-        x: 78,
+        x: 76,
         align: 'right'
       }, {
         label: 'Cover',
-        x: 107,
+        x: 98,
         align: 'right'
       }, {
         label: 'Share',
-        x: 124,
+        x: 122,
         align: 'right'
       }]);
-      // v2.4.0-rc1.78 — removed the full-width "cover-share gauge" that
-      // sat below each row. It was visually confusing because the bar
-      // tracked COVER share (cshare) while the column header next to it
-      // says "Share" — i.e. PAYER share (pshare). A 100% bar next to a
-      // 71% percent label looked like a misalignment. Replaced with a
-      // tight inline gauge in the SHARE column only (matches what the
-      // column actually claims to show).
-      // v2.4.0-rc1.91 — premium values now use full numbers (S$24,000)
-      // instead of the "k" shorthand (S$24k) so the FC reads exact figures
-      // when reviewing payer-share. Cover values keep "M" shortening
-      // because S$1,700,000 is unwieldy and "S$1.7M" reads cleaner at a
-      // glance.
       let my = 73;
       memberRows.slice(0, 6).forEach((m, idx) => {
         const pshare = totalAnnualPrem ? Math.round(m.annualPremium / totalAnnualPrem * 100) : 0;
@@ -69658,24 +69657,24 @@ function ReportTab() {
           size: SZ.body,
           style: 'bold',
           color: T.text,
-          maxW: 54,
+          maxW: 46,
           maxLines: 1
         });
         write(m.annualPremium > 0 ? money(m.annualPremium, {
           full: true
-        }) : '-', M + 226, my + 7, {
+        }) : '-', M + 148 + 76, my + 7, {
           size: SZ.body,
           color: T.text2,
           align: 'right'
         });
         write(money(m.sumAssured, {
           blankZero: true
-        }), M + 255, my + 7, {
+        }), M + 148 + 98, my + 7, {
           size: SZ.body,
           color: T.text2,
           align: 'right'
         });
-        write(pshare + '%', M + 272, my + 7, {
+        write(pshare + '%', M + 148 + 122, my + 7, {
           size: SZ.body,
           style: 'bold',
           color: pshare >= 70 ? T.warn : T.text2,
