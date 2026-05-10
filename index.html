@@ -13545,7 +13545,7 @@ function isLikelyFundName(name) {
 // ═══════════════════════════════════════════════════════════════
 
 const DB_NAME = 'PolicyLensV4';
-const DB_VER = 11;
+const DB_VER = 12;
 const openDB = () => new Promise((res, rej) => {
   const r = indexedDB.open(DB_NAME, DB_VER);
   r.onupgradeneeded = e => {
@@ -13674,6 +13674,30 @@ const openDB = () => new Promise((res, rej) => {
         unique: false
       });
     }
+    // v2.4.0-rc1.87: Report snapshots store. Captures the KPI summary
+    // and full report payload at PDF-generation time so the next run can
+    // render a "What changed" diff page. Keyed by an autoincrementing id;
+    // queried by (clientId, scope, scenario, takenAt). Currently
+    // local-only — see IMPROVEMENTS_DEFERRED.md for the planned
+    // policylens.report_snapshots Supabase mirror.
+    if (!db.objectStoreNames.contains('report_snapshots')) {
+      const rs = db.createObjectStore('report_snapshots', {
+        keyPath: 'id',
+        autoIncrement: true
+      });
+      rs.createIndex('byClientId', 'clientId', {
+        unique: false
+      });
+      rs.createIndex('byScope', 'scope', {
+        unique: false
+      });
+      rs.createIndex('byClientScope', ['clientId', 'scope'], {
+        unique: false
+      });
+      rs.createIndex('byTakenAt', 'takenAt', {
+        unique: false
+      });
+    }
   };
   r.onblocked = () => {
     console.warn('[IDB] Blocked by another tab — close other PolicyLens tabs');
@@ -13694,6 +13718,40 @@ const dbOp = (store, mode, fn) => openDB().then(db => new Promise((res, rej) => 
 const dbGetAll = store => dbOp(store, 'readonly', s => s.getAll());
 const dbPut = (store, val) => dbOp(store, 'readwrite', s => s.put(val));
 const dbDel = (store, id) => dbOp(store, 'readwrite', s => s.delete(id));
+
+// v2.4.0-rc1.87 — report-snapshot helpers (used by individual + family
+// generators for the "What changed since last review" page).
+//   scope: 'individual' | 'family'
+//   kpis: small summary {score, monthlyGap, totalCover, totalPremium,
+//         activePolicies, scenario}
+//   detail: full payload for richer diffing later (per-policy lines,
+//           per-area gap percentages). Stored as JSON.
+const saveReportSnapshot = async (clientId, scope, kpis, detail = {}) => {
+  if (!clientId || !scope) return;
+  try {
+    await dbPut('report_snapshots', {
+      clientId: String(clientId),
+      scope,
+      takenAt: Date.now(),
+      kpis: kpis || {},
+      detail: detail || {}
+    });
+  } catch (e) {
+    console.warn('[snapshot] save failed', e);
+  }
+};
+const getLatestReportSnapshot = async (clientId, scope) => {
+  if (!clientId || !scope) return null;
+  try {
+    const all = await dbOp('report_snapshots', 'readonly', s => s.index('byClientScope').getAll([String(clientId), scope]));
+    if (!all || !all.length) return null;
+    // Most recent first
+    return all.sort((a, b) => (b.takenAt || 0) - (a.takenAt || 0))[0];
+  } catch (e) {
+    console.warn('[snapshot] load failed', e);
+    return null;
+  }
+};
 const dbGet = (store, key) => {
   // Phase 8 polish: AI keys are now provided by the ckg-ai-proxy worker.
   // Stub any geminiKey* / anthropicKey* lookup so the legacy
@@ -65750,7 +65808,8 @@ function ReportTab() {
       // standard footer line, showing the page sequence with the current
       // page highlighted. Helps readers (especially advisors flipping to a
       // specific section in a meeting) navigate the PDF without scrubbing.
-      const PAGE_LABELS = ['Cover', 'Executive', 'Gaps', 'Retirement', 'Premiums', 'Policies'];
+      // v2.4.0-rc1.87 — labels include "Changes" when a diff page rendered.
+      const PAGE_LABELS = showDiffPage ? ['Cover', 'Changes', 'Executive', 'Gaps', 'Retirement', 'Premiums', 'Policies'] : ['Cover', 'Executive', 'Gaps', 'Retirement', 'Premiums', 'Policies'];
       const footer = () => {
         const pages = doc.getNumberOfPages();
         const contentPages = Math.max(1, pages - 1);
@@ -66651,6 +66710,14 @@ function ReportTab() {
         tone: tone(r.pct)
       }));
 
+      // v2.4.0-rc1.87 — fetch the prior snapshot for this client so we can
+      // render a "What changed since last review" diff page after the cover.
+      // Snapshots older than 1 day count as "previous" — anything within
+      // the same day is the user re-running the same report (no diff).
+      const priorSnapshot = await getLatestReportSnapshot(activeClientId, 'individual');
+      const priorAgeDays = priorSnapshot ? Math.floor((Date.now() - (priorSnapshot.takenAt || 0)) / 86400000) : 0;
+      const showDiffPage = priorSnapshot && priorAgeDays >= 1;
+
       // ─────────────────────────────────────────────────────────────────
       // PAGE 0 — Cover (v2.4.0-rc1.84)
       // Editorial cover: eyebrow + client name (hero, serif bold) +
@@ -66788,10 +66855,204 @@ function ReportTab() {
       });
 
       // ─────────────────────────────────────────────────────────────────
+      // PAGE 0.5 — What changed since last review (v2.4.0-rc1.87)
+      // Only renders if a prior snapshot exists for this client AND it's
+      // at least 1 day old. Shows the deltas on the headline KPIs (score,
+      // monthly gap, total cover, total premium, active policies) plus a
+      // list of policies added/removed since the last snapshot.
+      // ─────────────────────────────────────────────────────────────────
+      if (showDiffPage) {
+        doc.addPage();
+        pageHeader(1, 'What changed since last review');
+        const k = priorSnapshot.kpis || {};
+        const sub = priorAgeDays === 1 ? 'yesterday' : priorAgeDays + ' days ago';
+        text('Compared to the snapshot from ' + sub + ' (' + new Date(priorSnapshot.takenAt).toLocaleDateString('en-SG') + ')', M, 32, {
+          size: 7.6,
+          color: T.text3,
+          style: 'italic'
+        });
+
+        // KPI delta strip — 5 tiles showing now vs then with arrow
+        const dY = 40,
+          dH = 32,
+          dW = (CW - 4 * 4) / 5;
+        const fmtDelta = (now, then, monthly = false, suffix = '') => {
+          const dlt = now - then;
+          if (Math.abs(dlt) < 1) return 'unchanged';
+          const sign = dlt > 0 ? '+' : '';
+          if (monthly) return sign + money(dlt, {
+            suffix: '/mo'
+          });
+          if (suffix) return sign + Math.round(dlt) + suffix;
+          return sign + money(dlt);
+        };
+        const deltaCards = [{
+          label: 'Coverage score',
+          now: score,
+          then: k.score || 0,
+          nowStr: score + '/100',
+          delta: fmtDelta(score, k.score || 0, false, ' pts'),
+          tone: score > (k.score || 0) ? T.success : score < (k.score || 0) ? T.danger : T.text3
+        }, {
+          label: 'Monthly gap',
+          now: monthlyGap,
+          then: k.monthlyGap || 0,
+          nowStr: money(monthlyGap, {
+            suffix: '/mo'
+          }),
+          delta: fmtDelta(monthlyGap, k.monthlyGap || 0, true),
+          tone: monthlyGap < (k.monthlyGap || 0) ? T.success : monthlyGap > (k.monthlyGap || 0) ? T.danger : T.text3
+        }, {
+          label: 'Insured value',
+          now: totalCoverage,
+          then: k.totalCover || 0,
+          nowStr: money(totalCoverage),
+          delta: fmtDelta(totalCoverage, k.totalCover || 0),
+          tone: totalCoverage > (k.totalCover || 0) ? T.success : totalCoverage < (k.totalCover || 0) ? T.danger : T.text3
+        }, {
+          label: 'Annual premium',
+          now: totalAnnualPrem,
+          then: k.totalPremium || 0,
+          nowStr: money(totalAnnualPrem, {
+            suffix: '/yr'
+          }),
+          delta: fmtDelta(totalAnnualPrem, k.totalPremium || 0),
+          tone: T.text3
+        }, {
+          label: 'Active policies',
+          now: activePolicies.length,
+          then: k.activePolicies || 0,
+          nowStr: String(activePolicies.length),
+          delta: fmtDelta(activePolicies.length, k.activePolicies || 0, false, ''),
+          tone: activePolicies.length >= (k.activePolicies || 0) ? T.success : T.danger
+        }];
+        deltaCards.forEach((d, i) => {
+          const x = M + i * (dW + 4);
+          card(x, dY, dW, dH, T.surface, T.border, 4);
+          doc.setFillColor(...d.tone);
+          doc.roundedRect(x + 4, dY + 4, 1.4, dH - 8, 0.7, 0.7, 'F');
+          label(d.label, x + 9, dY + 7);
+          text(d.nowStr, x + 9, dY + 17, {
+            family: 'times',
+            style: 'bold',
+            size: 14,
+            color: T.text,
+            maxW: dW - 14,
+            maxLines: 1
+          });
+          text('then: ' + (d.label === 'Coverage score' ? (k.score || 0) + '/100' : d.label === 'Monthly gap' ? money(k.monthlyGap || 0, {
+            suffix: '/mo'
+          }) : d.label === 'Insured value' ? money(k.totalCover || 0) : d.label === 'Annual premium' ? money(k.totalPremium || 0, {
+            suffix: '/yr'
+          }) : String(k.activePolicies || 0)), x + 9, dY + 23, {
+            size: 5.4,
+            color: T.text3
+          });
+          text(d.delta, x + dW - 4, dY + 23, {
+            size: 6.6,
+            style: 'bold',
+            color: d.tone,
+            align: 'right'
+          });
+        });
+
+        // Diff list — policies added / removed since last snapshot
+        const priorPolIds = new Set((priorSnapshot.detail?.policies || []).map(p => p.id));
+        const currentPolIds = new Set(activePolicies.map(p => p.id));
+        const added = activePolicies.filter(p => !priorPolIds.has(p.id));
+        const removed = (priorSnapshot.detail?.policies || []).filter(p => !currentPolIds.has(p.id));
+        const diffY = 78;
+        card(M, diffY, CW, 90, T.surface, T.border, 4);
+        label('Policies added since last review', M + 5, diffY + 6, T.success);
+        let lY = diffY + 14;
+        if (added.length) {
+          added.slice(0, 6).forEach(pl => {
+            doc.setFillColor(...T.success);
+            doc.circle(M + 7, lY - 1.2, 0.9, 'F');
+            text(safe((pl.insurer || '?') + ' - ' + (pl.productName || pl.policyName || pl.subType || 'Policy'), 60), M + 11, lY, {
+              size: 7,
+              color: T.text2,
+              maxW: CW * 0.5 - 14,
+              maxLines: 1
+            });
+            text(pl.sumAssured ? money(pl.sumAssured) + ' cover' : '-', M + CW * 0.5 - 4, lY, {
+              size: 6.6,
+              color: T.text3,
+              align: 'right'
+            });
+            lY += 5.5;
+          });
+          if (added.length > 6) {
+            text('... and ' + (added.length - 6) + ' more', M + 11, lY, {
+              size: 5.6,
+              style: 'italic',
+              color: T.text3
+            });
+          }
+        } else {
+          text('No new policies added since the last review.', M + 11, lY, {
+            size: 6.6,
+            color: T.text3,
+            style: 'italic'
+          });
+        }
+
+        // Removed list — right column
+        label('Policies removed / matured since last review', M + CW * 0.5 + 5, diffY + 6, T.danger);
+        let rY = diffY + 14;
+        if (removed.length) {
+          removed.slice(0, 6).forEach(pl => {
+            doc.setFillColor(...T.danger);
+            doc.circle(M + CW * 0.5 + 7, rY - 1.2, 0.9, 'F');
+            text(safe((pl.insurer || '?') + ' - ' + (pl.name || pl.subType || 'Policy'), 60), M + CW * 0.5 + 11, rY, {
+              size: 7,
+              color: T.text2,
+              maxW: CW * 0.5 - 14,
+              maxLines: 1
+            });
+            text(pl.sumAssured ? money(pl.sumAssured) + ' cover' : '-', M + CW - 4, rY, {
+              size: 6.6,
+              color: T.text3,
+              align: 'right'
+            });
+            rY += 5.5;
+          });
+          if (removed.length > 6) {
+            text('... and ' + (removed.length - 6) + ' more', M + CW * 0.5 + 11, rY, {
+              size: 5.6,
+              style: 'italic',
+              color: T.text3
+            });
+          }
+        } else {
+          text('No policies removed since the last review.', M + CW * 0.5 + 11, rY, {
+            size: 6.6,
+            color: T.text3,
+            style: 'italic'
+          });
+        }
+
+        // Helper note on what to discuss
+        const noteY = diffY + 95;
+        card(M, noteY, CW, 18, T.recessed, T.border, 3);
+        doc.setFillColor(...T.primary);
+        doc.roundedRect(M, noteY, 1.4, 18, 0.7, 0.7, 'F');
+        label('Discussion prompt', M + 5, noteY + 5);
+        const noteCopy = added.length || removed.length ? 'Walk through each addition / removal with the client. For changes to coverage that materially shift the score, link the explanation back to the gap on page 3.' : 'No portfolio changes since the last review. Use this meeting to revisit the gaps from last time and confirm assumptions still hold.';
+        text(noteCopy, M + 5, noteY + 11, {
+          size: 6.4,
+          color: T.text2,
+          maxW: CW - 10,
+          maxLines: 2,
+          lineH: 3.2
+        });
+      }
+
+      // ─────────────────────────────────────────────────────────────────
       // PAGE 1 — Executive review (V4)
       // ─────────────────────────────────────────────────────────────────
       doc.addPage();
-      pageHeader(1, 'Executive review');
+      pageHeader(showDiffPage ? 2 : 1, 'Executive review');
 
       // Top row: Diagnosis band (155mm) + Score summary (117mm), gap of 5mm
       // Per V4 spec: x=10..165 + x=170..287 in landscape CW=277.
@@ -67060,7 +67321,7 @@ function ReportTab() {
       // PAGE 2 — Protection gap map
       // ─────────────────────────────────────────────────────────────────
       doc.addPage();
-      pageHeader(2, 'Protection gap map');
+      pageHeader(showDiffPage ? 3 : 2, 'Protection gap map');
       // Header strip — rc1.51: bumped y from 24 to 30 for header clearance
       card(M, 30, CW, 14, T.surface, T.border, 4);
       text('Score', M + 5, 39, {
@@ -67173,7 +67434,7 @@ function ReportTab() {
       // PAGE 3 — Retirement income gap (V4 — landscape, polished chart)
       // ─────────────────────────────────────────────────────────────────
       doc.addPage();
-      pageHeader(3, 'Retirement income gap');
+      pageHeader(showDiffPage ? 4 : 3, 'Retirement income gap');
 
       // V5 polish: client-facing KPI labels (Lifestyle target today / Target
       // at 65 / Expected income at 65 / Income gap / Target covered).
@@ -67536,7 +67797,7 @@ function ReportTab() {
       // PAGE 4 — Premium runway + action queue (V4 — strategic decision page)
       // ─────────────────────────────────────────────────────────────────
       doc.addPage();
-      pageHeader(4, 'Premium runway and review queue');
+      pageHeader(showDiffPage ? 5 : 4, 'Premium runway and review queue');
 
       // Left chart ~62% + Right strategy panel ~38%
       const leftW = 172,
@@ -67791,7 +68052,7 @@ function ReportTab() {
       });
       const startInventoryPage = () => {
         doc.addPage();
-        pageHeader(5, 'Policy register');
+        pageHeader(showDiffPage ? 6 : 5, 'Policy register');
         return 30;
       };
 
@@ -67974,6 +68235,28 @@ function ReportTab() {
       // v2.4.0-rc1.82 — user-facing filename: "<Name> Individual Executive Review.pdf"
       const fileNameSafe = clientLabel.replace(/[\\\/:*?"<>|]/g, '').replace(/\s+/g, ' ').trim() || 'Client';
       doc.save(fileNameSafe + ' Individual Executive Review.pdf');
+      // v2.4.0-rc1.87 — capture a snapshot of the KPIs that drove this PDF
+      // so the next generation can render a "What changed since last review"
+      // diff page. Detail payload kept lean to keep IndexedDB rows small.
+      saveReportSnapshot(activeClientId, 'individual', {
+        score: score,
+        scoreLabel,
+        monthlyGap: monthlyGap,
+        totalCover: totalCoverage,
+        totalPremium: totalAnnualPrem,
+        activePolicies: activePolicies.length,
+        scenario,
+        retPct
+      }, {
+        policies: activePolicies.map(pl => ({
+          id: pl.id,
+          name: pl.productName || pl.policyName || '',
+          insurer: pl.insurer || '',
+          subType: pl.subType || '',
+          sumAssured: n(pl.sumAssured),
+          category: pl.category || ''
+        }))
+      });
     } catch (e) {
       console.error('[Visual PDF] Error:', e);
       toast('Visual report generation error: ' + e.message, 'error', 6000);
@@ -69481,13 +69764,31 @@ function ReportTab() {
       // doesn't render as "Tan Mei Lian Family Family Executive Review.pdf".
       const familyBaseSafe = familyName.replace(/\s+Family\s*$/i, '').replace(/[\\\/:*?"<>|]/g, '').replace(/\s+/g, ' ').trim() || 'Family';
       doc.save(familyBaseSafe + ' Family Executive Review.pdf');
+      // v2.4.0-rc1.87 — capture a snapshot for the family scope so future
+      // generations can render a "What changed" diff (currently the diff
+      // page is wired only for individual reports; family snapshots
+      // accumulate so the family diff page can land in a follow-up).
+      saveReportSnapshot(activeClientId, 'family', {
+        totalSA: totalSA,
+        totalAnnualPrem: totalAnnualPrem,
+        memberCount: members.length,
+        scenario
+      }, {
+        members: (members || []).map(m => ({
+          id: m.id,
+          name: m.name || '',
+          sumAssured: n(m.sumAssured)
+        }))
+      });
     } catch (e) {
       console.error('[Family Visual PDF] Error:', e);
       toast('Family visual report generation error: ' + e.message, 'error', 6000);
     } finally {
       setGeneratingFamilyVisual(false);
     }
-    setGenerating(false);
+    // v2.4.0-rc1.87: removed orphan `setGenerating(false)` (the Classic
+    // PDF state was dropped in rc1.83 — this referenced the deleted setter
+    // and would have thrown at runtime if the family generator was used).
   };
 
   // v2.4.0-rc1.37: Report tab is now a multi-section live preview that
