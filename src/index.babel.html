@@ -14515,6 +14515,93 @@ const getLatestReportSnapshot = async (clientId, scope) => {
     return null;
   }
 };
+
+// v2.4.0-rc1.88 — Drive upload for generated PDFs.
+// Strategy:
+//   - Single dedicated folder "PolicyLens Reports" in the user's Drive
+//     root, created on first use. Folder id cached in IndexedDB
+//     (settings: 'reportsFolderId') so subsequent uploads skip the lookup.
+//   - PDFs uploaded as multipart with the human-readable filename
+//     (rc1.82) plus a date suffix for versioning: "Chan Chung Yin
+//     Individual Executive Review 2026-05-08.pdf".
+//   - Returns {ok, fileId, viewLink, error?} so callers can surface a
+//     toast with a clickable open-in-Drive link.
+//
+// Auth is handled by the existing _driveFetch helper which silently
+// refreshes via the drive-auth-dev Edge Function on 401. If refresh
+// also fails, the helper throws a 401 — caller falls back to the
+// local download path and toasts "Drive permission lost".
+const REPORTS_FOLDER_NAME = 'PolicyLens Reports';
+const _ensureReportsFolder = async () => {
+  // Check cache first
+  const cached = await dbGet('settings', 'reportsFolderId').catch(() => null);
+  if (cached?.value) {
+    // Verify it still exists (user might have deleted it)
+    try {
+      const r = await _driveFetch('https://www.googleapis.com/drive/v3/files/' + encodeURIComponent(cached.value) + '?fields=id,trashed');
+      const data = await r.json();
+      if (data && data.id && !data.trashed) return cached.value;
+    } catch (_) { /* fall through to recreate */ }
+  }
+  // Search for existing
+  const q = encodeURIComponent("name='" + REPORTS_FOLDER_NAME + "' and mimeType='application/vnd.google-apps.folder' and trashed=false");
+  const searchResp = await _driveFetch('https://www.googleapis.com/drive/v3/files?q=' + q + '&fields=files(id,name)&pageSize=10');
+  const searchData = await searchResp.json();
+  let folderId = searchData?.files?.[0]?.id;
+  if (!folderId) {
+    // Create it
+    const createResp = await _driveFetch('https://www.googleapis.com/drive/v3/files?fields=id', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: REPORTS_FOLDER_NAME, mimeType: 'application/vnd.google-apps.folder' })
+    });
+    const createData = await createResp.json();
+    folderId = createData.id;
+  }
+  if (folderId) {
+    await dbPut('settings', { key: 'reportsFolderId', value: folderId }).catch(() => {});
+  }
+  return folderId;
+};
+
+const uploadReportToDrive = async (filename, pdfBlob) => {
+  try {
+    const folderId = await _ensureReportsFolder();
+    if (!folderId) return { ok: false, error: 'Could not create or find PolicyLens Reports folder' };
+
+    // Read the blob as base64 for multipart upload
+    const arrBuf = await pdfBlob.arrayBuffer();
+    const bytes = new Uint8Array(arrBuf);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    const b64 = btoa(binary);
+
+    const boundary = '-------PolicyLensReport' + Math.random().toString(36).slice(2);
+    const metadata = JSON.stringify({ name: filename, mimeType: 'application/pdf', parents: [folderId] });
+    const body =
+      '--' + boundary + '\r\n' +
+      'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+      metadata + '\r\n' +
+      '--' + boundary + '\r\n' +
+      'Content-Type: application/pdf\r\n' +
+      'Content-Transfer-Encoding: base64\r\n\r\n' +
+      b64 + '\r\n' +
+      '--' + boundary + '--';
+
+    const resp = await _driveFetch(
+      'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink',
+      { method: 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + boundary }, body }
+    );
+    const data = await resp.json();
+    return { ok: true, fileId: data.id, viewLink: data.webViewLink || null };
+  } catch (e) {
+    console.error('[Drive report upload]', e);
+    if (e?.status === 401) {
+      return { ok: false, error: 'Drive permission lost — reconnect on the Settings tab', authFailed: true };
+    }
+    return { ok: false, error: e?.message || String(e) };
+  }
+};
 const dbGet=(store,key)=>{
   // Phase 8 polish: AI keys are now provided by the ckg-ai-proxy worker.
   // Stub any geminiKey* / anthropicKey* lookup so the legacy
@@ -45103,13 +45190,19 @@ function ReportTab() {
   // underlying profile values before computing protection requirements.
   const [printMode, setPrintMode] = useState(false);
   const [scenario, setScenario] = useState('baseline');
+  // v2.4.0-rc1.88: saveToDrive toggle — when on, the Download button ALSO
+  // uploads the PDF to the user's Drive in a "PolicyLens Reports" folder
+  // with a date-suffixed filename. Persisted across sessions.
+  const [saveToDrive, setSaveToDrive] = useState(false);
   // Persist preferences across sessions
   React.useEffect(() => {
     dbGet('settings', 'reportPrintMode').then(r => { if (r?.value === true) setPrintMode(true); }).catch(() => {});
     dbGet('settings', 'reportScenario').then(r => { if (r?.value && typeof r.value === 'string') setScenario(r.value); }).catch(() => {});
+    dbGet('settings', 'reportSaveToDrive').then(r => { if (r?.value === true) setSaveToDrive(true); }).catch(() => {});
   }, []);
   const updatePrintMode = (v) => { setPrintMode(v); dbPut('settings', { key: 'reportPrintMode', value: v }).catch(() => {}); };
   const updateScenario = (v) => { setScenario(v); dbPut('settings', { key: 'reportScenario', value: v }).catch(() => {}); };
+  const updateSaveToDrive = (v) => { setSaveToDrive(v); dbPut('settings', { key: 'reportSaveToDrive', value: v }).catch(() => {}); };
   // v2.4.0-rc1.85 — scenario overlay. Modifies the working profile based
   // on the current "What if?" preset. Affects BOTH the live preview and
   // the generated PDF so what the FC sees on screen matches what they'll
@@ -47148,7 +47241,29 @@ function ReportTab() {
       footer();
       // v2.4.0-rc1.82 — user-facing filename: "<Name> Individual Executive Review.pdf"
       const fileNameSafe = (clientLabel.replace(/[\\\/:*?"<>|]/g, '').replace(/\s+/g, ' ').trim() || 'Client');
-      doc.save(fileNameSafe + ' Individual Executive Review.pdf');
+      const localFilename = fileNameSafe + ' Individual Executive Review.pdf';
+      doc.save(localFilename);
+      // v2.4.0-rc1.88 — also upload to Drive when the toggle is on. Date
+      // suffix is appended for versioning (the local download keeps the
+      // clean name; Drive needs unique names per generation).
+      if (saveToDrive) {
+        const dateStamp = new Date().toISOString().slice(0, 10);
+        const driveFilename = fileNameSafe + ' Individual Executive Review ' + dateStamp + '.pdf';
+        const blob = doc.output('blob');
+        uploadReportToDrive(driveFilename, blob).then(result => {
+          if (result.ok) {
+            const linkSuffix = result.viewLink ? ' Click to open: ' + result.viewLink : '';
+            toast('Saved to Drive (PolicyLens Reports folder).' + linkSuffix, 'success', 6000);
+          } else if (result.authFailed) {
+            toast('Drive permission lost - reconnect on Settings tab. Local copy saved.', 'warning', 7000);
+          } else {
+            toast('Drive upload failed: ' + (result.error || 'unknown'), 'error', 6000);
+          }
+        }).catch(e => {
+          console.error('[Drive upload]', e);
+          toast('Drive upload failed: ' + (e?.message || e), 'error', 6000);
+        });
+      }
       // v2.4.0-rc1.87 — capture a snapshot of the KPIs that drove this PDF
       // so the next generation can render a "What changed since last review"
       // diff page. Detail payload kept lean to keep IndexedDB rows small.
@@ -48253,7 +48368,27 @@ function ReportTab() {
         .replace(/[\\\/:*?"<>|]/g, '')
         .replace(/\s+/g, ' ')
         .trim() || 'Family');
-      doc.save(familyBaseSafe + ' Family Executive Review.pdf');
+      const familyLocalFilename = familyBaseSafe + ' Family Executive Review.pdf';
+      doc.save(familyLocalFilename);
+      // v2.4.0-rc1.88 — Drive upload (mirror of individual generator)
+      if (saveToDrive) {
+        const dateStamp = new Date().toISOString().slice(0, 10);
+        const driveFilename = familyBaseSafe + ' Family Executive Review ' + dateStamp + '.pdf';
+        const blob = doc.output('blob');
+        uploadReportToDrive(driveFilename, blob).then(result => {
+          if (result.ok) {
+            const linkSuffix = result.viewLink ? ' Click to open: ' + result.viewLink : '';
+            toast('Saved to Drive (PolicyLens Reports folder).' + linkSuffix, 'success', 6000);
+          } else if (result.authFailed) {
+            toast('Drive permission lost - reconnect on Settings tab. Local copy saved.', 'warning', 7000);
+          } else {
+            toast('Drive upload failed: ' + (result.error || 'unknown'), 'error', 6000);
+          }
+        }).catch(e => {
+          console.error('[Drive upload]', e);
+          toast('Drive upload failed: ' + (e?.message || e), 'error', 6000);
+        });
+      }
       // v2.4.0-rc1.87 — capture a snapshot for the family scope so future
       // generations can render a "What changed" diff (currently the diff
       // page is wired only for individual reports; family snapshots
@@ -48417,6 +48552,21 @@ function ReportTab() {
               cursor:'pointer', fontFamily:T_V2.sansFamily, whiteSpace:'nowrap'
             }}>
             {printMode ? '◼ Print B&W' : '◻ Print B&W'}
+          </button>
+          {/* v2.4.0-rc1.88 — Save to Drive toggle. When on, the Download
+              button ALSO uploads the PDF to a "PolicyLens Reports" folder
+              in the user's Drive (with date suffix for versioning). */}
+          <button onClick={()=>updateSaveToDrive(!saveToDrive)}
+            title="Also save the PDF to your Drive (PolicyLens Reports folder, date-suffixed)"
+            style={{
+              height:36, padding:'0 14px', fontSize:12, fontWeight:500,
+              borderRadius:999,
+              background: saveToDrive ? '#1a73e8' : 'var(--bg2)',
+              color: saveToDrive ? '#fff' : 'var(--text2)',
+              border: `1px solid ${saveToDrive ? '#1a73e8' : T_V2.border}`,
+              cursor:'pointer', fontFamily:T_V2.sansFamily, whiteSpace:'nowrap'
+            }}>
+            {saveToDrive ? '☁ Saving to Drive' : '☁ Save to Drive'}
           </button>
           <button onClick={generateFamilyVisualReport} disabled={generatingFamilyVisual || generatingVisual || !activeClientId}
             style={{
