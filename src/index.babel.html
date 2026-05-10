@@ -14459,9 +14459,9 @@ const openDB=()=>new Promise((res,rej)=>{
     // v2.4.0-rc1.87: Report snapshots store. Captures the KPI summary
     // and full report payload at PDF-generation time so the next run can
     // render a "What changed" diff page. Keyed by an autoincrementing id;
-    // queried by (clientId, scope, scenario, takenAt). Currently
-    // local-only — see IMPROVEMENTS_DEFERRED.md for the planned
-    // policylens.report_snapshots Supabase mirror.
+    // queried by (clientId, scope, takenAt). Currently local-only — see
+    // IMPROVEMENTS_DEFERRED.md for the planned policylens.report_snapshots
+    // Supabase mirror.
     if(!db.objectStoreNames.contains('report_snapshots')){
       const rs=db.createObjectStore('report_snapshots',{keyPath:'id',autoIncrement:true});
       rs.createIndex('byClientId','clientId',{unique:false});
@@ -14486,7 +14486,7 @@ const dbDel=(store,id)=>dbOp(store,'readwrite',s=>s.delete(id));
 // generators for the "What changed since last review" page).
 //   scope: 'individual' | 'family'
 //   kpis: small summary {score, monthlyGap, totalCover, totalPremium,
-//         activePolicies, scenario}
+//         activePolicies}
 //   detail: full payload for richer diffing later (per-policy lines,
 //           per-area gap percentages). Stored as JSON.
 const saveReportSnapshot = async (clientId, scope, kpis, detail = {}) => {
@@ -45186,10 +45186,11 @@ function ReportTab() {
   const [generatingFamilyVisual, setGeneratingFamilyVisual] = useState(false);
   // v2.4.0-rc1.85: report options — printMode swaps the cream/coral palette
   // for grayscale (high-contrast B&W output for monochrome printers).
-  // scenario applies a "what if?" preset (income drop, life event) to the
-  // underlying profile values before computing protection requirements.
+  // v2.4.0-rc1.90: "What if?" scenario picker removed entirely — was
+  // dropping false positives on the cover ("WHAT-IF SCENARIO" tag) when
+  // a stale persisted preference loaded, and the FC team preferred to
+  // edit the underlying profile directly when stress-testing.
   const [printMode, setPrintMode] = useState(false);
-  const [scenario, setScenario] = useState('baseline');
   // v2.4.0-rc1.88: saveToDrive toggle — when on, the Download button ALSO
   // uploads the PDF to the user's Drive in a "PolicyLens Reports" folder
   // with a date-suffixed filename. Persisted across sessions.
@@ -45197,45 +45198,11 @@ function ReportTab() {
   // Persist preferences across sessions
   React.useEffect(() => {
     dbGet('settings', 'reportPrintMode').then(r => { if (r?.value === true) setPrintMode(true); }).catch(() => {});
-    dbGet('settings', 'reportScenario').then(r => { if (r?.value && typeof r.value === 'string') setScenario(r.value); }).catch(() => {});
     dbGet('settings', 'reportSaveToDrive').then(r => { if (r?.value === true) setSaveToDrive(true); }).catch(() => {});
   }, []);
   const updatePrintMode = (v) => { setPrintMode(v); dbPut('settings', { key: 'reportPrintMode', value: v }).catch(() => {}); };
-  const updateScenario = (v) => { setScenario(v); dbPut('settings', { key: 'reportScenario', value: v }).catch(() => {}); };
   const updateSaveToDrive = (v) => { setSaveToDrive(v); dbPut('settings', { key: 'reportSaveToDrive', value: v }).catch(() => {}); };
-  // v2.4.0-rc1.85 — scenario overlay. Modifies the working profile based
-  // on the current "What if?" preset. Affects BOTH the live preview and
-  // the generated PDF so what the FC sees on screen matches what they'll
-  // hand to the client.
-  // Available scenarios:
-  //   baseline       - no changes (default)
-  //   income-30      - monthly/annual income reduced by 30%
-  //   new-child      - dependants + 1
-  //   married        - marital status -> married, dependants minimum 1
-  const SCENARIO_LABELS = {
-    baseline: 'Baseline',
-    'income-30': 'Income drops 30%',
-    'new-child': 'New child arrives',
-    married: 'Married next year'
-  };
-  const baseClientProfile = clientProfile || {};
-  const p = (() => {
-    if (scenario === 'baseline') return baseClientProfile;
-    const overrides = {};
-    if (scenario === 'income-30') {
-      const monthlyInc = parseFloat(baseClientProfile.monthlyIncome) || 0;
-      const annualInc = parseFloat(baseClientProfile.annualIncome) || 0;
-      if (monthlyInc > 0) overrides.monthlyIncome = Math.round(monthlyInc * 0.7);
-      if (annualInc > 0) overrides.annualIncome = Math.round(annualInc * 0.7);
-    } else if (scenario === 'new-child') {
-      overrides.dependants = (parseInt(baseClientProfile.dependants) || 0) + 1;
-    } else if (scenario === 'married') {
-      overrides.maritalStatus = 'married';
-      const dep = parseInt(baseClientProfile.dependants) || 0;
-      if (dep < 1) overrides.dependants = 1;
-    }
-    return Object.keys(overrides).length ? { ...baseClientProfile, ...overrides } : baseClientProfile;
-  })();
+  const p = clientProfile || {};
   const age = getProfileAge(p) ?? 35;
   const retAge = getRetirementAge(p, 65); // v2.0.3
   const annualIncome = parseFloat(p.annualIncome)||0;
@@ -46175,17 +46142,6 @@ function ReportTab() {
       // Top eyebrow row
       label('PolicyLens', M, 14, T.primary);
       text('Confidential portfolio review', M + 25, 14, { size: 6.4, color: T.text3 });
-      // v2.4.0-rc1.85 — active scenario tag (only shown when not baseline).
-      // Sits beneath the section eyebrow so it's clear this report reflects
-      // a "what if?" overlay, not the client's current data.
-      if (scenario && scenario !== 'baseline' && SCENARIO_LABELS[scenario]) {
-        const tagText = 'WHAT-IF SCENARIO: ' + SCENARIO_LABELS[scenario].toUpperCase();
-        setFont('helvetica', 'bold', 5.6, T.warn);
-        const tagW = doc.getTextWidth(pdfSafe(tagText)) + 8;
-        doc.setFillColor(...T.warnSoft); doc.setDrawColor(...T.warn); doc.setLineWidth(0.3);
-        doc.roundedRect(M, 22, tagW, 5.4, 2.7, 2.7, 'FD');
-        text(tagText, M + 4, 25.6, { size: 5.6, style: 'bold', color: T.warn });
-      }
       const coverDateStr = today.toUpperCase();
       text(coverDateStr, W - M, 14, { size: 5.8, style: 'bold', color: T.text3, align: 'right', charSpace: 0.6 });
       setFont('helvetica', 'bold', 5.8, T.text3);
@@ -47278,7 +47234,6 @@ function ReportTab() {
         totalCover: totalCoverage,
         totalPremium: totalAnnualPrem,
         activePolicies: activePolicies.length,
-        scenario,
         retPct
       }, {
         policies: activePolicies.map(pl => ({
@@ -48400,7 +48355,7 @@ function ReportTab() {
       // accumulate so the family diff page can land in a follow-up).
       saveReportSnapshot(activeClientId, 'family', {
         totalSA: totalSA, totalAnnualPrem: totalAnnualPrem,
-        memberCount: members.length, scenario
+        memberCount: members.length
       }, {
         members: (members || []).map(m => ({
           id: m.id, name: m.name || '', sumAssured: n(m.sumAssured)
@@ -48523,27 +48478,9 @@ function ReportTab() {
               "Download Visual PDF" → "Download Individual Report"
             so the FC sees report-type names instead of file-format names. */}
         <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
-          {/* v2.4.0-rc1.85 — Scenario picker (low-friction "What if?" presets).
-              Single-click selection, persisted across sessions. The active
-              preset modifies the working profile (monthlyIncome, dependants,
-              maritalStatus) so the live preview and generated PDF reflect
-              the scenario without the FC having to edit profile fields. */}
-          <select value={scenario} onChange={e=>updateScenario(e.target.value)}
-            title="Apply a 'What if?' scenario to the report"
-            style={{
-              height:36, padding:'0 12px', fontSize:12, fontWeight:500,
-              borderRadius:999, background: scenario==='baseline' ? 'var(--bg2)' : T_V2.gold + '14',
-              color: scenario==='baseline' ? 'var(--text2)' : T_V2.gold,
-              border: `1px solid ${scenario==='baseline' ? T_V2.border : T_V2.gold}`,
-              cursor:'pointer', fontFamily:T_V2.sansFamily, appearance:'none',
-              backgroundImage:'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'10\' height=\'6\' viewBox=\'0 0 10 6\'><path d=\'M1 1l4 4 4-4\' stroke=\'%23999\' stroke-width=\'1.5\' fill=\'none\'/></svg>")',
-              backgroundRepeat:'no-repeat', backgroundPosition:'right 10px center', paddingRight:26
-            }}>
-            <option value="baseline">What if: Baseline</option>
-            <option value="income-30">What if: Income drops 30%</option>
-            <option value="new-child">What if: New child arrives</option>
-            <option value="married">What if: Married next year</option>
-          </select>
+          {/* v2.4.0-rc1.90 — "What if?" scenario picker removed. To stress-test
+              a scenario, edit the underlying profile values on the Profile tab
+              instead — the report tab and PDF reflect those edits live. */}
           {/* Print-mode toggle — single click switches palette to grayscale
               for monochrome printer output. Persisted. */}
           <button onClick={()=>updatePrintMode(!printMode)}
