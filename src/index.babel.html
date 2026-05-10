@@ -45539,10 +45539,15 @@ function ReportTab() {
       // page highlighted. Helps readers (especially advisors flipping to a
       // specific section in a meeting) navigate the PDF without scrubbing.
       // v2.4.0-rc1.87 — labels include "Changes" when a diff page rendered.
-      const PAGE_LABELS = showDiffPage
-        ? ['Cover', 'Changes', 'Executive', 'Gaps', 'Retirement', 'Premiums', 'Policies']
-        : ['Cover', 'Executive', 'Gaps', 'Retirement', 'Premiums', 'Policies'];
+      // v2.4.0-rc1.91 — PAGE_LABELS moved INSIDE footer() so it evaluates
+      // at call time. Was at function-body top, which is BEFORE showDiffPage
+      // is set further down — TDZ ReferenceError ("Cannot access
+      // 'showDiffPage' before initialization") fired the moment the
+      // generator reached this line.
       const footer = () => {
+        const PAGE_LABELS = showDiffPage
+          ? ['Cover', 'Changes', 'Executive', 'Gaps', 'Retirement', 'Premiums', 'Policies']
+          : ['Cover', 'Executive', 'Gaps', 'Retirement', 'Premiums', 'Policies'];
         const pages = doc.getNumberOfPages();
         const contentPages = Math.max(1, pages - 1);
         for (let i = 1; i <= pages; i++) {
