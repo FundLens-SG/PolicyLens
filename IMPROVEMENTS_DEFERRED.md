@@ -147,9 +147,11 @@ d) **What to do on save.**
 
 ## 4. Embed unicode font subset (Noto Sans) for non-ASCII names
 
-**Why deferred:** Choosing a font + bundling strategy involves a build-size tradeoff that should be made deliberately.
+**Status (rc1.89):** PARTIALLY done. The pdfSafe catchall was relaxed to keep Latin-1 supplement chars (À-ÿ), so all European accented names now render correctly via jsPDF's built-in WinAnsiEncoding. **Remaining work**: CJK / emoji / other non-Latin scripts still need the font subset. The decisions below apply to that remaining work only.
 
-**Why it matters:** jsPDF's built-in fonts (Helvetica/Times/Courier) are Latin-1 only. The `pdfSafe` helper currently strips non-ASCII so e.g. `François Müller` renders as `Francois Muller`. For a Singaporean market deliverable, names like `陈美莲` or `Tan Mei Lian (陈美莲)` get butchered.
+**Why deferred (the rest):** Choosing a font + bundling strategy involves a build-size tradeoff that should be made deliberately.
+
+**Why it still matters:** jsPDF's built-in fonts only cover up through Latin-1. For a Singaporean market deliverable, names like `陈美莲` or `Tan Mei Lian (陈美莲)` still get stripped.
 
 **Open questions:**
 

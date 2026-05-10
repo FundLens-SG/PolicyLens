@@ -65543,10 +65543,15 @@ function ReportTab() {
   const createReportEngine = (doc, T, engineOpts = {}) => {
     const labelSize = engineOpts.labelSize || 6.4;
     const pdfSafe = s => String(s == null ? '' : s).replace(/[ ]/g, ' ').replace(/[‘’‚‛]/g, "'").replace(/[“”„‟]/g, '"').replace(/[–—−]/g, '-').replace(/[•·]/g, '-').replace(/[←-⇿]/g, '->').replace(/[×]/g, 'x').replace(/[≈]/g, '~').replace(/[…]/g, '...').replace(/[​-‍﻿]/g, '').replace(/['"]?&?\s*note/gi, '').replace(/MediSave detected/gi, 'MediSave funding applies').replace(/Medisave detected/gi, 'MediSave funding applies')
-    // Final defensive strip: any remaining non-printable / non-ASCII
-    // chars become empty (was: rendered as garbage by jsPDF's Latin-1
-    // built-in fonts). Matches family generator's stricter behavior.
-    .replace(/[^\t\n\r\x20-\x7E]/g, '').replace(/\s+/g, ' ').trim();
+    // v2.4.0-rc1.89 — relaxed final strip. Was: \x20-\x7E only (kills
+    // every accented char, mangling French/German/Spanish/Vietnamese
+    // names). Now: keeps the Latin-1 supplement (\xA0-\xFF) which
+    // jsPDF's built-in helvetica/times render correctly via the
+    // WinAnsiEncoding. Means "Tan Mei Lian", "Francois Muller",
+    // "Nunez", "Soren" all render as their accented originals.
+    // Strips CJK / emoji / other non-Latin scripts (those still need
+    // the deferred unicode font subset — see IMPROVEMENTS_DEFERRED.md).
+    .replace(/[^\t\n\r\x20-\x7E\xA0-\xFF]/g, '').replace(/\s+/g, ' ').trim();
     const cleanPdfText = pdfSafe;
     const n = v => {
       if (v === null || v === undefined || v === '') return 0;

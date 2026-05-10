@@ -45274,10 +45274,15 @@ function ReportTab() {
       .replace(/['"]?&?\s*note/gi, '')
       .replace(/MediSave detected/gi, 'MediSave funding applies')
       .replace(/Medisave detected/gi, 'MediSave funding applies')
-      // Final defensive strip: any remaining non-printable / non-ASCII
-      // chars become empty (was: rendered as garbage by jsPDF's Latin-1
-      // built-in fonts). Matches family generator's stricter behavior.
-      .replace(/[^\t\n\r\x20-\x7E]/g, '')
+      // v2.4.0-rc1.89 — relaxed final strip. Was: \x20-\x7E only (kills
+      // every accented char, mangling French/German/Spanish/Vietnamese
+      // names). Now: keeps the Latin-1 supplement (\xA0-\xFF) which
+      // jsPDF's built-in helvetica/times render correctly via the
+      // WinAnsiEncoding. Means "Tan Mei Lian", "Francois Muller",
+      // "Nunez", "Soren" all render as their accented originals.
+      // Strips CJK / emoji / other non-Latin scripts (those still need
+      // the deferred unicode font subset — see IMPROVEMENTS_DEFERRED.md).
+      .replace(/[^\t\n\r\x20-\x7E\xA0-\xFF]/g, '')
       .replace(/\s+/g, ' ')
       .trim();
     const cleanPdfText = pdfSafe;
