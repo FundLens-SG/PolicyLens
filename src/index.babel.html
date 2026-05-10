@@ -45778,7 +45778,8 @@ function ReportTab() {
       const drawPolicyDetailRow = (x, y, w, p, opts={}) => {
         // v2.4.0-rc1.91: 8 columns now (added Matures between Prem end and
         // Method). Default cols match the polCols array at the call site.
-        const cols = opts.cols || [82, 28, 28, 32, 18, 20, 22, w - 82 - 28 - 28 - 32 - 18 - 20 - 22];
+        // v2.4.0-rc1.93: Matures widened to 30mm for "age X (MM/YYYY)" format.
+        const cols = opts.cols || [82, 28, 26, 32, 16, 30, 18, w - 82 - 28 - 26 - 32 - 16 - 30 - 18];
         const alt = !!opts.alt;
         const remarksText = String(p.remarks || p.notes || '').trim();
         const hasRemarks = !!remarksText;
@@ -46679,9 +46680,17 @@ function ReportTab() {
       });
 
       // Main content — chart left (182mm) + income source mix right (89mm)
-      const mainY = inflY + 32;
-      const chartCardX = M, chartCardW = 182, chartCardH = 86;
-      const srcCardX = M + chartCardW + 6, srcCardW = CW - chartCardW - 6, srcCardH = chartCardH;
+      // v2.4.0-rc1.93: tightened spacing so the bottom lever cards no
+      // longer overlap the TOC breadcrumb. Was inflY+32; now inflY+30
+      // (saves 2mm) and the chart card is 4mm shorter (82 vs 86) so
+      // levers end at y=193 — 4.5mm above the TOC at y=197.5.
+      const mainY = inflY + 30;
+      // v2.4.0-rc1.93: chartCardH 86 → 82 to free 4mm so the bottom lever
+      // cards don't crash into the TOC breadcrumb. srcCardH now sized to
+      // its content (~58mm) instead of mirroring chartCardH (which left
+      // ~28mm of empty space inside the income-mix card).
+      const chartCardX = M, chartCardW = 182, chartCardH = 82;
+      const srcCardX = M + chartCardW + 6, srcCardW = CW - chartCardW - 6, srcCardH = 58;
 
       // ── Chart card ──
       card(chartCardX, mainY, chartCardW, chartCardH, T.surface, T.border, 4);
@@ -47083,12 +47092,15 @@ function ReportTab() {
       const riderShort = (rd) => RIDER_CODE[(rd.type || '').toLowerCase().replace(/[^a-z_]/g, '')] || (rd.type || '').toUpperCase().slice(0, 3);
 
       let invY = startInventoryPage();
-      // v2.4.0-rc1.91 — landscape column widths now include MATURES between
-      // Prem end and Method (so the FC sees both when premium STOPS and
-      // when the policy WORKS UNTIL — these are different for whole-life,
-      // endowment, term policies). Premium column also widened from 28 to
-      // 32mm to fit the full-number premium values (S$24,000/yr).
-      const polCols = [82, 28, 28, 32, 18, 20, 22, CW - 82 - 28 - 28 - 32 - 18 - 20 - 22];
+      // v2.4.0-rc1.91 — landscape column widths include MATURES between
+      // Prem end and Method (different from premEnd: when premiums STOP
+      // vs when the policy WORKS UNTIL — these differ for whole-life,
+      // endowment, term policies). Premium column also widened to fit
+      // full-number premium values (S$24,000/yr).
+      // v2.4.0-rc1.93 — Matures widened from 20mm to 30mm to fit the
+      // new "age X (MM/YYYY)" format ("age 60 (05/2092)" ~ 17mm wide).
+      // Method shrunk to 18mm (sufficient for "MediSave" / "Cash" / "CPF").
+      const polCols = [82, 28, 26, 32, 16, 30, 18, CW - 82 - 28 - 26 - 32 - 16 - 30 - 18];
       const drawPolHeader = (y) => {
         tableRow(M, y, polCols,
           ['Insurer / product', 'Type', 'Cover', 'Premium', 'Prem end', 'Matures', 'Method', 'Riders'],
@@ -47164,15 +47176,28 @@ function ReportTab() {
             ? (n(pol.annualPremium) ? money(pol.annualPremium,{full:true}) + ' lump' : 'Single')
             : (annualizedPremium(pol) > 0 ? money(annualizedPremium(pol),{full:true}) : '-');
           const premEnd = pol.premEndAge ? 'age ' + pol.premEndAge : (pol.premTerm ? pol.premTerm + 'y' : '-');
-          // v2.4.0-rc1.91: maturity (when policy actually pays out / expires)
+          // v2.4.0-rc1.93: maturity formatted as "age X (MM/YYYY)" when both
+          // are known. currentAge in scope; age-at-maturity computed from
+          // the year-delta if only the date is set.
           const matures = (() => {
-            if (pol.maturityAge) return 'age ' + pol.maturityAge;
+            let dateStr = null, ageAtMat = null;
             if (pol.maturityDate) {
               try {
                 const d = new Date(pol.maturityDate);
-                if (!isNaN(d.getTime())) return String(d.getFullYear());
+                if (!isNaN(d.getTime())) {
+                  const mm = String(d.getMonth() + 1).padStart(2, '0');
+                  dateStr = mm + '/' + d.getFullYear();
+                  if (currentAge) {
+                    const yearsAhead = d.getFullYear() - new Date().getFullYear();
+                    if (yearsAhead >= 0) ageAtMat = currentAge + yearsAhead;
+                  }
+                }
               } catch (_) {}
             }
+            if (pol.maturityAge && !ageAtMat) ageAtMat = pol.maturityAge;
+            if (ageAtMat && dateStr) return 'age ' + ageAtMat + ' (' + dateStr + ')';
+            if (dateStr) return dateStr;
+            if (ageAtMat) return 'age ' + ageAtMat;
             if (pol.premWholeLife || /whole\s*life/i.test(pol.subType || '')) return 'whole life';
             return '-';
           })();
@@ -47553,19 +47578,31 @@ function ReportTab() {
         return '-';
       };
 
-      // v2.4.0-rc1.91 — when does the policy actually mature / pay out /
-      // expire? Distinct from premEnd (when premiums STOP being paid).
-      // Reads explicit maturityAge first, falls back to maturityDate
-      // (year only — full date is too long for a small column),
-      // recognises whole-life policies, returns '-' when neither known.
-      const policyMaturity = (pol) => {
-        if (pol.maturityAge) return 'age ' + pol.maturityAge;
+      // v2.4.0-rc1.93 — maturity now formats as "age X (MM/YYYY)" when
+      // both pieces are known, falling back gracefully when only one is.
+      // refCurrentAge lets the helper compute age-at-maturity from the
+      // maturity date when the explicit pol.maturityAge isn't set:
+      // currentYear→matYear delta added to the member's current age.
+      const policyMaturity = (pol, refCurrentAge = null) => {
+        let dateStr = null;
+        let ageAtMat = null;
         if (pol.maturityDate) {
           try {
             const d = new Date(pol.maturityDate);
-            if (!isNaN(d.getTime())) return String(d.getFullYear());
+            if (!isNaN(d.getTime())) {
+              const mm = String(d.getMonth() + 1).padStart(2, '0');
+              dateStr = mm + '/' + d.getFullYear();
+              if (refCurrentAge) {
+                const yearsAhead = d.getFullYear() - new Date().getFullYear();
+                if (yearsAhead >= 0) ageAtMat = refCurrentAge + yearsAhead;
+              }
+            }
           } catch (_) { /* ignore */ }
         }
+        if (pol.maturityAge && !ageAtMat) ageAtMat = pol.maturityAge;
+        if (ageAtMat && dateStr) return 'age ' + ageAtMat + ' (' + dateStr + ')';
+        if (dateStr) return dateStr;
+        if (ageAtMat) return 'age ' + ageAtMat;
         if (pol.premWholeLife || /whole\s*life/i.test(pol.subType || '')) return 'whole life';
         return '-';
       };
@@ -47675,10 +47712,13 @@ function ReportTab() {
       // v2.4.0-rc1.78: data column positions match the updated header
       // x-coords. v2.4.0-rc1.91 — Maturity column added between Prem end
       // and Method. Premium uses full numbers (S$24,000/yr) instead of
-      // shorthand (S$24k/yr). Geometry:
-      //   Cover (r) x+128 / Premium (r) x+158 / Prem end (c) x+174
-      //   Matures (c) x+193 / Method (c) x+213 / Riders (l) x+232
-      const drawPolicyDetailRow = (x,y,w,pol,idx) => {
+      // shorthand (S$24k/yr).
+      // v2.4.0-rc1.93 — Matures widened from 20mm to 30mm to fit the new
+      // "age X (MM/YYYY)" format. memberAge passed through so policyMaturity
+      // can compute age-at-maturity from the year-delta. Geometry:
+      //   Cover (r) x+126 / Premium (r) x+156 / Prem end (c) x+170
+      //   Matures (c) x+197 / Method (c) x+222 / Riders (l) x+240
+      const drawPolicyDetailRow = (x,y,w,pol,idx,memberAge=null) => {
         const fill = idx % 2 ? T.tableAlt : T.surface;
         const product = safe([pol.insurer, pol.productName || pol.policyName || pol.planName || pol.subType || 'Policy'].filter(Boolean).join(' - '), 56);
         const status = policyStatusLine(pol);
@@ -47700,18 +47740,18 @@ function ReportTab() {
         write(product,x+3,y+5.4,{size:6.4,style:'bold',color:T.text,maxW:78,maxLines:1});
 
         // Top-line cells aligned with header positions
-        write(policyType(pol),x+84,y+5.4,{size:5.9,color:T.text2,maxW:40,maxLines:1});
-        write(policyCover(pol) > 0 ? money(policyCover(pol)) : '-',x+128,y+5.4,{size:6.1,style:'bold',color:T.text2,align:'right'});
+        write(policyType(pol),x+84,y+5.4,{size:5.9,color:T.text2,maxW:38,maxLines:1});
+        write(policyCover(pol) > 0 ? money(policyCover(pol)) : '-',x+126,y+5.4,{size:6.1,style:'bold',color:T.text2,align:'right'});
         const prem = isSinglePremium(pol)
           ? (n(pol.annualPremium) ? money(n(pol.annualPremium),{full:true}) + ' single' : 'single')
           : (policyAnnual(pol) ? money(policyAnnual(pol),{full:true}) + '/yr' : '-');
-        write(prem,x+158,y+5.4,{size:5.9,color:T.text2,align:'right'});
-        write(policyPremEnd(pol),x+174,y+5.4,{size:5.8,color:T.text2,align:'center'});
-        write(policyMaturity(pol),x+193,y+5.4,{size:5.8,color:T.text2,align:'center'});
-        write(safe(pol.paymentMethod || '-',12),x+213,y+5.4,{size:5.8,color:T.text2,align:'center'});
+        write(prem,x+156,y+5.4,{size:5.9,color:T.text2,align:'right'});
+        write(policyPremEnd(pol),x+170,y+5.4,{size:5.8,color:T.text2,align:'center'});
+        write(policyMaturity(pol, memberAge),x+197,y+5.4,{size:5.8,color:T.text2,align:'center',maxW:28,maxLines:1});
+        write(safe(pol.paymentMethod || '-',10),x+222,y+5.4,{size:5.8,color:T.text2,align:'center'});
         const codes = riderCodes(pol);
         if (codes && codes !== '-') {
-          write(codes, x+232, y+5.4, {size:5.6,style:'bold',color:T.primary,maxW:w-236,maxLines:1});
+          write(codes, x+240, y+5.4, {size:5.6,style:'bold',color:T.primary,maxW:w-244,maxLines:1});
         }
 
         // Sub-line — status (left, ~80mm) + remarks (rest, up to 2 lines)
@@ -48330,16 +48370,17 @@ function ReportTab() {
           }
           y += 11;
           // v2.4.0-rc1.91: Maturity column added between Prem end and Method.
+          // v2.4.0-rc1.93: Matures widened to 30mm for "age X (MM/YYYY)" format.
           // Column x-coords match drawPolicyDetailRow exactly.
           drawMiniTableHeader(M,y,CW,[
             {label:'Insurer / product', x:3},
             {label:'Type', x:84},
-            {label:'Cover', x:128, align:'right'},
-            {label:'Premium', x:158, align:'right'},
-            {label:'Prem end', x:174, align:'center'},
-            {label:'Matures', x:193, align:'center'},
-            {label:'Method', x:213, align:'center'},
-            {label:'Riders', x:232}
+            {label:'Cover', x:126, align:'right'},
+            {label:'Premium', x:156, align:'right'},
+            {label:'Prem end', x:170, align:'center'},
+            {label:'Matures', x:197, align:'center'},
+            {label:'Method', x:222, align:'center'},
+            {label:'Riders', x:240}
           ]);
           y += 8;
         };
@@ -48357,7 +48398,7 @@ function ReportTab() {
               y = renderMemberPage(m,true);
               drawFamilyCatBand(cat, pols, true);
             }
-            drawPolicyDetailRow(M,y,CW,pol,idx);
+            drawPolicyDetailRow(M,y,CW,pol,idx,m.age);
             y += 17;
           });
           y += 4;
