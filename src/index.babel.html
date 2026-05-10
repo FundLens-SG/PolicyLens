@@ -45101,6 +45101,135 @@ function ReportTab() {
   const annualIncome = parseFloat(p.annualIncome)||0;
 
   // ═══════════════════════════════════════════════════════════════
+  // SHARED REPORT ENGINE (v2.4.0-rc1.86)
+  // Factory that returns the helper bag (pdfSafe / setFont / text /
+  // label / card / pill / bar / money / safe / n / pct) bound to a
+  // specific jsPDF doc + palette. Lives once above the generators so
+  // both individual + family use the same implementation — no more
+  // copy-paste drift causing "X is not defined" when one generator
+  // adds a helper the other lacks.
+  //
+  // Page-layout helpers (drawInflationBridge, drawPolicyDetailRow,
+  // drawStrategyGroup, footer, pageHeader) stay generator-local because
+  // each report has its own page geometry.
+  //
+  // The labelSize option preserves the visual difference between the
+  // two reports: individual uses 6.4pt eyebrows, family uses 5.8pt.
+  // Both call sites get the same `label(s, x, y, color)` API.
+  // ═══════════════════════════════════════════════════════════════
+  const createReportEngine = (doc, T, engineOpts = {}) => {
+    const labelSize = engineOpts.labelSize || 6.4;
+
+    const pdfSafe = (s) => String(s == null ? '' : s)
+      .replace(/[ ]/g, ' ')
+      .replace(/[‘’‚‛]/g, "'")
+      .replace(/[“”„‟]/g, '"')
+      .replace(/[–—−]/g, '-')
+      .replace(/[•·]/g, '-')
+      .replace(/[←-⇿]/g, '->')
+      .replace(/[×]/g, 'x')
+      .replace(/[≈]/g, '~')
+      .replace(/[…]/g, '...')
+      .replace(/[​-‍﻿]/g, '')
+      .replace(/['"]?&?\s*note/gi, '')
+      .replace(/MediSave detected/gi, 'MediSave funding applies')
+      .replace(/Medisave detected/gi, 'MediSave funding applies')
+      // Final defensive strip: any remaining non-printable / non-ASCII
+      // chars become empty (was: rendered as garbage by jsPDF's Latin-1
+      // built-in fonts). Matches family generator's stricter behavior.
+      .replace(/[^\t\n\r\x20-\x7E]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const cleanPdfText = pdfSafe;
+
+    const n = (v) => {
+      if (v === null || v === undefined || v === '') return 0;
+      if (typeof v === 'number') return Number.isFinite(v) ? v : 0;
+      const x = parseFloat(String(v).replace(/[^0-9.-]/g, ''));
+      return Number.isFinite(x) ? x : 0;
+    };
+
+    const safe = (s, max = 48) => {
+      const out = pdfSafe(String(s || '').replace(/\s+/g, ' ').trim());
+      return out.length > max ? out.slice(0, Math.max(0, max - 3)) + '...' : out;
+    };
+
+    const money = (value, opts = {}) => {
+      const v = Math.round(n(value));
+      const sign = v < 0 ? '-' : '';
+      const abs = Math.abs(v);
+      const suffix = opts.suffix || '';
+      if (opts.blankZero && abs === 0) return '-';
+      if (opts.full) return sign + 'S$' + abs.toLocaleString('en-SG') + suffix;
+      if (abs >= 1000000) return sign + 'S$' + (abs / 1000000).toFixed(abs >= 10000000 ? 0 : 1).replace(/\.0$/, '') + 'M' + suffix;
+      if (abs >= 1000) return sign + 'S$' + Math.round(abs / 1000).toLocaleString('en-SG') + 'k' + suffix;
+      return sign + 'S$' + abs.toLocaleString('en-SG') + suffix;
+    };
+
+    const pct = (a, b) => b > 0 ? Math.max(0, Math.min(100, Math.round(n(a) / n(b) * 100))) : 0;
+
+    const setFont = (family = 'helvetica', style = 'normal', size = 8, color = T.text) => {
+      doc.setFont(family, style); doc.setFontSize(size); doc.setTextColor(...color);
+    };
+    const font = setFont;
+
+    const text = (s, x, y, opts = {}) => {
+      // Defensive: accept JSX/CSS spelling `fontStyle` as well as `style`
+      // so future copy-paste from React inline styles doesn't silently
+      // render italics as normal weight (rc1.83).
+      const styleResolved = opts.style || opts.fontStyle || 'normal';
+      setFont(opts.family || 'helvetica', styleResolved, opts.size || 8, opts.color || T.text);
+      const safeStr = pdfSafe(s);
+      if (opts.maxW) {
+        const lines = doc.splitTextToSize(safeStr, opts.maxW).slice(0, opts.maxLines || 99);
+        doc.text(lines, x, y, opts.align ? { align: opts.align } : undefined);
+        return lines.length * (opts.lineH || 4);
+      }
+      doc.text(safeStr, x, y, opts.align ? { align: opts.align } : undefined);
+      return opts.lineH || 4;
+    };
+    const write = text;
+
+    const label = (s, x, y, color = T.text3) =>
+      text(pdfSafe(s).toUpperCase(), x, y, { size: labelSize, style: 'bold', color });
+
+    const card = (x, y, w, h, fill = T.surface, stroke = T.border, r = 3) => {
+      doc.setFillColor(...fill); doc.setDrawColor(...stroke); doc.setLineWidth(0.2);
+      doc.roundedRect(x, y, w, h, r, r, 'FD');
+    };
+
+    const pill = (s, x, y, tone = 'primary', opts = {}) => {
+      const m = {
+        primary: [T.primarySoft, T.primary], danger: [T.dangerSoft, T.danger],
+        success: [T.successSoft, T.success], warn: [T.warnSoft, T.warn],
+        sky: [T.skySoft, T.sky], ghost: [T.recessed, T.text2]
+      }[tone] || [T.primarySoft, T.primary];
+      const safeStr = pdfSafe(s);
+      setFont('helvetica', 'bold', opts.size || 6, m[1]);
+      const w = opts.w || Math.max(15, doc.getTextWidth(safeStr) + 5);
+      const h = opts.h || 5.2;
+      doc.setFillColor(...m[0]); doc.setDrawColor(...m[0]);
+      doc.roundedRect(x, y, w, h, h / 2, h / 2, 'FD');
+      doc.text(safeStr, x + w / 2, y + h * 0.7, { align: 'center' });
+      return w;
+    };
+
+    const bar = (x, y, w, h, pctValue, color = T.primary) => {
+      const pVal = Math.max(0, Math.min(100, pctValue));
+      doc.setFillColor(...T.recessed); doc.roundedRect(x, y, w, h, h / 2, h / 2, 'F');
+      if (pVal > 0) {
+        doc.setFillColor(...color);
+        doc.roundedRect(x, y, Math.max(h, w * pVal / 100), h, h / 2, h / 2, 'F');
+      }
+    };
+
+    return Object.freeze({
+      pdfSafe, cleanPdfText, safe, n, money, pct,
+      setFont, font, text, write, label, card, pill, bar
+    });
+  };
+
+  // ═══════════════════════════════════════════════════════════════
   // VISUAL REPORT — hero cover, Chart.js dashboard, policy cards
   // Creates ephemeral Chart.js instances on hidden canvases, exports as PNG,
   // and composes them into a jsPDF document with navy/gold design language.
@@ -45176,104 +45305,19 @@ function ReportTab() {
       })();
       const T = printMode ? T_BW : T_COLOR;
 
-      // ─── Helpers ───
-      const inactiveStatuses = new Set(['matured','surrendered','lapsed']);
-      const n = (v) => {
-        if (v === null || v === undefined || v === '') return 0;
-        if (typeof v === 'number') return Number.isFinite(v) ? v : 0;
-        const x = parseFloat(String(v).replace(/[^0-9.-]/g,''));
-        return Number.isFinite(x) ? x : 0;
-      };
-      const clamp = (v, lo=0, hi=100) => Math.max(lo, Math.min(hi, v));
+      // ─── Helpers (shared via createReportEngine, rc1.86) ───
+      // pdfSafe / safe / n / money / pct / setFont / font / text / write /
+      // label / card / pill / bar all live in one canonical impl in the
+      // engine factory above. Generator-LOCAL helpers (clamp, coverPct,
+      // split, inactiveStatuses, drawConnectorArrow, etc.) stay below.
+      const _eng = createReportEngine(doc, T);
+      const { pdfSafe, cleanPdfText, safe, n, money, pct, setFont, font, text, write, label, card, pill, bar } = _eng;
+
+      const inactiveStatuses = new Set(['matured', 'surrendered', 'lapsed']);
+      const clamp = (v, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, v));
       const coverPct = (have, need) => need > 0 ? clamp(Math.round((n(have) / n(need)) * 100), 0, 100) : 100;
-      const money = (value, opts={}) => {
-        const valueN = Math.round(n(value));
-        const sign = valueN < 0 ? '-' : '';
-        const abs = Math.abs(valueN);
-        const suffix = opts.suffix || '';
-        if (opts.full) return sign + 'S$' + abs.toLocaleString('en-SG') + suffix;
-        if (abs >= 1000000) return sign + 'S$' + (abs/1000000).toFixed(abs >= 10000000 ? 0 : 1).replace(/\.0$/,'') + 'M' + suffix;
-        if (abs >= 1000) return sign + 'S$' + Math.round(abs/1000).toLocaleString('en-SG') + 'k' + suffix;
-        return sign + 'S$' + abs.toLocaleString('en-SG') + suffix;
-      };
-      // v2.4.0-rc1.61: jsPDF Helvetica/Times/Courier built-ins are limited
-      // Latin-1 subsets — non-ASCII glyphs (≈ × — — … • · → ‘ ’ “ ”) render as
-      // garbage like '"H'. pdfSafe normalises every string going to doc.text()
-      // or doc.getTextWidth() to ASCII equivalents. Wraps every helper that
-      // touches user copy: safe(), text(), label(), pill().
-      // v2.4.0-rc1.67 V5 polish: pdfSafe also kills 'note' placeholder
-      // leaks (legacy import data) and rewrites "MediSave detected" jargon
-      // to client copy. Aliased as cleanPdfText for V5 spec naming.
-      const pdfSafe = (s) => String(s == null ? '' : s)
-        .replace(/[ ]/g, ' ')
-        .replace(/[‘’‚‛]/g, "'")
-        .replace(/[“”„‟]/g, '"')
-        .replace(/[–—−]/g, '-')
-        .replace(/[•·]/g, '-')
-        .replace(/[←-⇿]/g, '->')
-        .replace(/[×]/g, 'x')
-        .replace(/[≈]/g, '~')
-        .replace(/[…]/g, '...')
-        .replace(/[​-‍﻿]/g, '')
-        .replace(/['"]?&?\s*note/gi, '')
-        .replace(/MediSave detected/gi, 'MediSave funding applies')
-        .replace(/Medisave detected/gi, 'MediSave funding applies')
-        .replace(/\s+/g, ' ')
-        .trim();
-      const cleanPdfText = pdfSafe;
-      const safe = (s, max=48) => {
-        const out = pdfSafe(String(s || '').replace(/\s+/g,' ').trim());
-        return out.length > max ? out.slice(0, max - 1) + '...' : out;
-      };
       const split = (s, w) => doc.splitTextToSize(pdfSafe(s), w);
-      const setFont = (family='helvetica', style='normal', size=8, color=T.text) => {
-        doc.setFont(family, style); doc.setFontSize(size); doc.setTextColor(...color);
-      };
-      // v2.4.0-rc1.80 PERMA-FIX: defensive alias so future copy-paste from
-      // the family generator (which names this helper `font`) doesn't throw
-      // ReferenceError. Both names now reach the same impl. Mirrors the
-      // `setFont = font` alias the family generator already has at the
-      // symmetric position. This is the symmetric counterpart that closes
-      // the loop — code using either name works in either generator.
-      const font = setFont;
-      const text = (s, x, y, opts={}) => {
-        // v2.4.0-rc1.83 PERMA-FIX: accept the JSX/CSS spelling `fontStyle`
-        // as a fallback for `style` so future copy-paste from React inline
-        // styles (where italics use `fontStyle: 'italic'`) renders correctly
-        // instead of silently falling back to normal weight.
-        const styleResolved = opts.style || opts.fontStyle || 'normal';
-        setFont(opts.family || 'helvetica', styleResolved, opts.size || 8, opts.color || T.text);
-        const safeStr = pdfSafe(s);
-        if (opts.maxW) {
-          const lines = doc.splitTextToSize(safeStr, opts.maxW).slice(0, opts.maxLines || 99);
-          doc.text(lines, x, y, opts.align ? {align:opts.align} : undefined);
-          return lines.length * (opts.lineH || 4);
-        }
-        doc.text(safeStr, x, y, opts.align ? {align:opts.align} : undefined);
-        return opts.lineH || 4;
-      };
-      const label = (s, x, y, color=T.text3) => text(pdfSafe(s).toUpperCase(), x, y, {size:6.4, style:'bold', color});
-      const card = (x, y, w, h, fill=T.surface, stroke=T.border, r=3) => {
-        doc.setFillColor(...fill); doc.setDrawColor(...stroke); doc.setLineWidth(0.2); doc.roundedRect(x, y, w, h, r, r, 'FD');
-      };
-      const pill = (s, x, y, tone='primary', opts={}) => {
-        const m = {
-          primary:[T.primarySoft,T.primary], danger:[T.dangerSoft,T.danger], success:[T.successSoft,T.success],
-          warn:[T.warnSoft,T.warn], sky:[T.skySoft,T.sky], ghost:[T.recessed,T.text2]
-        }[tone] || [T.primarySoft,T.primary];
-        const safeStr = pdfSafe(s);
-        setFont('helvetica','bold',opts.size || 6,m[1]);
-        const w = opts.w || Math.max(15, doc.getTextWidth(safeStr) + 5);
-        const h = opts.h || 5.2;
-        doc.setFillColor(...m[0]); doc.setDrawColor(...m[0]); doc.roundedRect(x,y,w,h,h/2,h/2,'FD');
-        doc.text(safeStr, x + w/2, y + h*0.7, {align:'center'});
-        return w;
-      };
-      const bar = (x, y, w, h, pctValue, color=T.primary) => {
-        const pVal = clamp(pctValue,0,100);
-        doc.setFillColor(...T.recessed); doc.roundedRect(x,y,w,h,h/2,h/2,'F');
-        if (pVal > 0) { doc.setFillColor(...color); doc.roundedRect(x,y,Math.max(h,w*pVal/100),h,h/2,h/2,'F'); }
-      };
+
       // v2.4.0-rc1.67 V5 polish: drawn connector arrow for the inflation bridge
       // (replaces text-based "->" arrows that occasionally rendered as garbage
       // in jsPDF's built-in fonts).
@@ -47035,114 +47079,17 @@ function ReportTab() {
       const today = new Date().toLocaleDateString('en-SG',{day:'numeric',month:'long',year:'numeric'});
       const inactiveStatuses = new Set(['matured','surrendered','lapsed','cancelled','terminated']);
 
-      // v2.4.0-rc1.67 V5 polish: kills 'note' placeholder leaks and rewrites
-      // "MediSave detected" jargon to client-friendly copy.
-      const cleanPdfText = (input) => {
-        return String(input == null ? '' : input)
-          .replace(/[ ]/g, ' ')
-          .replace(/[‘’‚‛]/g, "'")
-          .replace(/[“”„‟]/g, '"')
-          .replace(/[–—−]/g, '-')
-          .replace(/[•·]/g, '-')
-          .replace(/[←-⇿]/g, '->')
-          .replace(/[×]/g, 'x')
-          .replace(/[≈]/g, '~')
-          .replace(/[…]/g, '...')
-          .replace(/[​-‍﻿]/g, '')
-          .replace(/['"]?&?\s*note/gi, '')
-          .replace(/MediSave detected/gi, 'MediSave funding applies')
-          .replace(/Medisave detected/gi, 'MediSave funding applies')
-          .replace(/[^\t\n\r\x20-\x7E]/g, '')
-          .replace(/\s+/g, ' ')
-          .trim();
-      };
-      // v2.4.0-rc1.72 PERMA-FIX: defensive alias so future copy-paste
-      // from the V4 single-client generator (which names this helper
-      // `pdfSafe`) doesn't throw ReferenceError. Both names now reach
-      // the same impl. Mirrors the `setFont = font` alias added in
-      // rc1.69 for the exact same class of bug.
-      const pdfSafe = cleanPdfText;
-
-      const n = (v) => {
-        if (v === null || v === undefined || v === '') return 0;
-        if (typeof v === 'number') return Number.isFinite(v) ? v : 0;
-        const x = parseFloat(String(v).replace(/[^0-9.-]/g,''));
-        return Number.isFinite(x) ? x : 0;
-      };
-
-      const safe = (s, max=48) => {
-        const out = cleanPdfText(s);
-        return out.length > max ? out.slice(0, Math.max(0,max-3)).trim() + '...' : out;
-      };
-
-      const money = (value, opts={}) => {
-        const v = Math.round(n(value));
-        const sign = v < 0 ? '-' : '';
-        const abs = Math.abs(v);
-        const suffix = opts.suffix || '';
-        if (opts.blankZero && abs === 0) return '-';
-        if (opts.full) return sign + 'S$' + abs.toLocaleString('en-SG') + suffix;
-        if (abs >= 1000000) return sign + 'S$' + (abs/1000000).toFixed(abs >= 10000000 ? 0 : 1).replace(/\.0$/,'') + 'M' + suffix;
-        if (abs >= 1000) return sign + 'S$' + Math.round(abs/1000).toLocaleString('en-SG') + 'k' + suffix;
-        return sign + 'S$' + abs.toLocaleString('en-SG') + suffix;
-      };
-
-      const pct = (a,b) => b > 0 ? Math.max(0, Math.min(100, Math.round(n(a)/n(b)*100))) : 0;
-
-      const font = (family='helvetica', style='normal', size=8, color=T.text) => {
-        doc.setFont(family, style);
-        doc.setFontSize(size);
-        doc.setTextColor(...color);
-      };
-      // v2.4.0-rc1.69 PERMA-FIX: defensive alias so future copy-paste from
-      // the single-client V4 generator (which names this helper `setFont`)
-      // doesn't throw ReferenceError. Both names now reach the same impl.
-      const setFont = font;
-
-      const write = (s,x,y,opts={}) => {
-        const str = cleanPdfText(s);
-        // v2.4.0-rc1.83 PERMA-FIX: accept the JSX/CSS spelling `fontStyle`
-        // as a fallback so future copy-paste from React inline styles renders
-        // italics instead of silently falling back to normal weight.
-        const styleResolved = opts.style || opts.fontStyle || 'normal';
-        font(opts.family || 'helvetica', styleResolved, opts.size || 8, opts.color || T.text);
-        if (opts.maxW) {
-          const lines = doc.splitTextToSize(str, opts.maxW).slice(0, opts.maxLines || 99);
-          doc.text(lines, x, y, opts.align ? {align:opts.align} : undefined);
-          return lines.length * (opts.lineH || 4);
-        }
-        doc.text(str, x, y, opts.align ? {align:opts.align} : undefined);
-        return opts.lineH || 4;
-      };
-
-      const label = (s,x,y,color=T.text3) => write(String(s).toUpperCase(), x, y, {size:5.8, style:'bold', color});
-
-      const card = (x,y,w,h,fill=T.surface,stroke=T.border,r=4) => {
-        doc.setFillColor(...fill);
-        doc.setDrawColor(...stroke);
-        doc.setLineWidth(0.18);
-        doc.roundedRect(x,y,w,h,r,r,'FD');
-      };
-
-      const pill = (s,x,y,tone='primary',opts={}) => {
-        const tones = {
-          primary:[T.primarySoft,T.primary],
-          danger:[T.dangerSoft,T.danger],
-          warn:[T.warnSoft,T.warn],
-          success:[T.successSoft,T.success],
-          sky:[T.skySoft,T.sky],
-          ghost:[T.recessed,T.text2]
-        };
-        const t = tones[tone] || tones.primary;
-        const h = opts.h || 5.6;
-        font('helvetica','bold',opts.size || 5.4,t[1]);
-        const w = opts.w || Math.max(16, doc.getTextWidth(cleanPdfText(s)) + 6);
-        doc.setFillColor(...t[0]);
-        doc.setDrawColor(...t[0]);
-        doc.roundedRect(x,y,w,h,h/2,h/2,'FD');
-        doc.text(cleanPdfText(s), x + w/2, y + h*0.68, {align:'center'});
-        return w;
-      };
+      // ─── Helpers (shared via createReportEngine, rc1.86) ───
+      // pdfSafe / cleanPdfText / safe / n / money / pct / setFont / font /
+      // text / write / label / card / pill / bar all live in one canonical
+      // impl in the engine factory. Family passes labelSize: 5.8 to
+      // preserve its tighter eyebrow size (vs individual's 6.4 default).
+      // Layout-specific helpers (drawBg, drawHeader, drawFooters,
+      // drawMetricTile, drawGapBar, drawBulletLine, drawConnectorArrow,
+      // drawMiniTableHeader, drawFamilyMemberRow, drawPolicyDetailRow)
+      // stay below — they're family-specific page geometry.
+      const _eng = createReportEngine(doc, T, { labelSize: 5.8 });
+      const { pdfSafe, cleanPdfText, safe, n, money, pct, setFont, font, text, write, label, card, pill, bar } = _eng;
 
       const drawBg = () => {
         doc.setFillColor(...T.bg);
