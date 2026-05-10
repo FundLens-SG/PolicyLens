@@ -65603,8 +65603,13 @@ function ReportTab() {
         }
       };
       const tone = pctVal => pctVal >= 100 ? ['success', T.success, 'Covered'] : pctVal >= 70 ? ['warn', T.warn, 'Improve'] : pctVal >= 40 ? ['warn', T.warn, 'Review'] : ['danger', T.danger, 'Critical'];
+      // v2.4.0-rc1.84 — page numbering accounts for the cover page added
+      // before the executive review. The cover is labelled "Cover", and
+      // content pages are numbered 1..N (where N excludes the cover) so
+      // "Page 3 of 5" reads as the third *content* page out of five.
       const footer = () => {
         const pages = doc.getNumberOfPages();
+        const contentPages = Math.max(1, pages - 1);
         for (let i = 1; i <= pages; i++) {
           doc.setPage(i);
           doc.setDrawColor(...T.border);
@@ -65619,12 +65624,21 @@ function ReportTab() {
             color: T.text3,
             align: 'center'
           });
-          text(i + ' / ' + pages, W - M, H - 5, {
-            size: 5.6,
-            style: 'bold',
-            color: T.primary,
-            align: 'right'
-          });
+          if (i === 1) {
+            text('Cover', W - M, H - 5, {
+              size: 5.6,
+              style: 'bold',
+              color: T.primary,
+              align: 'right'
+            });
+          } else {
+            text(i - 1 + ' / ' + contentPages, W - M, H - 5, {
+              size: 5.6,
+              style: 'bold',
+              color: T.primary,
+              align: 'right'
+            });
+          }
         }
       };
       // ─── V4 helpers (rc1.62) ───
@@ -66365,41 +66379,79 @@ function ReportTab() {
           discuss: 'PA standalone or rider'
         }
       };
+      // v2.4.0-rc1.84 — actions now carry IMPACT (the $ at risk if not
+      // addressed, monthly or one-time) and EFFORT (Low/Med/High to
+      // implement). The action queue table on page 4 sorts by impact
+      // descending within priority band so the highest-leverage moves are
+      // at the top of the page.
       const actions = [];
       weakest.slice(0, 3).forEach(r => {
         const a = ACTION_TEXT[r.key];
         if (a) actions.push({
           priority: 'High',
+          impactValue: r.gap,
+          impactMonthly: !!r.monthly,
+          effort: 'Med',
           ...a
         });
       });
       if (retirement.desired > 0 && retPct < 70) actions.push({
         priority: 'High',
+        impactValue: monthlyGap,
+        impactMonthly: true,
+        effort: 'Low',
         ...ACTION_TEXT.retire
       });
       if (!coverage.hasISP) actions.push({
         priority: 'High',
+        impactValue: 0,
+        impactMonthly: false,
+        effort: 'Low',
         ...ACTION_TEXT.hosp
       });
       if (premiumRatio > 15) actions.push({
         priority: 'Medium',
+        impactValue: totalAnnualPrem,
+        impactMonthly: false,
+        effort: 'High',
         ...ACTION_TEXT.prem,
-        short: 'Premium load is ' + premiumRatio + '% of income — stage or restructure before adding.'
+        short: 'Premium load is ' + premiumRatio + '% of income - stage or restructure before adding.'
       });
       if (continuingAfterRet >= 2 && actions.length < 5) actions.push({
         priority: 'Medium',
+        impactValue: 0,
+        impactMonthly: false,
+        effort: 'Med',
         ...ACTION_TEXT.prem
       });
       if (coverage.add <= 0 && actions.length < 5) actions.push({
         priority: 'Low',
+        impactValue: 0,
+        impactMonthly: false,
+        effort: 'Low',
         ...ACTION_TEXT.pa
       });
       if (!actions.length) actions.push({
         priority: 'Low',
+        impactValue: 0,
+        impactMonthly: false,
+        effort: 'Low',
         area: 'Annual review',
         why: 'Confirm assumptions.',
         short: 'No critical shortfall detected. Verify policy benefits, riders, and assumptions annually.',
         discuss: 'Annual review calendar and assumptions check'
+      });
+      // Sort by priority band, then by impact $ within band (highest first).
+      const priorityRank = {
+        High: 0,
+        Medium: 1,
+        Low: 2
+      };
+      actions.sort((a, b) => {
+        const pa = priorityRank[a.priority] ?? 99,
+          pb = priorityRank[b.priority] ?? 99;
+        if (pa !== pb) return pa - pb;
+        return (b.impactValue || 0) - (a.impactValue || 0);
       });
       const trimmedActions = actions.slice(0, 5);
 
@@ -66421,8 +66473,128 @@ function ReportTab() {
       }));
 
       // ─────────────────────────────────────────────────────────────────
+      // PAGE 0 — Cover (v2.4.0-rc1.84)
+      // Editorial cover: eyebrow + client name (hero, serif bold) +
+      // subtitle + two hero stats (insured / annual premium) + advisor
+      // signature block. Mirrors the family report's cover treatment so
+      // both deliverables feel like the same product line.
+      // ─────────────────────────────────────────────────────────────────
+      pageBg();
+      // Top eyebrow row
+      label('PolicyLens', M, 14, T.primary);
+      text('Confidential portfolio review', M + 25, 14, {
+        size: 6.4,
+        color: T.text3
+      });
+      const coverDateStr = today.toUpperCase();
+      text(coverDateStr, W - M, 14, {
+        size: 5.8,
+        style: 'bold',
+        color: T.text3,
+        align: 'right',
+        charSpace: 0.6
+      });
+      setFont('helvetica', 'bold', 5.8, T.text3);
+      const coverDateW = doc.getTextWidth(pdfSafe(coverDateStr));
+      doc.setFillColor(...T.text4);
+      doc.circle(W - M - coverDateW - 4, 12.5, 0.6, 'F');
+      // Decorative coral accent line beneath eyebrow
+      doc.setDrawColor(...T.primary);
+      doc.setLineWidth(0.8);
+      doc.line(M, 18, M + 28, 18);
+      // Section eyebrow above the hero name
+      text('PORTFOLIO REVIEW', M, 60, {
+        size: 6.4,
+        style: 'bold',
+        color: T.primary,
+        charSpace: 0.6
+      });
+      text('PREPARED FOR', M + 36, 60, {
+        size: 6.4,
+        style: 'bold',
+        color: T.text3,
+        charSpace: 0.6
+      });
+      // Hero — client name in big Times bold (uppercased for editorial feel)
+      const heroName = pdfSafe(clientLabel).toUpperCase();
+      text(heroName, M, 80, {
+        family: 'times',
+        style: 'bold',
+        size: 32,
+        color: T.text,
+        maxW: CW,
+        maxLines: 1
+      });
+      // Subtitle — italic Times caption
+      const cleanGenderCover = (p.gender || '').trim();
+      const subtitleParts = ['Insurance portfolio review'];
+      const ageGenderTail = ['age ' + currentAge];
+      if (cleanGenderCover) ageGenderTail.push(cleanGenderCover.toLowerCase());
+      subtitleParts.push(ageGenderTail.join(' - '));
+      text(subtitleParts.join('   -   '), M, 92, {
+        family: 'times',
+        style: 'italic',
+        size: 12,
+        color: T.text3
+      });
+      // Hero KPI row — two big stats (insured / annual premium) and one mid
+      // (active policies). Uses a light card backdrop so they read as a unit.
+      const coverKpiY = 120;
+      const coverKpiH = 36;
+      card(M, coverKpiY, CW, coverKpiH, T.surface, T.border, 4);
+      const coverKpis = [['Insured value', money(totalCoverage), activePolicies.length + ' active polic' + (activePolicies.length === 1 ? 'y' : 'ies'), T.primary], ['Annual premium', money(totalAnnualPrem), premiumRatio > 0 ? premiumRatio + '% of income' : 'recurring premium', T.sun], ['Coverage score', score + '/100', scoreLabel, scoreTone]];
+      const coverKpiW = (CW - 4) / 3;
+      coverKpis.forEach((k, i) => {
+        const kx = M + i * coverKpiW + (i > 0 ? 2 : 0);
+        // Coloured rail on the left of each tile
+        doc.setFillColor(...k[3]);
+        doc.roundedRect(kx + 4, coverKpiY + 4, 1.4, coverKpiH - 8, 0.7, 0.7, 'F');
+        label(k[0], kx + 9, coverKpiY + 10);
+        text(k[1], kx + 9, coverKpiY + 22, {
+          family: 'times',
+          style: 'bold',
+          size: 18,
+          color: T.text,
+          maxW: coverKpiW - 14,
+          maxLines: 1
+        });
+        text(k[2], kx + 9, coverKpiY + 30, {
+          size: 6.4,
+          color: T.text3,
+          maxW: coverKpiW - 14,
+          maxLines: 1
+        });
+        if (i < 2) {
+          doc.setDrawColor(...T.border);
+          doc.setLineWidth(0.16);
+          doc.line(kx + coverKpiW - 1, coverKpiY + 6, kx + coverKpiW - 1, coverKpiY + coverKpiH - 6);
+        }
+      });
+      // Footer block — advisor + company (sits above the standard page
+      // footer line which the footer() helper draws on every page)
+      const coverFooterY = 175;
+      doc.setDrawColor(...T.border);
+      doc.setLineWidth(0.18);
+      doc.line(M, coverFooterY, W - M, coverFooterY);
+      label('Prepared by', M, coverFooterY + 6);
+      const advisorLine = (advisorName || 'Your financial consultant') + (advisorCompany ? '   -   ' + advisorCompany : '');
+      text(advisorLine, M, coverFooterY + 13, {
+        family: 'times',
+        style: 'bold',
+        size: 11,
+        color: T.text
+      });
+      text("Read pages 1-5 for diagnosis, gaps, retirement and recommendations.", W - M, coverFooterY + 13, {
+        size: 6,
+        color: T.text3,
+        style: 'italic',
+        align: 'right'
+      });
+
+      // ─────────────────────────────────────────────────────────────────
       // PAGE 1 — Executive review (V4)
       // ─────────────────────────────────────────────────────────────────
+      doc.addPage();
       pageHeader(1, 'Executive review');
 
       // Top row: Diagnosis band (155mm) + Score summary (117mm), gap of 5mm
@@ -66731,7 +66903,10 @@ function ReportTab() {
       // the negative final width caused the Gap column to render outside
       // the table and bleed into the priority matrix area (the floating
       // unlabeled "S$2.8M" the user spotted between Critical and Review).
-      const tcols = [38, 22, 22, 11, 20, tblW - 38 - 22 - 22 - 11 - 20];
+      // v2.4.0-rc1.84 — % column widened from 11 to 18mm and rendered as a
+      // tone-driven chip (Critical/Review/Improve/Covered) so coverage status
+      // is scannable in one glance, not buried as bare-number text.
+      const tcols = [38, 22, 22, 18, 20, tblW - 38 - 22 - 22 - 18 - 20];
       const tblX = M,
         tblYstart = 50; // rc1.51: was 44; bumped to follow score strip at y=30+14+6
       tableRow(tblX, tblYstart, tcols, ['Area', 'Current', 'Recommended', '%', 'Gap', 'Advisory'], {
@@ -66750,7 +66925,12 @@ function ReportTab() {
         const gap = r.flag ? '' : r.monthly ? money(r.gap, {
           suffix: '/mo'
         }) : money(r.gap);
-        tableRow(tblX, ry, tcols, [r.label, cur, rec, r.pct + '%', gap, r.advice], {
+        const pctCell = r.flag ? '-' : {
+          kind: 'chip',
+          text: r.pct + '%',
+          tone: tn[0]
+        };
+        tableRow(tblX, ry, tcols, [r.label, cur, rec, pctCell, gap, r.advice], {
           alt: i % 2 === 1,
           h: 9.6,
           align: ['left', 'right', 'right', 'center', 'right', 'left'],
@@ -66801,18 +66981,24 @@ function ReportTab() {
 
       // V5 polish: client-facing KPI labels (Lifestyle target today / Target
       // at 65 / Expected income at 65 / Income gap / Target covered).
+      // v2.4.0-rc1.84 — headline-delta context added:
+      //   Target at 65 sub: shows the inflation delta vs today (+89% etc).
+      //   Income gap sub: shows how short you are vs target (-72% etc) —
+      //     much more scannable than the bare word "shortfall".
       const diagY = 30,
         diagH = 18,
         diagW2 = (CW - 4 * 2) / 5;
+      const inflBumpPct = retirement.baseLifestyleToday > 0 ? Math.round((retirement.desired - retirement.baseLifestyleToday) / retirement.baseLifestyleToday * 100) : 0;
+      const shortPct = Math.max(0, 100 - retPct);
       const diags = [['Lifestyle target today', money(retirement.baseLifestyleToday, {
         suffix: '/mo'
       }), "today's dollars", T.sage], ['Target at ' + retirementAge, money(retirement.desired, {
         suffix: '/mo'
-      }), 'inflation-adjusted', T.lavender], ['Expected income at ' + retirementAge, money(retTotal, {
+      }), '+' + inflBumpPct + '% from inflation', T.lavender], ['Expected income at ' + retirementAge, money(retTotal, {
         suffix: '/mo'
       }), 'monthly income', retPct < 70 ? T.danger : T.success], ['Income gap', money(monthlyGap, {
         suffix: '/mo'
-      }), monthlyGap > 0 ? 'shortfall' : 'covered', monthlyGap > 0 ? T.danger : T.success], ['Target covered', retPct + '%', 'of target at ' + retirementAge, retPct < 70 ? T.danger : T.success]];
+      }), monthlyGap > 0 ? '-' + shortPct + '% short of target' : 'fully covered', monthlyGap > 0 ? T.danger : T.success], ['Target covered', retPct + '%', 'of inflation-adjusted target', retPct < 70 ? T.danger : T.success]];
       diags.forEach((d, i) => {
         const x = M + i * (diagW2 + 2);
         card(x, diagY, diagW2, diagH, T.surface, T.border, 3);
@@ -67162,20 +67348,33 @@ function ReportTab() {
         rightX = M + leftW + 5;
 
       // ── Left: 20-year premium chart ──
+      // v2.4.0-rc1.84 — title now leads with the 20-year COMMITMENT total
+      // (premium $ × time) and the cover it buys, so the reader sees the
+      // headline scale before parsing the bar chart underneath. The
+      // delta is implicit: "S$485k buys S$2.1M of cover" lets the reader
+      // do the value math in their head.
       const chartCardY = 30;
       const leftCardH = 88;
       card(M, chartCardY, leftW, leftCardH, T.surface, T.border, 4);
-      // Title hierarchy + subcaption
-      text('20-year premium outlook', M + 4, chartCardY + 5.6, {
+      const total20yrPrem = premiumYears.reduce((s, r) => s + r.total, 0);
+      const titleStr = '20-year commitment: ' + money(total20yrPrem) + ' for ' + money(totalCoverage) + ' cover';
+      text(titleStr, M + 4, chartCardY + 5.6, {
         family: 'times',
         style: 'bold',
         size: 9.6,
-        color: T.text
+        color: T.text,
+        maxW: leftW - 8,
+        maxLines: 1
       });
-      text('Annual recurring premium by age', M + 4, chartCardY + 9.6, {
+      const subStr = 'Currently ' + money(totalAnnualPrem, {
+        suffix: '/yr'
+      }) + (premiumRatio > 0 ? ' (' + premiumRatio + '% of income)' : '') + ' - bars track annual recurring premium by age';
+      text(subStr, M + 4, chartCardY + 9.6, {
         size: 5.8,
         color: T.text3,
-        style: 'italic'
+        style: 'italic',
+        maxW: leftW - 8,
+        maxLines: 1
       });
       const pcPadL = 18,
         pcPadR = 6,
@@ -67330,25 +67529,38 @@ function ReportTab() {
         };
         return map[a.area] || a.area + '. ' + a.why;
       };
-      const actCols = [18, 90, CW - 18 - 90];
-      tableRow(M, actY + 3, actCols, ['Priority', 'Action', 'Why it matters'], {
+      // v2.4.0-rc1.84 — 5-column action queue: Priority chip / Action /
+      // Impact ($/mo or $) / Effort chip / Why it matters. Sorted by
+      // priority band then by impact value (highest first) so the most
+      // leveraged moves sit at the top of the page.
+      const actCols = [18, 80, 36, 24, CW - 18 - 80 - 36 - 24];
+      tableRow(M, actY + 3, actCols, ['Priority', 'Action', 'Impact', 'Effort', 'Why it matters'], {
         header: true,
-        h: 6
+        h: 6,
+        align: ['center', 'left', 'right', 'center', 'left']
       });
       let aRy = actY + 9;
       trimmedActions.forEach((a, i) => {
-        const tn = a.priority === 'High' ? 'danger' : a.priority === 'Medium' ? 'warn' : 'success';
+        const priorityTone = a.priority === 'High' ? 'danger' : a.priority === 'Medium' ? 'warn' : 'success';
+        const effortTone = a.effort === 'High' ? 'danger' : a.effort === 'Med' ? 'warn' : 'success';
+        const impactStr = a.impactValue > 0 ? money(a.impactValue, {
+          suffix: a.impactMonthly ? '/mo' : ''
+        }) : '-';
         tableRow(M, aRy, actCols, [{
           kind: 'chip',
           text: a.priority,
-          tone: tn
-        }, sharpenAction(a), sharpenReason(a)], {
+          tone: priorityTone
+        }, sharpenAction(a), impactStr, {
+          kind: 'chip',
+          text: a.effort,
+          tone: effortTone
+        }, sharpenReason(a)], {
           alt: i % 2 === 1,
           h: 9,
-          align: ['center', 'left', 'left'],
-          styles: [null, 'bold', null],
-          colors: [null, T.text, T.text2],
-          sizes: [null, 7.2, 6.4]
+          align: ['center', 'left', 'right', 'center', 'left'],
+          styles: [null, 'bold', 'bold', null, null],
+          colors: [null, T.text, a.impactValue > 0 ? T.danger : T.text3, null, T.text2],
+          sizes: [null, 7.2, 7, null, 6.4]
         });
         aRy += 9;
       });
