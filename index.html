@@ -66184,7 +66184,9 @@ function ReportTab() {
       // auto-grows from 14mm (no remarks) → 18mm (1-line remarks) → 22mm
       // (2-line remarks). Headers/data align cleanly via opts.cols.
       const drawPolicyDetailRow = (x, y, w, p, opts = {}) => {
-        const cols = opts.cols || [78, 24, 24, 24, 18, 18, w - 78 - 24 - 24 - 24 - 18 - 18];
+        // v2.4.0-rc1.91: 8 columns now (added Matures between Prem end and
+        // Method). Default cols match the polCols array at the call site.
+        const cols = opts.cols || [82, 28, 28, 32, 18, 20, 22, w - 82 - 28 - 28 - 32 - 18 - 20 - 22];
         const alt = !!opts.alt;
         const remarksText = String(p.remarks || p.notes || '').trim();
         const hasRemarks = !!remarksText;
@@ -66234,19 +66236,25 @@ function ReportTab() {
           align: 'center'
         });
         cx += cols[4];
+        text(p.matures || '-', cx + cols[5] / 2, topY, {
+          size: 6.4,
+          color: T.text3,
+          align: 'center'
+        });
+        cx += cols[5];
         text(p.method || '-', cx + 2, topY, {
           size: 6,
           color: T.text3,
-          maxW: cols[5] - 4,
+          maxW: cols[6] - 4,
           maxLines: 1
         });
-        cx += cols[5];
+        cx += cols[6];
         // Riders column — no "Riders:" prefix (column header already says it)
         text(p.riders || '-', cx + 2, topY, {
           size: 6.4,
           style: 'bold',
           color: T.primary,
-          maxW: cols[6] - 4,
+          maxW: cols[7] - 4,
           maxLines: 1
         });
         // Subline — policy number / status / years in force on left
@@ -66873,7 +66881,12 @@ function ReportTab() {
       const coverKpiY = 120;
       const coverKpiH = 36;
       card(M, coverKpiY, CW, coverKpiH, T.surface, T.border, 4);
-      const coverKpis = [['Insured value', money(totalCoverage), activePolicies.length + ' active polic' + (activePolicies.length === 1 ? 'y' : 'ies'), T.primary], ['Annual premium', money(totalAnnualPrem), premiumRatio > 0 ? premiumRatio + '% of income' : 'recurring premium', T.sun], ['Coverage score', score + '/100', scoreLabel, scoreTone]];
+      const coverKpis = [['Insured value', money(totalCoverage), activePolicies.length + ' active polic' + (activePolicies.length === 1 ? 'y' : 'ies'), T.primary],
+      // v2.4.0-rc1.91: premium uses full numbers (S$24,000) — coverage stays
+      // shorthand (S$1.7M) per FC team feedback.
+      ['Annual premium', money(totalAnnualPrem, {
+        full: true
+      }), premiumRatio > 0 ? premiumRatio + '% of income' : 'recurring premium', T.sun], ['Coverage score', score + '/100', scoreLabel, scoreTone]];
       const coverKpiW = (CW - 4) / 3;
       coverKpis.forEach((k, i) => {
         const kx = M + i * coverKpiW + (i > 0 ? 2 : 0);
@@ -66982,7 +66995,8 @@ function ReportTab() {
           now: totalAnnualPrem,
           then: k.totalPremium || 0,
           nowStr: money(totalAnnualPrem, {
-            suffix: '/yr'
+            suffix: '/yr',
+            full: true
           }),
           delta: fmtDelta(totalAnnualPrem, k.totalPremium || 0),
           tone: T.text3
@@ -67011,7 +67025,8 @@ function ReportTab() {
           text('then: ' + (d.label === 'Coverage score' ? (k.score || 0) + '/100' : d.label === 'Monthly gap' ? money(k.monthlyGap || 0, {
             suffix: '/mo'
           }) : d.label === 'Insured value' ? money(k.totalCover || 0) : d.label === 'Annual premium' ? money(k.totalPremium || 0, {
-            suffix: '/yr'
+            suffix: '/yr',
+            full: true
           }) : String(k.activePolicies || 0)), x + 9, dY + 23, {
             size: 5.4,
             color: T.text3
@@ -67140,7 +67155,8 @@ function ReportTab() {
         // Line 1 — current portfolio
         if (polCount > 0) {
           arr.push('Current portfolio: ' + polCount + ' polic' + (polCount === 1 ? 'y' : 'ies') + ', ' + money(totalCoverage) + ' cover, ' + money(totalAnnualPrem, {
-            suffix: '/yr'
+            suffix: '/yr',
+            full: true
           }) + ' premium.');
         } else {
           arr.push('No active policies on file yet.');
@@ -67199,7 +67215,9 @@ function ReportTab() {
       const kpiY = 72,
         kpiH = 18,
         kpiW = (CW - 4 * 2) / 5;
-      const kpis = [['Insured value', money(totalCoverage), activePolicies.length + ' polic' + (activePolicies.length === 1 ? 'y' : 'ies'), T.sky], ['Annual premium', money(totalAnnualPrem), premiumRatio ? premiumRatio + '% of income' : 'recurring', premiumRatio > 15 ? T.danger : T.sun], ['Active policies', String(activePolicies.length), activeInsurers + ' insurer' + (activeInsurers === 1 ? '' : 's'), T.lavender], ['Protection gap', money(protectionGap), score + '/100 score', scoreTone], ['Retirement income', money(retTotal, {
+      const kpis = [['Insured value', money(totalCoverage), activePolicies.length + ' polic' + (activePolicies.length === 1 ? 'y' : 'ies'), T.sky], ['Annual premium', money(totalAnnualPrem, {
+        full: true
+      }), premiumRatio ? premiumRatio + '% of income' : 'recurring', premiumRatio > 15 ? T.danger : T.sun], ['Active policies', String(activePolicies.length), activeInsurers + ' insurer' + (activeInsurers === 1 ? '' : 's'), T.lavender], ['Protection gap', money(protectionGap), score + '/100 score', scoreTone], ['Retirement income', money(retTotal, {
         suffix: '/mo'
       }), retPct + '% of target', retPct < 70 ? T.danger : T.success]];
       kpis.forEach((k, i) => {
@@ -67472,7 +67490,9 @@ function ReportTab() {
       const matX = tblX + tblW + 4;
       const matY = tblYstart;
       label('Priority matrix', matX, matY - 2);
-      const buckets = [['Critical', T.danger, T.dangerSoft, allRows.filter(r => !r.flag && r.pct < 40).map(r => r.short)], ['Review', T.warn, T.warnSoft, allRows.filter(r => !r.flag && r.pct >= 40 && r.pct < 80).map(r => r.short)], ['Confirm', T.sky, T.skySoft, [coverage.hasISP ? 'ISP rider terms' : 'Hospitalisation status', coverage.add > 0 ? 'PA medical reimb.' : 'Personal accident gap']], ['Keep', T.success, T.successSoft, [activePolicies.length + ' active polic' + (activePolicies.length === 1 ? 'y' : 'ies'), coverage.hasISP ? 'ISP held' : null, totalAnnualPrem > 0 ? money(totalAnnualPrem) + '/yr premium tracked' : null].filter(Boolean)]];
+      const buckets = [['Critical', T.danger, T.dangerSoft, allRows.filter(r => !r.flag && r.pct < 40).map(r => r.short)], ['Review', T.warn, T.warnSoft, allRows.filter(r => !r.flag && r.pct >= 40 && r.pct < 80).map(r => r.short)], ['Confirm', T.sky, T.skySoft, [coverage.hasISP ? 'ISP rider terms' : 'Hospitalisation status', coverage.add > 0 ? 'PA medical reimb.' : 'Personal accident gap']], ['Keep', T.success, T.successSoft, [activePolicies.length + ' active polic' + (activePolicies.length === 1 ? 'y' : 'ies'), coverage.hasISP ? 'ISP held' : null, totalAnnualPrem > 0 ? money(totalAnnualPrem, {
+        full: true
+      }) + '/yr premium tracked' : null].filter(Boolean)]];
       // v2.4.0-rc1.83 — empty buckets are now hidden entirely (was: rendered
       // a single '—' placeholder which read as a missing-data bug). The
       // remaining buckets reflow up the column so the matrix stays compact.
@@ -67882,7 +67902,10 @@ function ReportTab() {
       const leftCardH = 88;
       card(M, chartCardY, leftW, leftCardH, T.surface, T.border, 4);
       const total20yrPrem = premiumYears.reduce((s, r) => s + r.total, 0);
-      const titleStr = '20-year commitment: ' + money(total20yrPrem) + ' for ' + money(totalCoverage) + ' cover';
+      // v2.4.0-rc1.91: premium uses full numbers, cover keeps shorthand.
+      const titleStr = '20-year commitment: ' + money(total20yrPrem, {
+        full: true
+      }) + ' for ' + money(totalCoverage) + ' cover';
       text(titleStr, M + 4, chartCardY + 5.6, {
         family: 'times',
         style: 'bold',
@@ -67892,7 +67915,8 @@ function ReportTab() {
         maxLines: 1
       });
       const subStr = 'Currently ' + money(totalAnnualPrem, {
-        suffix: '/yr'
+        suffix: '/yr',
+        full: true
       }) + (premiumRatio > 0 ? ' (' + premiumRatio + '% of income)' : '') + ' - bars track annual recurring premium by age';
       text(subStr, M + 4, chartCardY + 9.6, {
         size: 5.8,
@@ -68006,7 +68030,11 @@ function ReportTab() {
       const stratGap = 3;
       const stratHTotal = leftCardH; // align with left chart card height
       const stratH = (stratHTotal - stratGap * 2) / 3;
-      drawStrategyGroup(rightX, chartCardY, rightW, 'Affordability', [['Annual premium', money(totalAnnualPrem)], ['Monthly premium', money(totalAnnualPrem / 12)], ['Premium ratio', annualIncome ? premiumRatio + '% of income' : 'income missing']], {
+      drawStrategyGroup(rightX, chartCardY, rightW, 'Affordability', [['Annual premium', money(totalAnnualPrem, {
+        full: true
+      })], ['Monthly premium', money(totalAnnualPrem / 12, {
+        full: true
+      })], ['Premium ratio', annualIncome ? premiumRatio + '% of income' : 'income missing']], {
         h: stratH,
         accent: premiumRatio > 15 ? T.danger : T.primary
       });
@@ -68144,13 +68172,17 @@ function ReportTab() {
       };
       const riderShort = rd => RIDER_CODE[(rd.type || '').toLowerCase().replace(/[^a-z_]/g, '')] || (rd.type || '').toUpperCase().slice(0, 3);
       let invY = startInventoryPage();
-      // Landscape column widths: insurer/product · Type · Cover · Premium · Prem end · Method · Riders
-      const polCols = [88, 30, 28, 28, 18, 22, CW - 88 - 30 - 28 - 28 - 18 - 22];
+      // v2.4.0-rc1.91 — landscape column widths now include MATURES between
+      // Prem end and Method (so the FC sees both when premium STOPS and
+      // when the policy WORKS UNTIL — these are different for whole-life,
+      // endowment, term policies). Premium column also widened from 28 to
+      // 32mm to fit the full-number premium values (S$24,000/yr).
+      const polCols = [82, 28, 28, 32, 18, 20, 22, CW - 82 - 28 - 28 - 32 - 18 - 20 - 22];
       const drawPolHeader = y => {
-        tableRow(M, y, polCols, ['Insurer / product', 'Type', 'Cover', 'Premium', 'Prem end', 'Method', 'Riders'], {
+        tableRow(M, y, polCols, ['Insurer / product', 'Type', 'Cover', 'Premium', 'Prem end', 'Matures', 'Method', 'Riders'], {
           header: true,
           h: 5.6,
-          align: ['left', 'left', 'right', 'right', 'center', 'left', 'left']
+          align: ['left', 'left', 'right', 'right', 'center', 'center', 'left', 'left']
         });
         return y + 6;
       };
@@ -68227,8 +68259,26 @@ function ReportTab() {
           })();
           const productLine = [pol.insurer || '-', pol.productName || pol.policyName || pol.subType || 'Policy'].filter(Boolean).join(' - ');
           const cover = n(pol.sumAssured) > 0 ? money(pol.sumAssured) : '-';
-          const prem = isSinglePremium(pol) ? n(pol.annualPremium) ? money(pol.annualPremium) + ' lump' : 'Single' : annualizedPremium(pol) > 0 ? money(annualizedPremium(pol)) : '-';
+          // v2.4.0-rc1.91: premium uses full numbers ({full:true}) so the
+          // FC reads exact amounts (S$24,000/yr) not shorthand (S$24k/yr).
+          const prem = isSinglePremium(pol) ? n(pol.annualPremium) ? money(pol.annualPremium, {
+            full: true
+          }) + ' lump' : 'Single' : annualizedPremium(pol) > 0 ? money(annualizedPremium(pol), {
+            full: true
+          }) : '-';
           const premEnd = pol.premEndAge ? 'age ' + pol.premEndAge : pol.premTerm ? pol.premTerm + 'y' : '-';
+          // v2.4.0-rc1.91: maturity (when policy actually pays out / expires)
+          const matures = (() => {
+            if (pol.maturityAge) return 'age ' + pol.maturityAge;
+            if (pol.maturityDate) {
+              try {
+                const d = new Date(pol.maturityDate);
+                if (!isNaN(d.getTime())) return String(d.getFullYear());
+              } catch (_) {}
+            }
+            if (pol.premWholeLife || /whole\s*life/i.test(pol.subType || '')) return 'whole life';
+            return '-';
+          })();
           const method = pol.paymentMethod ? safe(pol.paymentMethod, 14) : '-';
           const type = safe(pol.subType || '-', 18);
           const riderCodes = (pol.riders || []).map(riderShort).filter(Boolean).slice(0, 5).join(' ');
@@ -68255,6 +68305,7 @@ function ReportTab() {
             cover,
             premium: prem,
             premEnd,
+            matures,
             method,
             // v2.4.0-rc1.79: column header already says "Riders" — no
             // need for the redundant "Riders:" prefix on every row.
@@ -68709,6 +68760,23 @@ function ReportTab() {
         if (pol.premWholeLife) return 'whole life';
         return '-';
       };
+
+      // v2.4.0-rc1.91 — when does the policy actually mature / pay out /
+      // expire? Distinct from premEnd (when premiums STOP being paid).
+      // Reads explicit maturityAge first, falls back to maturityDate
+      // (year only — full date is too long for a small column),
+      // recognises whole-life policies, returns '-' when neither known.
+      const policyMaturity = pol => {
+        if (pol.maturityAge) return 'age ' + pol.maturityAge;
+        if (pol.maturityDate) {
+          try {
+            const d = new Date(pol.maturityDate);
+            if (!isNaN(d.getTime())) return String(d.getFullYear());
+          } catch (_) {/* ignore */}
+        }
+        if (pol.premWholeLife || /whole\s*life/i.test(pol.subType || '')) return 'whole life';
+        return '-';
+      };
       const policyType = pol => safe(pol.subType || pol.category || 'Policy', 22);
       const policyStatusLine = pol => {
         const bits = [];
@@ -68778,6 +68846,8 @@ function ReportTab() {
         // at the call site:
         //   Member 4 / Age 66 (c) / Pol 82 (c) / Premium 116 (r) /
         //   Cover 138 (r) / Bar 143-158 / Share-pct 163 (r)
+        // v2.4.0-rc1.91: premium uses full numbers (S$24,000), no "k"
+        // shorthand, so the FC reads exact recurring spend per member.
         const fill = idx % 2 ? T.tableAlt : T.surface;
         card(x, y, w, 12, fill, T.border, 1.5);
         write(m.name, x + 4, y + 7, {
@@ -68797,7 +68867,9 @@ function ReportTab() {
           color: T.text2,
           align: 'center'
         });
-        write(money(m.annualPremium), x + 116, y + 7, {
+        write(m.annualPremium > 0 ? money(m.annualPremium, {
+          full: true
+        }) : '-', x + 116, y + 7, {
           size: 6.7,
           color: T.text2,
           align: 'right'
@@ -68829,12 +68901,11 @@ function ReportTab() {
       };
 
       // v2.4.0-rc1.78: data column positions match the updated header
-      // x-coords (Cover right at x+138, Premium right at x+165, Prem end
-      // centred at x+178, Method centred at x+198, Riders left at x+206).
-      // Remarks wrap to up to 2 lines BELOW the data row spanning full
-      // row width — no more "..." truncation. Row height auto-grows from
-      // 17mm (no remarks / 1-line remarks) to 22mm (2-line remarks) so
-      // long client-facing copy is fully visible.
+      // x-coords. v2.4.0-rc1.91 — Maturity column added between Prem end
+      // and Method. Premium uses full numbers (S$24,000/yr) instead of
+      // shorthand (S$24k/yr). Geometry:
+      //   Cover (r) x+128 / Premium (r) x+158 / Prem end (c) x+174
+      //   Matures (c) x+193 / Method (c) x+213 / Riders (l) x+232
       const drawPolicyDetailRow = (x, y, w, pol, idx) => {
         const fill = idx % 2 ? T.tableAlt : T.surface;
         const product = safe([pol.insurer, pol.productName || pol.policyName || pol.planName || pol.subType || 'Policy'].filter(Boolean).join(' - '), 56);
@@ -68863,38 +68934,47 @@ function ReportTab() {
         write(policyType(pol), x + 84, y + 5.4, {
           size: 5.9,
           color: T.text2,
-          maxW: 50,
+          maxW: 40,
           maxLines: 1
         });
-        write(policyCover(pol) > 0 ? money(policyCover(pol)) : '-', x + 138, y + 5.4, {
+        write(policyCover(pol) > 0 ? money(policyCover(pol)) : '-', x + 128, y + 5.4, {
           size: 6.1,
           style: 'bold',
           color: T.text2,
           align: 'right'
         });
-        const prem = isSinglePremium(pol) ? n(pol.annualPremium) ? money(n(pol.annualPremium)) + ' single' : 'single' : policyAnnual(pol) ? money(policyAnnual(pol)) + '/yr' : '-';
-        write(prem, x + 165, y + 5.4, {
+        const prem = isSinglePremium(pol) ? n(pol.annualPremium) ? money(n(pol.annualPremium), {
+          full: true
+        }) + ' single' : 'single' : policyAnnual(pol) ? money(policyAnnual(pol), {
+          full: true
+        }) + '/yr' : '-';
+        write(prem, x + 158, y + 5.4, {
           size: 5.9,
           color: T.text2,
           align: 'right'
         });
-        write(policyPremEnd(pol), x + 178, y + 5.4, {
+        write(policyPremEnd(pol), x + 174, y + 5.4, {
           size: 5.8,
           color: T.text2,
           align: 'center'
         });
-        write(safe(pol.paymentMethod || '-', 16), x + 198, y + 5.4, {
+        write(policyMaturity(pol), x + 193, y + 5.4, {
+          size: 5.8,
+          color: T.text2,
+          align: 'center'
+        });
+        write(safe(pol.paymentMethod || '-', 12), x + 213, y + 5.4, {
           size: 5.8,
           color: T.text2,
           align: 'center'
         });
         const codes = riderCodes(pol);
         if (codes && codes !== '-') {
-          write(codes, x + 206, y + 5.4, {
+          write(codes, x + 232, y + 5.4, {
             size: 5.6,
             style: 'bold',
             color: T.primary,
-            maxW: w - 210,
+            maxW: w - 236,
             maxLines: 1
           });
         }
@@ -69046,7 +69126,9 @@ function ReportTab() {
           priority: 'Review',
           tone: 'warn',
           action: 'Check the protection mix',
-          why: 'Most premium goes to ' + categoryLabel(largestCat.cat) + ' (' + money(largestCat.prem) + '/yr).',
+          why: 'Most premium goes to ' + categoryLabel(largestCat.cat) + ' (' + money(largestCat.prem, {
+            full: true
+          }) + '/yr).',
           discussion: 'Make sure protection (life, disability, illness) is in place before adding more savings and investments.'
         });
       }
@@ -69120,7 +69202,9 @@ function ReportTab() {
         });
       });
       const kW = (CW - 12) / 5;
-      [['Members', String(memberRows.length), 'family scope', T.sky], ['Active policies', String(familyPolicies.length), insurerCount + ' insurers', T.lavender], ['Annual premium', money(totalAnnualPrem), money(totalAnnualPrem / 12, {
+      [['Members', String(memberRows.length), 'family scope', T.sky], ['Active policies', String(familyPolicies.length), insurerCount + ' insurers', T.lavender], ['Annual premium', money(totalAnnualPrem, {
+        full: true
+      }), money(totalAnnualPrem / 12, {
         full: true
       }) + '/mo', T.sun], ['Sum assured', money(totalSA), 'family total', T.primary], ['Cover concentration', String(topCoverShare) + '%', topCoverMember ? 'top insured member' : 'n/a', topCoverShare >= 80 ? T.danger : T.success]].forEach((m, i) => drawMetricTile(M + i * (kW + 3), 94, kW, 25, m[0], m[1], m[2], m[3]));
       card(M, 128, 175, 50, T.surface, T.border, 3.5);
@@ -69206,7 +69290,14 @@ function ReportTab() {
       // Page 2 - Coverage balance map.
       doc.addPage();
       drawHeader(2, 'Coverage balance map', 'Where household protection sits and which members need baseline cover.');
-      card(M, 48, 178, 105, T.surface, T.border, 4);
+
+      // v2.4.0-rc1.91 — top-left card shrunk from 105mm to 60mm so it
+      // matches the right-column "Coverage gap alert" card height.
+      // Previously the fixed 105mm card had 40-50mm of empty space when
+      // households had only 2-3 members. New left-middle card below
+      // (y=114-153) shows premium share by member, filling the freed
+      // real estate with useful supplementary information.
+      card(M, 48, 178, 60, T.surface, T.border, 4);
       label('Sum-assured share by member', M + 5, 58);
       // v2.4.0-rc1.71: dollar value position fixed. Was barX+barW+33 = M+185
       // which is OUTSIDE the card's right edge (M+178), causing "S$1.7M" to
@@ -69216,7 +69307,11 @@ function ReportTab() {
       const barX = M + 50,
         barW = 88;
       const dollarX = M + 178 - 4;
-      let by = 70;
+      // Member-row height scales DOWN when there are few members so the
+      // card still looks well-packed at N=2 (was fixed 14mm causing
+      // huge empty zones below row 2 with only 2 members).
+      const shareRowH = memberRows.length <= 2 ? 14 : memberRows.length <= 4 ? 11 : 8;
+      let by = 68;
       memberRows.forEach((m, idx) => {
         const share = totalSA ? Math.round(m.sumAssured / totalSA * 100) : 0;
         const color = idx === 0 ? T.primary : [T.sage, T.sky, T.lavender, T.sun][idx % 4];
@@ -69234,22 +69329,51 @@ function ReportTab() {
           color: share === 0 ? T.danger : color
         });
         write(money(m.sumAssured, {
+          full: true,
           blankZero: true
         }), dollarX, by, {
           size: SZ.caption,
           color: T.text3,
           align: 'right'
         });
-        by += 14;
+        by += shareRowH;
       });
-      if (memberRows.length <= 2) {
-        write('A balanced household review should consider both cover amount and who depends on whom for income.', M + 5, 136, {
-          size: 6.3,
-          color: T.text3,
-          maxW: 160,
-          maxLines: 2
+
+      // v2.4.0-rc1.91 — NEW middle-left card: premium share by member.
+      // Mirrors the cover-share treatment above so the eye can compare
+      // "who is insured for what" vs "who pays what" at a glance.
+      card(M, 114, 178, 39, T.surface, T.border, 4);
+      label('Premium share by member', M + 5, 124);
+      const premBarX = M + 50,
+        premBarW = 88;
+      const premDollarX = M + 178 - 4;
+      const premRowH = memberRows.length <= 2 ? 11 : memberRows.length <= 4 ? 8 : 6;
+      let py = 132;
+      memberRows.forEach((m, idx) => {
+        const pshare = totalAnnualPrem ? Math.round(m.annualPremium / totalAnnualPrem * 100) : 0;
+        const color = idx === 0 ? T.sun : [T.sage, T.sky, T.lavender, T.primary][idx % 4];
+        write(m.name, M + 5, py, {
+          size: SZ.body,
+          style: 'bold',
+          color: T.text,
+          maxW: 43,
+          maxLines: 1
         });
-      }
+        drawGapBar(premBarX, py - 4, premBarW, 4.2, pshare, color);
+        write(pshare + '%', premBarX + premBarW + 6, py, {
+          size: SZ.body,
+          style: 'bold',
+          color: pshare === 0 ? T.text3 : color
+        });
+        write(m.annualPremium > 0 ? money(m.annualPremium, {
+          full: true
+        }) + '/yr' : '-', premDollarX, py, {
+          size: SZ.caption,
+          color: T.text3,
+          align: 'right'
+        });
+        py += premRowH;
+      });
 
       // v2.4.0-rc1.65 hardfix: this panel was 105mm tall with ~80% empty
       // space (just one big number + one sentence + tiny pill). Shrunk to
@@ -69466,6 +69590,11 @@ function ReportTab() {
       // 71% percent label looked like a misalignment. Replaced with a
       // tight inline gauge in the SHARE column only (matches what the
       // column actually claims to show).
+      // v2.4.0-rc1.91 — premium values now use full numbers (S$24,000)
+      // instead of the "k" shorthand (S$24k) so the FC reads exact figures
+      // when reviewing payer-share. Cover values keep "M" shortening
+      // because S$1,700,000 is unwieldy and "S$1.7M" reads cleaner at a
+      // glance.
       let my = 73;
       memberRows.slice(0, 6).forEach((m, idx) => {
         const pshare = totalAnnualPrem ? Math.round(m.annualPremium / totalAnnualPrem * 100) : 0;
@@ -69478,7 +69607,9 @@ function ReportTab() {
           maxW: 54,
           maxLines: 1
         });
-        write(money(m.annualPremium), M + 226, my + 7, {
+        write(m.annualPremium > 0 ? money(m.annualPremium, {
+          full: true
+        }) : '-', M + 226, my + 7, {
           size: SZ.body,
           color: T.text2,
           align: 'right'
@@ -69718,9 +69849,8 @@ function ReportTab() {
             });
           }
           y += 11;
-          // v2.4.0-rc1.78: numeric columns right-aligned to match data;
-          // "Riders / remarks" → "Riders" only (remarks live on the
-          // bottom line of the row spanning the full row width).
+          // v2.4.0-rc1.91: Maturity column added between Prem end and Method.
+          // Column x-coords match drawPolicyDetailRow exactly.
           drawMiniTableHeader(M, y, CW, [{
             label: 'Insurer / product',
             x: 3
@@ -69729,23 +69859,27 @@ function ReportTab() {
             x: 84
           }, {
             label: 'Cover',
-            x: 138,
+            x: 128,
             align: 'right'
           }, {
             label: 'Premium',
-            x: 165,
+            x: 158,
             align: 'right'
           }, {
             label: 'Prem end',
-            x: 178,
+            x: 174,
+            align: 'center'
+          }, {
+            label: 'Matures',
+            x: 193,
             align: 'center'
           }, {
             label: 'Method',
-            x: 198,
+            x: 213,
             align: 'center'
           }, {
             label: 'Riders',
-            x: 206
+            x: 232
           }]);
           y += 8;
         };
