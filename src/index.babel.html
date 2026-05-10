@@ -45050,7 +45050,52 @@ function ReportTab() {
   // state, ~530 lines of unreachable code).
   const [generatingVisual, setGeneratingVisual] = useState(false);
   const [generatingFamilyVisual, setGeneratingFamilyVisual] = useState(false);
-  const p = clientProfile || {};
+  // v2.4.0-rc1.85: report options — printMode swaps the cream/coral palette
+  // for grayscale (high-contrast B&W output for monochrome printers).
+  // scenario applies a "what if?" preset (income drop, life event) to the
+  // underlying profile values before computing protection requirements.
+  const [printMode, setPrintMode] = useState(false);
+  const [scenario, setScenario] = useState('baseline');
+  // Persist preferences across sessions
+  React.useEffect(() => {
+    dbGet('settings', 'reportPrintMode').then(r => { if (r?.value === true) setPrintMode(true); }).catch(() => {});
+    dbGet('settings', 'reportScenario').then(r => { if (r?.value && typeof r.value === 'string') setScenario(r.value); }).catch(() => {});
+  }, []);
+  const updatePrintMode = (v) => { setPrintMode(v); dbPut('settings', { key: 'reportPrintMode', value: v }).catch(() => {}); };
+  const updateScenario = (v) => { setScenario(v); dbPut('settings', { key: 'reportScenario', value: v }).catch(() => {}); };
+  // v2.4.0-rc1.85 — scenario overlay. Modifies the working profile based
+  // on the current "What if?" preset. Affects BOTH the live preview and
+  // the generated PDF so what the FC sees on screen matches what they'll
+  // hand to the client.
+  // Available scenarios:
+  //   baseline       - no changes (default)
+  //   income-30      - monthly/annual income reduced by 30%
+  //   new-child      - dependants + 1
+  //   married        - marital status -> married, dependants minimum 1
+  const SCENARIO_LABELS = {
+    baseline: 'Baseline',
+    'income-30': 'Income drops 30%',
+    'new-child': 'New child arrives',
+    married: 'Married next year'
+  };
+  const baseClientProfile = clientProfile || {};
+  const p = (() => {
+    if (scenario === 'baseline') return baseClientProfile;
+    const overrides = {};
+    if (scenario === 'income-30') {
+      const monthlyInc = parseFloat(baseClientProfile.monthlyIncome) || 0;
+      const annualInc = parseFloat(baseClientProfile.annualIncome) || 0;
+      if (monthlyInc > 0) overrides.monthlyIncome = Math.round(monthlyInc * 0.7);
+      if (annualInc > 0) overrides.annualIncome = Math.round(annualInc * 0.7);
+    } else if (scenario === 'new-child') {
+      overrides.dependants = (parseInt(baseClientProfile.dependants) || 0) + 1;
+    } else if (scenario === 'married') {
+      overrides.maritalStatus = 'married';
+      const dep = parseInt(baseClientProfile.dependants) || 0;
+      if (dep < 1) overrides.dependants = 1;
+    }
+    return Object.keys(overrides).length ? { ...baseClientProfile, ...overrides } : baseClientProfile;
+  })();
   const age = getProfileAge(p) ?? 35;
   const retAge = getRetirementAge(p, 65); // v2.0.3
   const annualIncome = parseFloat(p.annualIncome)||0;
@@ -45086,7 +45131,7 @@ function ReportTab() {
       // paper, tableHead, tableAlt, blush, blushSoft) so future copy-paste
       // between the two generators cannot throw "T.x is not iterable" again.
       // Mirrors the setFont/pdfSafe alias pattern from rc1.69 / rc1.72.
-      const T = {
+      const T_COLOR = {
         bg:[251,244,234], paper:[255,251,246], surface:[255,248,239], surface2:[255,251,246],
         tableHead:[239,229,217], tableAlt:[253,246,239], recessed:[243,234,223],
         border:[229,216,202], border2:[208,193,175],
@@ -45102,6 +45147,34 @@ function ReportTab() {
         blush:[226,148,148], blushSoft:[252,229,229],
         white:[255,255,255]
       };
+      // v2.4.0-rc1.85 — print-mode B&W palette. Maps every brand colour to
+      // a luminance-derived gray so monochrome printers render legibly
+      // (no muddy yellows on grayscale output, no pinkish "soft" fills
+      // that vanish on toner). Triggered by the printMode preference set
+      // on the Report tab.
+      const T_BW = (() => {
+        const lum = ([r, g, b]) => Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+        const gray = (l) => [l, l, l];
+        const darkenBy = (c, by) => gray(Math.max(0, lum(c) - by));
+        const out = {};
+        Object.entries(T_COLOR).forEach(([k, v]) => {
+          // Keep canvas backgrounds near-white and ink near-black for printer
+          // friendliness, regardless of original hue.
+          if (/^(bg|paper|surface|surface2|recessed|tableHead|tableAlt|white)$/.test(k)) {
+            out[k] = gray(Math.max(245, lum(v)));
+          } else if (/^(text|text2|text3|text4)$/.test(k)) {
+            out[k] = gray(Math.min(160, lum(v)));
+          } else if (/Soft$/.test(k)) {
+            out[k] = gray(228);  // light gray fills for chips/pills
+          } else if (/^border/.test(k)) {
+            out[k] = gray(190);
+          } else {
+            out[k] = darkenBy(v, 30);  // accent colours rendered as mid-dark gray
+          }
+        });
+        return out;
+      })();
+      const T = printMode ? T_BW : T_COLOR;
 
       // ─── Helpers ───
       const inactiveStatuses = new Set(['matured','surrendered','lapsed']);
@@ -45305,15 +45378,50 @@ function ReportTab() {
         : pctVal >= 70 ? ['warn', T.warn, 'Improve']
         : pctVal >= 40 ? ['warn', T.warn, 'Review']
         : ['danger', T.danger, 'Critical'];
-      // v2.4.0-rc1.84 — page numbering accounts for the cover page added
-      // before the executive review. The cover is labelled "Cover", and
-      // content pages are numbered 1..N (where N excludes the cover) so
-      // "Page 3 of 5" reads as the third *content* page out of five.
+      // v2.4.0-rc1.85 — footer now includes a TOC breadcrumb above the
+      // standard footer line, showing the page sequence with the current
+      // page highlighted. Helps readers (especially advisors flipping to a
+      // specific section in a meeting) navigate the PDF without scrubbing.
+      const PAGE_LABELS = ['Cover', 'Executive', 'Gaps', 'Retirement', 'Premiums', 'Policies'];
       const footer = () => {
         const pages = doc.getNumberOfPages();
         const contentPages = Math.max(1, pages - 1);
-        for (let i=1; i<=pages; i++) {
+        for (let i = 1; i <= pages; i++) {
           doc.setPage(i);
+
+          // TOC breadcrumb (above the standard footer line)
+          const tocY = H - 12.5;
+          // Pages beyond the canonical 6 are policy-register continuation —
+          // map them to the last "Policies" label so the highlight tracks.
+          const currentSection = Math.min(i, PAGE_LABELS.length);
+          // Measure total breadcrumb width so we can center it
+          let totalW = 0;
+          PAGE_LABELS.forEach((lbl, idx) => {
+            const isCurrent = idx + 1 === currentSection;
+            setFont('helvetica', isCurrent ? 'bold' : 'normal', 5.4);
+            totalW += doc.getTextWidth(pdfSafe(lbl));
+            if (idx < PAGE_LABELS.length - 1) totalW += 5;  // separator gap
+          });
+          let tocX = (W - totalW) / 2;
+          PAGE_LABELS.forEach((lbl, idx) => {
+            const isCurrent = idx + 1 === currentSection;
+            setFont('helvetica', isCurrent ? 'bold' : 'normal', 5.4, isCurrent ? T.primary : T.text3);
+            const lblW = doc.getTextWidth(pdfSafe(lbl));
+            doc.text(pdfSafe(lbl), tocX, tocY);
+            // Highlight underline on the current label so the eye lands on it
+            if (isCurrent) {
+              doc.setDrawColor(...T.primary); doc.setLineWidth(0.5);
+              doc.line(tocX, tocY + 1.2, tocX + lblW, tocY + 1.2);
+            }
+            tocX += lblW;
+            if (idx < PAGE_LABELS.length - 1) {
+              doc.setFillColor(...T.text4);
+              doc.circle(tocX + 2.5, tocY - 1.3, 0.5, 'F');
+              tocX += 5;
+            }
+          });
+
+          // Standard footer line + page number
           doc.setDrawColor(...T.border); doc.setLineWidth(0.15); doc.line(M, H-9, W-M, H-9);
           text('PolicyLens · Confidential · For Financial Consultant Use', M, H-5, {size:5.6, color:T.text3});
           if (advisorName) text(advisorName + (advisorCompany ? ' · ' + advisorCompany : ''), W/2, H-5, {size:5.6, color:T.text3, align:'center'});
@@ -45867,6 +45975,17 @@ function ReportTab() {
       // Top eyebrow row
       label('PolicyLens', M, 14, T.primary);
       text('Confidential portfolio review', M + 25, 14, { size: 6.4, color: T.text3 });
+      // v2.4.0-rc1.85 — active scenario tag (only shown when not baseline).
+      // Sits beneath the section eyebrow so it's clear this report reflects
+      // a "what if?" overlay, not the client's current data.
+      if (scenario && scenario !== 'baseline' && SCENARIO_LABELS[scenario]) {
+        const tagText = 'WHAT-IF SCENARIO: ' + SCENARIO_LABELS[scenario].toUpperCase();
+        setFont('helvetica', 'bold', 5.6, T.warn);
+        const tagW = doc.getTextWidth(pdfSafe(tagText)) + 8;
+        doc.setFillColor(...T.warnSoft); doc.setDrawColor(...T.warn); doc.setLineWidth(0.3);
+        doc.roundedRect(M, 22, tagW, 5.4, 2.7, 2.7, 'FD');
+        text(tagText, M + 4, 25.6, { size: 5.6, style: 'bold', color: T.warn });
+      }
       const coverDateStr = today.toUpperCase();
       text(coverDateStr, W - M, 14, { size: 5.8, style: 'bold', color: T.text3, align: 'right', charSpace: 0.6 });
       setFont('helvetica', 'bold', 5.8, T.text3);
@@ -46830,7 +46949,7 @@ function ReportTab() {
       const doc = new jsPDF('l','mm','a4');
       const W = 297, H = 210, M = 10, CW = W - M * 2;
 
-      const T = {
+      const T_COLOR = {
         bg:[250,246,238],
         paper:[255,251,246],
         surface:[255,248,239],
@@ -46864,6 +46983,31 @@ function ReportTab() {
         blushSoft:[252,229,229],
         white:[255,255,255]
       };
+      // v2.4.0-rc1.85 — print-mode B&W palette derived from the colour
+      // palette by luminance. Same shape as T_COLOR, all RGB triples
+      // collapsed to grayscale. Triggered by the printMode preference
+      // set on the Report tab.
+      const T_BW = (() => {
+        const lum = ([r, g, b]) => Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+        const gray = (l) => [l, l, l];
+        const darkenBy = (c, by) => gray(Math.max(0, lum(c) - by));
+        const out = {};
+        Object.entries(T_COLOR).forEach(([k, v]) => {
+          if (/^(bg|paper|surface|surface2|recessed|tableHead|tableAlt|white)$/.test(k)) {
+            out[k] = gray(Math.max(245, lum(v)));
+          } else if (/^(text|text2|text3|text4)$/.test(k)) {
+            out[k] = gray(Math.min(160, lum(v)));
+          } else if (/Soft$/.test(k)) {
+            out[k] = gray(228);
+          } else if (/^border/.test(k)) {
+            out[k] = gray(190);
+          } else {
+            out[k] = darkenBy(v, 30);
+          }
+        });
+        return out;
+      })();
+      const T = printMode ? T_BW : T_COLOR;
 
       // v2.4.0-rc1.65 — locked typographic scale + per-card-type accent
       // mapping. Replaces the ~11 inline font sizes and rainbow accents
@@ -48085,21 +48229,56 @@ function ReportTab() {
               "Download Visual PDF" → "Download Individual Report"
             so the FC sees report-type names instead of file-format names. */}
         <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
-          <button onClick={generateFamilyVisualReport} disabled={generatingFamilyVisual || generatingVisual || generating || !activeClientId}
+          {/* v2.4.0-rc1.85 — Scenario picker (low-friction "What if?" presets).
+              Single-click selection, persisted across sessions. The active
+              preset modifies the working profile (monthlyIncome, dependants,
+              maritalStatus) so the live preview and generated PDF reflect
+              the scenario without the FC having to edit profile fields. */}
+          <select value={scenario} onChange={e=>updateScenario(e.target.value)}
+            title="Apply a 'What if?' scenario to the report"
+            style={{
+              height:36, padding:'0 12px', fontSize:12, fontWeight:500,
+              borderRadius:999, background: scenario==='baseline' ? 'var(--bg2)' : T_V2.gold + '14',
+              color: scenario==='baseline' ? 'var(--text2)' : T_V2.gold,
+              border: `1px solid ${scenario==='baseline' ? T_V2.border : T_V2.gold}`,
+              cursor:'pointer', fontFamily:T_V2.sansFamily, appearance:'none',
+              backgroundImage:'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'10\' height=\'6\' viewBox=\'0 0 10 6\'><path d=\'M1 1l4 4 4-4\' stroke=\'%23999\' stroke-width=\'1.5\' fill=\'none\'/></svg>")',
+              backgroundRepeat:'no-repeat', backgroundPosition:'right 10px center', paddingRight:26
+            }}>
+            <option value="baseline">What if: Baseline</option>
+            <option value="income-30">What if: Income drops 30%</option>
+            <option value="new-child">What if: New child arrives</option>
+            <option value="married">What if: Married next year</option>
+          </select>
+          {/* Print-mode toggle — single click switches palette to grayscale
+              for monochrome printer output. Persisted. */}
+          <button onClick={()=>updatePrintMode(!printMode)}
+            title="Toggle print-friendly (B&W) palette for monochrome printers"
+            style={{
+              height:36, padding:'0 14px', fontSize:12, fontWeight:500,
+              borderRadius:999,
+              background: printMode ? 'var(--text2)' : 'var(--bg2)',
+              color: printMode ? '#fff' : 'var(--text2)',
+              border: `1px solid ${printMode ? 'var(--text2)' : T_V2.border}`,
+              cursor:'pointer', fontFamily:T_V2.sansFamily, whiteSpace:'nowrap'
+            }}>
+            {printMode ? '◼ Print B&W' : '◻ Print B&W'}
+          </button>
+          <button onClick={generateFamilyVisualReport} disabled={generatingFamilyVisual || generatingVisual || !activeClientId}
             style={{
               height:36,padding:'0 16px',fontSize:12.5,fontWeight:600,
               borderRadius:999,background:'var(--bg2)',color:'var(--text2)',
               border:`1px solid ${T_V2.border}`,cursor:'pointer',whiteSpace:'nowrap',
-              fontFamily:T_V2.sansFamily,opacity:(generatingFamilyVisual || generatingVisual || generating || !activeClientId)?0.5:1,
+              fontFamily:T_V2.sansFamily,opacity:(generatingFamilyVisual || generatingVisual || !activeClientId)?0.5:1,
             }}>
             {generatingFamilyVisual ? '⏳ Rendering…' : '👨‍👩‍👧‍👦 Family Report'}
           </button>
-          <button onClick={generateVisualReport} disabled={generatingVisual || generating || policies.length===0}
+          <button onClick={generateVisualReport} disabled={generatingVisual || policies.length===0}
             style={{
               height:36,padding:'0 18px',fontSize:12.5,fontWeight:600,
               borderRadius:999,background:'var(--gold)',color:'#fff',
               border:'1px solid var(--gold)',cursor:'pointer',whiteSpace:'nowrap',
-              fontFamily:T_V2.sansFamily,opacity:(generatingVisual || generating || policies.length===0)?0.5:1,
+              fontFamily:T_V2.sansFamily,opacity:(generatingVisual || policies.length===0)?0.5:1,
               boxShadow:'0 1px 2px rgba(60,40,20,0.06)',
             }}>
             {generatingVisual ? '⏳ Rendering charts…' : '⬇ Download Individual Report'}
