@@ -258,20 +258,19 @@ label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;lett
   .modal{max-width:95vw!important;max-height:90vh!important;padding:16px!important;}
 }
 
-/* ===== CKG Suite Strip — global cross-tool nav (LEGACY, pre-v2.4) =====
-   v2.4.0-rc1.9: PolicyLens now renders its own cream-themed PLSuiteStrip
-   inside the React tree, providing the same cross-tool nav (← CKG Suite
-   pill + breadcrumb) plus a live Drive sync indicator. The legacy black
-   strip below is suppressed (display: none) and the body's reserved
-   padding zeroed out. Style rules retained for future reactivation if
-   needed. ============================================================ */
-:root { --ckg-strip-h: 0px; }
-@media (max-width: 640px) { :root { --ckg-strip-h: 0px; } }
-body { padding-top: 0 !important; }
-.ckg-suite-strip { display: none !important; }
-.ckg-suite-strip-LEGACY-UNUSED {
+/* ===== CKG Suite Strip — global cross-tool nav ===========================
+   PolicyLens uses the canonical CKG Suite Strip — same legacy black bar
+   that FundLens / Illustration / AutoDial / Report Builder share. The
+   global /_ckg-strip-enhance.js script (injected by ckgtools middleware)
+   turns the CKG pill into a tool-switcher dropdown. The previous
+   React-rendered PLSuiteStrip was removed in favour of this consistent,
+   shared chrome. ====================================================== */
+:root { --ckg-strip-h: 36px; }
+@media (max-width: 640px) { :root { --ckg-strip-h: 44px; } }
+body { padding-top: var(--ckg-strip-h) !important; }
+.ckg-suite-strip {
   position: fixed; top: 0; left: 0; right: 0;
-  height: 36px;
+  height: var(--ckg-strip-h);
   background: #0a0a0a;
   border-bottom: 1px solid rgba(214, 168, 122, 0.18);
   display: flex; align-items: center;
@@ -833,259 +832,11 @@ function PLSparkline({ T = T_V2, data, color, width = 90, height = 26 }) {
   );
 }
 
-// ── COMPONENT: PLSuiteStrip — internal CKG cross-tool nav ──
-// 2026-05-05: Switched from PolicyLens cream/light theme to the dark+
-//   brass aesthetic shared by FundLens / Illustration / AutoDial /
-//   Report Builder. Hardcodes the suite-strip palette so it stays
-//   consistent with the hub and other tools regardless of the
-//   PolicyLens light/dark mode toggle (which still controls the
-//   tool's interior).
-//
-//   Click "← CKG ▾" pill → opens an inline dropdown listing Suite
-//   Home + all 6 tools, matching what /_ckg-strip-enhance.js
-//   produces on the other tools. Implements its own dropdown state
-//   inside React so it survives re-renders (the plain-DOM enhancer
-//   script can't safely mutate React-managed nodes).
-//
-//   Right side keeps the live Drive sync indicator unchanged.
-function PLSuiteStrip() {
-  const [menuOpen, setMenuOpen] = React.useState(false);
-  const wrapRef = React.useRef(null);
-
-  let clientName = '', driveStatus = 'disconnected';
-  try {
-    const ctx = React.useContext(AppCtx);
-    if (ctx) {
-      clientName = ctx.clientName || '';
-      driveStatus = ctx.driveState?.status || (typeof getDriveStatus === 'function' ? getDriveStatus() : 'disconnected');
-    }
-  } catch(_) {}
-  const isMobile = (typeof useViewportIsMobile === 'function') ? useViewportIsMobile() : false;
-
-  // Click-outside / Escape close
-  React.useEffect(() => {
-    if (!menuOpen) return undefined;
-    function onClick(e) {
-      if (wrapRef.current && !wrapRef.current.contains(e.target)) setMenuOpen(false);
-    }
-    function onKey(e) { if (e.key === 'Escape') setMenuOpen(false); }
-    document.addEventListener('click', onClick);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('click', onClick);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [menuOpen]);
-
-  // Hardcoded dark palette so PolicyLens's strip matches the hub
-  // and the other tools regardless of internal theme state.
-  const STRIP = {
-    bg:        '#0a0a0a',
-    border:    'rgba(214, 168, 122, 0.18)',
-    pillBg:    'transparent',
-    pillBr:    'rgba(214, 168, 122, 0.32)',
-    pillFg:    '#d6a87a',
-    crumb:     'rgba(244, 241, 232, 0.58)',
-    crumbDim:  'rgba(244, 241, 232, 0.36)',
-    crumbStrong: 'rgba(244, 241, 232, 0.78)',
-    sansFamily: '"Geist", "Inter", system-ui, -apple-system, sans-serif',
-    monoFamily: '"Geist Mono", "JetBrains Mono", ui-monospace, monospace',
-  };
-  const driveIndicator = (() => {
-    if (driveStatus === 'connected')         return { color: 'oklch(0.78 0.13 145)', text: 'Drive synced' };
-    if (driveStatus === 'checking')          return { color: 'oklch(0.78 0.14 65)',  text: 'Checking Drive…' };
-    if (driveStatus === 'reconnect-needed')  return { color: 'oklch(0.78 0.14 65)',  text: 'Reconnect Drive' };
-    return { color: 'rgba(244, 241, 232, 0.40)', text: 'Drive offline' };
-  })();
-
-  // v2.4.0-rc1.94 — synced with canonical ckgtools/src/lib/tools.ts:
-  // CRMLens flipped from disabled→live ('Drive-first CRM'), Notes added
-  // as a separate front door into the same Apps Script web app
-  // ('Appointment notes · auto-CRM'). Both live at /tools/crmlens/ and
-  // /tools/notes/ on ckgtools.com behind same-domain wrappers.
-  const NAV = [
-    { id: 'home',         name: 'Suite Home',         desc: 'All tools',                       href: 'https://ckgtools.com/',                          primary: true },
-    { id: 'fundlens',     name: 'FundLens',           desc: 'Portfolio analysis',              href: 'https://ckgtools.com/tools/fundlens/'                           },
-    { id: 'policylens',   name: 'PolicyLens',         desc: 'Policy intelligence',             href: 'https://ckgtools.com/tools/policylens/',         current: true },
-    { id: 'illustration', name: 'Illustration Studio', desc: 'Client illustrations',           href: 'https://ckgtools.com/tools/illustration/'                       },
-    { id: 'autodial',     name: 'AutoDial',           desc: 'Calling cockpit',                 href: 'https://ckgtools.com/tools/autodial/'                           },
-    { id: 'reports',      name: 'Report Builder',     desc: 'Snapshot reports',                href: 'https://ckgtools.com/tools/report-builder/docs/'                },
-    { id: 'crmlens',      name: 'CRMLens',            desc: 'Drive-first CRM',                 href: 'https://ckgtools.com/tools/crmlens/'                            },
-    { id: 'notes',        name: 'Notes',              desc: 'Appointment notes - auto-CRM',    href: 'https://ckgtools.com/tools/notes/'                              },
-  ];
-
-  // Mini tool marks — kept in sync with ckgtools/src/lib/tools.ts +
-  // ckgtools/public/_ckg-strip-enhance.js. Inlined as React-compatible
-  // strings so we can dangerouslySetInnerHTML on the mark slot.
-  const STRIP_MARKS = {
-    home:           '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="13" fill="#0f1d2d"/><rect x="1" y="1" width="62" height="62" rx="12" fill="none" stroke="oklch(0.82 0.095 70 / 0.35)" stroke-width="0.6"/><rect x="14" y="14" width="14" height="14" rx="2" fill="#d8c895"/><rect x="36" y="14" width="14" height="14" rx="2" fill="#d8c895" opacity="0.7"/><rect x="14" y="36" width="14" height="14" rx="2" fill="#d8c895" opacity="0.7"/><rect x="36" y="36" width="14" height="14" rx="2" fill="#d8c895"/></svg>',
-    fundlens:       '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="13" fill="#0f1d2d"/><rect x="1" y="1" width="62" height="62" rx="12" fill="none" stroke="oklch(0.82 0.095 70 / 0.35)" stroke-width="0.6"/><circle cx="32" cy="32" r="22" fill="none" stroke="#d8c895" stroke-width="2.5"/><rect x="17" y="38" width="4" height="9" rx="0.6" fill="#d8c895"/><rect x="23" y="34" width="4" height="13" rx="0.6" fill="#d8c895"/><rect x="29" y="29" width="4" height="18" rx="0.6" fill="#d8c895"/><rect x="35" y="23" width="4" height="24" rx="0.6" fill="#d8c895"/><line x1="15" y1="48" x2="42" y2="48" stroke="#d8c895" stroke-width="1.1" stroke-linecap="round" opacity="0.7"/><path d="M 41 22 L 47 16" stroke="#d8c895" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M 44 16 L 47 16 L 47 19" stroke="#d8c895" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>',
-    policylens:     '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="13" fill="#0a1421"/><rect x="1" y="1" width="62" height="62" rx="12" fill="none" stroke="oklch(0.82 0.095 70 / 0.35)" stroke-width="0.6"/><circle cx="26" cy="26" r="13.5" fill="oklch(0.82 0.095 70 / 0.10)"/><circle cx="26" cy="26" r="13.5" fill="none" stroke="#d8c895" stroke-width="3"/><circle cx="21" cy="21" r="2.6" fill="oklch(0.92 0.060 75 / 0.65)"/><line x1="36" y1="36" x2="50" y2="50" stroke="#d8c895" stroke-width="5" stroke-linecap="round"/><line x1="38" y1="38" x2="48" y2="48" stroke="oklch(0.92 0.060 75 / 0.45)" stroke-width="1.4" stroke-linecap="round"/></svg>',
-    illustration:   '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="pl-suite-illu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d8c895" stop-opacity="0.55"/><stop offset="1" stop-color="#d8c895" stop-opacity="0.05"/></linearGradient></defs><rect width="64" height="64" rx="13" fill="#0f1d2d"/><rect x="1" y="1" width="62" height="62" rx="12" fill="none" stroke="oklch(0.82 0.095 70 / 0.35)" stroke-width="0.6"/><line x1="10" y1="14" x2="10" y2="50" stroke="oklch(0.82 0.095 70 / 0.30)" stroke-width="0.6"/><line x1="10" y1="50" x2="55" y2="50" stroke="oklch(0.82 0.095 70 / 0.30)" stroke-width="0.6"/><path d="M 10 50 L 10 44 Q 22 42 32 33 T 55 12 L 55 50 Z" fill="url(#pl-suite-illu)"/><path d="M 10 44 Q 22 42 32 33 T 55 12" fill="none" stroke="#d8c895" stroke-width="2.2" stroke-linecap="round"/><circle cx="55" cy="12" r="2.2" fill="#d8c895"/></svg>',
-    autodial:       '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="13" fill="#0f1d2d"/><rect x="1" y="1" width="62" height="62" rx="12" fill="none" stroke="oklch(0.82 0.095 70 / 0.35)" stroke-width="0.6"/><circle cx="30" cy="33" r="15" fill="oklch(0.82 0.095 70 / 0.07)"/><path d="M21 21a3 3 0 0 1 3-3h4l3 8-4 2.5a16 16 0 0 0 8.5 8.5L38 32l8 3v4a3 3 0 0 1-3 3A22 22 0 0 1 21 21z" fill="none" stroke="#d8c895" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/><line x1="38" y1="22" x2="48" y2="12" stroke="#d8c895" stroke-width="2.2" stroke-linecap="round"/><polyline points="42,12 48,12 48,18" stroke="#d8c895" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>',
-    reports:        '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="13" fill="oklch(0.20 0.012 80)"/><rect x="9" y="16" width="20" height="26" rx="2.5" fill="oklch(0.30 0.012 30 / 0.55)" stroke="oklch(0.62 0.020 80 / 0.6)" stroke-width="1"/><rect x="11" y="13" width="20" height="26" rx="2.5" fill="oklch(0.20 0.012 80)" stroke="oklch(0.86 0.020 80)" stroke-width="1.4"/><path d="M25 13v5a2 2 0 0 0 2 2h4" fill="none" stroke="oklch(0.86 0.020 80)" stroke-width="1.4"/><rect x="13.5" y="29" width="13" height="5" rx="1" fill="oklch(0.78 0.13 28)"/><text x="20" y="32.9" font-family="Geist Mono, monospace" font-size="4" font-weight="700" fill="oklch(0.16 0.005 80)" text-anchor="middle" letter-spacing="0.18">PDF</text><path d="M14 22h11 M14 25h9" stroke="oklch(0.62 0.020 80)" stroke-width="1" stroke-linecap="round"/><path d="M33 27h6 m-2 -2 l2 2 -2 2" stroke="oklch(0.82 0.095 70)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/><rect x="40" y="20" width="18" height="24" rx="2.5" fill="oklch(0.18 0.020 250 / 0.85)" stroke="oklch(0.82 0.095 70)" stroke-width="1.4"/><rect x="43.2" y="36" width="2.5" height="5" rx="0.6" fill="oklch(0.62 0.10 240)"/><rect x="46.9" y="33" width="2.5" height="8" rx="0.6" fill="oklch(0.66 0.11 165)"/><rect x="50.6" y="29" width="2.5" height="12" rx="0.6" fill="oklch(0.78 0.12 80)"/><rect x="54.3" y="34" width="2.5" height="7" rx="0.6" fill="oklch(0.62 0.10 240)"/><path d="M43 26h12" stroke="oklch(0.82 0.095 70 / 0.6)" stroke-width="0.8"/><circle cx="55" cy="25" r="1" fill="oklch(0.82 0.095 70)"/><rect x="42" y="40" width="11" height="3" rx="0.8" fill="oklch(0.82 0.095 70)"/></svg>',
-    crmlens:        '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="13" fill="oklch(0.20 0.012 80)"/><ellipse cx="32" cy="32" rx="22" ry="10" fill="none" stroke="oklch(0.62 0.020 80 / 0.7)" stroke-width="1.4" transform="rotate(-25 32 32)"/><ellipse cx="32" cy="32" rx="22" ry="10" fill="none" stroke="oklch(0.62 0.020 80 / 0.7)" stroke-width="1.4" transform="rotate(25 32 32)"/><circle cx="32" cy="32" r="5.5" fill="oklch(0.82 0.095 70)"/><circle cx="32" cy="32" r="5.5" fill="none" stroke="oklch(0.20 0.012 80)" stroke-width="1.6"/><circle cx="32" cy="32" r="2" fill="oklch(0.20 0.012 80)"/><circle cx="12" cy="22.5" r="2" fill="oklch(0.86 0.020 80)"/><circle cx="52" cy="41.5" r="2" fill="oklch(0.86 0.020 80)"/></svg>',
-    notes:          '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="13" fill="oklch(0.20 0.012 80)"/><rect x="1" y="1" width="62" height="62" rx="12" fill="none" stroke="oklch(0.82 0.095 70 / 0.35)" stroke-width="0.6"/><rect x="14" y="13" width="34" height="40" rx="2" fill="oklch(0.20 0.012 80)" stroke="oklch(0.82 0.095 70)" stroke-width="1.6"/><path d="M40 13 L48 21 L40 21 Z" fill="oklch(0.82 0.095 70 / 0.18)" stroke="oklch(0.82 0.095 70)" stroke-width="1.4" stroke-linejoin="round"/><line x1="20" y1="28" x2="42" y2="28" stroke="oklch(0.82 0.095 70 / 0.55)" stroke-width="1"/><line x1="20" y1="34" x2="42" y2="34" stroke="oklch(0.82 0.095 70 / 0.55)" stroke-width="1"/><line x1="20" y1="40" x2="36" y2="40" stroke="oklch(0.82 0.095 70 / 0.55)" stroke-width="1"/><line x1="20" y1="46" x2="32" y2="46" stroke="oklch(0.82 0.095 70 / 0.55)" stroke-width="1"/><path d="M52 47 L53.5 50.2 L57 50.7 L54.4 53.1 L55 56.5 L52 54.9 L49 56.5 L49.6 53.1 L47 50.7 L50.5 50.2 Z" fill="oklch(0.82 0.095 70)" stroke="none"/></svg>',
-  };
-
-  function renderItem(t) {
-    const itemBaseStyle = {
-      display: 'grid', gridTemplateColumns: '28px 1fr auto', gap: 10,
-      alignItems: 'center',
-      padding: '10px 12px',
-      borderRadius: 8,
-      textDecoration: 'none',
-      color: '#f4f1e8',
-      fontSize: 13,
-      border: '1px solid transparent',
-      background: 'transparent',
-      transition: 'background 120ms ease-out, border-color 120ms ease-out',
-    };
-    if (t.current) {
-      itemBaseStyle.background = 'rgba(214, 168, 122, 0.10)';
-      itemBaseStyle.borderColor = 'rgba(214, 168, 122, 0.28)';
-    }
-    if (t.primary) {
-      itemBaseStyle.borderBottom = '1px solid rgba(255,255,255,0.06)';
-      itemBaseStyle.borderRadius = '8px 8px 0 0';
-      itemBaseStyle.marginBottom = 4;
-      itemBaseStyle.paddingBottom = 12;
-    }
-    if (t.disabled) {
-      itemBaseStyle.opacity = 0.42;
-      itemBaseStyle.cursor = 'not-allowed';
-    } else {
-      itemBaseStyle.cursor = 'pointer';
-    }
-    const markStyle = {
-      width: 28, height: 28, borderRadius: 6, overflow: 'hidden',
-      display: 'block', flexShrink: 0,
-    };
-    const markHtml = STRIP_MARKS[t.id] || '';
-    const body = (
-      <>
-        <span style={markStyle} aria-hidden="true" dangerouslySetInnerHTML={{ __html: markHtml }} />
-        <span>
-          <span style={{ fontWeight: 500, lineHeight: 1.2, color: t.current ? '#d6a87a' : '#f4f1e8' }}>{t.name}</span>
-          <span style={{ display: 'block', fontSize: 11, color: 'rgba(244,241,232,0.5)', marginTop: 2, lineHeight: 1.2 }}>{t.desc}</span>
-        </span>
-        {t.disabled
-          ? <span style={{ fontFamily: STRIP.monoFamily, fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(244,241,232,0.4)', border: '1px solid rgba(255,255,255,0.08)', padding: '3px 8px', borderRadius: 3 }}>Coming Soon</span>
-          : <span style={{ color: 'rgba(244,241,232,0.4)', fontSize: 12 }} aria-hidden="true">→</span>
-        }
-      </>
-    );
-    if (t.disabled) {
-      return (
-        <div key={t.id} role="menuitem" aria-disabled="true" style={itemBaseStyle}>{body}</div>
-      );
-    }
-    return (
-      <a key={t.id} href={t.href} role="menuitem" aria-current={t.current ? 'page' : undefined} style={itemBaseStyle}>{body}</a>
-    );
-  }
-
-  return (
-    <div ref={wrapRef} style={{ position: 'relative', flexShrink: 0, zIndex: 50 }}>
-      <div style={{
-        height: isMobile ? 44 : 36,
-        background: STRIP.bg,
-        borderBottom: '1px solid ' + STRIP.border,
-        display: 'flex', alignItems: 'center', gap: 12,
-        padding: isMobile ? '0 12px' : '0 18px',
-        fontFamily: STRIP.sansFamily,
-      }}>
-        <button
-          onClick={() => setMenuOpen(o => !o)}
-          title="Switch tool"
-          aria-haspopup="menu"
-          aria-expanded={menuOpen ? 'true' : 'false'}
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: 6,
-            padding: isMobile ? '5px 12px' : '6px 14px',
-            background: STRIP.pillBg, color: STRIP.pillFg,
-            border: '1px solid ' + STRIP.pillBr,
-            borderRadius: 999,
-            fontFamily: STRIP.sansFamily, fontSize: isMobile ? 11 : 11.5, fontWeight: 500,
-            letterSpacing: '0.06em',
-            cursor: 'pointer', flexShrink: 0,
-            transition: 'all 150ms ease-out',
-          }}>
-          <span style={{ fontSize: isMobile ? 11 : 12 }}>←</span>
-          <span>CKG</span>
-          <span style={{ fontSize: 9, opacity: 0.6, marginLeft: 1 }}>▾</span>
-        </button>
-
-        {!isMobile && (
-          <span style={{
-            fontFamily: STRIP.monoFamily, fontSize: 10.5,
-            letterSpacing: '0.18em', textTransform: 'uppercase',
-            color: STRIP.crumb, minWidth: 0, overflow: 'hidden',
-            whiteSpace: 'nowrap', textOverflow: 'ellipsis',
-          }}>
-            Suite <span style={{ color: STRIP.crumbDim, margin: '0 6px' }}>/</span>
-            <span style={{ color: STRIP.crumbStrong, fontWeight: 500 }}>PolicyLens</span>
-            {clientName && (<>
-              <span style={{ color: STRIP.crumbDim, margin: '0 6px' }}>/</span>
-              <span style={{ color: STRIP.crumbStrong }}>{clientName}</span>
-            </>)}
-          </span>
-        )}
-
-        {/* v2.4.0-rc1.70: on mobile the breadcrumb is hidden — the empty
-            middle space gets the active client name instead. The cream
-            PolicyLens nav can no longer fit the full name (it truncates
-            to "C..."), so surfacing it up here keeps the FC anchored on
-            who they're working with without needing to tap the avatar
-            pill. Same Geist sans, lighter cream weight, ellipsis on
-            overflow. Centered between the CKG pill and Drive indicator. */}
-        {isMobile && clientName && (
-          <span style={{
-            flex: '1 1 auto',
-            minWidth: 0,
-            textAlign: 'center',
-            fontFamily: STRIP.sansFamily,
-            fontSize: 11.5, fontWeight: 500,
-            color: 'rgba(244, 241, 232, 0.85)',
-            letterSpacing: '0.01em',
-            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-            padding: '0 8px',
-          }}>{clientName}</span>
-        )}
-
-        <div style={{ marginLeft: isMobile && clientName ? 0 : 'auto', display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-          <span style={{
-            width: 7, height: 7, borderRadius: 999,
-            background: driveIndicator.color,
-            boxShadow: driveStatus === 'connected' ? '0 0 6px ' + driveIndicator.color : 'none',
-          }} />
-          <span style={{ fontFamily: STRIP.sansFamily, fontSize: 11, color: 'rgba(244, 241, 232, 0.66)' }}>
-            {driveIndicator.text}
-          </span>
-        </div>
-      </div>
-
-      {menuOpen && (
-        <div role="menu" aria-label="Switch tool"
-          style={{
-            position: 'absolute', top: '100%', left: isMobile ? 6 : 14,
-            marginTop: 4,
-            background: '#0a0a0a',
-            border: '1px solid rgba(214, 168, 122, 0.32)',
-            borderRadius: 12,
-            boxShadow: '0 24px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04)',
-            fontFamily: STRIP.sansFamily,
-            minWidth: 280, maxWidth: '92vw',
-            padding: 6,
-            zIndex: 999998,
-          }}>
-          {NAV.map(renderItem)}
-        </div>
-      )}
-    </div>
-  );
-}
-
+// PLSuiteStrip removed - PolicyLens now uses the global CKG suite strip
+// shared with FundLens / Illustration / AutoDial / Report Builder.
+// The Drive sync indicator that used to live in this component is no
+// longer surfaced here; a deferred follow-up could re-add it as a small
+// inline affordance in PolicyLens's own header if needed.
 // Expose for v2 components in later batches (and console diagnostics).
 if (typeof window !== 'undefined') {
   window.T_V2 = T_V2;
@@ -21471,11 +21222,7 @@ function App() {
         </div>
       </div>}
       <DriveReconnectBar />
-      {/* v2.4.0-rc1.6: Internal CKG Suite Strip — slim cream bar that
-          sits ABOVE the PolicyLens header, providing cross-tool nav
-          + breadcrumb + sync indicator. Per the design brief Round 2
-          (G2). Heights match the prototype: 36px desktop, 44px mobile. */}
-      <PLSuiteStrip />
+
       <Header />
       {/* v2.4.0-rc1.61: explicit width clamp + boxSizing on the app content
           wrapper. Even though `overflow:auto` allowed scroll, child grids
