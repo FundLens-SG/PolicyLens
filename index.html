@@ -611,9 +611,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.5';
-const APP_VERSION_DATE = '2026-05-13';
-const APP_VERSION_NAME = 'AI smartness Tier F Phase 2 — focused ownership cross-check (rider-of-parent confusion detector)';
+const APP_VERSION = 'v2.4.0-rc2.6';
+const APP_VERSION_DATE = '2026-05-14';
+const APP_VERSION_NAME = 'UX polish: per-file bulk progress, routing conflict tooltip, per-policy analyst note';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -5517,6 +5517,67 @@ async function verifyLowConfidenceFields(parsed, contentBlocks, opts = {}) {
       reason: e?.message || 'verifier-error'
     };
   }
+}
+
+// ── rc2.6 — PER-POLICY ANALYST NOTE ──
+// Pure function: given a policy, derive a 1-sentence analyst takeaway.
+// Used in the policy card / form to give the FC a quick "what should I
+// notice about THIS policy" prompt without burning AI tokens. Falls
+// back to policy.notes when an empty derivation. Deterministic — no AI
+// call. Returns null when nothing useful to surface.
+function policyAnalystNote(policy) {
+  if (!policy || typeof policy !== 'object') return null;
+  const insights = [];
+  const sa = parseFloat(policy.sumAssured) || 0;
+  const prem = parseFloat(policy.annualPremium ?? policy.premiumAmount) || 0;
+  const mult = parseFloat(policy.saMultiplier) || 1;
+  const multEndAge = parseInt(policy.multiplierEndAge, 10);
+  const subType = String(policy.subType || '').trim();
+  const cat = String(policy.category || '').trim();
+  // 1. SA multiplier expiry — cover drops at end-age
+  if (mult > 1 && multEndAge && multEndAge < 90) {
+    insights.push(mult + 'x SA multiplier ends at age ' + multEndAge + ' — cover effectively reduces from S$' + Math.round(sa * mult).toLocaleString('en-SG') + ' to S$' + Math.round(sa).toLocaleString('en-SG') + ' from that point.');
+  }
+  // 2. Whole-life / endowment with low cash value vs premium
+  const cv = parseFloat(policy.cashValue) || 0;
+  const yrsInForce = parseFloat(policy.yearsInForce || policy.yearsInforce) || 0;
+  if ((subType === 'Whole Life' || cat === 'savings' || cat === 'investment') && cv > 0 && prem > 0 && yrsInForce > 3) {
+    const totalPaid = prem * yrsInForce;
+    if (cv < totalPaid * 0.55) {
+      insights.push('Cash value S$' + Math.round(cv).toLocaleString('en-SG') + ' is below 55% of total premiums paid (~S$' + Math.round(totalPaid).toLocaleString('en-SG') + ') — review surrender vs continuation.');
+    }
+  }
+  // 3. Single premium with future maturity — drawdown candidate
+  if (policy.premSingle || /single\s*premium/i.test(policy.premiumStructure || '')) {
+    insights.push('Single premium policy — no further outflow expected. Confirm payout schedule and surrender penalties.');
+  }
+  // 4. Premium continues past 65
+  const premEndAge = parseInt(policy.premEndAge, 10);
+  if (premEndAge && premEndAge > 65) {
+    insights.push('Premium pays until age ' + premEndAge + ' — affects retirement cash flow planning.');
+  }
+  // 5. ILP with low protection-to-AV ratio
+  if (cat === 'investment' && /ilp/i.test(subType)) {
+    const av = parseFloat(policy.accountValue || policy.cashValue) || 0;
+    const protRatio = parseFloat(policy.ilpProtPct) || 101;
+    if (av > 100000 && protRatio <= 110) {
+      insights.push('ILP with ' + protRatio + '% protection on a S$' + Math.round(av).toLocaleString('en-SG') + ' AV — leans investment-heavy, low death-cover leverage.');
+    }
+  }
+  // 6. Health/ISP without rider
+  if (cat === 'health' && /integrated\s*shield/i.test(subType) && policy.hasRider === false) {
+    insights.push('ISP without rider — deductible + co-insurance applies on every hospitalisation. Consider adding rider for full cover.');
+  }
+  // 7. Term life expiring soon
+  if (subType === 'Term Life') {
+    const matY = policy.maturityDate ? new Date(policy.maturityDate).getFullYear() : null;
+    const nowY = new Date().getFullYear();
+    if (matY && matY - nowY <= 5 && matY - nowY > 0) {
+      insights.push('Term Life expires in ' + (matY - nowY) + ' year(s) — convert to permanent before expiry to lock in insurability.');
+    }
+  }
+  if (insights.length === 0) return null;
+  return insights[0]; // surface the most important one to keep noise low
 }
 
 // ── rc2.0 — CROSS-POLICY PORTFOLIO AUDIT ──
@@ -47857,6 +47918,7 @@ function CardRoutingBadge({
   setItems
 }) {
   const [open, setOpen] = useState(false);
+  const [hoveringConflict, setHoveringConflict] = useState(false);
   const [allClients, setAllClients] = useState(null);
   // Load all clients lazily on first open (avoids hitting IDB for every card on render)
   useEffect(() => {
@@ -47897,13 +47959,33 @@ function CardRoutingBadge({
     }));
     setOpen(false);
   };
+
+  // rc2.6: detect conflict reasons so we can surface a richer side-by-side
+  // tooltip on hover (vs the FC having to click the badge to see the
+  // reason). Reasons starting with "CONFLICT:" come from the rc2.5
+  // focused-ownership cross-check.
+  const reason = sug && sug.reason || '';
+  const isConflict = /^CONFLICT:/i.test(reason);
+  let conflictPrimary = null,
+    conflictSecondary = null;
+  if (isConflict) {
+    const m = reason.match(/primary routing said (.+?), focused ownership pass says (.+?)\.?\s*(?:Verify|$)/i);
+    if (m) {
+      conflictPrimary = m[1].trim();
+      conflictSecondary = m[2].trim();
+    }
+  }
   return /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 5,
-      fontSize: 10.5
+      fontSize: 10.5,
+      position: 'relative',
+      display: 'inline-block'
     }
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => setOpen(o => !o),
+    onMouseEnter: () => isConflict && setHoveringConflict(true),
+    onMouseLeave: () => setHoveringConflict(false),
     style: {
       display: 'inline-flex',
       alignItems: 'center',
@@ -47917,12 +47999,12 @@ function CardRoutingBadge({
       border: '1px solid ' + tone,
       cursor: 'pointer'
     },
-    title: "Click to change which client this policy is routed to"
+    title: isConflict ? 'Routing conflict detected — hover or click to compare' : 'Click to change which client this policy is routed to'
   }, /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 9
     }
-  }, item._routingApplied ? '✓' : '→'), "Route: ", currentTarget, sug && sug.reason ? /*#__PURE__*/React.createElement("span", {
+  }, isConflict ? '⚠' : item._routingApplied ? '✓' : '→'), "Route: ", currentTarget, sug && sug.reason ? /*#__PURE__*/React.createElement("span", {
     style: {
       color: 'var(--text3)',
       fontWeight: 400,
@@ -47934,7 +48016,71 @@ function CardRoutingBadge({
       fontSize: 8,
       marginLeft: 2
     }
-  }, open ? '▾' : '▸')), open && /*#__PURE__*/React.createElement("div", {
+  }, open ? '▾' : '▸')), isConflict && hoveringConflict && conflictPrimary && conflictSecondary && !open && /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'absolute',
+      left: 0,
+      top: 'calc(100% + 4px)',
+      zIndex: 10,
+      padding: '8px 10px',
+      background: 'rgba(45,30,20,.97)',
+      color: '#fff',
+      border: '1px solid rgba(220,140,40,.6)',
+      borderRadius: 6,
+      fontSize: 10.5,
+      lineHeight: 1.5,
+      minWidth: 260,
+      maxWidth: 340,
+      boxShadow: '0 4px 12px rgba(0,0,0,.3)',
+      fontFamily: 'inherit',
+      pointerEvents: 'none'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9,
+      fontWeight: 700,
+      color: '#dc8c28',
+      letterSpacing: '.05em',
+      textTransform: 'uppercase',
+      marginBottom: 5
+    }
+  }, "Routing conflict"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: 'auto 1fr',
+      gap: '4px 8px',
+      marginBottom: 4
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: '#aaa',
+      fontSize: 9.5
+    }
+  }, "Primary AI said:"), /*#__PURE__*/React.createElement("strong", {
+    style: {
+      color: '#fff',
+      fontSize: 10.5
+    }
+  }, conflictPrimary), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: '#aaa',
+      fontSize: 9.5
+    }
+  }, "Focused ownership:"), /*#__PURE__*/React.createElement("strong", {
+    style: {
+      color: '#5ba8a0',
+      fontSize: 10.5
+    }
+  }, conflictSecondary)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9.5,
+      color: '#dcc',
+      fontStyle: 'italic',
+      marginTop: 5,
+      paddingTop: 5,
+      borderTop: '1px solid rgba(255,255,255,.15)'
+    }
+  }, "Click the badge to pick the right client manually.")), open && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 6,
       padding: '8px 10px',
@@ -48882,7 +49028,7 @@ function BulkVerifyModal({
       fontSize: 9,
       color: 'var(--text3)'
     }
-  }, "Batch ", scanProgress.batch, "/", scanProgress.totalBatches, scanProgress.eta ? ' · ' + scanProgress.eta : '')), /*#__PURE__*/React.createElement("div", {
+  }, scanProgress.fileStatus ? `${Object.values(scanProgress.fileStatus).filter(s => s === 'done' || s === 'error').length} / ${Object.keys(scanProgress.fileStatus).length} files` : `Batch ${scanProgress.batch}/${scanProgress.totalBatches}`, scanProgress.eta ? ' · ' + scanProgress.eta : '')), /*#__PURE__*/React.createElement("div", {
     style: {
       height: 4,
       background: 'var(--bg4)',
@@ -48897,7 +49043,55 @@ function BulkVerifyModal({
       borderRadius: 2,
       transition: 'width .5s ease'
     }
-  })), /*#__PURE__*/React.createElement("div", {
+  })), scanProgress.fileStatus ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 6,
+      maxHeight: 120,
+      overflowY: 'auto',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 2
+    }
+  }, Object.entries(scanProgress.fileStatus).map(([fileName, status]) => {
+    const tone = status === 'done' ? 'var(--green2)' : status === 'error' ? 'var(--red)' : status === 'extracting' ? 'var(--gold)' : 'var(--text3)';
+    const icon = status === 'done' ? '✓' : status === 'error' ? '×' : status === 'extracting' ? '…' : '·';
+    return /*#__PURE__*/React.createElement("div", {
+      key: fileName,
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+        fontSize: 9.5,
+        color: 'var(--text2)'
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        display: 'inline-flex',
+        width: 14,
+        height: 14,
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: 9,
+        color: tone,
+        fontWeight: 700
+      }
+    }, icon), /*#__PURE__*/React.createElement("span", {
+      style: {
+        flex: 1,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
+      }
+    }, fileName), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 8.5,
+        color: tone,
+        fontWeight: 600,
+        textTransform: 'uppercase',
+        letterSpacing: '.03em'
+      }
+    }, status));
+  })) : /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 9,
       color: 'var(--text3)',
@@ -51384,6 +51578,17 @@ function Policies() {
         const stages = {};
         for (const j of active) stages[j.stage] = (stages[j.stage] || 0) + 1;
         const stageStr = Object.entries(stages).map(([k, v]) => v + ' ' + k).join(', ');
+        // rc2.6: build a per-file status map for the BulkVerify progress
+        // strip so the FC sees which specific file is currently being
+        // extracted. Falls back to the batch-only view if fileName isn't
+        // available on the job.
+        const fileStatus = {};
+        for (const j of jobs) {
+          if (!j || !j.fileName) continue;
+          let status;
+          if (j.stage === 'done') status = 'done';else if (j.stage === 'failed') status = 'error';else if (j.stage === 'extracting' || j.stage === 'extract') status = 'extracting';else status = 'queued';
+          fileStatus[j.fileName] = status;
+        }
         setScanProgress({
           batch: completed,
           totalBatches: total,
@@ -51393,7 +51598,8 @@ function Policies() {
           startTime: _sessionCost.startTime,
           eta: null,
           bgMode: 'foreground',
-          bgModeReason: null
+          bgModeReason: null,
+          fileStatus: Object.keys(fileStatus).length > 0 ? fileStatus : null
         });
       } else if (done.length > 0) {
         // All done — flush to BulkVerifyModal
@@ -65519,7 +65725,43 @@ function PolicyFormModal({
       setRepoMatches(null);
       setPendingRepoItem(null);
     }
-  }, "Cancel")))), /*#__PURE__*/React.createElement("div", {
+  }, "Cancel")))), (() => {
+    const note = policyAnalystNote(form);
+    if (!note) return null;
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 14,
+        padding: '10px 12px',
+        background: 'rgba(91,168,160,.08)',
+        border: '1px solid rgba(91,168,160,.30)',
+        borderRadius: 8,
+        fontSize: 11.5,
+        color: 'var(--text2)',
+        display: 'flex',
+        gap: 8,
+        alignItems: 'flex-start'
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 13,
+        flexShrink: 0
+      }
+    }, "\uD83D\uDCA1"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        lineHeight: 1.5
+      }
+    }, /*#__PURE__*/React.createElement("strong", {
+      style: {
+        color: 'var(--teal)',
+        fontSize: 10.5,
+        letterSpacing: '.04em',
+        textTransform: 'uppercase',
+        display: 'block',
+        marginBottom: 3
+      }
+    }, "Analyst note"), note));
+  })(), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'flex-end',
