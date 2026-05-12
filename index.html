@@ -611,9 +611,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.13';
+const APP_VERSION = 'v2.4.0-rc2.14';
 const APP_VERSION_DATE = '2026-05-14';
-const APP_VERSION_NAME = 'CRMLens outbound hardening — deletion guard + version arbitration';
+const APP_VERSION_NAME = 'BulkVerify progress fixes — OCR/cancelled stages + failure summary + filename tooltips';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -49911,55 +49911,76 @@ function BulkVerifyModal({
       borderRadius: 2,
       transition: 'width .5s ease'
     }
-  })), scanProgress.fileStatus ? /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 6,
-      maxHeight: 120,
-      overflowY: 'auto',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 2
-    }
-  }, Object.entries(scanProgress.fileStatus).map(([fileName, status]) => {
-    const tone = status === 'done' ? 'var(--green2)' : status === 'error' ? 'var(--red)' : status === 'extracting' ? 'var(--gold)' : 'var(--text3)';
-    const icon = status === 'done' ? '✓' : status === 'error' ? '×' : status === 'extracting' ? '…' : '·';
-    return /*#__PURE__*/React.createElement("div", {
-      key: fileName,
+  })), scanProgress.fileStatus ? (() => {
+    // rc2.14 — also surface a one-line retry/failure summary so the
+    // FC sees at a glance how many files needed a retry vs. failed
+    // outright. Pulls from the same map without an extra prop.
+    const entries = Object.entries(scanProgress.fileStatus);
+    const counts = entries.reduce((acc, [, st]) => {
+      acc[st] = (acc[st] || 0) + 1;
+      return acc;
+    }, {});
+    const failedCount = counts.error || 0;
+    const cancelledCount = counts.cancelled || 0;
+    return /*#__PURE__*/React.createElement(React.Fragment, null, (failedCount > 0 || cancelledCount > 0) && /*#__PURE__*/React.createElement("div", {
       style: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 6,
-        fontSize: 9.5,
-        color: 'var(--text2)'
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        display: 'inline-flex',
-        width: 14,
-        height: 14,
-        alignItems: 'center',
-        justifyContent: 'center',
         fontSize: 9,
-        color: tone,
-        fontWeight: 700
+        color: 'var(--red)',
+        marginTop: 4,
+        fontWeight: 600
       }
-    }, icon), /*#__PURE__*/React.createElement("span", {
+    }, failedCount > 0 ? failedCount + ' failed' : '', failedCount > 0 && cancelledCount > 0 ? ' · ' : '', cancelledCount > 0 ? cancelledCount + ' cancelled' : ''), /*#__PURE__*/React.createElement("div", {
       style: {
-        flex: 1,
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis'
+        marginTop: 6,
+        maxHeight: 120,
+        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2
       }
-    }, fileName), /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: 8.5,
-        color: tone,
-        fontWeight: 600,
-        textTransform: 'uppercase',
-        letterSpacing: '.03em'
-      }
-    }, status));
-  })) : /*#__PURE__*/React.createElement("div", {
+    }, entries.map(([fileName, status]) => {
+      const tone = status === 'done' ? 'var(--green2)' : status === 'error' ? 'var(--red)' : status === 'cancelled' ? 'var(--text3)' : status === 'extracting' ? 'var(--gold)' : status === 'ocr' ? 'var(--teal)' : 'var(--text3)';
+      const icon = status === 'done' ? '✓' : status === 'error' ? '×' : status === 'cancelled' ? '⊘' : status === 'extracting' ? '…' : status === 'ocr' ? '◐' : '·';
+      const label = status === 'ocr' ? 'OCR' : status === 'extracting' ? 'AI' : status;
+      return /*#__PURE__*/React.createElement("div", {
+        key: fileName,
+        title: fileName /* tooltip with full name */,
+        style: {
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          fontSize: 9.5,
+          color: 'var(--text2)'
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          display: 'inline-flex',
+          width: 14,
+          height: 14,
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 9,
+          color: tone,
+          fontWeight: 700
+        }
+      }, icon), /*#__PURE__*/React.createElement("span", {
+        style: {
+          flex: 1,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }
+      }, fileName), /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 8.5,
+          color: tone,
+          fontWeight: 600,
+          textTransform: 'uppercase',
+          letterSpacing: '.03em'
+        }
+      }, label));
+    })));
+  })() : /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 9,
       color: 'var(--text3)',
@@ -52450,11 +52471,14 @@ function Policies() {
         // strip so the FC sees which specific file is currently being
         // extracted. Falls back to the batch-only view if fileName isn't
         // available on the job.
+        // rc2.14 — handle 'ocr' (currently in the OCR step, not yet at AI)
+        // and 'cancelled' (user/system aborted) explicitly. Previously
+        // both fell through to 'queued' which is misleading.
         const fileStatus = {};
         for (const j of jobs) {
           if (!j || !j.fileName) continue;
           let status;
-          if (j.stage === 'done') status = 'done';else if (j.stage === 'failed') status = 'error';else if (j.stage === 'extracting' || j.stage === 'extract') status = 'extracting';else status = 'queued';
+          if (j.stage === 'done') status = 'done';else if (j.stage === 'failed') status = 'error';else if (j.stage === 'cancelled') status = 'cancelled';else if (j.stage === 'ocr') status = 'ocr';else if (j.stage === 'extracting' || j.stage === 'extract') status = 'extracting';else status = 'queued';
           fileStatus[j.fileName] = status;
         }
         setScanProgress({
