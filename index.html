@@ -611,9 +611,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.9';
+const APP_VERSION = 'v2.4.0-rc2.10';
 const APP_VERSION_DATE = '2026-05-14';
-const APP_VERSION_NAME = 'Document fingerprinting — repeat-template fast-path with per-fingerprint few-shot';
+const APP_VERSION_NAME = 'CRMLens outbound sync — write enrichments back to shared row';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -19197,6 +19197,173 @@ async function sbCrmLensPoliciesPull() {
   }
 }
 
+// ── CRMLens outbound: write back enrichment ──
+// rc2.10 — two-way sync. When PolicyLens enriches a CRMLens-sourced
+// policy (e.g. by AI-extracting product details from the linked PDF),
+// the enriched fields are written back to the shared user_policies row
+// so CRMLens can surface them. This runs INDEPENDENTLY of the
+// Drive-vs-Supabase mode toggle — CRMLens-sourced policies always
+// sync back, because the shared table is the contract surface.
+//
+// Field policy:
+//   • PUSH: AI-derived enrichments (productName, category, subType,
+//     sumAssured, annualPremium, premFrequency, premiumStructure,
+//     premTerm, currency, policyTerm, maturityDate, cashValue, riders,
+//     notes, _policylensFingerprint, _policylensEnrichedAt).
+//   • PRESERVE: CRMLens-owned identity (clientId, _crmlensClientId,
+//     _crmlens, policyOwner, lifeInsured, _source).
+// We pull the existing row's `data` first, deep-merge our enrichment on
+// top, then upsert. This guarantees CRMLens's authoritative fields are
+// never clobbered even if PolicyLens has stale copies locally.
+const CRMLENS_ENRICHMENT_FIELDS = ['productName', 'category', 'subType', 'currency', 'sumAssured', 'annualPremium', 'premFrequency', 'premiumStructure', 'premTerm', 'policyTerm', 'maturityDate', 'cashValue', 'riders', 'notes', 'remarks', 'commencementDate', 'expiryDate', 'paymentMode', 'paymentMethod', 'bankAccount', 'beneficiaries', 'underwritingStatus'];
+async function sbCrmLensPolicyPushBack(policy, versions) {
+  const s = getSB();
+  const uid = sbGetUserId();
+  if (!s || !uid || !policy?.id) return {
+    ok: false,
+    reason: 'no-session'
+  };
+  // Only push back for CRMLens-sourced policies.
+  const isCrmLens = String(policy.id || '').startsWith('crmlens:') || policy._source === 'crmlens' || !!policy._crmlensPolicyId || !!policy._crmlensClientId;
+  if (!isCrmLens) return {
+    ok: false,
+    reason: 'not-crmlens'
+  };
+  try {
+    // 1) Pull the live row so we don't clobber CRMLens-owned fields.
+    const {
+      data: liveRows,
+      error: pullErr
+    } = await s.schema('policylens').from('user_policies').select('*').eq('user_id', uid).eq('id', policy.id);
+    if (pullErr) {
+      console.warn('[CRMLensSync] push-back pull error:', pullErr.message);
+      return {
+        ok: false,
+        reason: 'pull-failed'
+      };
+    }
+    const liveRow = (liveRows || [])[0] || null;
+    if (!liveRow) {
+      // Row has been deleted on the CRMLens side — skip rather than
+      // resurrecting (CRMLens is authoritative for deletion).
+      return {
+        ok: false,
+        reason: 'row-deleted'
+      };
+    }
+    const liveData = liveRow.data || {};
+
+    // 2) Build the enrichment-only patch.
+    const patch = {};
+    let nonEmpty = false;
+    for (const f of CRMLENS_ENRICHMENT_FIELDS) {
+      const v = policy[f];
+      // Only push values that are meaningfully set. Skip null/undefined
+      // and empty strings (no signal). Arrays/objects with content pass.
+      if (v == null) continue;
+      if (typeof v === 'string' && !v.trim()) continue;
+      if (Array.isArray(v) && v.length === 0) continue;
+      if (typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 0) continue;
+      patch[f] = v;
+      nonEmpty = true;
+    }
+    if (!nonEmpty) return {
+      ok: false,
+      reason: 'no-enrichment'
+    };
+
+    // 3) Deep-merge: live (CRMLens authoritative) is the base, patch
+    //    (PolicyLens enrichment) overrides leaf values but does NOT
+    //    overwrite the whole `_crmlens` block.
+    const merged = {
+      ...liveData,
+      ...patch
+    };
+    // Re-protect _crmlens block & owner identity.
+    if (liveData._crmlens) merged._crmlens = liveData._crmlens;
+    if (liveData.policyOwner) merged.policyOwner = liveData.policyOwner;
+    if (liveData.lifeInsured && !patch.lifeInsured) merged.lifeInsured = liveData.lifeInsured;
+    merged.clientId = liveData.clientId || policy.clientId;
+    merged._crmlensClientId = liveData._crmlensClientId || policy._crmlensClientId;
+    merged._source = 'crmlens';
+    merged._policylensEnrichedAt = new Date().toISOString();
+    merged._policylensVersion = typeof APP_VERSION === 'string' ? APP_VERSION : 'policylens';
+    // Stash fingerprint so CRMLens can later cluster by template too.
+    if (policy._policylensFingerprint && !merged._policylensFingerprint) {
+      merged._policylensFingerprint = policy._policylensFingerprint;
+    }
+
+    // 4) Merge field-versions: only bump for fields we actually pushed.
+    const liveVersions = liveRow.field_versions || {};
+    const mergedVersions = {
+      ...liveVersions
+    };
+    const nowVer = Date.now();
+    for (const f of Object.keys(patch)) {
+      // Use the higher of local version or now+1 to ensure monotonic.
+      const local = versions && versions[f] || 0;
+      const live = liveVersions[f] || 0;
+      mergedVersions[f] = Math.max(local, live, nowVer);
+    }
+
+    // 5) Push.
+    const {
+      error: upErr
+    } = await s.schema('policylens').from('user_policies').upsert({
+      id: policy.id,
+      user_id: uid,
+      data: merged,
+      field_versions: mergedVersions,
+      deleted_at: null,
+      updated_at: new Date().toISOString()
+    }, {
+      onConflict: 'user_id,id'
+    });
+    if (upErr) {
+      console.warn('[CRMLensSync] push-back upsert error:', upErr.message);
+      return {
+        ok: false,
+        reason: 'upsert-failed'
+      };
+    }
+    console.log('[CRMLensSync] enrichment written back for', policy.id, '— fields:', Object.keys(patch));
+    return {
+      ok: true,
+      fields: Object.keys(patch)
+    };
+  } catch (e) {
+    console.warn('[CRMLensSync] push-back failed:', e.message);
+    return {
+      ok: false,
+      reason: 'exception'
+    };
+  }
+}
+
+// Debounced batch — coalesce many enrichment saves on a single client
+// (e.g. bulk scan of 8 PDFs) into ~2-3 actual round-trips.
+const _crmLensPushQueue = new Map(); // policyId -> { policy, versions, timer }
+function scheduleCrmLensPushBack(policy, versions, delay = 1200) {
+  if (!policy?.id) return;
+  const isCrmLens = String(policy.id || '').startsWith('crmlens:') || policy._source === 'crmlens' || !!policy._crmlensPolicyId || !!policy._crmlensClientId;
+  if (!isCrmLens) return;
+  const existing = _crmLensPushQueue.get(policy.id);
+  if (existing && existing.timer) clearTimeout(existing.timer);
+  const timer = setTimeout(() => {
+    const job = _crmLensPushQueue.get(policy.id);
+    _crmLensPushQueue.delete(policy.id);
+    if (!job) return;
+    sbCrmLensPolicyPushBack(job.policy, job.versions).catch(e => {
+      console.warn('[CRMLensSync] scheduled push-back error:', e?.message || e);
+    });
+  }, delay);
+  _crmLensPushQueue.set(policy.id, {
+    policy,
+    versions,
+    timer
+  });
+}
+
 // ── App settings sync ──
 // Whitelist of setting keys that get synced across devices.
 // Add new ones here as needed. Excluded by design:
@@ -23265,6 +23432,12 @@ function App() {
     // Stamp self-push so Realtime echoes get ignored.
     lastSelfPushRef.current = Date.now();
     sbPolicyPush(enriched, newVersions).catch(() => {});
+    // rc2.10 — two-way CRMLens sync. If this is a CRMLens-sourced
+    // policy, write enrichments back to the shared row regardless of
+    // Drive vs Supabase mode. Debounced to coalesce bulk-scan bursts.
+    try {
+      scheduleCrmLensPushBack(enriched, newVersions, 1500);
+    } catch (_) {}
     // v2.2.0-alpha: Dual-write to Drive (debounced, fire-and-forget)
     scheduleDriveWriteForClient(enriched.clientId, 'policy-save', 1000);
     return enriched;
@@ -23447,6 +23620,10 @@ function App() {
     } catch (_) {}
     lastSelfPushRef.current = Date.now();
     sbPolicyPush(enriched, newVersions).catch(() => {});
+    // rc2.10 — also push back to CRMLens shared row when applicable.
+    try {
+      scheduleCrmLensPushBack(enriched, newVersions, 1500);
+    } catch (_) {}
     await scheduleDriveWriteForClient(targetClientId, opts.reason || 'policy-route', opts.delay || 1000);
     return enriched;
   };
