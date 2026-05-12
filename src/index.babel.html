@@ -601,9 +601,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.1';
+const APP_VERSION = 'v2.4.0-rc2.2';
 const APP_VERSION_DATE = '2026-05-13';
-const APP_VERSION_NAME = 'AI smartness Tier D — surface what the loop already knows: confidence badges, AI insights panel, AI memory browser';
+const APP_VERSION_NAME = 'AI smartness Tier E — bulk extraction now runs through the same closed-loop pipeline as single-policy scan';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -40430,8 +40430,62 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
         runDerivePass(result, clientProfile);
         runValidatePass(result, clientProfile);
 
+        // ── rc2.2: same deterministic safety net as the single-policy
+        // scan-into-form path (insurer rules + sanity validator). Plus
+        // stash an _extractedRaw snapshot so the BulkVerify save flow can
+        // capture FC corrections back into extraction_corrections, same
+        // as scanIntoForm. Without this, the bulk path was the ONLY way
+        // to extract that bypassed the closed loop. ──
+        const _rulesAndSanity = applyExtractionRulesAndSanity(result);
+        // applyExtractionRulesAndSanity returned a new object with autoFixes
+        // applied — fold the fixes back onto `result` in place so downstream
+        // code (which has already captured the reference) sees them.
+        for (const k of Object.keys(_rulesAndSanity.parsed || {})) {
+          if (_rulesAndSanity.parsed[k] !== undefined && _rulesAndSanity.parsed[k] !== result[k]) {
+            result[k] = _rulesAndSanity.parsed[k];
+          }
+        }
+        result._extractedRaw = {
+          fields: { ..._rulesAndSanity.parsed },
+          confidence: Array.isArray(result._confidence) ? result._confidence
+            : (Array.isArray(result._extractConfidence) ? result._extractConfidence : []),
+          autoFixes: _rulesAndSanity.autoFixes || [],
+          warnings: _rulesAndSanity.warnings || [],
+          promptVersion: EXTRACT_PROMPT_VERSION || APP_VERSION || 'unknown',
+          timestamp: Date.now(),
+          savePath: 'bulk-extract'
+        };
+
         return result;
       });
+
+      // rc2.2: multi-member batch detector — if the AI extracted policies
+      // with two or more distinct life-insured names that don't match the
+      // active client, surface a banner toast before the FC saves. The
+      // single-policy scan path has a stricter content-based detector;
+      // here we infer it from the extracted policies themselves since the
+      // raw content has already been split across batches.
+      try {
+        const activeClientNameLc = String(clientProfile?.name || clientName || '').trim().toLowerCase();
+        const names = new Set();
+        for (const item of processed) {
+          const li = String(item?.lifeInsured || '').trim();
+          if (!li) continue;
+          const lcLi = li.toLowerCase();
+          if (lcLi === activeClientNameLc) continue;
+          if (/^(self|same|policyholder|owner|insured)$/i.test(li)) continue;
+          if (li.length < 4 || li.length > 60) continue;
+          names.add(li);
+          if (names.size > 6) break;
+        }
+        if (names.size >= 2) {
+          const list = [...names].slice(0, 3).join(', ');
+          console.warn('[MultiMember] bulk extraction returned policies for', names.size, 'distinct people:', [...names]);
+          try {
+            toast('Multi-person batch detected: ' + names.size + ' life-insured names (' + list + (names.size > 3 ? ', ...' : '') + '). Route each policy to the correct client during review.', 'warning', 8000);
+          } catch (_) {}
+        }
+      } catch (e) { console.warn('[MultiMember] detector failed:', e?.message || e); }
 
       const ownerTrace = backfillDependantPolicyOwners(processed, { currentClientName: clientProfile?.name || clientName || '' });
       if (ownerTrace.updated > 0) {
