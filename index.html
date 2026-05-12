@@ -611,9 +611,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.12';
+const APP_VERSION = 'v2.4.0-rc2.13';
 const APP_VERSION_DATE = '2026-05-14';
-const APP_VERSION_NAME = 'Audit-pass fixes — palette Escape preventDefault + ReDoS-defensive size cap';
+const APP_VERSION_NAME = 'CRMLens outbound hardening — deletion guard + version arbitration';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -19299,18 +19299,32 @@ async function sbCrmLensPolicyPushBack(policy, versions) {
     }
     const liveRow = (liveRows || [])[0] || null;
     if (!liveRow) {
-      // Row has been deleted on the CRMLens side — skip rather than
-      // resurrecting (CRMLens is authoritative for deletion).
+      // Row never existed on the CRMLens side — skip rather than creating
+      // a new row from a stale PolicyLens copy.
+      return {
+        ok: false,
+        reason: 'row-missing'
+      };
+    }
+    // rc2.13 — CRMLens is authoritative for deletion. If the row is
+    // soft-deleted on the cloud side, do NOT resurrect it via upsert.
+    if (liveRow.deleted_at) {
       return {
         ok: false,
         reason: 'row-deleted'
       };
     }
     const liveData = liveRow.data || {};
+    const liveVersions = liveRow.field_versions || {};
 
-    // 2) Build the enrichment-only patch.
+    // 2) Build the enrichment-only patch with per-field version arbitration.
+    // For each candidate field, only push if PolicyLens's local version is
+    // strictly newer than the live row's version (or if live has no version
+    // for that field yet). This avoids clobbering a fresh CRMLens edit that
+    // happened between our pull and our push.
     const patch = {};
     let nonEmpty = false;
+    const skippedByVersion = [];
     for (const f of CRMLENS_ENRICHMENT_FIELDS) {
       const v = policy[f];
       // Only push values that are meaningfully set. Skip null/undefined
@@ -19319,13 +19333,30 @@ async function sbCrmLensPolicyPushBack(policy, versions) {
       if (typeof v === 'string' && !v.trim()) continue;
       if (Array.isArray(v) && v.length === 0) continue;
       if (typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 0) continue;
+      // rc2.13 — version arbitration. If live has a strictly newer version,
+      // CRMLens already wrote this field after PolicyLens last extracted —
+      // don't overwrite. (Local version absent → assume 0 → live wins.)
+      const localVer = versions && versions[f] || 0;
+      const liveVer = liveVersions[f] || 0;
+      if (liveVer > localVer) {
+        skippedByVersion.push(f);
+        continue;
+      }
       patch[f] = v;
       nonEmpty = true;
     }
-    if (!nonEmpty) return {
-      ok: false,
-      reason: 'no-enrichment'
-    };
+    if (!nonEmpty) {
+      if (skippedByVersion.length) {
+        console.log('[CRMLensSync] push-back skipped (all enrichment fields lost version arbitration):', skippedByVersion);
+      }
+      return {
+        ok: false,
+        reason: 'no-enrichment'
+      };
+    }
+    if (skippedByVersion.length) {
+      console.log('[CRMLensSync] some fields lost version arbitration, preserving live:', skippedByVersion);
+    }
 
     // 3) Deep-merge: live (CRMLens authoritative) is the base, patch
     //    (PolicyLens enrichment) overrides leaf values but does NOT
@@ -19349,7 +19380,6 @@ async function sbCrmLensPolicyPushBack(policy, versions) {
     }
 
     // 4) Merge field-versions: only bump for fields we actually pushed.
-    const liveVersions = liveRow.field_versions || {};
     const mergedVersions = {
       ...liveVersions
     };
@@ -19361,7 +19391,10 @@ async function sbCrmLensPolicyPushBack(policy, versions) {
       mergedVersions[f] = Math.max(local, live, nowVer);
     }
 
-    // 5) Push.
+    // 5) Push. NOTE: do NOT pass deleted_at: null — relying on the row
+    // already being non-deleted (we checked at step 1). Passing null
+    // would re-arm the row from a deleted state in the brief window
+    // where another tab soft-deleted it between our pull and our push.
     const {
       error: upErr
     } = await s.schema('policylens').from('user_policies').upsert({
@@ -19369,7 +19402,6 @@ async function sbCrmLensPolicyPushBack(policy, versions) {
       user_id: uid,
       data: merged,
       field_versions: mergedVersions,
-      deleted_at: null,
       updated_at: new Date().toISOString()
     }, {
       onConflict: 'user_id,id'
