@@ -611,9 +611,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.14';
+const APP_VERSION = 'v2.4.0-rc2.15';
 const APP_VERSION_DATE = '2026-05-14';
-const APP_VERSION_NAME = 'BulkVerify progress fixes — OCR/cancelled stages + failure summary + filename tooltips';
+const APP_VERSION_NAME = 'CardRoutingBadge conflict parser — comma-in-name safe + raw reason fallback';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -48832,15 +48832,25 @@ function CardRoutingBadge({
   // tooltip on hover (vs the FC having to click the badge to see the
   // reason). Reasons starting with "CONFLICT:" come from the rc2.5
   // focused-ownership cross-check.
+  // rc2.15 — switched to a greedy match anchored on the literal canonical
+  // generator format. Non-greedy was fragile against names with embedded
+  // commas (e.g. "Soh Soon Jooh, Eric"), which would have been truncated
+  // to "Soh Soon Jooh" in the tooltip.
   const reason = sug && sug.reason || '';
   const isConflict = /^CONFLICT:/i.test(reason);
   let conflictPrimary = null,
     conflictSecondary = null;
   if (isConflict) {
-    const m = reason.match(/primary routing said (.+?), focused ownership pass says (.+?)\.?\s*(?:Verify|$)/i);
+    const m = reason.match(/^CONFLICT:\s*primary routing said (.+), focused ownership pass says (.+)\.\s*Verify before save\.?$/i);
     if (m) {
       conflictPrimary = m[1].trim();
       conflictSecondary = m[2].trim();
+    } else {
+      // Fallback: regex failed, but caller still flagged as conflict.
+      // Show the raw text so the FC at least sees the warning rather
+      // than a phantom hover with nothing rendered.
+      conflictPrimary = '(primary)';
+      conflictSecondary = '(focused) — see reason below';
     }
   }
   return /*#__PURE__*/React.createElement("div", {
@@ -48927,7 +48937,8 @@ function CardRoutingBadge({
   }, "Primary AI said:"), /*#__PURE__*/React.createElement("strong", {
     style: {
       color: '#fff',
-      fontSize: 10.5
+      fontSize: 10.5,
+      wordBreak: 'break-word'
     }
   }, conflictPrimary), /*#__PURE__*/React.createElement("span", {
     style: {
@@ -48937,9 +48948,20 @@ function CardRoutingBadge({
   }, "Focused ownership:"), /*#__PURE__*/React.createElement("strong", {
     style: {
       color: '#5ba8a0',
-      fontSize: 10.5
+      fontSize: 10.5,
+      wordBreak: 'break-word'
     }
   }, conflictSecondary)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9,
+      color: '#888',
+      fontStyle: 'italic',
+      marginTop: 6,
+      paddingTop: 5,
+      borderTop: '1px solid rgba(255,255,255,.12)',
+      wordBreak: 'break-word'
+    }
+  }, reason.replace(/^CONFLICT:\s*/i, '')), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 9.5,
       color: '#dcc',
