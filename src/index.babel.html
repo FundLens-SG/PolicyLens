@@ -601,9 +601,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.15';
+const APP_VERSION = 'v2.4.0-rc2.16';
 const APP_VERSION_DATE = '2026-05-14';
-const APP_VERSION_NAME = 'CardRoutingBadge conflict parser — comma-in-name safe + raw reason fallback';
+const APP_VERSION_NAME = 'policyAnalystNote heuristic fixes — ILP false positive + date parsing + sa=0 guard';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -6257,7 +6257,8 @@ function policyAnalystNote(policy) {
   const subType = String(policy.subType || '').trim();
   const cat = String(policy.category || '').trim();
   // 1. SA multiplier expiry — cover drops at end-age
-  if (mult > 1 && multEndAge && multEndAge < 90) {
+  // rc2.16 — guard against sa=0 (would render misleading "S$0 to S$0")
+  if (mult > 1 && multEndAge && multEndAge < 90 && sa > 0) {
     insights.push(mult + 'x SA multiplier ends at age ' + multEndAge + ' — cover effectively reduces from S$' + Math.round(sa * mult).toLocaleString('en-SG') + ' to S$' + Math.round(sa).toLocaleString('en-SG') + ' from that point.');
   }
   // 2. Whole-life / endowment with low cash value vs premium
@@ -6279,11 +6280,14 @@ function policyAnalystNote(policy) {
     insights.push('Premium pays until age ' + premEndAge + ' — affects retirement cash flow planning.');
   }
   // 5. ILP with low protection-to-AV ratio
+  // rc2.16 — only fire when ilpProtPct is explicitly known. The previous
+  // `|| 101` default caused false positives for every ILP without
+  // ilpProtPct populated, because 101 <= 110 still triggers the warning.
   if (cat === 'investment' && /ilp/i.test(subType)) {
     const av = parseFloat(policy.accountValue || policy.cashValue) || 0;
-    const protRatio = parseFloat(policy.ilpProtPct) || 101;
-    if (av > 100000 && protRatio <= 110) {
-      insights.push('ILP with ' + protRatio + '% protection on a S$' + Math.round(av).toLocaleString('en-SG') + ' AV — leans investment-heavy, low death-cover leverage.');
+    const protRatioRaw = parseFloat(policy.ilpProtPct);
+    if (Number.isFinite(protRatioRaw) && av > 100000 && protRatioRaw <= 110) {
+      insights.push('ILP with ' + protRatioRaw + '% protection on a S$' + Math.round(av).toLocaleString('en-SG') + ' AV — leans investment-heavy, low death-cover leverage.');
     }
   }
   // 6. Health/ISP without rider
@@ -6291,8 +6295,19 @@ function policyAnalystNote(policy) {
     insights.push('ISP without rider — deductible + co-insurance applies on every hospitalisation. Consider adding rider for full cover.');
   }
   // 7. Term life expiring soon
-  if (subType === 'Term Life') {
-    const matY = policy.maturityDate ? new Date(policy.maturityDate).getFullYear() : null;
+  // rc2.16 — accept DD/MM/YYYY in addition to ISO. SG FCs often enter
+  // dates as "31/12/2030" which `new Date()` parses as Invalid Date in
+  // some browsers (Safari especially). Fall back to a year extraction.
+  if (subType === 'Term Life' && policy.maturityDate) {
+    const md = String(policy.maturityDate);
+    let matY = null;
+    const iso = new Date(md);
+    if (!isNaN(iso.getTime())) matY = iso.getFullYear();
+    if (!matY) {
+      // Try DD/MM/YYYY or MM/DD/YYYY or DD-MM-YYYY explicit
+      const m = md.match(/\b(20\d{2})\b/);
+      if (m) matY = parseInt(m[1], 10);
+    }
     const nowY = new Date().getFullYear();
     if (matY && matY - nowY <= 5 && matY - nowY > 0) {
       insights.push('Term Life expires in ' + (matY - nowY) + ' year(s) — convert to permanent before expiry to lock in insurability.');
