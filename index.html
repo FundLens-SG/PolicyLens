@@ -611,9 +611,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.6';
+const APP_VERSION = 'v2.4.0-rc2.7';
 const APP_VERSION_DATE = '2026-05-14';
-const APP_VERSION_NAME = 'UX polish: per-file bulk progress, routing conflict tooltip, per-policy analyst note';
+const APP_VERSION_NAME = 'Command palette: Cmd+K / Ctrl+K / "/" — instant search across clients, policies, tabs, actions';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -19428,6 +19428,433 @@ function CameraModal() {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// MODULE: COMMAND PALETTE (rc2.7) — Cmd+K / Ctrl+K / "/" global search
+// ═══════════════════════════════════════════════════════════════
+//
+// One palette. Searches:
+//   • Clients (by name + tier)
+//   • Policies of the active client (by insurer / product / policy number)
+//   • Navigation tabs (Dashboard, Policies, Clients, Profile, Report, Repo, Settings)
+//   • Actions (New client, Import policy, Save checkpoint, Toggle B&W,
+//     Open AI Memory, Sign out)
+//
+// Keyboard: ↑/↓ navigate, Enter selects, Esc closes. Mouse: hover to
+// highlight, click to select. Seed query prefix "client:" pre-filters
+// to clients when the header chip opens the palette.
+
+function CommandPalette({
+  open,
+  onClose,
+  seedQuery
+}) {
+  const ctx = useContext(AppCtx);
+  const [query, setQuery] = useState('');
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [allClients, setAllClients] = useState([]);
+  const inputRef = useRef(null);
+  useEffect(() => {
+    if (open) {
+      setQuery(seedQuery || '');
+      setSelectedIndex(0);
+      setTimeout(() => inputRef.current?.focus(), 0);
+    }
+  }, [open, seedQuery]);
+
+  // Load all clients on open
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    PolicyDB.getAllDriveStates().then(states => {
+      if (!cancelled) setAllClients((states || []).filter(s => s && s.clientId && s.clientName));
+    }).catch(() => {
+      if (!cancelled) setAllClients([]);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
+  const items = useMemo(() => {
+    if (!ctx || !open) return [];
+    const out = [];
+    const policies = Array.isArray(ctx.policies) ? ctx.policies : [];
+    const activeId = ctx.activeClientId;
+    // Recent clients first
+    let recents = [];
+    try {
+      recents = JSON.parse(localStorage.getItem('policylens_recent_clients') || '[]');
+    } catch (_) {}
+    const recentIds = new Set(recents.map(r => r && r.clientId).filter(Boolean));
+    // Clients (recent first, then alphabetical)
+    const clientsOrdered = [...recents.map(r => allClients.find(c => c.clientId === r.clientId)).filter(Boolean), ...allClients.filter(c => !recentIds.has(c.clientId)).sort((a, b) => String(a.clientName || '').localeCompare(String(b.clientName || '')))];
+    for (const c of clientsOrdered) {
+      out.push({
+        id: 'client:' + c.clientId,
+        kind: 'Client',
+        label: c.clientName || 'Untitled client',
+        subLabel: (c.tier ? c.tier + ' tier · ' : '') + (recentIds.has(c.clientId) ? 'recent' : ''),
+        keywords: (c.clientName || '').toLowerCase() + ' ' + (c.tier || '').toLowerCase(),
+        icon: '👤',
+        action: async () => {
+          if (c.clientId === activeId) return;
+          await ctx.switchClient(c.clientId);
+          // Mark recent
+          try {
+            const filtered = recents.filter(r => r && r.clientId !== c.clientId);
+            const next = [{
+              clientId: c.clientId,
+              name: c.clientName,
+              lastVisitedAt: Date.now()
+            }, ...filtered].slice(0, 8);
+            localStorage.setItem('policylens_recent_clients', JSON.stringify(next));
+          } catch (_) {}
+        }
+      });
+    }
+    // Active client's policies
+    for (const pol of policies.slice(0, 60)) {
+      const productLabel = (pol.insurer || '') + ' ' + (pol.productName || pol.policyName || pol.subType || 'Policy');
+      out.push({
+        id: 'policy:' + (pol.id || Math.random()),
+        kind: 'Policy',
+        label: productLabel.trim() || 'Policy',
+        subLabel: [pol.policyNumber ? '#' + pol.policyNumber : '', pol.category, pol.subType].filter(Boolean).join(' · '),
+        keywords: productLabel.toLowerCase() + ' ' + (pol.policyNumber || '').toLowerCase() + ' ' + (pol.category || '').toLowerCase(),
+        icon: '📋',
+        action: () => {
+          ctx.setTab && ctx.setTab('policies');
+        }
+      });
+    }
+    // Tabs
+    const tabs = [{
+      id: 'tab:profile',
+      label: 'Profile',
+      icon: '👤',
+      kw: 'profile client info'
+    }, {
+      id: 'tab:dashboard',
+      label: 'Dashboard',
+      icon: '🏡',
+      kw: 'dashboard home overview'
+    }, {
+      id: 'tab:policies',
+      label: 'Policies',
+      icon: '📋',
+      kw: 'policies list'
+    }, {
+      id: 'tab:clients',
+      label: 'Clients',
+      icon: '👥',
+      kw: 'clients all'
+    }, {
+      id: 'tab:repository',
+      label: 'Repo (product library)',
+      icon: '📚',
+      kw: 'repo repository products'
+    }, {
+      id: 'tab:report',
+      label: 'Report',
+      icon: '📄',
+      kw: 'report pdf print'
+    }, {
+      id: 'tab:settings',
+      label: 'Settings',
+      icon: '⚙️',
+      kw: 'settings preferences'
+    }];
+    for (const t of tabs) {
+      out.push({
+        id: t.id,
+        kind: 'Go to',
+        label: t.label,
+        subLabel: '',
+        keywords: t.kw,
+        icon: t.icon,
+        action: () => {
+          ctx.setTab && ctx.setTab(t.id.replace('tab:', ''));
+        }
+      });
+    }
+    // Actions
+    const actions = [{
+      id: 'act:add-policy',
+      label: 'Add policy',
+      icon: '+',
+      kw: 'add new policy create',
+      action: () => {
+        ctx.setTab && ctx.setTab('policies');
+        setTimeout(() => {
+          try {
+            window.dispatchEvent(new CustomEvent('policylens-open-add-policy'));
+          } catch (_) {}
+        }, 50);
+      }
+    }, {
+      id: 'act:new-client',
+      label: 'New client',
+      icon: '+',
+      kw: 'new client onboard',
+      action: () => {
+        try {
+          window.dispatchEvent(new CustomEvent('policylens-open-new-client'));
+        } catch (_) {}
+      }
+    }, {
+      id: 'act:open-settings',
+      label: 'Open Settings',
+      icon: '⚙',
+      kw: 'settings preferences',
+      action: () => {
+        ctx.setTab && ctx.setTab('settings');
+      }
+    }, {
+      id: 'act:ai-memory',
+      label: 'Open AI Memory',
+      icon: '🧠',
+      kw: 'memory corrections extraction log',
+      action: () => {
+        ctx.setTab && ctx.setTab('settings');
+        setTimeout(() => {
+          try {
+            document.querySelector('[data-ai-memory-anchor]')?.scrollIntoView({
+              behavior: 'smooth'
+            });
+          } catch (_) {}
+        }, 200);
+      }
+    }, {
+      id: 'act:sign-out',
+      label: 'Sign out',
+      icon: '⎋',
+      kw: 'sign out logout',
+      action: () => {
+        if (confirm('Sign out of PolicyLens?') && window.authLogout) window.authLogout();
+      }
+    }];
+    for (const a of actions) {
+      out.push({
+        id: a.id,
+        kind: 'Action',
+        label: a.label,
+        subLabel: '',
+        keywords: a.kw,
+        icon: a.icon,
+        action: a.action
+      });
+    }
+    return out;
+  }, [ctx, open, allClients]);
+  const filtered = useMemo(() => {
+    if (!query) return items;
+    const lower = query.toLowerCase();
+    // Special prefix "client:" -> only Clients
+    const stripped = lower.startsWith('client:') ? lower.slice(7).trim() : lower;
+    const onlyClients = lower.startsWith('client:');
+    const matches = items.filter(it => onlyClients ? it.kind === 'Client' : true).filter(it => !stripped || it.keywords && it.keywords.includes(stripped) || it.label.toLowerCase().includes(stripped) || it.subLabel && it.subLabel.toLowerCase().includes(stripped));
+    return matches.slice(0, 30);
+  }, [items, query]);
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [filtered.length, query]);
+  const handleKeyDown = e => {
+    if (e.key === 'Escape') {
+      onClose();
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIndex(i => Math.min(filtered.length - 1, i + 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIndex(i => Math.max(0, i - 1));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const item = filtered[selectedIndex];
+      if (item && typeof item.action === 'function') {
+        try {
+          item.action();
+        } catch (err) {
+          console.warn('[CommandPalette] action failed:', err);
+        }
+        onClose();
+      }
+    }
+  };
+  if (!open) return null;
+  const grouped = filtered.reduce((acc, item, i) => {
+    if (!acc[item.kind]) acc[item.kind] = [];
+    acc[item.kind].push({
+      ...item,
+      _flatIndex: i
+    });
+    return acc;
+  }, {});
+  const groupOrder = ['Client', 'Policy', 'Go to', 'Action'];
+  return /*#__PURE__*/React.createElement("div", {
+    onClick: onClose,
+    style: {
+      position: 'fixed',
+      inset: 0,
+      zIndex: 9000,
+      background: 'rgba(20, 14, 8, 0.55)',
+      backdropFilter: 'blur(4px)',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'flex-start',
+      paddingTop: 80
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    onClick: e => e.stopPropagation(),
+    role: "dialog",
+    "aria-label": "Command palette",
+    style: {
+      width: 'min(90vw, 600px)',
+      maxHeight: '70vh',
+      background: 'var(--bg2)',
+      border: '1px solid var(--border)',
+      borderRadius: 14,
+      boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
+      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'column',
+      fontFamily: 'var(--font-sans, system-ui, sans-serif)'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: '12px 16px',
+      borderBottom: '1px solid var(--border)'
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    ref: inputRef,
+    value: query,
+    onChange: e => setQuery(e.target.value),
+    onKeyDown: handleKeyDown,
+    placeholder: "Search clients, policies, tabs, actions\u2026",
+    style: {
+      width: '100%',
+      padding: '8px 4px',
+      background: 'transparent',
+      border: 'none',
+      outline: 'none',
+      fontSize: 16,
+      color: 'var(--text)',
+      fontFamily: 'inherit'
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 10,
+      marginTop: 6,
+      fontSize: 10.5,
+      color: 'var(--text3)'
+    }
+  }, /*#__PURE__*/React.createElement("kbd", {
+    style: {
+      padding: '1px 5px',
+      background: 'var(--bg3)',
+      border: '1px solid var(--border)',
+      borderRadius: 3,
+      fontSize: 9
+    }
+  }, "\u2191\u2193"), " navigate", /*#__PURE__*/React.createElement("kbd", {
+    style: {
+      padding: '1px 5px',
+      background: 'var(--bg3)',
+      border: '1px solid var(--border)',
+      borderRadius: 3,
+      fontSize: 9
+    }
+  }, "\u21B5"), " select", /*#__PURE__*/React.createElement("kbd", {
+    style: {
+      padding: '1px 5px',
+      background: 'var(--bg3)',
+      border: '1px solid var(--border)',
+      borderRadius: 3,
+      fontSize: 9
+    }
+  }, "esc"), " close", /*#__PURE__*/React.createElement("span", {
+    style: {
+      marginLeft: 'auto',
+      color: 'var(--text4)'
+    }
+  }, filtered.length, " result", filtered.length === 1 ? '' : 's'))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      overflowY: 'auto',
+      flex: 1
+    }
+  }, filtered.length === 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: '24px 16px',
+      textAlign: 'center',
+      color: 'var(--text3)',
+      fontSize: 13
+    }
+  }, "No matches. Try typing a client name, policy insurer, or action."), groupOrder.filter(g => grouped[g] && grouped[g].length > 0).map(group => /*#__PURE__*/React.createElement("div", {
+    key: group
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: '8px 16px 4px',
+      fontSize: 9.5,
+      fontWeight: 700,
+      color: 'var(--text3)',
+      letterSpacing: '.08em',
+      textTransform: 'uppercase',
+      background: 'var(--bg)',
+      position: 'sticky',
+      top: 0
+    }
+  }, group), grouped[group].map(item => /*#__PURE__*/React.createElement("div", {
+    key: item.id,
+    onMouseEnter: () => setSelectedIndex(item._flatIndex),
+    onClick: () => {
+      try {
+        item.action();
+      } catch (err) {
+        console.warn('[CommandPalette] action failed:', err);
+      }
+      onClose();
+    },
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      padding: '8px 16px',
+      cursor: 'pointer',
+      background: item._flatIndex === selectedIndex ? 'var(--gold-dim)' : 'transparent',
+      borderLeft: item._flatIndex === selectedIndex ? '3px solid var(--gold)' : '3px solid transparent'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 14,
+      width: 18,
+      textAlign: 'center',
+      flexShrink: 0
+    }
+  }, item.icon || '•'), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: 'var(--text)',
+      fontWeight: 500,
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis'
+    }
+  }, item.label), item.subLabel && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10.5,
+      color: 'var(--text3)',
+      marginTop: 1,
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis'
+    }
+  }, item.subLabel)))))))));
+}
+
+// ═══════════════════════════════════════════════════════════════
 // MODULE: ONBOARDING — First-time user guide
 // ═══════════════════════════════════════════════════════════════
 
@@ -20132,6 +20559,32 @@ function OAuthReturnLoader() {
   }, _OAUTH_LOADER_MESSAGES[idx])));
 }
 function App() {
+  // rc2.7 — global Cmd+K command palette
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [paletteSeed, setPaletteSeed] = useState('');
+  useEffect(() => {
+    const onKey = e => {
+      const isMac = /Mac|iPhone|iPad/.test(navigator.platform || '');
+      const modOk = isMac ? e.metaKey : e.ctrlKey;
+      if (modOk && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        setPaletteSeed('');
+        setPaletteOpen(true);
+      }
+      // Allow `/` to open the palette when not focused in an input
+      if (e.key === '/' && document.activeElement && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName) && !document.activeElement.isContentEditable) {
+        e.preventDefault();
+        setPaletteSeed('');
+        setPaletteOpen(true);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+  const openPaletteForClients = useCallback(() => {
+    setPaletteSeed('client:');
+    setPaletteOpen(true);
+  }, []);
   const [tab, setTabState] = useState(getInitialPolicyLensTab);
   const setTab = useCallback(nextTab => {
     setTabState(prev => {
@@ -23597,7 +24050,12 @@ function App() {
     activeClientId,
     switchClient,
     destroyClient,
-    isAdmin
+    isAdmin,
+    openPaletteForClients,
+    openCommandPalette: () => {
+      setPaletteSeed('');
+      setPaletteOpen(true);
+    }
   };
   if (loading) {
     if (_isOAuthReturn) return /*#__PURE__*/React.createElement(OAuthReturnLoader, null);
@@ -23638,7 +24096,11 @@ function App() {
   }
   return /*#__PURE__*/React.createElement(AppCtx.Provider, {
     value: ctx
-  }, /*#__PURE__*/React.createElement(ToastContainer, null), /*#__PURE__*/React.createElement(CameraModal, null), /*#__PURE__*/React.createElement(OnboardingModal, null), showChangelog && /*#__PURE__*/React.createElement(ChangelogModal, {
+  }, /*#__PURE__*/React.createElement(ToastContainer, null), /*#__PURE__*/React.createElement(CameraModal, null), /*#__PURE__*/React.createElement(OnboardingModal, null), /*#__PURE__*/React.createElement(CommandPalette, {
+    open: paletteOpen,
+    onClose: () => setPaletteOpen(false),
+    seedQuery: paletteSeed
+  }), showChangelog && /*#__PURE__*/React.createElement(ChangelogModal, {
     onClose: () => setShowChangelog(false)
   }), reconcileData && /*#__PURE__*/React.createElement(ReconcileSyncModal, {
     data: reconcileData,
@@ -29191,6 +29653,7 @@ function NewClientModal({
   }, creating ? 'Creating…' : matches.length > 0 ? 'None of these — create new' : 'Create client'))));
 }
 function Header() {
+  const ctx = useContext(AppCtx);
   const {
     tab,
     setTab,
@@ -29204,8 +29667,10 @@ function Header() {
     setPresentMode,
     driveState,
     activeClientId,
-    switchClient
-  } = useContext(AppCtx);
+    switchClient,
+    openPaletteForClients,
+    openCommandPalette
+  } = ctx;
   const isMobile = useViewportIsMobile();
   const [saveOpen, setSaveOpen] = useState(false);
   const [loadOpen, setLoadOpen] = useState(false);
@@ -29370,8 +29835,11 @@ function Header() {
       flexShrink: 0
     }
   }), clientName && /*#__PURE__*/React.createElement("button", {
-    onClick: () => setTab('clients'),
-    title: isMobile ? 'Switch client (' + clientName + ')' : 'Switch client',
+    onClick: () => {
+      const fn = typeof ctx?.openPaletteForClients === 'function' ? ctx.openPaletteForClients : null;
+      if (fn) fn();else setTab('clients');
+    },
+    title: isMobile ? 'Switch client (' + clientName + ', ⌘K to search)' : 'Switch client (⌘K to search)',
     style: {
       display: 'flex',
       alignItems: 'center',
