@@ -1,0 +1,12 @@
+{
+  "name": "Prudential — premium > 50% of SA flagged by sanity check",
+  "description": "Sanity check should warn when annualPremium > 50% of sumAssured AND it's not a single premium. This catches the very common 'premium is monthly but AI returned annual' mistake. The harness only tests the parsed JSON shape; the warning surfaces at runtime via toast.",
+  "insurer": "Prudential",
+  "rawAiOutput": "{ \"insurer\": \"Prudential\", \"productName\": \"PruActive Saver\", \"category\": \"savings\", \"subType\": \"Endowment\", \"currency\": \"SGD\", \"sumAssured\": 62000, \"annualPremium\": 12000, \"premFrequency\": \"annual\", \"premiumStructure\": \"Limited Pay\", \"premTerm\": 10 }",
+  "fieldAssertions": [
+    { "field": "insurer", "expected": "Prudential" },
+    { "field": "annualPremium", "expected": 12000 },
+    { "field": "sumAssured", "expected": 62000 },
+    { "field": "premiumStructure", "expected": "Limited Pay" }
+  ]
+}

@@ -611,9 +611,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.99';
+const APP_VERSION = 'v2.4.0-rc1.100';
 const APP_VERSION_DATE = '2026-05-13';
-const APP_VERSION_NAME = 'AI smartness Tier S: feedback capture from manual edits, extraction audit log, eval harness skeleton';
+const APP_VERSION_NAME = 'AI smartness Tier B: insurer-specific normalization rules + deterministic sanity validator on every extraction';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -4975,6 +4975,278 @@ function stripExtractionInternals(policy) {
   delete cleaned._extractedRaw;
   delete cleaned._originalValues;
   return cleaned;
+}
+
+// ── rc1.100 — INSURER-SPECIFIC NORMALIZATION RULES ──
+// Deterministic post-extraction rules per insurer. Runs AFTER the AI
+// returns its parsed object and BEFORE the value lands in the form.
+// Each rule fires either as an autoFix (silent normalization) or a
+// warning (surfaced to the FC). The library is intentionally JS-object
+// (not JSON) so we can use regex literals + arrow functions without an
+// extra parser step.
+//
+// Rule shape:
+//   { id, field?, type: 'autoFix' | 'warning', test: (p) => bool, fix?: (p) => patch, message?: string }
+//
+// Where:
+//   - test(p) returns true when the rule applies (the value is "wrong"
+//     or "ambiguous" by this insurer's rules).
+//   - fix(p) returns a PATCH object whose keys override the policy.
+//     Only applies for autoFix rules.
+//   - warning rules don't mutate; they push a {level:'warning',...} row
+//     into the returned _validation array.
+const INSURER_NORMALIZATION_RULES = {
+  Manulife: [{
+    id: 'manulife-cash-outlay-is-annual',
+    field: 'premFrequency',
+    type: 'autoFix',
+    test: p => {
+      const note = String(p?.notes || p?._sourceText || '').toLowerCase();
+      return p?.premFrequency === 'monthly' && note.includes('cash outlay');
+    },
+    fix: () => ({
+      premFrequency: 'annual'
+    }),
+    message: 'Manulife "cash outlay" rows are annual unless explicitly labeled monthly.'
+  }, {
+    id: 'manulife-policy-number-shape',
+    field: 'policyNumber',
+    type: 'warning',
+    test: p => p?.policyNumber && !/^M?\d{6,12}$/i.test(String(p.policyNumber).replace(/\s|-/g, '')),
+    message: 'Manulife policy numbers are usually 6-12 digits with optional M prefix. Verify the policy number against the document.'
+  }],
+  Prudential: [{
+    id: 'pru-no-period-defaults-annual',
+    field: 'premFrequency',
+    type: 'autoFix',
+    test: p => p?.premFrequency === 'single' && p?.maturityDate && p?.inceptionDate && String(p.maturityDate) !== String(p.inceptionDate),
+    fix: () => ({
+      premFrequency: 'annual',
+      premiumStructure: 'Limited Pay'
+    }),
+    message: 'Prudential: premiumEndDate years after inceptionDate cannot be single premium. Defaulting to annual / Limited Pay.'
+  }, {
+    id: 'pru-name-keeps-pru-prefix',
+    field: 'productName',
+    type: 'autoFix',
+    test: p => typeof p?.productName === 'string' && /^pru/i.test(p.productName) && !p.productName.startsWith('Pru'),
+    fix: p => ({
+      productName: 'Pru' + p.productName.replace(/^pru/i, '')
+    }),
+    message: 'Normalized Prudential product name to keep the "Pru" prefix.'
+  }],
+  'Great Eastern': [{
+    id: 'ge-keeps-great-prefix',
+    field: 'productName',
+    type: 'autoFix',
+    test: p => typeof p?.productName === 'string' && /^great\b/i.test(p.productName) && !/^GREAT\b/.test(p.productName),
+    fix: p => ({
+      productName: p.productName.replace(/^great/i, 'GREAT')
+    }),
+    message: 'Great Eastern product names use the "GREAT" prefix in caps.'
+  }],
+  AIA: [{
+    id: 'aia-vitality-is-rider-not-product',
+    field: 'productName',
+    type: 'warning',
+    test: p => /\bvitality\b/i.test(String(p?.productName || '')),
+    message: 'AIA "Vitality" is a wellness rider/programme, not a product name. Confirm the actual product name (e.g. Pro Achiever).'
+  }],
+  'NTUC Income': [{
+    id: 'ntuc-income-aliases',
+    field: 'insurer',
+    type: 'autoFix',
+    test: p => /^income\s+insurance$/i.test(String(p?.insurer || '')),
+    fix: () => ({
+      insurer: 'NTUC Income'
+    }),
+    message: 'Normalized "Income Insurance" to canonical "NTUC Income".'
+  }],
+  Singlife: [{
+    id: 'singlife-no-period-defaults-annual',
+    field: 'premFrequency',
+    type: 'autoFix',
+    test: p => p?.premFrequency === 'unknown' && typeof p?.annualPremium === 'number' && p.annualPremium > 1000,
+    fix: () => ({
+      premFrequency: 'annual'
+    }),
+    message: 'Singlife premium with no period qualifier defaults to annual when amount > S$1,000.'
+  }]
+};
+
+// Insurer-name resolution — handles aliases before we look up rules.
+function _resolveInsurerKey(insurer) {
+  const s = String(insurer || '').trim();
+  if (!s) return null;
+  if (INSURER_NORMALIZATION_RULES[s]) return s;
+  const lc = s.toLowerCase();
+  for (const key of Object.keys(INSURER_NORMALIZATION_RULES)) {
+    if (key.toLowerCase() === lc) return key;
+  }
+  // Common aliases
+  if (/^income(\s+insurance)?$/i.test(s)) return 'NTUC Income';
+  if (/^pru(dential)?$/i.test(s)) return 'Prudential';
+  if (/^(ge|great\s*eastern)$/i.test(s)) return 'Great Eastern';
+  if (/^aia$/i.test(s)) return 'AIA';
+  if (/^manulife$/i.test(s)) return 'Manulife';
+  if (/^singlife$/i.test(s)) return 'Singlife';
+  return null;
+}
+
+// ── rc1.100 — DETERMINISTIC SANITY VALIDATOR ──
+// Runs after extraction (and after insurer rules) to catch impossible
+// values that AI sometimes produces: implausibly large amounts, premium
+// > 50% of cover, dates inside out, ages out of range, contradictory
+// flags. Each finding is a {level, field, message, value} entry. The
+// caller decides whether to surface as toast, block save, or auto-fix.
+function _sanityNumber(v) {
+  if (typeof v === 'number') return v;
+  if (typeof v === 'string') {
+    const n = parseFloat(v.replace(/[, $]/g, ''));
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
+}
+function _sanityParseDate(v) {
+  if (!v) return null;
+  const t = new Date(v).getTime();
+  return Number.isFinite(t) ? t : null;
+}
+function _sanityIsKnownSubtype(subType, category) {
+  if (!subType) return true;
+  const map = {
+    protection: ['Term Life', 'Whole Life', 'Universal Life (UL)', 'Indexed UL (IUL)', 'Variable UL (VUL)', 'Critical Illness', 'Personal Accident', 'Disability Income', 'Long-term Care', 'ILP (Protection)', 'Income Replacement', 'Mortgage Reducing Term'],
+    savings: ['Endowment', 'Lifetime Endowment', 'Education Plan', 'Short-term Endowment'],
+    health: ['Integrated Shield Plan', 'Hospital Income', 'Hospitalisation', 'CareShield Life Supplement', 'ElderShield 300', 'ElderShield 400', 'Pre/Post Hospital Outpatient'],
+    investment: ['ILP (Investment)', 'Unit Trust', 'Annuity', 'Investment Plan'],
+    retirement: ['Retirement', 'Annuity', 'CPF Life Top-up'],
+    maternity: ['Maternity Coverage'],
+    cash_investments: ['Fixed Deposit', 'T-bill', 'Singapore Savings Bond', 'Corporate Bond', 'Money Market', 'Fixed Coupon Note (FCN)', 'Equity Linked Note (ELN)'],
+    other_assets: ['Property', 'Stocks/Equities', 'Gold/Precious Metals', 'Options/Futures', 'Cryptocurrency', 'Other']
+  };
+  if (!category || !map[category]) return true; // category unknown -> can't validate
+  return map[category].some(s => s.toLowerCase() === String(subType).toLowerCase());
+}
+function sanityCheckPolicy(policy) {
+  const findings = [];
+  if (!policy || typeof policy !== 'object') return findings;
+  const sa = _sanityNumber(policy.sumAssured);
+  const prem = _sanityNumber(policy.annualPremium ?? policy.premiumAmount);
+  const incep = _sanityParseDate(policy.inceptionDate);
+  const mat = _sanityParseDate(policy.maturityDate);
+  const age = _sanityNumber(policy.lifeInsuredAge ?? policy.ageAtEntry);
+  if (sa !== null) {
+    if (sa < 0) findings.push({
+      level: 'error',
+      field: 'sumAssured',
+      message: 'Sum assured cannot be negative.',
+      value: sa
+    });else if (sa > 100_000_000) findings.push({
+      level: 'warning',
+      field: 'sumAssured',
+      message: 'Sum assured > S$100M — verify against the document.',
+      value: sa
+    });
+  }
+  if (prem !== null) {
+    if (prem < 0) findings.push({
+      level: 'error',
+      field: 'annualPremium',
+      message: 'Annual premium cannot be negative.',
+      value: prem
+    });else if (sa !== null && sa > 0 && prem > sa * 0.5 && policy.premiumStructure !== 'Single Premium' && !policy.premSingle) {
+      findings.push({
+        level: 'warning',
+        field: 'annualPremium',
+        message: 'Annual premium > 50% of sum assured — recheck premium frequency or whether this is a single premium.',
+        value: prem
+      });
+    }
+  }
+  if (incep != null && mat != null && mat < incep) {
+    findings.push({
+      level: 'error',
+      field: 'maturityDate',
+      message: 'Maturity date is before inception date — fields may be swapped.'
+    });
+  }
+  if (age !== null) {
+    if (age < 0 || age > 120) findings.push({
+      level: 'error',
+      field: 'lifeInsuredAge',
+      message: 'Life insured age out of range (0-120).',
+      value: age
+    });
+  }
+  if (policy.subType === 'Term Life' && policy.premWholeLife) {
+    findings.push({
+      level: 'warning',
+      field: 'subType',
+      message: 'Term Life policy flagged as whole-life premium — contradiction.'
+    });
+  }
+  if (policy.premiumStructure === 'Single Premium' && _sanityNumber(policy.premTerm) && _sanityNumber(policy.premTerm) > 1) {
+    findings.push({
+      level: 'warning',
+      field: 'premiumStructure',
+      message: 'Single Premium with premTerm > 1 — recheck.'
+    });
+  }
+  if (!_sanityIsKnownSubtype(policy.subType, policy.category)) {
+    findings.push({
+      level: 'warning',
+      field: 'subType',
+      message: 'Subtype "' + policy.subType + '" not in canonical list for category "' + policy.category + '".'
+    });
+  }
+  return findings;
+}
+
+// ── rc1.100 — apply insurer rules and sanity check together ──
+// Returns: { parsed, autoFixes: [{ruleId, field, before, after}], warnings: [{level, field, message}] }
+// Callers MUST replace their previous `parsed` with the returned `parsed`
+// (the autoFixes have already been applied).
+function applyExtractionRulesAndSanity(parsed) {
+  const out = {
+    parsed: parsed && typeof parsed === 'object' ? {
+      ...parsed
+    } : parsed,
+    autoFixes: [],
+    warnings: []
+  };
+  if (!out.parsed || typeof out.parsed !== 'object' || Array.isArray(out.parsed)) return out;
+  const insurerKey = _resolveInsurerKey(out.parsed.insurer);
+  const rules = insurerKey ? INSURER_NORMALIZATION_RULES[insurerKey] || [] : [];
+  for (const rule of rules) {
+    try {
+      if (!rule.test(out.parsed)) continue;
+      if (rule.type === 'autoFix' && typeof rule.fix === 'function') {
+        const patch = rule.fix(out.parsed) || {};
+        for (const [k, v] of Object.entries(patch)) {
+          out.autoFixes.push({
+            ruleId: rule.id,
+            field: k,
+            before: out.parsed[k],
+            after: v,
+            message: rule.message || null
+          });
+          out.parsed[k] = v;
+        }
+      } else {
+        out.warnings.push({
+          level: 'warning',
+          field: rule.field || null,
+          message: rule.message || rule.id,
+          ruleId: rule.id
+        });
+      }
+    } catch (e) {
+      console.warn('[InsurerRules] rule failed:', rule.id, e?.message || e);
+    }
+  }
+  const sanity = sanityCheckPolicy(out.parsed);
+  for (const f of sanity) out.warnings.push(f);
+  return out;
 }
 
 // ── v14.3 C6: BUILT-IN INSURER FEW-SHOT CORPUS ──
@@ -58110,6 +58382,22 @@ function PolicyFormModal({
         parsed.annualPremium = parsed.premiumAmount;
         delete parsed.premiumAmount;
       }
+      // rc1.100: apply deterministic insurer rules + sanity checks
+      // BEFORE we stash the snapshot. Autofixes happen silently;
+      // warnings get toasted + console-logged + attached to the
+      // extraction log entry for later replay/debug.
+      const rulesResult = applyExtractionRulesAndSanity(parsed);
+      const validatedParsed = rulesResult.parsed;
+      if (rulesResult.autoFixes.length > 0) {
+        console.log('[InsurerRules] applied', rulesResult.autoFixes.length, 'autofix(es):', rulesResult.autoFixes.map(f => f.ruleId + ' (' + f.field + ')').join(', '));
+      }
+      if (rulesResult.warnings.length > 0) {
+        console.warn('[SanityCheck] warnings on extracted policy:', rulesResult.warnings);
+        try {
+          const summary = rulesResult.warnings.slice(0, 2).map(w => (w.field ? w.field + ': ' : '') + w.message).join(' / ');
+          toast('AI extracted — please verify: ' + summary, 'warning', 5500);
+        } catch (_) {}
+      }
       // rc1.99: log this extraction run so it can be replayed later
       // (debug + diff against future prompt changes). The returned logId
       // gets stashed onto _extractedRaw so the savePolicy correction-
@@ -58119,21 +58407,23 @@ function PolicyFormModal({
         fileName: formFiles[0]?.name || '',
         fileSize: formFiles[0]?.size || 0,
         rawResponse: rawText2,
-        parsed,
+        parsed: validatedParsed,
         savePath: 'scan-into-form',
         durationMs: extractDuration,
         promptVersion: EXTRACT_PROMPT_VERSION,
         inputHash,
-        insurer: parsed.insurer || ''
+        insurer: validatedParsed.insurer || ''
       }).catch(() => null);
       // rc1.99: stash the raw AI extraction on the form so savePolicy can
       // diff post-edit vs pre-edit and write per-field corrections to the
       // extraction_corrections store. Stripped before final persist.
       const extractedRawSnapshot = {
         fields: {
-          ...parsed
+          ...validatedParsed
         },
-        confidence: Array.isArray(parsed._confidence) ? parsed._confidence : [],
+        confidence: Array.isArray(validatedParsed._confidence) ? validatedParsed._confidence : [],
+        autoFixes: rulesResult.autoFixes,
+        warnings: rulesResult.warnings,
         promptVersion: EXTRACT_PROMPT_VERSION || APP_VERSION || 'unknown',
         timestamp: Date.now(),
         logId,
@@ -58141,7 +58431,7 @@ function PolicyFormModal({
       };
       const overwrites = [];
       const updates = {};
-      Object.entries(parsed).forEach(([k, v]) => {
+      Object.entries(validatedParsed).forEach(([k, v]) => {
         if (v === null || v === undefined || v === '') return;
         if (k === 'faceAmount') k = 'sumAssured';
         const current = form[k];
