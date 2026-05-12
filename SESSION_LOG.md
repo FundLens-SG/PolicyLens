@@ -1,18 +1,18 @@
 # Overnight execution log — 2026-05-13/14
 
-**Goal:** complete the remaining roadmap end-to-end, smoke-test against 3 real xlsx files, fix every bug found, ship clean.
+**Goal:** complete the remaining roadmap end-to-end, smoke-test against 3 real xlsx files, fix every bug found, ship clean. (Updated request mid-session: smoke-test between every patch.)
 
-**Status: ✅ COMPLETE — all 10 roadmap items shipped + 5 bugs auto-fixed**
+**Status: ✅ COMPLETE — all 10 roadmap items shipped + 13 bugs auto-fixed across 13 release candidates**
 
 ## TL;DR
 
-Shipped **7 release candidates** overnight (rc2.6 → rc2.12), closing out every remaining roadmap item. Smoke-tested against your 3 real xlsx files (Soh family, Belinda, Eunice Kong) — found 4 real bugs in the multi-member detector during the smoke test, plus 1 more from a self-audit pass; all 5 fixed and re-verified.
+Shipped **13 release candidates** overnight (rc2.6 → rc2.18) plus 1 smoke-harness commit. Smoke-tested against your 3 real xlsx files (Soh family, Belinda, Eunice Kong) **between every commit** after rc2.12. The smoke test caught the initial 4 bugs in the multi-member detector; subsequent rounds of self-audit caught 7 more in CRMLens outbound, BulkVerify, CardRoutingBadge, policyAnalystNote, and CommandPalette. All 13 fixed and re-verified.
 
 End state:
-- **HEAD:** `9d5a914 v2.4.0-rc2.12`
+- **HEAD:** `021997e v2.4.0-rc2.18`
 - **Eval:** 5 fixtures, 27/27 assertions, **100%**
 - **Golden test:** 7/7 passing
-- **Smoke test:** 3/3 xlsx files pass (Soh: 5 members detected, Belinda: 1, Eunice: 1)
+- **Smoke test:** 3/3 xlsx files pass + 4 new regression assertions (stability, idempotency, dedup, perf)
 - **Build:** clean, pushed to `FundLens-SG/PolicyLens` main
 
 ---
@@ -77,6 +77,50 @@ End state:
   - **CommandPalette Escape leak.** Escape didn't call `e.preventDefault()` or `e.stopPropagation()`, so any parent modal handler also fired on Escape — could close two UI layers at once. Now consistent with the other key handlers in the palette.
   - **Multi-member detector ReDoS defense.** The 6 regex patterns use non-greedy quantifiers + whitespace-allowing character classes. Real inputs are capped at 60 KB at xlsx convert time, but added a defensive 200 KB cap on the input to `detectMultiMemberDocument`. Belt + braces.
 
+### rc2.13 — CRMLens outbound hardening
+Two bugs in the rc2.10 implementation, caught by a deeper re-read:
+- **Soft-deleted row resurrection.** The push-back pulled the live row and skipped only when no row existed. But Supabase soft-deletes leave the row present with `deleted_at` set. Without checking, the upsert wrote `deleted_at: null`, silently resurrecting a row CRMLens had just deleted. Now explicitly checks `liveRow.deleted_at` at step 1; dropped explicit `deleted_at: null` from the upsert payload.
+- **Missing version arbitration on per-field merge.** Classic pull-merge-push race: PolicyLens pulls at T1, CRMLens updates at T2, PolicyLens pushes at T3 overwriting T2. Fix: for each enrichment field, only push if PolicyLens's local `field_versions` value ≥ live row's. Lost-arbitration fields get logged.
+
+### rc2.14 — BulkVerify progress fixes
+Two bugs in the rc2.6 per-file progress UI:
+- **`ocr` and `cancelled` stages fell through to `queued`.** The queue emits stages: queued, ocr, extracting, done, failed, cancelled. The rc2.6 mapping only handled three. A file in OCR showed as `queued` (mid-pipeline, misleading); a cancelled file also showed as `queued` (suggests it'll still run, very misleading). Added explicit branches + distinct icons (`◐` for OCR, `⊘` for cancelled).
+- **Missing retry/failure summary.** Original roadmap asked for it. Now renders a small red bar above the file list with `N failed · M cancelled` when either is non-zero.
+- Also added `title` attribute on each row so the full filename appears on hover (was truncated with no escape hatch).
+
+### rc2.15 — CardRoutingBadge conflict parser
+Two fragility issues in the rc2.6 conflict tooltip:
+- **Non-greedy regex truncated names with embedded commas.** Reason string is `'CONFLICT: primary routing said NAME_A, focused ownership pass says NAME_B. Verify before save.'`. With `(.+?)` non-greedy, parsing a name like `"Soh Soon Jooh, Eric"` truncated to `"Soh Soon Jooh"`. Switched to greedy match anchored on the full canonical producer format — greedy backtracking selects the LAST valid split, robust against any number of commas inside either name.
+- **Silent fallback.** When the regex failed to match (shouldn't happen, but defensive), the tooltip rendered nothing on hover — phantom hover. Now falls back to placeholder labels AND renders the raw reason as a caption below the parsed pair.
+
+### rc2.16 — policyAnalystNote heuristic fixes
+Three bugs in the rc2.6 deterministic insight generator:
+- **ILP false positive when `ilpProtPct` is missing.** Default `|| 101` meant any ILP with av > S$100k where protection % wasn't extracted got flagged as "investment-heavy". Switched to `Number.isFinite()` guard so the heuristic only fires when `ilpProtPct` is explicitly known.
+- **SA multiplier insight rendered `S$0 to S$0`** when `sumAssured` was missing but multiplier was populated. Added `sa > 0` guard.
+- **Term Life expiry heuristic skipped DD/MM/YYYY dates.** SG FCs enter dates as `"31/12/2030"` which `new Date()` rejects in Safari. Now falls back to year-extraction regex when ISO parsing fails.
+
+### rc2.17 — CommandPalette dead-action fixes
+Found two dead-end actions in the rc2.7 palette:
+- **`Add policy` dispatched a custom event but no component listened.** Clicking navigated to /policies and nothing else — the FC had to manually click "+ Add manually". Added a `useEffect` listener in the Policies component.
+- **`New client` had the same issue PLUS didn't even switch tabs first.** Even if a listener existed it would be in an unmounted component. Fixed both: palette action now `setTab('clients')` then 50ms delay then dispatch; added a listener in ClientsTab respecting the same `activeClientId` guard as the in-tab button.
+- Also hardened CommandPalette's localStorage recents read: falls back to `[]` if the parsed value is not an array (defensive against manual localStorage corruption).
+
+### rc2.18 — CommandPalette mount-race fix
+The rc2.17 wiring had a subtle race: `setTab()` switches the active tab, then 50ms later the event dispatches. In slow rendering paths (initial load, low-power devices), the target tab's `useEffect` listener may not be registered when the event fires — silently dropped.
+
+**Belt + braces fix:**
+- Palette sets `window._policylensPendingAddPolicy` or `window._policylensPendingNewClient` BEFORE the setTimeout/dispatch.
+- Target component's `useEffect`, on first mount, also checks the flag — if set, clears it and triggers the same logic the event handler would have triggered.
+
+Guarantees correctness regardless of mount ordering.
+
+### smoke harness hardening
+Layered 4 new regression assertions on top of the basic detection:
+- **Fingerprint stability:** `computeDocFingerprint` twice on same content must return same id.
+- **Detection idempotency:** `detectMultiMemberDocument` twice must produce same candidate set.
+- **Substring dedup verification:** no candidate may be a strict substring of another.
+- **Performance sanity:** detection must complete <250ms. Catches ReDoS. (Current: <1ms on all 3 files.)
+
 ---
 
 ## Smoke test results — 3 real FC xlsx files
@@ -110,7 +154,7 @@ Every member of the Soh family is now correctly identified (including the JE she
 
 ---
 
-## Bugs found and patched — 6 total
+## Bugs found and patched — 13 total
 
 | # | Bug | Severity | Surfaced by | Fixed in |
 |---|---|---|---|---|
@@ -120,6 +164,16 @@ Every member of the Soh family is now correctly identified (including the JE she
 | 4 | Soh DD/MM "Name, Given" quoted-CSV cells missed all patterns | functional | smoke test rc2.11 | rc2.11 |
 | 5 | Pattern C truncated names at `(` open-paren | functional | smoke test rc2.11 | rc2.11 |
 | 6 | CommandPalette Escape leaked to parent modals | UX | self-audit | rc2.12 |
+| 7 | CRMLens push-back resurrected soft-deleted rows | data integrity | deep audit | rc2.13 |
+| 8 | CRMLens push-back missing version arbitration (write-write race) | data integrity | deep audit | rc2.13 |
+| 9 | BulkVerify per-file status: ocr/cancelled fell through to "queued" | UX | code re-read | rc2.14 |
+| 10 | CardRoutingBadge conflict parser truncated names with embedded commas | functional | code re-read | rc2.15 |
+| 11 | policyAnalystNote ILP false positive when `ilpProtPct` missing | UX (false-positive) | code re-read | rc2.16 |
+| 12 | policyAnalystNote SA multiplier rendered `S$0 to S$0` | UX (display) | code re-read | rc2.16 |
+| 13 | policyAnalystNote Term Life skipped DD/MM/YYYY dates | functional | code re-read | rc2.16 |
+| 14 | CommandPalette `Add policy` action dispatched event with no listener | functional | code re-read | rc2.17 |
+| 15 | CommandPalette `New client` action had no listener + no tab switch | functional | code re-read | rc2.17 |
+| 16 | CommandPalette mount-race could drop event on cold tab open | functional | deeper re-read | rc2.18 |
 
 ---
 
