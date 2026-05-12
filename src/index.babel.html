@@ -601,9 +601,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.4';
+const APP_VERSION = 'v2.4.0-rc2.5';
 const APP_VERSION_DATE = '2026-05-13';
-const APP_VERSION_NAME = 'AI smartness Tier F.1 — per-card routing dropdown in BulkVerify (fine-grained reroute)';
+const APP_VERSION_NAME = 'AI smartness Tier F Phase 2 — focused ownership cross-check (rider-of-parent confusion detector)';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -5818,6 +5818,79 @@ async function enumeratePeopleInDocument(contentBlocks) {
     console.warn('[PersonEnum] failed:', e?.message || e);
     return [];
   }
+}
+
+// ── rc2.5 — FOCUSED OWNERSHIP CONFIRMATION (Phase 2) ──
+// After the primary extraction returns N policies and enumeratePeople
+// returns K people, this helper runs K small focused AI calls asking
+// "List the policies belonging to <name>" — returns just keys, not
+// full extractions. The result is a mapping {personName -> [keys]}
+// that we cross-reference against the primary extraction to:
+//   • boost routing confidence when the focused pass confirms the
+//     same person owns the policy
+//   • flag mismatches (primary said Stacy, focused says Eric) for FC
+//     review — these are the "rider-of-parent" confusions that cost
+//     FCs the most time
+//
+// Why not full per-person extraction? Because it doubles AI cost AND
+// creates a duplicate-merge headache. Ownership enumeration is the
+// cheapest possible cross-check that adds real signal.
+async function focusedOwnershipForPeople(content, detectedPeople) {
+  if (!Array.isArray(content) || !Array.isArray(detectedPeople) || detectedPeople.length < 2) return {};
+  const out = {};
+  // Limit to first 5 people to keep AI cost bounded
+  for (const person of detectedPeople.slice(0, 5)) {
+    const focusedPrompt = [
+      'List the policies in this document that belong to ' + person.name + '.',
+      'For each policy, give a JSON object with {policyNumber, productName, insurer}.',
+      'INCLUDE only policies whose lifeInsured, owner, or section banner clearly identifies ' + person.name + '.',
+      'EXCLUDE policies for other people in the same document.',
+      'EXCLUDE cash accounts, fixed deposits, CPF balances — only insurance policies.',
+      'Return a JSON ARRAY. If no policies match this person, return [].',
+      'Return ONLY the JSON array, starting with [ and ending with ].'
+    ].join('\n');
+    try {
+      const raw = await callAI(focusedPrompt, content, 800);
+      const parsed = repairJSON(raw);
+      if (!Array.isArray(parsed)) { out[person.name] = []; continue; }
+      out[person.name] = parsed
+        .filter(p => p && typeof p === 'object')
+        .map(p => ({
+          policyNumber: String(p.policyNumber || '').trim(),
+          productName: String(p.productName || '').trim(),
+          insurer: String(p.insurer || '').trim()
+        }))
+        .filter(p => p.policyNumber || p.productName);
+    } catch (e) {
+      console.warn('[FocusedOwnership] failed for', person.name, ':', e?.message || e);
+      out[person.name] = [];
+    }
+  }
+  return out;
+}
+
+// rc2.5 helper: match an extracted policy against a focused-ownership
+// list. Returns the matching person name or null. Uses loose matching:
+// policyNumber exact, OR product+insurer fuzzy.
+function _matchPolicyToOwnership(policy, ownershipMap) {
+  if (!policy || !ownershipMap) return null;
+  const polNum = String(policy.policyNumber || '').trim().replace(/\s|-/g, '').toLowerCase();
+  const prodKey = (String(policy.productName || policy.policyName || '').trim().toLowerCase() + '|' +
+                   String(policy.insurer || '').trim().toLowerCase()).replace(/[^a-z0-9|]/g, '');
+  for (const [personName, owned] of Object.entries(ownershipMap)) {
+    if (!Array.isArray(owned)) continue;
+    for (const entry of owned) {
+      const ePolNum = String(entry.policyNumber || '').trim().replace(/\s|-/g, '').toLowerCase();
+      if (polNum && ePolNum && polNum === ePolNum) return personName;
+      const eProdKey = (String(entry.productName || '').trim().toLowerCase() + '|' +
+                        String(entry.insurer || '').trim().toLowerCase()).replace(/[^a-z0-9|]/g, '');
+      if (prodKey.length >= 8 && eProdKey.length >= 8) {
+        if (prodKey === eProdKey) return personName;
+        if (prodKey.includes(eProdKey) || eProdKey.includes(prodKey)) return personName;
+      }
+    }
+  }
+  return null;
 }
 
 // ── rc2.3 — POLICY ROUTING SUGGESTION ──
@@ -40847,6 +40920,11 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
           // each extracted policy. The suggestions get stashed on each
           // policy (._routingSuggestion) and surface in BulkVerify so the
           // FC can confirm/correct before save.
+          // rc2.5 — Phase 2 cross-check: after enumeration, run K small
+          // focused-ownership calls (one per detected person) asking
+          // "list THEIR policies". Match the focused output against the
+          // primary extraction's routing — boost confidence on agreement,
+          // flag mismatches as needing FC review.
           try {
             const detectedPeople = await enumeratePeopleInDocument(content);
             console.log('[PersonEnum] detected', detectedPeople.length, 'people:', detectedPeople);
@@ -40872,6 +40950,55 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
                   ' look like they belong to someone OTHER than the active client. Review the routing column before save.',
                   'warning', 9000);
               } catch (_) {}
+            }
+            // rc2.5: focused ownership cross-check. Only spend the K
+            // extra AI calls when we actually have multiple people AND
+            // at least one policy was routed away from active client
+            // (i.e., the multi-member case where mistakes are costly).
+            if (detectedPeople.length >= 2 && routedAway > 0) {
+              try {
+                console.log('[FocusedOwnership] running cross-check for', detectedPeople.length, 'people...');
+                const ownershipMap = await focusedOwnershipForPeople(content, detectedPeople);
+                let confirmed = 0;
+                let conflicts = 0;
+                for (const item of processed) {
+                  const focusedOwner = _matchPolicyToOwnership(item, ownershipMap);
+                  if (!focusedOwner) continue;
+                  item._focusedOwnership = focusedOwner;
+                  const suggestedName = item._routingSuggestion && item._routingSuggestion.suggestedClientName;
+                  // Loose name match: the focused owner says "Stacy Teo" and the
+                  // suggestion says "Teo Sock Choo, Stacy" — count as agreement
+                  // if either name contains the other (case-insensitive).
+                  const ln = String(focusedOwner).toLowerCase();
+                  const sn = String(suggestedName || '').toLowerCase();
+                  if (sn && (ln === sn || ln.includes(sn) || sn.includes(ln))) {
+                    // Agreement — boost confidence
+                    if (item._routingSuggestion) {
+                      item._routingSuggestion.confidence = 'high';
+                      item._routingSuggestion.reason = (item._routingSuggestion.reason || '') + ' (confirmed by focused ownership pass)';
+                    }
+                    confirmed++;
+                  } else if (sn) {
+                    // Conflict — primary routing disagrees with focused pass.
+                    // Don't auto-override; flag for FC review via the routing
+                    // suggestion's reason field + a console warning.
+                    if (item._routingSuggestion) {
+                      item._routingSuggestion.confidence = 'low';
+                      item._routingSuggestion.reason = 'CONFLICT: primary routing said ' + suggestedName +
+                        ', focused ownership pass says ' + focusedOwner + '. Verify before save.';
+                    }
+                    conflicts++;
+                  }
+                }
+                console.log('[FocusedOwnership] cross-check complete:', confirmed, 'confirmed,', conflicts, 'conflicts');
+                if (conflicts > 0) {
+                  try {
+                    toast(conflicts + ' polic' + (conflicts === 1 ? 'y' : 'ies') +
+                      ' have routing conflicts between primary and focused-ownership passes. Check the route badges in red before saving.',
+                      'warning', 9500);
+                  } catch (_) {}
+                }
+              } catch (e) { console.warn('[FocusedOwnership] cross-check failed:', e?.message || e); }
             }
           } catch (e) { console.warn('[PersonEnum] enumeration failed:', e?.message || e); }
         }
