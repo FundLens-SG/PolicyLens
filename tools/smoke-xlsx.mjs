@@ -13,15 +13,30 @@
 // USAGE
 //   npm run smoke:xlsx
 //
+// FIXTURES
+//   Local-only (user-specific). The 3 default fixtures live in
+//   ~/Downloads/. If they're not on the running machine the harness
+//   exits 0 with a 'no fixtures available' note — so CI doesn't fail
+//   on machines where the FC test files aren't present. Add a fresh
+//   xlsx to the FIXTURES array below to extend coverage.
+//
 // EXIT CODES
-//   0 = all 3 files produce sane detection results
-//   1 = at least one file regressed
+//   0 = all available fixtures pass, OR no fixtures available
+//   1 = at least one available fixture regressed
+//   2 = xlsx package not installed (cannot run)
 
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
-import * as XLSX from 'xlsx';
+
+let XLSX;
+try {
+  XLSX = await import('xlsx');
+} catch (e) {
+  console.error('[smoke:xlsx] xlsx package is not installed. Run: npm install');
+  process.exit(2);
+}
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -271,9 +286,25 @@ function main() {
   console.log(dim('=========================='));
   console.log('');
 
+  // rc2.18 — skip fixtures that don't exist on the current machine
+  // (they're user-specific files in ~/Downloads). If NONE are present,
+  // exit 0 with a friendly note instead of failing CI.
+  const presentFixtures = FIXTURES.filter(fx => existsSync(fx.path));
+  if (presentFixtures.length === 0) {
+    console.log(yellow('No fixtures found on this machine.'));
+    console.log(dim('Add an xlsx path to the FIXTURES array in tools/smoke-xlsx.mjs to run.'));
+    console.log(dim('Expected:'));
+    for (const fx of FIXTURES) console.log(dim('  - ' + fx.path));
+    process.exit(0);
+  }
+  if (presentFixtures.length < FIXTURES.length) {
+    console.log(yellow('Note: ' + (FIXTURES.length - presentFixtures.length) + ' fixture(s) missing on this machine — skipping.'));
+    console.log('');
+  }
+
   let anyFail = false;
   const results = [];
-  for (const fx of FIXTURES) {
+  for (const fx of presentFixtures) {
     const r = smokeTestOne(fx);
     results.push(r);
     const status = r.ok ? green('PASS') : red('FAIL');

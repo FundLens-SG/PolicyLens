@@ -7,5 +7,8 @@
     "eval:extraction": "node tools/eval-extraction.mjs",
     "eval:extraction:verbose": "node tools/eval-extraction.mjs --verbose",
     "smoke:xlsx": "node tools/smoke-xlsx.mjs"
+  },
+  "devDependencies": {
+    "xlsx": "^0.18.5"
   }
 }
