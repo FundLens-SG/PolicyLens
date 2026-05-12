@@ -214,6 +214,55 @@ function smokeTestOne(fixture) {
     result.issues.push('REGRESSION: fingerprint returned null (need >= 2 anchors)');
   }
 
+  // rc2.18 — additional guards layered on top of the basic detection.
+
+  // 4) Fingerprint stability: running computeDocFingerprint twice on
+  //    the same blocks must return the same id. If not, the fingerprint
+  //    is non-deterministic (e.g. picked up a time-based fallback) and
+  //    the per-template few-shot will fragment across re-extractions.
+  if (fp) {
+    const fp2 = computeDocFingerprint(blocks);
+    if (!fp2 || fp2.id !== fp.id) {
+      result.ok = false;
+      result.issues.push('REGRESSION: fingerprint NOT stable across re-runs (id1=' + fp.id + ', id2=' + (fp2?.id || 'null') + ')');
+    }
+  }
+
+  // 5) Detection idempotency: running detectMultiMemberDocument twice
+  //    must produce the same candidate set. Order-insensitive.
+  const det2 = detectMultiMemberDocument(blocks);
+  const set1 = JSON.stringify([...det.candidates].sort());
+  const set2 = JSON.stringify([...det2.candidates].sort());
+  if (set1 !== set2) {
+    result.ok = false;
+    result.issues.push('REGRESSION: detection NOT idempotent (run1=' + set1 + ', run2=' + set2 + ')');
+  }
+
+  // 6) Substring dedup verification: no candidate is a strict substring
+  //    of another candidate (case-insensitive). The rc2.11 dedup step
+  //    should enforce this; if it ever regresses, this fires.
+  for (const a of det.candidates) {
+    for (const b of det.candidates) {
+      if (a === b) continue;
+      if (b.toLowerCase().includes(a.toLowerCase()) && b.length > a.length) {
+        result.ok = false;
+        result.issues.push('REGRESSION: substring dedup let through: "' + a + '" is contained in "' + b + '"');
+        break;
+      }
+    }
+  }
+
+  // 7) Performance sanity: detection should complete under ~250ms on
+  //    a real FC xlsx. ReDoS would push this into seconds.
+  const perfStart = Date.now();
+  detectMultiMemberDocument(blocks);
+  const perfMs = Date.now() - perfStart;
+  result.info.detectionMs = perfMs;
+  if (perfMs > 250) {
+    result.ok = false;
+    result.issues.push('REGRESSION: detection took ' + perfMs + 'ms (>250ms threshold) — possible ReDoS');
+  }
+
   return result;
 }
 
@@ -235,6 +284,12 @@ function main() {
     console.log(dim('  candidates (' + (r.info.candidates || []).length + ')      : ') + JSON.stringify(r.info.candidates));
     console.log(dim('  fingerprint id     : ') + (r.info.fingerprint || '(none)'));
     console.log(dim('  fingerprint anchors: ') + (r.info.fingerprintComposite || '(none)'));
+    if (typeof r.info.detectionMs === 'number') {
+      const perfStr = r.info.detectionMs <= 50 ? green(r.info.detectionMs + 'ms')
+        : r.info.detectionMs <= 150 ? yellow(r.info.detectionMs + 'ms')
+        : red(r.info.detectionMs + 'ms');
+      console.log(dim('  detection perf     : ') + perfStr);
+    }
     if (r.issues.length) {
       console.log(red('  Issues:'));
       for (const iss of r.issues) console.log(red('    × ' + iss));
