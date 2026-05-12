@@ -601,9 +601,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.11';
+const APP_VERSION = 'v2.4.0-rc2.12';
 const APP_VERSION_DATE = '2026-05-14';
-const APP_VERSION_NAME = 'Multi-member detection v2 — quoted names, CSV-prefix tolerance, substring dedup';
+const APP_VERSION_NAME = 'Audit-pass fixes — palette Escape preventDefault + ReDoS-defensive size cap';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -5748,11 +5748,16 @@ function sanityCheckPolicy(policy) {
 // pragmatic 90/10 unlock — same code path, smarter warning.
 function detectMultiMemberDocument(contentBlocks) {
   if (!Array.isArray(contentBlocks)) return { detected: false, candidates: [] };
-  const textChunks = contentBlocks
+  const textChunksRaw = contentBlocks
     .filter(b => b && (b.type === 'text' || typeof b.text === 'string'))
     .map(b => String(b.text || ''))
     .join('\n');
-  if (!textChunks) return { detected: false, candidates: [] };
+  if (!textChunksRaw) return { detected: false, candidates: [] };
+  // rc2.11 — defensive cap. Multi-member detection patterns use
+  // non-greedy quantifiers with whitespace-allowing char classes, which
+  // can be slow on adversarial input. Cap at 200KB — anything larger is
+  // unlikely to be a hand-prepared SG insurance summary anyway.
+  const textChunks = textChunksRaw.length > 200000 ? textChunksRaw.slice(0, 200000) : textChunksRaw;
 
   const candidates = new Set();
   const addCandidate = (rawName, opts = {}) => {
@@ -19749,7 +19754,7 @@ function CommandPalette({ open, onClose, seedQuery }) {
   useEffect(() => { setSelectedIndex(0); }, [filtered.length, query]);
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Escape') { onClose(); }
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); onClose(); }
     else if (e.key === 'ArrowDown') { e.preventDefault(); setSelectedIndex(i => Math.min(filtered.length - 1, i + 1)); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); setSelectedIndex(i => Math.max(0, i - 1)); }
     else if (e.key === 'Enter') {
