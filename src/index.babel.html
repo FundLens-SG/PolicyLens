@@ -601,9 +601,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.10';
+const APP_VERSION = 'v2.4.0-rc2.11';
 const APP_VERSION_DATE = '2026-05-14';
-const APP_VERSION_NAME = 'CRMLens outbound sync — write enrichments back to shared row';
+const APP_VERSION_NAME = 'Multi-member detection v2 — quoted names, CSV-prefix tolerance, substring dedup';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -5755,18 +5755,25 @@ function detectMultiMemberDocument(contentBlocks) {
   if (!textChunks) return { detected: false, candidates: [] };
 
   const candidates = new Set();
-  const addCandidate = (rawName) => {
+  const addCandidate = (rawName, opts = {}) => {
     if (!rawName) return;
     // rc2.8 — strip leading/trailing whitespace including embedded newlines
     // (Eunice Kong's name cell is "\nKONG SEET YIN").
+    // rc2.11 — also strip leading/trailing quotes and commas (CSV cells).
     const name = String(rawName)
-      .replace(/^[\s\n\r]+|[\s\n\r]+$/g, '')
+      .replace(/^[\s\n\r",]+|[\s\n\r",]+$/g, '')
       .replace(/\s+/g, ' ');
-    if (name.length < 4 || name.length > 60) return;
-    if (/policy|summary|report|portfolio|insurer|insurance|review|client|account|holder|owner/i.test(name)) return;
-    // rc2.8 — must have at least one space (full name with surname).
-    // Filters single-word noise like "Self" or label text.
-    if (!/\s/.test(name)) return;
+    if (name.length > 60) return;
+    if (/policy|summary|report|portfolio|insurer|insurance|review|client|account|holder|owner|hospitalisation|protection|critical\s+illness|legacy\s+planning|life\s+protection|personal\s+accident/i.test(name)) return;
+    // rc2.11 — high-confidence patterns (DOB-adjacent, identity-header-adjacent)
+    // pass loose: allow ≥ 2 chars and single-word nicknames. Low-confidence
+    // patterns (bare sheet header) still require ≥ 4 chars + space.
+    if (opts.loose) {
+      if (name.length < 2) return;
+    } else {
+      if (name.length < 4) return;
+      if (!/\s/.test(name)) return;
+    }
     candidates.add(name);
   };
 
@@ -5777,16 +5784,28 @@ function detectMultiMemberDocument(contentBlocks) {
   const sohRegex = /([A-Z][a-zA-Z'\-\.\s]{3,50}?),\s*(\d{1,2}\s+[A-Z][a-z]+\s+\d{4})/g;
   let m;
   while ((m = sohRegex.exec(textChunks)) !== null) {
-    addCandidate(m[1]);
+    addCandidate(m[1], { loose: true });
+    if (candidates.size > 8) break;
+  }
+
+  // Pattern A2 — quoted name + quoted DOB on next line (Soh DD/MM sheets
+  // where given name is comma-suffixed inside a single CSV cell:
+  // "Soh Soon Jooh, Eric"\n"21 November 1968, 57 y/o").
+  const quotedNameDobRegex = /"([A-Z][a-zA-Z'\-\.\s,]{3,60}?)"\s*\n\s*"?\d{1,2}\s+[A-Z][a-z]+\s+\d{4}/g;
+  while ((m = quotedNameDobRegex.exec(textChunks)) !== null) {
+    addCandidate(m[1], { loose: true });
     if (candidates.size > 8) break;
   }
 
   // Pattern B — NRIC-style: NAME (potentially newline-prefixed)
   // followed within ~80 chars by "NRIC/FIN" and/or "D.O.B." labels.
   // Used by Belinda + Eunice templates.
-  const nricRegex = /(?:^|\n)\s*([A-Z][A-Z\sa-z'\-\.,\(\)]{4,60})\s*\n\s*(?:Policy Summary|NRIC\/FIN|NRIC|FIN\b)/g;
+  // rc2.11 — tolerate leading/trailing CSV noise (commas, quotes) around
+  // the name and before the id-marker. Belinda has ",Tan Kah Lan (Belinda)";
+  // Eunice has a quoted multi-line cell "\nKONG SEET YIN".
+  const nricRegex = /(?:^|\n)[\s,"]*([A-Z][A-Z\sa-z'\-\.,\(\)]{3,60}?)[\s"]*\n[\s,"]*(?:Policy Summary|NRIC\/FIN|NRIC|FIN\b)/g;
   while ((m = nricRegex.exec(textChunks)) !== null) {
-    addCandidate(m[1]);
+    addCandidate(m[1], { loose: true });
     if (candidates.size > 8) break;
   }
 
@@ -5796,7 +5815,10 @@ function detectMultiMemberDocument(contentBlocks) {
   //   <name>,...
   // For Soh family (5 sheets DD/MM/JL/JY/JE), each sheet's row 1 is the
   // person's full name. Match across all sheets, not just the first.
-  const sheetRegex = /---\s*Sheet:\s*[^-]+---\s*\n\s*([A-Z][A-Z\sa-z'\-\.,]{4,60})/g;
+  // rc2.11 — tolerate leading CSV noise (commas, quotes) before name AND
+  // include parens in name char class so "Tan Kah Lan (Belinda)" is
+  // captured whole instead of truncated to "Tan Kah Lan".
+  const sheetRegex = /---\s*Sheet:\s*[^-]+---\s*\n[\s",]*([A-Z][A-Z\sa-z'\-\.,\(\)]{4,60})/g;
   while ((m = sheetRegex.exec(textChunks)) !== null) {
     addCandidate(m[1]);
     if (candidates.size > 8) break;
@@ -5805,15 +5827,35 @@ function detectMultiMemberDocument(contentBlocks) {
   // Pattern D — file-level start marker [Spreadsheet: <name>] followed
   // by a name on the next line. Catches the first sheet name when sheet
   // markers aren't present (csv files, single-sheet xlsx).
-  const fileRegex = /\[Spreadsheet:[^\]]+\]\s*\n\s*([A-Z][A-Z\sa-z'\-\.,]{4,60})/g;
+  const fileRegex = /\[Spreadsheet:[^\]]+\]\s*\n[\s",]*([A-Z][A-Z\sa-z'\-\.,\(\)]{4,60})/g;
   while ((m = fileRegex.exec(textChunks)) !== null) {
     addCandidate(m[1]);
     if (candidates.size > 8) break;
   }
 
+  // Pattern F — high-confidence: sheet marker → name → DOB-line.
+  // Catches sheets where the name is a single short token (e.g. "Je")
+  // or quoted with embedded comma, with a date line on the next row.
+  // The DOB evidence is what licenses the looser length filter.
+  const sheetNameDobRegex = /---\s*Sheet:\s*[^-]+---\s*\n\s*"?([A-Za-z][A-Za-z'\-\.\s,]{1,60}?)"?\s*\n\s*"?\d{1,2}\s+[A-Z][a-z]+\s+\d{4}/g;
+  while ((m = sheetNameDobRegex.exec(textChunks)) !== null) {
+    addCandidate(m[1], { loose: true });
+    if (candidates.size > 8) break;
+  }
+
+  // rc2.11 — substring dedup. If candidate A is a strict substring of
+  // candidate B (case-insensitive), drop A. Prevents Belinda's name from
+  // appearing both as "Tan Kah Lan" (truncated by parens) and "Tan Kah
+  // Lan (Belinda)" (full).
+  const all = [...candidates];
+  const final = all.filter(c => {
+    const cLow = c.toLowerCase();
+    return !all.some(other => other !== c && other.toLowerCase().includes(cLow) && other.length > c.length);
+  });
+
   return {
-    detected: candidates.size >= 2,
-    candidates: [...candidates]
+    detected: final.length >= 2,
+    candidates: final
   };
 }
 

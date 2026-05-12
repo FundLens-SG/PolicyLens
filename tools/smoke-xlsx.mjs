@@ -1,0 +1,263 @@
+// PolicyLens smoke test — xlsx structure + multi-member + fingerprint
+//
+// PURPOSE
+//   Run the deterministic xlsx-handling code paths (detectMultiMemberDocument
+//   + computeDocFingerprint + identity-header detection) against real
+//   FC-provided xlsx files. Catches regressions in:
+//     • Leading-newline name cells (e.g. "\nKONG SEET YIN")
+//     • y/o projection-label false positives (e.g. "(55 y/o)" in Belinda's
+//       projections table being treated as a person)
+//     • NRIC-style identity headers (Belinda + Eunice templates)
+//     • Multi-sheet workbooks (Soh family — 5 sheets, one per person)
+//
+// USAGE
+//   npm run smoke:xlsx
+//
+// EXIT CODES
+//   0 = all 3 files produce sane detection results
+//   1 = at least one file regressed
+
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
+import * as XLSX from 'xlsx';
+
+const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+const FIXTURES = [
+  { label: 'Soh Family',     path: 'C:\\Users\\user\\Downloads\\Soh Family Policy Summary.xlsx',           expectMulti: true,  expectMin: 4 },
+  { label: 'Belinda (Tan Kah Lan)', path: 'C:\\Users\\user\\Downloads\\Tan Kah Lan (Belinda) Policy Summary.xlsx', expectMulti: false, expectMin: 1 },
+  { label: 'Eunice Kong',    path: 'C:\\Users\\user\\Downloads\\Eunice Kong policy summary.xlsx',          expectMulti: false, expectMin: 1 }
+];
+
+function colorize(s, code) { return process.stdout.isTTY ? '\x1b[' + code + 'm' + s + '\x1b[0m' : s; }
+const green = s => colorize(s, '32');
+const red   = s => colorize(s, '31');
+const yellow = s => colorize(s, '33');
+const cyan = s => colorize(s, '36');
+const dim = s => colorize(s, '90');
+
+// ── XLSX -> CSV text, mirroring PolicyLens processFileForAI ──
+function xlsxToContentBlocks(filePath) {
+  const ab = readFileSync(filePath);
+  const wb = XLSX.read(ab, { type: 'buffer' });
+  let allText = '[Spreadsheet: ' + path.basename(filePath) + ']\n';
+  for (const sheetName of wb.SheetNames) {
+    const ws = wb.Sheets[sheetName];
+    if (!ws || !ws['!ref']) continue;
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    let maxCol = 0;
+    for (let r = range.s.r; r <= Math.min(range.s.r + 30, range.e.r); r++) {
+      for (let c = range.s.c; c <= range.e.c; c++) {
+        const cell = ws[XLSX.utils.encode_cell({ r, c })];
+        if (cell && cell.v !== null && cell.v !== undefined && String(cell.v).trim() !== '') {
+          maxCol = Math.max(maxCol, c);
+        }
+      }
+    }
+    const limitedRange = {
+      s: { r: range.s.r, c: range.s.c },
+      e: { r: Math.min(range.e.r, range.s.r + 200), c: Math.min(maxCol + 1, 20) }
+    };
+    const csv = XLSX.utils.sheet_to_csv(ws, { blankrows: false, range: limitedRange });
+    const cleaned = csv.split('\n').map(line => line.replace(/,+$/g, '')).filter(line => line.replace(/,/g, '').trim() !== '').join('\n');
+    if (cleaned.trim()) allText += '\n--- Sheet: ' + sheetName + ' ---\n' + cleaned;
+  }
+  return [{ type: 'text', text: allText.slice(0, 60000) }];
+}
+
+// ── Vendored: detectMultiMemberDocument (rc2.11) ──
+function detectMultiMemberDocument(contentBlocks) {
+  if (!Array.isArray(contentBlocks)) return { detected: false, candidates: [] };
+  const textChunks = contentBlocks
+    .filter(b => b && (b.type === 'text' || typeof b.text === 'string'))
+    .map(b => String(b.text || ''))
+    .join('\n');
+  if (!textChunks) return { detected: false, candidates: [] };
+
+  const candidates = new Set();
+  const addCandidate = (rawName, opts = {}) => {
+    if (!rawName) return;
+    const name = String(rawName).replace(/^[\s\n\r",]+|[\s\n\r",]+$/g, '').replace(/\s+/g, ' ');
+    if (name.length > 60) return;
+    if (/policy|summary|report|portfolio|insurer|insurance|review|client|account|holder|owner|hospitalisation|protection|critical\s+illness|legacy\s+planning|life\s+protection|personal\s+accident/i.test(name)) return;
+    if (opts.loose) {
+      if (name.length < 2) return;
+    } else {
+      if (name.length < 4) return;
+      if (!/\s/.test(name)) return;
+    }
+    candidates.add(name);
+  };
+
+  const sohRegex = /([A-Z][a-zA-Z'\-\.\s]{3,50}?),\s*(\d{1,2}\s+[A-Z][a-z]+\s+\d{4})/g;
+  let m;
+  while ((m = sohRegex.exec(textChunks)) !== null) { addCandidate(m[1], { loose: true }); if (candidates.size > 8) break; }
+
+  const quotedNameDobRegex = /"([A-Z][a-zA-Z'\-\.\s,]{3,60}?)"\s*\n\s*"?\d{1,2}\s+[A-Z][a-z]+\s+\d{4}/g;
+  while ((m = quotedNameDobRegex.exec(textChunks)) !== null) { addCandidate(m[1], { loose: true }); if (candidates.size > 8) break; }
+
+  const nricRegex = /(?:^|\n)[\s,"]*([A-Z][A-Z\sa-z'\-\.,\(\)]{3,60}?)[\s"]*\n[\s,"]*(?:Policy Summary|NRIC\/FIN|NRIC|FIN\b)/g;
+  while ((m = nricRegex.exec(textChunks)) !== null) { addCandidate(m[1], { loose: true }); if (candidates.size > 8) break; }
+
+  const sheetRegex = /---\s*Sheet:\s*[^-]+---\s*\n[\s",]*([A-Z][A-Z\sa-z'\-\.,\(\)]{4,60})/g;
+  while ((m = sheetRegex.exec(textChunks)) !== null) { addCandidate(m[1]); if (candidates.size > 8) break; }
+
+  const fileRegex = /\[Spreadsheet:[^\]]+\]\s*\n[\s",]*([A-Z][A-Z\sa-z'\-\.,\(\)]{4,60})/g;
+  while ((m = fileRegex.exec(textChunks)) !== null) { addCandidate(m[1]); if (candidates.size > 8) break; }
+
+  const sheetNameDobRegex = /---\s*Sheet:\s*[^-]+---\s*\n\s*"?([A-Za-z][A-Za-z'\-\.\s,]{1,60}?)"?\s*\n\s*"?\d{1,2}\s+[A-Z][a-z]+\s+\d{4}/g;
+  while ((m = sheetNameDobRegex.exec(textChunks)) !== null) { addCandidate(m[1], { loose: true }); if (candidates.size > 8) break; }
+
+  const all = [...candidates];
+  const final = all.filter(c => {
+    const cLow = c.toLowerCase();
+    return !all.some(other => other !== c && other.toLowerCase().includes(cLow) && other.length > c.length);
+  });
+  return { detected: final.length >= 2, candidates: final };
+}
+
+// ── Vendored: computeDocFingerprint (rc2.9) — Node port ──
+function computeDocFingerprint(contentBlocks) {
+  if (!Array.isArray(contentBlocks)) return null;
+  const text = contentBlocks
+    .filter(b => b && (b.type === 'text' || typeof b.text === 'string'))
+    .map(b => String(b.text || ''))
+    .join('\n');
+  if (!text || text.length < 50) return null;
+
+  const anchors = [];
+  const sheetMatches = text.match(/---\s*Sheet:\s*[^-]+---/g) || [];
+  if (sheetMatches.length) anchors.push('sheets:' + sheetMatches.length);
+  const spreadsheetMatch = text.match(/\[Spreadsheet:\s*([^\]]+)\]/);
+  if (spreadsheetMatch) anchors.push('xlsx:' + spreadsheetMatch[1].toLowerCase().replace(/\s+/g, '-'));
+
+  const colHeaderMatches = text.match(/(?:^|\n)([A-Z][^,\n]{0,40},){3,15}[A-Z][^,\n]{0,40}/g) || [];
+  for (const h of colHeaderMatches.slice(0, 5)) {
+    const cols = h.replace(/^[\n]+/, '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+    if (cols.length >= 3) anchors.push('cols:' + cols.slice(0, 8).join('|'));
+  }
+
+  const sectionMatches = text.match(/\b(Hospitalisation|Life Protection|Critical Illness|Personal Accident|Investment-linked|ILP|Endowment|Legacy Planning|Fixed Deposits|CPF Accounts|Short Term Endowments|Long Term Endowments|Wealth Accumulation|SRS|Annuity|Disability Income)\b/gi) || [];
+  const uniqueSections = [...new Set(sectionMatches.map(s => s.toLowerCase()))].sort();
+  if (uniqueSections.length) anchors.push('sections:' + uniqueSections.join(','));
+
+  const insurerMatches = text.match(/\b(Manulife|Prudential|Great Eastern|AIA|NTUC Income|Income Insurance|Singlife|Aviva|HSBC|FWD|Etiqa|Tokio Marine|MSIG|China Taiping|China Life|Generali|Zurich|Tugu|Sun Life|Friends Provident|Transamerica)\b/gi) || [];
+  const uniqueInsurers = [...new Set(insurerMatches.map(s => s.toLowerCase().trim()))].sort();
+  if (uniqueInsurers.length) anchors.push('insurers:' + uniqueInsurers.slice(0, 5).join(','));
+
+  if (/NRIC\/FIN/i.test(text)) anchors.push('schema:nric');
+  if (/\d{1,2}\s+[A-Z][a-z]+\s+\d{4},\s*\d{1,3}\s*y\/?o/i.test(text)) anchors.push('schema:soh');
+
+  if (anchors.length < 2) return null;
+  const composite = anchors.join('|');
+  const hex = createHash('sha256').update(composite).digest('hex').slice(0, 12);
+  return { id: hex, composite };
+}
+
+function smokeTestOne(fixture) {
+  const result = { label: fixture.label, ok: true, issues: [], info: {} };
+  if (!existsSync(fixture.path)) {
+    result.ok = false;
+    result.issues.push('Missing fixture: ' + fixture.path);
+    return result;
+  }
+  const blocks = xlsxToContentBlocks(fixture.path);
+  const text = blocks[0].text;
+  result.info.textLength = text.length;
+  result.info.sheetCount = (text.match(/---\s*Sheet:/g) || []).length;
+
+  // Detection
+  const det = detectMultiMemberDocument(blocks);
+  result.info.detected = det.detected;
+  result.info.candidates = det.candidates;
+
+  if (fixture.expectMulti && !det.detected) {
+    result.ok = false;
+    result.issues.push('Expected multi-member detection but got single-person');
+  }
+  if (fixture.expectMin && det.candidates.length < fixture.expectMin) {
+    result.ok = false;
+    result.issues.push('Expected at least ' + fixture.expectMin + ' candidates, got ' + det.candidates.length);
+  }
+
+  // Smoke-test specific guards
+  // 1) Leading-newline names — every candidate must have no leading whitespace
+  const leadingWs = det.candidates.filter(c => /^[\s\n\r]/.test(c));
+  if (leadingWs.length) {
+    result.ok = false;
+    result.issues.push('REGRESSION: leading-whitespace name(s): ' + JSON.stringify(leadingWs));
+  }
+
+  // 2) y/o false positive — no candidate name should literally contain "y/o"
+  //    or be an obvious projection label like "(55 y/o)" or "Age 65"
+  const yoFalse = det.candidates.filter(c => /\by\/o\b|^\(?age\s+\d|^\d+\s*y\/o\b/i.test(c));
+  if (yoFalse.length) {
+    result.ok = false;
+    result.issues.push('REGRESSION: y/o false-positive(s): ' + JSON.stringify(yoFalse));
+  }
+
+  // 3) None of the candidates should literally be label-style words
+  const labelFalse = det.candidates.filter(c => /^(Policy|Summary|Insurer|Client|Owner|Holder|Premium|Page \d|Total|Sub-?Total)\b/i.test(c));
+  if (labelFalse.length) {
+    result.ok = false;
+    result.issues.push('REGRESSION: label-style false-positive(s): ' + JSON.stringify(labelFalse));
+  }
+
+  // Fingerprint
+  const fp = computeDocFingerprint(blocks);
+  result.info.fingerprint = fp ? fp.id : null;
+  result.info.fingerprintComposite = fp ? fp.composite : null;
+  if (!fp) {
+    result.ok = false;
+    result.issues.push('REGRESSION: fingerprint returned null (need >= 2 anchors)');
+  }
+
+  return result;
+}
+
+function main() {
+  console.log(dim('PolicyLens xlsx smoke test'));
+  console.log(dim('=========================='));
+  console.log('');
+
+  let anyFail = false;
+  const results = [];
+  for (const fx of FIXTURES) {
+    const r = smokeTestOne(fx);
+    results.push(r);
+    const status = r.ok ? green('PASS') : red('FAIL');
+    console.log(status + '  ' + cyan(r.label));
+    console.log(dim('  text length        : ') + r.info.textLength);
+    console.log(dim('  sheets in workbook : ') + r.info.sheetCount);
+    console.log(dim('  multi-member       : ') + (r.info.detected ? green('yes') : yellow('no')));
+    console.log(dim('  candidates (' + (r.info.candidates || []).length + ')      : ') + JSON.stringify(r.info.candidates));
+    console.log(dim('  fingerprint id     : ') + (r.info.fingerprint || '(none)'));
+    console.log(dim('  fingerprint anchors: ') + (r.info.fingerprintComposite || '(none)'));
+    if (r.issues.length) {
+      console.log(red('  Issues:'));
+      for (const iss of r.issues) console.log(red('    × ' + iss));
+      anyFail = true;
+    }
+    console.log('');
+  }
+
+  // Distinct-fingerprint check: each xlsx should have a stable id, and
+  // distinct templates should NOT collide.
+  const distinctFps = new Set(results.map(r => r.info.fingerprint).filter(Boolean));
+  console.log(dim('Distinct fingerprints across 3 files: ') + distinctFps.size);
+  if (distinctFps.size < 2) {
+    console.log(yellow('WARN: all fixtures collided to a single fingerprint — distinguishing power may be too low'));
+  }
+
+  console.log('');
+  if (anyFail) {
+    console.log(red('SMOKE TEST FAIL'));
+    process.exit(1);
+  }
+  console.log(green('SMOKE TEST PASS — all 3 files behave as expected'));
+  process.exit(0);
+}
+
+main();

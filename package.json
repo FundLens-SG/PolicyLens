@@ -5,6 +5,7 @@
     "test:golden": "node tools/golden-family-routing-harness.mjs",
     "split:preview": "node tools/extract-index-modules.mjs --list",
     "eval:extraction": "node tools/eval-extraction.mjs",
-    "eval:extraction:verbose": "node tools/eval-extraction.mjs --verbose"
+    "eval:extraction:verbose": "node tools/eval-extraction.mjs --verbose",
+    "smoke:xlsx": "node tools/smoke-xlsx.mjs"
   }
 }
