@@ -601,9 +601,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.7';
+const APP_VERSION = 'v2.4.0-rc2.8';
 const APP_VERSION_DATE = '2026-05-14';
-const APP_VERSION_NAME = 'Command palette: Cmd+K / Ctrl+K / "/" — instant search across clients, policies, tabs, actions';
+const APP_VERSION_NAME = 'Multi-sheet xlsx detection + NRIC-header detection + leading-newline-name fix';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -5747,20 +5747,63 @@ function detectMultiMemberDocument(contentBlocks) {
     .join('\n');
   if (!textChunks) return { detected: false, candidates: [] };
 
-  // Looks for "Full Name, DD MMM YYYY, age N y/o" or similar banners.
-  // Tolerant of either Western or local formats. Scores rather than
-  // hard-extracts to keep noise low.
-  const nameDobAge = /([A-Z][a-zA-Z'\-\s]{3,40}),\s*(\d{1,2}\s+[A-Z][a-z]+\s+\d{4})(?:,\s*(\d{1,3})\s*y\/?o)?/g;
   const candidates = new Set();
-  let match;
-  while ((match = nameDobAge.exec(textChunks)) !== null) {
-    const name = match[1].trim().replace(/\s+/g, ' ');
-    if (name.length < 6 || name.length > 60) continue;
-    if (/policy|summary|report|portfolio|insurer|insurance|review|client|account/i.test(name)) continue;
-    if (!/\s/.test(name)) continue; // need at least two words
+  const addCandidate = (rawName) => {
+    if (!rawName) return;
+    // rc2.8 — strip leading/trailing whitespace including embedded newlines
+    // (Eunice Kong's name cell is "\nKONG SEET YIN").
+    const name = String(rawName)
+      .replace(/^[\s\n\r]+|[\s\n\r]+$/g, '')
+      .replace(/\s+/g, ' ');
+    if (name.length < 4 || name.length > 60) return;
+    if (/policy|summary|report|portfolio|insurer|insurance|review|client|account|holder|owner/i.test(name)) return;
+    // rc2.8 — must have at least one space (full name with surname).
+    // Filters single-word noise like "Self" or label text.
+    if (!/\s/.test(name)) return;
     candidates.add(name);
+  };
+
+  // Pattern A — Soh-style banner: "Full Name, DD MMM YYYY[, NN y/o]"
+  // Strict: requires the comma-DOB pattern to avoid matching arbitrary
+  // capitalized text. Excludes "y/o" projection labels like "(55 y/o)"
+  // by anchoring on a DATE before the y/o, not just the y/o phrase.
+  const sohRegex = /([A-Z][a-zA-Z'\-\.\s]{3,50}?),\s*(\d{1,2}\s+[A-Z][a-z]+\s+\d{4})/g;
+  let m;
+  while ((m = sohRegex.exec(textChunks)) !== null) {
+    addCandidate(m[1]);
     if (candidates.size > 8) break;
   }
+
+  // Pattern B — NRIC-style: NAME (potentially newline-prefixed)
+  // followed within ~80 chars by "NRIC/FIN" and/or "D.O.B." labels.
+  // Used by Belinda + Eunice templates.
+  const nricRegex = /(?:^|\n)\s*([A-Z][A-Z\sa-z'\-\.,\(\)]{4,60})\s*\n\s*(?:Policy Summary|NRIC\/FIN|NRIC|FIN\b)/g;
+  while ((m = nricRegex.exec(textChunks)) !== null) {
+    addCandidate(m[1]);
+    if (candidates.size > 8) break;
+  }
+
+  // Pattern C — multi-sheet workbook with one-person-per-sheet layout.
+  // The xlsx -> text converter emits each sheet as:
+  //   --- Sheet: <SheetName> ---
+  //   <name>,...
+  // For Soh family (5 sheets DD/MM/JL/JY/JE), each sheet's row 1 is the
+  // person's full name. Match across all sheets, not just the first.
+  const sheetRegex = /---\s*Sheet:\s*[^-]+---\s*\n\s*([A-Z][A-Z\sa-z'\-\.,]{4,60})/g;
+  while ((m = sheetRegex.exec(textChunks)) !== null) {
+    addCandidate(m[1]);
+    if (candidates.size > 8) break;
+  }
+
+  // Pattern D — file-level start marker [Spreadsheet: <name>] followed
+  // by a name on the next line. Catches the first sheet name when sheet
+  // markers aren't present (csv files, single-sheet xlsx).
+  const fileRegex = /\[Spreadsheet:[^\]]+\]\s*\n\s*([A-Z][A-Z\sa-z'\-\.,]{4,60})/g;
+  while ((m = fileRegex.exec(textChunks)) !== null) {
+    addCandidate(m[1]);
+    if (candidates.size > 8) break;
+  }
+
   return {
     detected: candidates.size >= 2,
     candidates: [...candidates]
