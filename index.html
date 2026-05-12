@@ -611,9 +611,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.3';
+const APP_VERSION = 'v2.4.0-rc2.4';
 const APP_VERSION_DATE = '2026-05-13';
-const APP_VERSION_NAME = 'AI smartness Tier F (Phase 1) — multi-member documents: per-policy routing suggestions + BulkVerify banner';
+const APP_VERSION_NAME = 'AI smartness Tier F.1 — per-card routing dropdown in BulkVerify (fine-grained reroute)';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -47780,6 +47780,190 @@ const QV_SELECT_OPTIONS = {
 // In Quick Verify mode we just show a one-line summary and a button to expand
 // the card to full review for that one policy.
 const QV_COMPLEX_FIELDS = new Set(['riders', 'fundAllocations', 'creditingRates', 'loyaltyBonus', 'fa_ia_allocation', 'highlights', 'indexSubAccountsText']);
+
+// rc2.4 — per-card routing badge + inline picker. Lives next to each
+// BulkVerify card's header. Renders only if either:
+//   (a) item has a _routingSuggestion attached by the rc2.3 multi-member
+//       pipeline, OR
+//   (b) item.clientId has been overridden away from the active client.
+// Click expands an inline dropdown of all known clients (or "Create new")
+// so the FC can fine-tune which workspace each policy lands in.
+function CardRoutingBadge({
+  item,
+  items,
+  setItems
+}) {
+  const [open, setOpen] = useState(false);
+  const [allClients, setAllClients] = useState(null);
+  // Load all clients lazily on first open (avoids hitting IDB for every card on render)
+  useEffect(() => {
+    if (!open || allClients !== null) return;
+    let cancelled = false;
+    PolicyDB.getAllDriveStates().then(states => {
+      if (!cancelled) setAllClients((states || []).filter(s => s && s.clientId && s.clientName));
+    }).catch(() => {
+      if (!cancelled) setAllClients([]);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
+  const sug = item._routingSuggestion;
+  // Only render the badge if a routing decision is non-trivial (suggestion
+  // exists OR item.clientId already overridden). Saves vertical space on
+  // single-person extractions where routing is implicit.
+  const overrideName = item._routingOverrideName;
+  const showBadge = !!(sug && sug.suggestedClientName) || !!overrideName;
+  if (!showBadge) return null;
+  const currentTarget = overrideName || sug && sug.suggestedClientName || 'Active client';
+  const confidence = sug && sug.confidence || 'medium';
+  const tone = item._routingApplied ? '#5ba8a0' // teal — confirmed
+  : confidence === 'high' ? '#5ba8a0' // teal — high
+  : confidence === 'medium' ? '#d18a2c' // amber — medium
+  : '#dc8c28'; // amber — low
+  const bg = item._routingApplied ? 'rgba(91,168,160,.10)' : confidence === 'high' ? 'rgba(91,168,160,.10)' : 'rgba(220,140,40,.10)';
+  const applyRoute = (clientId, clientName) => {
+    setItems(prev => prev.map(it => {
+      if (it._idx !== item._idx) return it;
+      return {
+        ...it,
+        clientId: clientId || undefined,
+        _routingApplied: true,
+        _routingOverrideName: clientName || it._routingSuggestion && it._routingSuggestion.suggestedClientName || null
+      };
+    }));
+    setOpen(false);
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 5,
+      fontSize: 10.5
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setOpen(o => !o),
+    style: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 5,
+      padding: '3px 8px',
+      borderRadius: 4,
+      fontSize: 10,
+      fontWeight: 600,
+      background: bg,
+      color: tone,
+      border: '1px solid ' + tone,
+      cursor: 'pointer'
+    },
+    title: "Click to change which client this policy is routed to"
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 9
+    }
+  }, item._routingApplied ? '✓' : '→'), "Route: ", currentTarget, sug && sug.reason ? /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: 'var(--text3)',
+      fontWeight: 400,
+      marginLeft: 4,
+      fontSize: 9
+    }
+  }, "\xB7 ", confidence, " conf") : null, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 8,
+      marginLeft: 2
+    }
+  }, open ? '▾' : '▸')), open && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 6,
+      padding: '8px 10px',
+      background: 'var(--bg)',
+      border: '1px solid var(--border)',
+      borderRadius: 6,
+      maxWidth: 300
+    }
+  }, sug && sug.reason && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: 'var(--text3)',
+      marginBottom: 6,
+      fontStyle: 'italic',
+      lineHeight: 1.4
+    }
+  }, "Why: ", sug.reason), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9,
+      color: 'var(--text3)',
+      fontWeight: 600,
+      letterSpacing: '.04em',
+      textTransform: 'uppercase',
+      marginBottom: 4
+    }
+  }, "Route to:"), allClients === null ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10.5,
+      color: 'var(--text3)',
+      fontStyle: 'italic'
+    }
+  }, "Loading clients...") : /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 2,
+      maxHeight: 180,
+      overflow: 'auto'
+    }
+  }, sug && !sug.suggestedClientId && sug.suggestedClientName && /*#__PURE__*/React.createElement("button", {
+    onClick: () => applyRoute(null, sug.suggestedClientName),
+    style: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      gap: 8,
+      padding: '5px 8px',
+      fontSize: 10.5,
+      textAlign: 'left',
+      background: item._routingOverrideName === sug.suggestedClientName ? 'rgba(220,140,40,.12)' : 'transparent',
+      color: 'var(--text)',
+      border: '1px solid ' + (item._routingOverrideName === sug.suggestedClientName ? '#d18a2c' : 'var(--border)'),
+      borderRadius: 4,
+      cursor: 'pointer'
+    }
+  }, /*#__PURE__*/React.createElement("span", null, "+ Create new: ", sug.suggestedClientName), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 9,
+      color: 'var(--text3)'
+    }
+  }, "new")), (allClients || []).map(c => /*#__PURE__*/React.createElement("button", {
+    key: c.clientId,
+    onClick: () => applyRoute(c.clientId, c.clientName),
+    style: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      gap: 8,
+      padding: '5px 8px',
+      fontSize: 10.5,
+      textAlign: 'left',
+      background: item.clientId === c.clientId ? 'rgba(91,168,160,.12)' : 'transparent',
+      color: 'var(--text)',
+      border: '1px solid ' + (item.clientId === c.clientId ? '#5ba8a0' : 'var(--border)'),
+      borderRadius: 4,
+      cursor: 'pointer'
+    }
+  }, /*#__PURE__*/React.createElement("span", null, c.clientName), item.clientId === c.clientId && /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 9,
+      color: '#5ba8a0',
+      fontWeight: 700
+    }
+  }, "\u2713"))), (allClients || []).length === 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: 'var(--text3)',
+      fontStyle: 'italic',
+      padding: '6px 4px'
+    }
+  }, "No other clients yet. Save this policy with the suggestion above to create a new client workspace."))));
+}
 function BulkVerifyModal({
   extracted,
   repo,
@@ -49495,7 +49679,11 @@ function BulkVerifyModal({
           color: 'var(--text3)',
           marginTop: 2
         }
-      }, item.subType || item.category || '?', " \xB7 ", item.currency || 'SGD', " ", (parseFloat(item.annualPremium) || 0).toLocaleString(), freqLabel, parseFloat(item.sumAssured) > 0 && ' · SA ' + parseFloat(item.sumAssured).toLocaleString()), (policyOwnerDisplay(item) || item.policyNumber || getPolicyAnnualPayout(item) > 0) && /*#__PURE__*/React.createElement("div", {
+      }, item.subType || item.category || '?', " \xB7 ", item.currency || 'SGD', " ", (parseFloat(item.annualPremium) || 0).toLocaleString(), freqLabel, parseFloat(item.sumAssured) > 0 && ' · SA ' + parseFloat(item.sumAssured).toLocaleString()), /*#__PURE__*/React.createElement(CardRoutingBadge, {
+        item: item,
+        items: items,
+        setItems: setItems
+      }), (policyOwnerDisplay(item) || item.policyNumber || getPolicyAnnualPayout(item) > 0) && /*#__PURE__*/React.createElement("div", {
         style: {
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit,minmax(118px,1fr))',
