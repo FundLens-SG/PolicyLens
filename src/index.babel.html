@@ -601,9 +601,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.2';
+const APP_VERSION = 'v2.4.0-rc2.3';
 const APP_VERSION_DATE = '2026-05-13';
-const APP_VERSION_NAME = 'AI smartness Tier E — bulk extraction now runs through the same closed-loop pipeline as single-policy scan';
+const APP_VERSION_NAME = 'AI smartness Tier F (Phase 1) — multi-member documents: per-policy routing suggestions + BulkVerify banner';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -5765,6 +5765,147 @@ function detectMultiMemberDocument(contentBlocks) {
     detected: candidates.size >= 2,
     candidates: [...candidates]
   };
+}
+
+// ── rc2.3 — PERSON ENUMERATION PASS (multi-member documents) ──
+// When a document mentions multiple people (family policy summaries are
+// the canonical case), the single-pass extraction silently routes
+// everything to the active client. Until now, detectMultiMemberDocument
+// only WARNED. This helper actually enumerates the people via a focused
+// AI call so each extracted policy can be routed to the right person.
+//
+// Returns: [{ name, dob?, age?, role? }] — empty array if only one person
+// or if enumeration failed (caller falls back to single-client routing).
+//
+// Strategy: a tiny focused prompt. Cheap (~500 tokens out), runs once
+// per extraction batch, results cached on the content hash so re-runs
+// don't re-pay.
+async function enumeratePeopleInDocument(contentBlocks) {
+  if (!Array.isArray(contentBlocks) || contentBlocks.length === 0) return [];
+  // First, fast heuristic — if our deterministic detector says only 1
+  // candidate, skip the AI call entirely.
+  const heuristic = detectMultiMemberDocument(contentBlocks);
+  if (!heuristic.detected) return [];
+
+  const enumeratePrompt = [
+    'You are enumerating the people whose insurance policies appear in this document.',
+    'Return a JSON ARRAY of {name, dob, age, role}. Each entry represents one person whose policies are listed.',
+    'RULES:',
+    '  - "name" is the full printed name as it appears in the document banner.',
+    '  - "dob" is YYYY-MM-DD if printed; otherwise null.',
+    '  - "age" is a number if printed (e.g. "57 y/o"); otherwise null.',
+    '  - "role" is "primary" for the policyholder, "spouse", "child", "parent", "dependant", or null if unclear.',
+    '  - SKIP advisor/broker/insurer staff names — only people whose POLICIES are documented.',
+    '  - SKIP duplicates: if the same person appears in multiple sections, list them once.',
+    '  - If only one person is in the document, return an empty array [] (the single-client path will handle it).',
+    'Return ONLY the JSON array, starting with [ and ending with ].'
+  ].join('\n');
+
+  try {
+    const raw = await callAI(enumeratePrompt, contentBlocks, 800);
+    const parsed = repairJSON(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(p => p && typeof p === 'object' && typeof p.name === 'string')
+      .map(p => ({
+        name: String(p.name).trim().replace(/\s+/g, ' '),
+        dob: p.dob && /^\d{4}-\d{2}-\d{2}$/.test(p.dob) ? p.dob : null,
+        age: Number.isFinite(parseInt(p.age, 10)) ? parseInt(p.age, 10) : null,
+        role: typeof p.role === 'string' ? p.role.toLowerCase() : null
+      }))
+      .filter(p => p.name && p.name.length >= 3 && p.name.length <= 60);
+  } catch (e) {
+    console.warn('[PersonEnum] failed:', e?.message || e);
+    return [];
+  }
+}
+
+// ── rc2.3 — POLICY ROUTING SUGGESTION ──
+// Given an extracted policy + a list of detected people in the document
+// + the active client, return a routing suggestion:
+//   { suggestedClientId, suggestedClientName, confidence, reason }
+// suggestedClientId is null when the policy should go to a NEW client
+// (the FC needs to create one). The BulkVerify UI uses this to show a
+// "Route to: [client name ▾]" dropdown with the suggestion pre-selected.
+function _normalizePersonNameForRouting(name) {
+  return String(name || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, '')
+    .replace(/\s+/g, ' ');
+}
+
+function suggestPolicyRouting(policy, detectedPeople, activeClient, allClients) {
+  const out = { suggestedClientId: null, suggestedClientName: null, confidence: 'low', reason: null };
+  if (!policy) return out;
+  const li = String(policy.lifeInsured || '').trim();
+  const owner = String(policy.policyOwner || '').trim();
+
+  // Self / owner / blank → active client
+  if (!li || /^(self|same|policyholder|owner|insured)$/i.test(li)) {
+    if (activeClient) {
+      out.suggestedClientId = activeClient.clientId;
+      out.suggestedClientName = activeClient.clientName;
+      out.confidence = 'high';
+      out.reason = 'lifeInsured says "Self" — routes to active client';
+    }
+    return out;
+  }
+
+  const liNorm = _normalizePersonNameForRouting(li);
+  const ownerNorm = _normalizePersonNameForRouting(owner);
+
+  // Check against detected people in this document first
+  if (Array.isArray(detectedPeople) && detectedPeople.length > 0) {
+    for (const person of detectedPeople) {
+      const personNorm = _normalizePersonNameForRouting(person.name);
+      if (!personNorm) continue;
+      if (personNorm === liNorm || personNorm === ownerNorm
+          || personNorm.includes(liNorm) || liNorm.includes(personNorm)) {
+        // Now: is there an EXISTING client matching this person?
+        if (Array.isArray(allClients)) {
+          const existingClient = allClients.find(c => {
+            const cNorm = _normalizePersonNameForRouting(c.clientName);
+            return cNorm && (cNorm === personNorm || cNorm.includes(personNorm) || personNorm.includes(cNorm));
+          });
+          if (existingClient) {
+            out.suggestedClientId = existingClient.clientId;
+            out.suggestedClientName = existingClient.clientName;
+            out.confidence = 'high';
+            out.reason = 'lifeInsured matches existing client "' + existingClient.clientName + '"';
+            return out;
+          }
+        }
+        // No existing client — suggest creating new one
+        out.suggestedClientId = null;
+        out.suggestedClientName = person.name;
+        out.confidence = 'medium';
+        out.reason = 'lifeInsured matches "' + person.name + '" (detected in document) — no existing client, will create new on save';
+        return out;
+      }
+    }
+  }
+
+  // Fallback — direct name match against all existing clients
+  if (Array.isArray(allClients) && allClients.length > 0) {
+    const exact = allClients.find(c => _normalizePersonNameForRouting(c.clientName) === liNorm);
+    if (exact) {
+      out.suggestedClientId = exact.clientId;
+      out.suggestedClientName = exact.clientName;
+      out.confidence = 'medium';
+      out.reason = 'lifeInsured matches existing client "' + exact.clientName + '"';
+      return out;
+    }
+  }
+
+  // Default: active client (with low confidence because lifeInsured looked like a name but didn't match)
+  if (activeClient) {
+    out.suggestedClientId = activeClient.clientId;
+    out.suggestedClientName = activeClient.clientName;
+    out.confidence = 'low';
+    out.reason = 'lifeInsured "' + li + '" did not match any detected person or existing client — defaulting to active client';
+  }
+  return out;
 }
 
 // ── rc2.0 — TWO-MODEL DISAGREEMENT VERIFICATION ──
@@ -35649,6 +35790,97 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
         </div>
         <div style={{padding:'14px 18px',overflow:'auto',flex:1}}>
 
+        {/* rc2.3 — Multi-person routing banner. Renders if the rc2.3
+            enumeratePeopleInDocument pass detected 2+ people and at least
+            one extracted policy looks like it belongs to someone other
+            than the active client. Surfaces the detected people, shows
+            counts per suggested target, and offers an "Apply suggested
+            routing" bulk action that pre-fills item.clientId so save
+            dispatches each policy to the right workspace. */}
+        {(() => {
+          const itemsWithRouting = items.filter(it => it && it._routingSuggestion && it._routingSuggestion.suggestedClientName);
+          if (itemsWithRouting.length === 0) return null;
+          const detectedPeople = itemsWithRouting[0]._detectedPeople || [];
+          // Group routing suggestions by target client name for display
+          const byTarget = new Map();
+          for (const it of itemsWithRouting) {
+            const key = it._routingSuggestion.suggestedClientName;
+            const bucket = byTarget.get(key) || { name: key, clientId: it._routingSuggestion.suggestedClientId, items: [], confidence: it._routingSuggestion.confidence };
+            bucket.items.push(it);
+            byTarget.set(key, bucket);
+          }
+          const groups = [...byTarget.values()].sort((a,b) => b.items.length - a.items.length);
+          const totalAffected = itemsWithRouting.length;
+          const newClientsNeeded = groups.filter(g => !g.clientId).length;
+          return (
+            <div style={{
+              marginBottom: 14,
+              padding: '12px 14px',
+              background: 'rgba(220, 140, 40, 0.10)',
+              border: '1px solid rgba(220, 140, 40, 0.45)',
+              borderRadius: 10
+            }}>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,flexWrap:'wrap'}}>
+                <div style={{minWidth:0,flex:1}}>
+                  <div style={{fontSize:11,fontWeight:700,color:'#b46a14',letterSpacing:'0.05em',textTransform:'uppercase'}}>
+                    Multi-person document detected
+                  </div>
+                  <div style={{fontSize:13,color:'var(--text)',marginTop:3,fontWeight:500}}>
+                    {totalAffected} polic{totalAffected===1?'y':'ies'} look like {totalAffected===1?'it belongs':'they belong'} to {groups.length} {groups.length===1?'person':'people'} other than the active client.
+                  </div>
+                  <div style={{fontSize:11,color:'var(--text3)',marginTop:4,lineHeight:1.5}}>
+                    Detected: {detectedPeople.slice(0,5).map(p => p.name).join(', ')}{detectedPeople.length>5?', ...':''}
+                  </div>
+                </div>
+                <button onClick={() => {
+                  // Apply suggestions for items routed to existing clients only.
+                  // Items with no existing client (new client needed) need manual
+                  // intervention via the PolicyOwnerRoutingModal — flag them.
+                  let applied = 0;
+                  let skipped = 0;
+                  setItems(prev => prev.map(it => {
+                    const sug = it && it._routingSuggestion;
+                    if (!sug || !sug.suggestedClientId) {
+                      if (sug && sug.suggestedClientName && !sug.suggestedClientId) skipped++;
+                      return it;
+                    }
+                    applied++;
+                    return { ...it, clientId: sug.suggestedClientId, _routingApplied: true };
+                  }));
+                  try {
+                    const msg = 'Routed ' + applied + ' polic' + (applied===1?'y':'ies') + ' to suggested clients.' +
+                      (skipped > 0 ? ' ' + skipped + ' need a new client workspace — fix via the Route button on each card.' : '');
+                    toast(msg, applied > 0 ? 'success' : 'info', 5500);
+                  } catch (_) {}
+                }} style={{
+                  padding:'7px 14px',fontSize:12,fontWeight:600,
+                  borderRadius:999,background:'#d18a2c',color:'#fff',
+                  border:'1px solid #b46a14',cursor:'pointer',whiteSpace:'nowrap',
+                  flexShrink:0
+                }}>
+                  Apply suggested routing
+                </button>
+              </div>
+              <div style={{marginTop:10,display:'flex',flexDirection:'column',gap:4}}>
+                {groups.map(g => (
+                  <div key={g.name} style={{fontSize:11.5,color:'var(--text2)',display:'flex',alignItems:'center',gap:8}}>
+                    <span style={{minWidth:120,fontWeight:600,color:'var(--text)'}}>{g.name}</span>
+                    <span>{g.items.length} polic{g.items.length===1?'y':'ies'}</span>
+                    {g.clientId
+                      ? <span style={{fontSize:10,color:'#5ba8a0',fontWeight:600}}>· existing client ✓</span>
+                      : <span style={{fontSize:10,color:'#dc8c28',fontWeight:600}}>· will create new client on save</span>}
+                  </div>
+                ))}
+                {newClientsNeeded > 0 && (
+                  <div style={{fontSize:10.5,color:'var(--text3)',fontStyle:'italic',marginTop:6}}>
+                    {newClientsNeeded} new client{newClientsNeeded===1?'':'s'} will be created automatically on save (ensureActiveClientForPolicySave handles the auto-creation).
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Live extraction progress */}
         {scanProgress && scanProgress.pctComplete < 100 && (
           <div style={{padding:'8px 16px',background:'color-mix(in oklch, var(--gold) 9%, transparent)',borderBottom:'1px solid var(--border)'}}>
@@ -40484,6 +40716,39 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
           try {
             toast('Multi-person batch detected: ' + names.size + ' life-insured names (' + list + (names.size > 3 ? ', ...' : '') + '). Route each policy to the correct client during review.', 'warning', 8000);
           } catch (_) {}
+
+          // rc2.3 — Phase 1 multi-pass: run the focused enumeration AI call
+          // to get the canonical list of people + suggest a routing for
+          // each extracted policy. The suggestions get stashed on each
+          // policy (._routingSuggestion) and surface in BulkVerify so the
+          // FC can confirm/correct before save.
+          try {
+            const detectedPeople = await enumeratePeopleInDocument(content);
+            console.log('[PersonEnum] detected', detectedPeople.length, 'people:', detectedPeople);
+            const allDriveStates = await PolicyDB.getAllDriveStates().catch(() => []);
+            const allClientsForRouting = (allDriveStates || []).filter(s => s && s.clientId && s.clientName);
+            const activeClientForRouting = activeClientIdRef.current
+              ? allClientsForRouting.find(c => c.clientId === activeClientIdRef.current)
+              : null;
+            let routedAway = 0;
+            for (const item of processed) {
+              const suggestion = suggestPolicyRouting(item, detectedPeople, activeClientForRouting, allClientsForRouting);
+              if (suggestion.suggestedClientName) {
+                item._routingSuggestion = suggestion;
+                item._detectedPeople = detectedPeople;
+                if (activeClientForRouting && suggestion.suggestedClientId !== activeClientForRouting.clientId) {
+                  routedAway++;
+                }
+              }
+            }
+            if (routedAway > 0) {
+              try {
+                toast(routedAway + ' polic' + (routedAway === 1 ? 'y' : 'ies') +
+                  ' look like they belong to someone OTHER than the active client. Review the routing column before save.',
+                  'warning', 9000);
+              } catch (_) {}
+            }
+          } catch (e) { console.warn('[PersonEnum] enumeration failed:', e?.message || e); }
         }
       } catch (e) { console.warn('[MultiMember] detector failed:', e?.message || e); }
 
