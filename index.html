@@ -611,9 +611,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.16';
+const APP_VERSION = 'v2.4.0-rc2.17';
 const APP_VERSION_DATE = '2026-05-14';
-const APP_VERSION_NAME = 'policyAnalystNote heuristic fixes — ILP false positive + date parsing + sa=0 guard';
+const APP_VERSION_NAME = 'CommandPalette wiring — Add policy + New client actions now actually fire';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -19884,7 +19884,8 @@ function CommandPalette({
     // Recent clients first
     let recents = [];
     try {
-      recents = JSON.parse(localStorage.getItem('policylens_recent_clients') || '[]');
+      const parsed = JSON.parse(localStorage.getItem('policylens_recent_clients') || '[]');
+      recents = Array.isArray(parsed) ? parsed : [];
     } catch (_) {}
     const recentIds = new Set(recents.map(r => r && r.clientId).filter(Boolean));
     // Clients (recent first, then alphabetical)
@@ -19997,10 +19998,15 @@ function CommandPalette({
       label: 'New client',
       icon: '+',
       kw: 'new client onboard',
+      // rc2.17 — switch to Clients tab first so its event listener is
+      // mounted before we dispatch the open-new-client event.
       action: () => {
-        try {
-          window.dispatchEvent(new CustomEvent('policylens-open-new-client'));
-        } catch (_) {}
+        ctx.setTab && ctx.setTab('clients');
+        setTimeout(() => {
+          try {
+            window.dispatchEvent(new CustomEvent('policylens-open-new-client'));
+          } catch (_) {}
+        }, 50);
       }
     }, {
       id: 'act:open-settings',
@@ -27501,6 +27507,17 @@ function ClientsTab() {
   // v2.4.0-rc1.52: family-view merge modal — source client + open flag
   const [familyMergeOpen, setFamilyMergeOpen] = useState(false);
   const [familyMergeSource, setFamilyMergeSource] = useState(null);
+  // rc2.17 — CommandPalette dispatches policylens-open-new-client to
+  // request the New-Client modal. Previously dispatched but never
+  // listened to. Respects the same guard as the in-tab + button: if
+  // there's an active client, show the guard first.
+  useEffect(() => {
+    const onOpen = () => {
+      if (activeClientId) setClientsGuardOpen(true);else setShowNewClient(true);
+    };
+    window.addEventListener('policylens-open-new-client', onOpen);
+    return () => window.removeEventListener('policylens-open-new-client', onOpen);
+  }, [activeClientId]);
   useEffect(() => {
     const load = async () => {
       const states = await PolicyDB.getAllDriveStates().catch(() => []);
@@ -52035,6 +52052,18 @@ function Policies() {
       window.removeEventListener('policylens-policies-flashed', onFlash);
       if (clearTimer) clearTimeout(clearTimer);
     };
+  }, []);
+  // rc2.17 — CommandPalette can request the Add-Policy modal directly
+  // via window event. Previously dispatched but never listened to, so
+  // 'Add policy' from the palette just navigated to /policies and did
+  // nothing further.
+  useEffect(() => {
+    const onOpen = () => {
+      setEditing(null);
+      setShowForm(true);
+    };
+    window.addEventListener('policylens-open-add-policy', onOpen);
+    return () => window.removeEventListener('policylens-open-add-policy', onOpen);
   }, []);
   // rc2e.32: Row style helper merges the existing selected/default background
   // with a stronger gold tint + left accent when this policy is "freshly
