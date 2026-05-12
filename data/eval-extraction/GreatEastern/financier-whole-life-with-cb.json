@@ -1,0 +1,14 @@
+{
+  "name": "Great Eastern Financier Whole Life w/ CB — multi-rider extraction",
+  "description": "From the Soh family xlsx: this Whole Life has multiple riders mashed into the Coverage cell with newlines. AI must extract them as a structured riders array, not as one blob string. The Coverage cell looked like: 'Death $170k SA\\nExtended TPD Rider $50k (10 Feb 2028)\\nTPD $220k SA\\nLiving Assurance Rider $30k (10 Feb 2028)\\nCI $30k SA (until 2028)\\nTerm Rider w/ TPD Benefits $40k (10 Feb 2033)'.",
+  "insurer": "Great Eastern",
+  "rawAiOutput": "{ \"insurer\": \"Great Eastern\", \"productName\": \"Financier Whole Life with CB\", \"policyNumber\": \"0012554905\", \"category\": \"protection\", \"subType\": \"Whole Life\", \"currency\": \"SGD\", \"sumAssured\": 170000, \"inceptionDate\": \"1991-02-11\", \"riders\": [ {\"type\":\"death\",\"riderName\":\"Death\",\"sa\":170000,\"bundled\":true}, {\"type\":\"tpd\",\"riderName\":\"Extended TPD Rider\",\"sa\":50000,\"expiryAge\":null,\"expiryDate\":\"2028-02-10\",\"bundled\":false}, {\"type\":\"tpd\",\"riderName\":\"TPD\",\"sa\":220000,\"bundled\":true}, {\"type\":\"ci\",\"riderName\":\"Living Assurance Rider\",\"sa\":30000,\"expiryDate\":\"2028-02-10\",\"bundled\":false}, {\"type\":\"ci\",\"riderName\":\"Critical Illness\",\"sa\":30000,\"expiryDate\":\"2028-12-31\",\"bundled\":true}, {\"type\":\"other\",\"riderName\":\"Term Rider w/ TPD Benefits\",\"sa\":40000,\"expiryDate\":\"2033-02-10\",\"bundled\":false} ] }",
+  "fieldAssertions": [
+    { "field": "insurer", "expected": "Great Eastern" },
+    { "field": "productName", "expected": "Financier Whole Life with CB" },
+    { "field": "sumAssured", "expected": 170000 },
+    { "field": "subType", "expected": "Whole Life" },
+    { "field": "riders.0.type", "expected": "death" },
+    { "field": "riders.5.riderName", "expected": "Term Rider w/ TPD Benefits" }
+  ]
+}

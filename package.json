@@ -3,6 +3,8 @@
   "scripts": {
     "build:precompile": "node tools/precompile-index.mjs",
     "test:golden": "node tools/golden-family-routing-harness.mjs",
-    "split:preview": "node tools/extract-index-modules.mjs --list"
+    "split:preview": "node tools/extract-index-modules.mjs --list",
+    "eval:extraction": "node tools/eval-extraction.mjs",
+    "eval:extraction:verbose": "node tools/eval-extraction.mjs --verbose"
   }
 }

@@ -1,0 +1,15 @@
+{
+  "name": "AIA Financial Guardian — endowment with dividend payouts",
+  "description": "From the Soh family xlsx: dividend payout schedule + accumulated bonuses sit in Remarks. AI should classify category='savings' subType='Endowment' and parse dividends as recurring cashflow (annuity payout), not lumped into 'notes'.",
+  "insurer": "AIA",
+  "rawAiOutput": "{ \"insurer\": \"AIA\", \"productName\": \"Financial Guardian\", \"policyNumber\": \"Q514255969\", \"category\": \"savings\", \"subType\": \"Endowment\", \"currency\": \"SGD\", \"sumAssured\": 75000, \"annualPremium\": 761.04, \"premFrequency\": \"annual\", \"maturityDate\": \"2069-11-02\", \"cashValue\": 49978.09, \"riders\": [ {\"type\":\"death\",\"riderName\":\"Death\",\"sa\":75000,\"bundled\":true}, {\"type\":\"tpd\",\"riderName\":\"TPD\",\"sa\":50000,\"bundled\":true}, {\"type\":\"accidental\",\"riderName\":\"Accidental Death Benefit\",\"sa\":50000,\"bundled\":true}, {\"type\":\"other\",\"riderName\":\"Riot & Civil Commotion\",\"sa\":50000,\"bundled\":true} ] }",
+  "expectedNormalized": {
+    "insurer": "AIA",
+    "productName": "Financial Guardian",
+    "category": "savings",
+    "subType": "Endowment",
+    "sumAssured": 75000,
+    "annualPremium": 761.04,
+    "maturityDate": "2069-11-02"
+  }
+}

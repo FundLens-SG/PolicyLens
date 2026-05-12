@@ -1,0 +1,13 @@
+{
+  "name": "Manulife InvestReady III — cash outlay annual",
+  "description": "Real-world FC complaint: the premium cell says '$1464 cash outlay' on the Singlife/SGFinDex export. AI must NOT interpret 'cash outlay' as monthly. PruShield uses similar language. Annual is the safe default unless 'Monthly' is explicit.",
+  "insurer": "Manulife",
+  "rawAiOutput": "{ \"insurer\": \"Manulife\", \"productName\": \"InvestReady (III) 13 yrs Flexi 10\", \"policyNumber\": \"M1234567890\", \"category\": \"investment\", \"subType\": \"ILP (Investment)\", \"currency\": \"SGD\", \"premiumAmount\": 12000, \"premFrequency\": \"annual\", \"sumAssured\": 0, \"ilpGrowth\": 6, \"ilpDivYield\": 2 }",
+  "expectedNormalized": {
+    "insurer": "Manulife",
+    "productName": "InvestReady (III) 13 yrs Flexi 10",
+    "premiumAmount": 12000,
+    "premFrequency": "annual",
+    "category": "investment"
+  }
+}

@@ -611,9 +611,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.98';
+const APP_VERSION = 'v2.4.0-rc1.99';
 const APP_VERSION_DATE = '2026-05-13';
-const APP_VERSION_NAME = 'Manual policy save hardened: active-client recovery, awaited modal saves, CRMLens policies inbound bridge, safer parsing and repository guards';
+const APP_VERSION_NAME = 'AI smartness Tier S: feedback capture from manual edits, extraction audit log, eval harness skeleton';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -4873,6 +4873,108 @@ async function buildCorrectionFewShot() {
     console.warn('[CorrectionMemory] Failed to load corrections:', e);
     return '';
   }
+}
+
+// ── rc1.99 — feedback capture from manual-edit save path ──
+// scanIntoForm stashes _extractedRaw on the form; this helper diffs the
+// post-edit saved policy vs the original AI extraction and writes one
+// correction record per changed field. The Bulk-Verify modal already
+// records corrections via PolicyDB.putCorrection — this closes the same
+// loop for the single-policy Add Policy + scan path.
+const _CORRECTION_SKIP_KEYS = new Set(['id', 'clientId', '_extractedRaw', '_extractionMeta', '_fieldVersions', '_extractionStages', '_ownerClassification', '_fieldEvidence', 'editHistory', '_pageFingerprint', '_documentAi', '_ocrText', '_repoMatch', '_confidence', '_extractedAt', '_extractionModel', '_extractionPromptVersion', '_crmlensImportedAt', '_crmlensSupabaseUpdatedAt', '_source', '_syncStamp', '_syncSource', '_syncCorrelationId',
+// Form-only sentinels
+'policyOwnerOther', 'lifeInsuredOther', '_originalValues']);
+function _correctionsIsEmpty(v) {
+  if (v === null || v === undefined || v === '') return true;
+  if (Array.isArray(v) && v.length === 0) return true;
+  if (typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 0) return true;
+  return false;
+}
+function _correctionsEqual(a, b) {
+  if (a === b) return true;
+  if (_correctionsIsEmpty(a) && _correctionsIsEmpty(b)) return true;
+  // Loose numeric equality (string "12000" === number 12000 for our purposes)
+  if (typeof a === 'number' && typeof b === 'string') return String(a) === b.trim();
+  if (typeof b === 'number' && typeof a === 'string') return String(b) === a.trim();
+  try {
+    return JSON.stringify(a) === JSON.stringify(b);
+  } catch {
+    return false;
+  }
+}
+function _correctionsStringify(v) {
+  if (v === null || v === undefined) return '';
+  if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') return String(v);
+  try {
+    return JSON.stringify(v);
+  } catch {
+    return String(v);
+  }
+}
+async function recordCorrectionsFromSave(savedPolicy, originalRaw, opts = {}) {
+  if (!savedPolicy || !originalRaw || typeof originalRaw !== 'object') return 0;
+  const fields = originalRaw.fields && typeof originalRaw.fields === 'object' ? originalRaw.fields : originalRaw;
+  if (!fields || typeof fields !== 'object') return 0;
+
+  // Confidence array (if any) so we can promote low-confidence corrections
+  const confByField = new Map();
+  const confList = Array.isArray(originalRaw.confidence) ? originalRaw.confidence : Array.isArray(fields._confidence) ? fields._confidence : [];
+  for (const c of confList) {
+    if (c && c.field) confByField.set(c.field, c.level || 'unknown');
+  }
+  const insurer = (savedPolicy.insurer || fields.insurer || 'unknown').trim();
+  const productName = (savedPolicy.productName || fields.productName || '').trim();
+  const promptVersion = originalRaw.promptVersion || EXTRACT_PROMPT_VERSION || APP_VERSION || 'unknown';
+  let written = 0;
+  for (const [key, aiValue] of Object.entries(fields)) {
+    if (_CORRECTION_SKIP_KEYS.has(key)) continue;
+    if (key.startsWith('_')) continue;
+    if (key === 'premiumAmount' && fields.annualPremium !== undefined) continue; // alias
+    const savedValue = savedPolicy[key];
+    if (_correctionsEqual(aiValue, savedValue)) continue;
+    // Skip if both are effectively empty
+    if (_correctionsIsEmpty(aiValue) && _correctionsIsEmpty(savedValue)) continue;
+    try {
+      await PolicyDB.putCorrection({
+        insurer,
+        productName,
+        field: key,
+        aiValue: _correctionsStringify(aiValue),
+        correctedValue: _correctionsStringify(savedValue),
+        policyNumber: savedPolicy.policyNumber || fields.policyNumber || '',
+        category: savedPolicy.category || fields.category || '',
+        documentType: fields.documentType || '',
+        sourcePage: fields.sourcePage || fields._sourcePage || '',
+        sourceImage: fields.sourceImage || fields._sourceImage || '',
+        fingerprint: fields._policyFingerprint?.id || '',
+        confidenceFlag: confByField.get(key) || null,
+        promptVersion,
+        savePath: opts.savePath || 'manual-edit',
+        learningHint: key === 'productName' ? 'product_alias' : key === 'insurer' ? 'insurer_layout_pattern' : typeof aiValue === 'string' && typeof savedValue === 'string' && aiValue.toLowerCase() !== savedValue.toLowerCase() ? 'ocr_or_field_mapping' : 'field_mapping'
+      });
+      written++;
+    } catch (e) {
+      console.warn('[FeedbackCapture] putCorrection failed for', key, ':', e?.message || e);
+    }
+  }
+  if (written > 0) {
+    // Invalidate the few-shot cache so the next extraction sees fresh corrections
+    _correctionCacheTime = 0;
+    _correctionCacheText = '';
+    console.log('[FeedbackCapture] recorded', written, 'corrections for', insurer + (productName ? ' / ' + productName : ''));
+  }
+  return written;
+}
+
+// Strip internal extraction metadata before persisting a policy.
+function stripExtractionInternals(policy) {
+  if (!policy || typeof policy !== 'object') return policy;
+  const cleaned = {
+    ...policy
+  };
+  delete cleaned._extractedRaw;
+  delete cleaned._originalValues;
+  return cleaned;
 }
 
 // ── v14.3 C6: BUILT-IN INSURER FEW-SHOT CORPUS ──
@@ -13186,7 +13288,7 @@ function isLikelyFundName(name) {
 // ═══════════════════════════════════════════════════════════════
 
 const DB_NAME = 'PolicyLensV4';
-const DB_VER = 13;
+const DB_VER = 14;
 const openDB = () => new Promise((res, rej) => {
   const r = indexedDB.open(DB_NAME, DB_VER);
   r.onupgradeneeded = e => {
@@ -13339,6 +13441,29 @@ const openDB = () => new Promise((res, rej) => {
         unique: false
       });
     }
+    // rc1.99: extraction_log — every AI extraction run gets logged with
+    // input hash, model, prompt version, raw response, parsed JSON, and
+    // (later) the final saved value. Enables replay-on-bug: pull the
+    // exact AI input/output for a misextracted policy and retry against
+    // a different prompt to compare. Keep ~90 days; older rows pruned.
+    if (!db.objectStoreNames.contains('extraction_log')) {
+      const el = db.createObjectStore('extraction_log', {
+        keyPath: 'id',
+        autoIncrement: true
+      });
+      el.createIndex('byInputHash', 'inputHash', {
+        unique: false
+      });
+      el.createIndex('byInsurer', 'insurer', {
+        unique: false
+      });
+      el.createIndex('byTimestamp', 'timestamp', {
+        unique: false
+      });
+      el.createIndex('byPromptVersion', 'promptVersion', {
+        unique: false
+      });
+    }
   };
   r.onblocked = () => {
     console.warn('[IDB] Blocked by another tab — close other PolicyLens tabs');
@@ -13372,6 +13497,140 @@ const dbOp = (store, mode, fn) => openDB().then(db => new Promise((res, rej) => 
 const dbGetAll = store => dbOp(store, 'readonly', s => s.getAll());
 const dbPut = (store, val) => dbOp(store, 'readwrite', s => s.put(val));
 const dbDel = (store, id) => dbOp(store, 'readwrite', s => s.delete(id));
+
+// rc1.99: extraction audit log — every AI extraction logs its input
+// hash, model, prompt version, raw response, parsed JSON, and (set
+// later when the policy is saved) the final value the FC kept.
+// Enables debugging by replay: pull the exact run that produced a
+// wrong field and try a different prompt against the same input.
+const EXTRACTION_LOG_RETENTION_DAYS = 90;
+async function _sha256HashString(str) {
+  try {
+    const enc = new TextEncoder().encode(String(str ?? ''));
+    const buf = await crypto.subtle.digest('SHA-256', enc);
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
+  } catch {
+    return 'h_' + Date.now().toString(36);
+  }
+}
+async function logExtractionAttempt(entry) {
+  try {
+    if (!entry || typeof entry !== 'object') return null;
+    const payload = {
+      timestamp: Date.now(),
+      inputHash: entry.inputHash || (entry.rawResponse ? await _sha256HashString(entry.rawResponse) : null),
+      fileName: entry.fileName || '',
+      fileSize: entry.fileSize || 0,
+      model: entry.model || 'unknown',
+      promptVersion: entry.promptVersion || EXTRACT_PROMPT_VERSION || APP_VERSION || 'unknown',
+      promptHash: entry.promptHash || null,
+      insurer: entry.parsed && entry.parsed.insurer || entry.insurer || '',
+      productName: entry.parsed && entry.parsed.productName || entry.productName || '',
+      // Raw response can be large — cap stored size to avoid bloating IDB
+      rawResponseLen: typeof entry.rawResponse === 'string' ? entry.rawResponse.length : 0,
+      rawResponse: typeof entry.rawResponse === 'string' ? entry.rawResponse.slice(0, 40000) : '',
+      parsedOutput: entry.parsed || null,
+      savePath: entry.savePath || 'unknown',
+      durationMs: entry.durationMs || null,
+      errorMessage: entry.errorMessage || null,
+      // Will be backfilled when the policy is finalized + saved
+      finalPolicyId: null,
+      finalSavedAt: null
+    };
+    return await dbPut('extraction_log', payload);
+  } catch (e) {
+    console.warn('[ExtractionLog] write failed:', e?.message || e);
+    return null;
+  }
+}
+async function attachFinalToExtractionLog(logId, policyId) {
+  if (!logId || !policyId) return;
+  try {
+    const db = await openDB();
+    const tx = db.transaction('extraction_log', 'readwrite');
+    const store = tx.objectStore('extraction_log');
+    const existing = await new Promise((res, rej) => {
+      const r = store.get(logId);
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => rej(r.error);
+    });
+    if (existing) {
+      existing.finalPolicyId = policyId;
+      existing.finalSavedAt = Date.now();
+      store.put(existing);
+    }
+    await new Promise((res, rej) => {
+      tx.oncomplete = res;
+      tx.onerror = () => rej(tx.error);
+    });
+    db.close();
+  } catch (e) {
+    console.warn('[ExtractionLog] attach final failed:', e?.message || e);
+  }
+}
+async function pruneExtractionLog() {
+  try {
+    const cutoff = Date.now() - EXTRACTION_LOG_RETENTION_DAYS * 86400 * 1000;
+    const db = await openDB();
+    const tx = db.transaction('extraction_log', 'readwrite');
+    const store = tx.objectStore('extraction_log');
+    const idx = store.index('byTimestamp');
+    const range = IDBKeyRange.upperBound(cutoff);
+    const req = idx.openCursor(range);
+    let removed = 0;
+    await new Promise((res, rej) => {
+      req.onsuccess = e => {
+        const cur = e.target.result;
+        if (cur) {
+          cur.delete();
+          removed++;
+          cur.continue();
+        } else {
+          res(removed);
+        }
+      };
+      req.onerror = () => rej(req.error);
+    });
+    await new Promise((res, rej) => {
+      tx.oncomplete = res;
+      tx.onerror = () => rej(tx.error);
+    });
+    db.close();
+    if (removed > 0) console.log('[ExtractionLog] pruned', removed, 'rows older than', EXTRACTION_LOG_RETENTION_DAYS, 'days');
+    return removed;
+  } catch (e) {
+    console.warn('[ExtractionLog] prune failed:', e?.message || e);
+    return 0;
+  }
+}
+async function getRecentExtractionLog(limit = 50) {
+  try {
+    const db = await openDB();
+    const tx = db.transaction('extraction_log', 'readonly');
+    const store = tx.objectStore('extraction_log');
+    const idx = store.index('byTimestamp');
+    const range = IDBKeyRange.upperBound(Date.now());
+    const out = [];
+    const cur = idx.openCursor(range, 'prev');
+    await new Promise((res, rej) => {
+      cur.onsuccess = e => {
+        const c = e.target.result;
+        if (c && out.length < limit) {
+          out.push(c.value);
+          c.continue();
+        } else {
+          res();
+        }
+      };
+      cur.onerror = () => rej(cur.error);
+    });
+    db.close();
+    return out;
+  } catch (e) {
+    console.warn('[ExtractionLog] read failed:', e?.message || e);
+    return [];
+  }
+}
 
 // v2.4.0-rc1.87 — report-snapshot helpers (used by individual + family
 // generators for the "What changed since last review" page).
@@ -20473,6 +20732,9 @@ function App() {
         }
       }, 1200);
       setLoading(false);
+      // rc1.99: prune old extraction-log rows (>90 days) on startup.
+      // Fire-and-forget — never block UI on log housekeeping.
+      pruneExtractionLog().catch(() => {});
     })();
   }, []);
 
@@ -21497,9 +21759,13 @@ function App() {
     return updated;
   };
   const savePolicy = async incomingP => {
+    // rc1.99 feedback capture — extract the raw AI snapshot (if any)
+    // BEFORE normalization strips it. Used to diff post-edit vs original
+    // and write per-field corrections to extraction_corrections.
+    const _capturedExtractedRaw = incomingP && typeof incomingP === 'object' ? incomingP._extractedRaw : null;
     // Dedup pass — if an existing policy shares (policyNumber|insurer),
     // merge into it rather than creating a duplicate row.
-    let p = normalizePolicyForStorage(incomingP || {}, {
+    let p = normalizePolicyForStorage(stripExtractionInternals(incomingP || {}), {
       currentClientName: clientProfile?.name || clientName || '',
       source: 'policy-save'
     });
@@ -21561,6 +21827,22 @@ function App() {
       clientId: targetClientId
     }, 'policy-save');
     await dbPut('policies', enriched);
+    // rc1.99 feedback capture — if this save came from a scan-into-form
+    // path (_extractedRaw was attached pre-edit), diff the saved fields
+    // against the raw AI extraction and write per-field corrections to
+    // the extraction_corrections store. Fire-and-forget — never block
+    // the save flow on correction-writing failure.
+    if (_capturedExtractedRaw) {
+      recordCorrectionsFromSave(enriched, _capturedExtractedRaw, {
+        savePath: 'scan-into-form'
+      }).catch(e => console.warn('[FeedbackCapture] save-path record failed:', e?.message || e));
+      // Backfill the extraction log row with the final saved policy id
+      // so the audit-replay UI can link a log row to "this is the policy
+      // the FC kept" (vs. the raw AI output).
+      if (_capturedExtractedRaw.logId) {
+        attachFinalToExtractionLog(_capturedExtractedRaw.logId, enriched.id).catch(e => console.warn('[ExtractionLog] backfill failed:', e?.message || e));
+      }
+    }
     clearDeletedPolicyId(enriched.clientId, enriched.id).catch(() => {});
     setPolicies(prev => {
       const idx = prev.findIndex(x => x.id === enriched.id);
@@ -57794,20 +58076,69 @@ function PolicyFormModal({
         const blocks = await processFileWithDocumentAI(file);
         content.push(...blocks);
       }
-      const formExtractPrompt = 'Extract insurance policy details. Return a JSON object with ALL fields: insurer, productName, policyNumber, category (protection/savings/health/investment/retirement/maternity), subType, currency, sumAssured (number), premiumAmount (number — the premium AS PAID at its stated frequency. "$1,000/mth" → premiumAmount=1000 premFrequency="monthly". "$12,000/yr" → premiumAmount=12000 premFrequency="annual". Do NOT convert between periods), premFrequency (annual/monthly/single/unknown — must match the period of premiumAmount. If unclear, use unknown), premiumStructure, paymentMethod, policyOwner, lifeInsured, gender, dob, ageAtEntry, smoker, nationality, occupation, inceptionDate, maturityDate, status, premStartAge, premTerm, premEndAge. Preserve the exact policyOwner printed on the document; do not replace it with the active client name. If policy owner and life insured differ, capture both exactly. Riders: riders (array) — CAPTURE-FIRST: for EVERY benefit listed, set riderName to EXACT name from document, THEN classify type from death/tpd/ci/eci/di/accidental/acc_medical/acc_tcm/acc_dismember/premium_waiver/other. If unsure, use type:"other". NEVER duplicate types for different benefits — use riderName to distinguish. Each: {type, riderName (ALWAYS filled), sa:number, premium:0 if bundled, expiryAge, bundled:boolean, multiClaim, totalClaimPct}. SA: saMultiplier, multiplierEndAge. ISP: ispClass, hasRider, riderList, riderPremium, ispDeductible, ispCoinsurance. ILP: ilpGrowth, ilpDivYield, ilpMgmtFee, fundAllocations (array of {fundName:string, allocation:number}). FUND RULES: extract real fund holdings confidently — names like "AIA India Balanced Fund", "Manulife Global Multi Asset Fund", "PRULink US Dividend Wealth Fund". DO NOT extract product descriptions or sentences (e.g. NEVER extract "AIA Platinum Wealth Venture ILP is a limited premium investment-linked insurance policy" as a fund). Fund names are 2-10 words, contain no verbs, no "policy"/"premium"/"insurance"/"ILP" tokens, and are typically <80 chars. If no specific funds are named, return fundAllocations:[]. NEVER substitute geographic tokens (India ≠ Asia ≠ Elite). Cash: cashValue, cvGrowthRate, surrenderPeriod. Notes: notes (FC review headline). EXTRACTION CONFIDENCE: ALSO include an optional _confidence array listing ONLY fields you are NOT highly confident about (default = confident). Each entry: {field, level (low|medium), reason}. Flag premiumAmount when ambiguous, policyNumber when OCR partial, premFrequency when not stated, etc. Do NOT flag fields stated verbatim. Empty array [] or omit entirely when all fields are clean. Return ONLY valid JSON starting with { ending with }.';
+      // rc1.99: prepend prior-corrections few-shot context so the AI
+      // learns from this FC's past edits (closed feedback loop). Cached
+      // for 30s inside buildCorrectionFewShot — cheap call.
+      const correctionPreamble = await buildCorrectionFewShot().catch(() => '');
+      const formExtractPromptBase = 'Extract insurance policy details. Return a JSON object with ALL fields: insurer, productName, policyNumber, category (protection/savings/health/investment/retirement/maternity), subType, currency, sumAssured (number), premiumAmount (number — the premium AS PAID at its stated frequency. "$1,000/mth" → premiumAmount=1000 premFrequency="monthly". "$12,000/yr" → premiumAmount=12000 premFrequency="annual". Do NOT convert between periods), premFrequency (annual/monthly/single/unknown — must match the period of premiumAmount. If unclear, use unknown), premiumStructure, paymentMethod, policyOwner, lifeInsured, gender, dob, ageAtEntry, smoker, nationality, occupation, inceptionDate, maturityDate, status, premStartAge, premTerm, premEndAge. Preserve the exact policyOwner printed on the document; do not replace it with the active client name. If policy owner and life insured differ, capture both exactly. Riders: riders (array) — CAPTURE-FIRST: for EVERY benefit listed, set riderName to EXACT name from document, THEN classify type from death/tpd/ci/eci/di/accidental/acc_medical/acc_tcm/acc_dismember/premium_waiver/other. If unsure, use type:"other". NEVER duplicate types for different benefits — use riderName to distinguish. Each: {type, riderName (ALWAYS filled), sa:number, premium:0 if bundled, expiryAge, bundled:boolean, multiClaim, totalClaimPct}. SA: saMultiplier, multiplierEndAge. ISP: ispClass, hasRider, riderList, riderPremium, ispDeductible, ispCoinsurance. ILP: ilpGrowth, ilpDivYield, ilpMgmtFee, fundAllocations (array of {fundName:string, allocation:number}). FUND RULES: extract real fund holdings confidently — names like "AIA India Balanced Fund", "Manulife Global Multi Asset Fund", "PRULink US Dividend Wealth Fund". DO NOT extract product descriptions or sentences (e.g. NEVER extract "AIA Platinum Wealth Venture ILP is a limited premium investment-linked insurance policy" as a fund). Fund names are 2-10 words, contain no verbs, no "policy"/"premium"/"insurance"/"ILP" tokens, and are typically <80 chars. If no specific funds are named, return fundAllocations:[]. NEVER substitute geographic tokens (India ≠ Asia ≠ Elite). Cash: cashValue, cvGrowthRate, surrenderPeriod. Notes: notes (FC review headline). EXTRACTION CONFIDENCE: ALSO include an optional _confidence array listing ONLY fields you are NOT highly confident about (default = confident). Each entry: {field, level (low|medium), reason}. Flag premiumAmount when ambiguous, policyNumber when OCR partial, premFrequency when not stated, etc. Do NOT flag fields stated verbatim. Empty array [] or omit entirely when all fields are clean. Return ONLY valid JSON starting with { ending with }.';
+      const formExtractPrompt = correctionPreamble + formExtractPromptBase;
       content.push({
         type: 'text',
         text: 'Extract all policy information from these documents/images.'
       });
+      const extractStartedAt = Date.now();
       const rawText2 = await callAI(formExtractPrompt, content, 4000);
+      const extractDuration = Date.now() - extractStartedAt;
       const parsedRaw = repairJSON(rawText2);
       const parsed = Array.isArray(parsedRaw) ? parsedRaw.find(item => item && typeof item === 'object' && !Array.isArray(item)) : parsedRaw;
-      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('AI extraction did not return a policy object.');
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        // rc1.99: log the failed extraction for debug + replay
+        await logExtractionAttempt({
+          fileName: formFiles[0]?.name || '',
+          fileSize: formFiles[0]?.size || 0,
+          rawResponse: rawText2,
+          parsed: null,
+          savePath: 'scan-into-form',
+          durationMs: extractDuration,
+          promptVersion: EXTRACT_PROMPT_VERSION,
+          errorMessage: 'AI extraction did not return a policy object'
+        }).catch(() => null);
+        throw new Error('AI extraction did not return a policy object.');
+      }
       // Map AI-facing premiumAmount → internal annualPremium field
       if (parsed && typeof parsed === 'object' && parsed.premiumAmount !== undefined && parsed.annualPremium === undefined) {
         parsed.annualPremium = parsed.premiumAmount;
         delete parsed.premiumAmount;
       }
+      // rc1.99: log this extraction run so it can be replayed later
+      // (debug + diff against future prompt changes). The returned logId
+      // gets stashed onto _extractedRaw so the savePolicy correction-
+      // capture can backfill finalPolicyId once the FC clicks save.
+      const inputHash = await _sha256HashString(rawText2);
+      const logId = await logExtractionAttempt({
+        fileName: formFiles[0]?.name || '',
+        fileSize: formFiles[0]?.size || 0,
+        rawResponse: rawText2,
+        parsed,
+        savePath: 'scan-into-form',
+        durationMs: extractDuration,
+        promptVersion: EXTRACT_PROMPT_VERSION,
+        inputHash,
+        insurer: parsed.insurer || ''
+      }).catch(() => null);
+      // rc1.99: stash the raw AI extraction on the form so savePolicy can
+      // diff post-edit vs pre-edit and write per-field corrections to the
+      // extraction_corrections store. Stripped before final persist.
+      const extractedRawSnapshot = {
+        fields: {
+          ...parsed
+        },
+        confidence: Array.isArray(parsed._confidence) ? parsed._confidence : [],
+        promptVersion: EXTRACT_PROMPT_VERSION || APP_VERSION || 'unknown',
+        timestamp: Date.now(),
+        logId,
+        inputHash
+      };
       const overwrites = [];
       const updates = {};
       Object.entries(parsed).forEach(([k, v]) => {
@@ -57823,11 +58154,13 @@ function PolicyFormModal({
       }
       setForm(f => ({
         ...f,
-        ...updates
+        ...updates,
+        _extractedRaw: extractedRawSnapshot
       }));
       if (onDraftChange) onDraftChange({
         ...form,
-        ...updates
+        ...updates,
+        _extractedRaw: extractedRawSnapshot
       });
       // Merge client details to profile
       mergeToProfile(parsed, _cp, _sp);

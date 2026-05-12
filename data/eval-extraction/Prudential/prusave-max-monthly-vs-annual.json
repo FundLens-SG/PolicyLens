@@ -1,0 +1,13 @@
+{
+  "name": "Prudential PruSave Max 10 — annual premium without /yr suffix",
+  "description": "Common AI confusion: 'Basic premium $5,200' with no period qualifier on Prudential apps. Must default to annual unless 'Monthly' is explicitly printed (per the Prudential few-shot in INSURER_FEWSHOTS).",
+  "insurer": "Prudential",
+  "rawAiOutput": "{ \"insurer\": \"Prudential\", \"productName\": \"PruSave Max 10\", \"policyNumber\": \"P0987654321\", \"category\": \"savings\", \"subType\": \"Endowment\", \"currency\": \"SGD\", \"premiumAmount\": 5200, \"premFrequency\": \"annual\", \"premiumStructure\": \"Limited Pay\", \"premTerm\": 10 }",
+  "expectedNormalized": {
+    "insurer": "Prudential",
+    "productName": "PruSave Max 10",
+    "premiumAmount": 5200,
+    "premFrequency": "annual",
+    "premTerm": 10
+  }
+}
