@@ -611,9 +611,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.0';
+const APP_VERSION = 'v2.4.0-rc2.1';
 const APP_VERSION_DATE = '2026-05-13';
-const APP_VERSION_NAME = 'AI smartness Tier C: portfolio context, cross-policy audit, multi-member detector, two-model disagreement verification';
+const APP_VERSION_NAME = 'AI smartness Tier D — surface what the loop already knows: confidence badges, AI insights panel, AI memory browser';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -39869,6 +39869,156 @@ const PLRetirementProjectionChart = React.memo(function PLRetirementProjectionCh
 // ═══════════════════════════════════════════════════════════════
 // MODULE: UPLOAD_PORTAL — Client document collection link
 // ═══════════════════════════════════════════════════════════════
+// rc2.1 — AI Insights panel. Pure presentation; computes findings via
+// auditPortfolio (deterministic, module-scope) on every policies change.
+// Each finding shows level (info/warning/error), a one-line summary,
+// and a "View" affordance that navigates to the relevant tab.
+function AIInsightsPanel({
+  T,
+  policies,
+  clientProfile,
+  setTab,
+  isMobile
+}) {
+  const findings = React.useMemo(() => {
+    try {
+      return auditPortfolio(policies || [], clientProfile || {});
+    } catch (e) {
+      console.warn('[AIInsightsPanel] audit failed:', e?.message || e);
+      return [];
+    }
+  }, [policies, clientProfile]);
+  if (!findings || findings.length === 0) return null;
+  const sevPalette = {
+    error: {
+      bg: 'rgba(220, 60, 60, 0.10)',
+      border: 'rgba(220, 60, 60, 0.45)',
+      dot: '#dc3c3c',
+      label: 'CRITICAL'
+    },
+    warning: {
+      bg: 'rgba(220, 140, 40, 0.10)',
+      border: 'rgba(220, 140, 40, 0.45)',
+      dot: '#dc8c28',
+      label: 'REVIEW'
+    },
+    info: {
+      bg: 'rgba(91, 168, 160, 0.10)',
+      border: 'rgba(91, 168, 160, 0.45)',
+      dot: '#5ba8a0',
+      label: 'NOTE'
+    }
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: T.bg2,
+      border: '1px solid ' + T.border,
+      borderRadius: T.radiusLg,
+      padding: isMobile ? 14 : 18,
+      fontFamily: T.sansFamily
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 12,
+      marginBottom: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: T.primary,
+      fontWeight: 600,
+      letterSpacing: '0.05em',
+      textTransform: 'uppercase'
+    }
+  }, "AI insights"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: T.serifFamily,
+      fontSize: isMobile ? 18 : 22,
+      color: T.text,
+      letterSpacing: '-0.015em',
+      marginTop: 4,
+      lineHeight: 1.2
+    }
+  }, findings.length, " thing", findings.length === 1 ? '' : 's', " to surface with this client")), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setTab('policies'),
+    style: {
+      padding: '6px 12px',
+      fontSize: 11.5,
+      fontWeight: 600,
+      borderRadius: 999,
+      background: T.bg,
+      color: T.text2,
+      border: '1px solid ' + T.border,
+      cursor: 'pointer',
+      whiteSpace: 'nowrap',
+      fontFamily: T.sansFamily
+    }
+  }, "Open Policies \u2192")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 8
+    }
+  }, findings.slice(0, 8).map((f, i) => {
+    const sev = sevPalette[f.level] || sevPalette.info;
+    return /*#__PURE__*/React.createElement("div", {
+      key: f.code + '-' + i,
+      style: {
+        display: 'flex',
+        gap: 10,
+        alignItems: 'flex-start',
+        padding: '10px 12px',
+        background: sev.bg,
+        border: '1px solid ' + sev.border,
+        borderRadius: T.radiusMd || 8
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        marginTop: 5,
+        flexShrink: 0,
+        width: 8,
+        height: 8,
+        borderRadius: 999,
+        background: sev.dot
+      }
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 9.5,
+        fontWeight: 700,
+        letterSpacing: '0.06em',
+        color: sev.dot,
+        marginBottom: 2
+      }
+    }, sev.label), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 12.5,
+        color: T.text,
+        lineHeight: 1.5
+      }
+    }, f.message), Array.isArray(f.policyIds) && f.policyIds.length > 0 && /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10.5,
+        color: T.text3,
+        marginTop: 3
+      }
+    }, f.policyIds.length, " polic", f.policyIds.length === 1 ? 'y' : 'ies', " affected")));
+  }), findings.length > 8 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: T.text3,
+      fontStyle: 'italic',
+      marginTop: 4
+    }
+  }, "+ ", findings.length - 8, " more \u2014 open Policies for the full list.")));
+}
 function Dashboard() {
   const {
     policies,
@@ -41671,6 +41821,12 @@ function Dashboard() {
     active: true,
     onFiles: handleDashDrop,
     label: "\uD83D\uDCCE Drop or paste any document \u2014 client profile, policy contracts, benefit illustrations"
+  }), /*#__PURE__*/React.createElement(AIInsightsPanel, {
+    T: T,
+    policies: policies,
+    clientProfile: clientProfile,
+    setTab: setTab,
+    isMobile: isMobile
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'relative',
@@ -58366,6 +58522,200 @@ function PolicyFormModal({
     onClose();
   };
 
+  // ── rc2.1 — confidence + extraction-warnings surfacing ──
+  // The AI returns a _confidence array per extraction listing fields it's
+  // NOT sure about. applyExtractionRulesAndSanity also pushes warnings
+  // onto _extractedRaw.warnings. We render small dots next to important
+  // field labels + a banner at the top of the form so the FC can see at
+  // a glance what to double-check. Until now, this data has been
+  // returned but never displayed.
+  const confidenceByField = (() => {
+    const out = {};
+    const raw = form?._extractedRaw;
+    if (!raw) return out;
+    const arr = Array.isArray(raw.confidence) ? raw.confidence : [];
+    for (const c of arr) {
+      if (c && c.field) out[c.field] = c;
+    }
+    // Sanity warnings also map onto specific fields
+    const warns = Array.isArray(raw.warnings) ? raw.warnings : [];
+    for (const w of warns) {
+      if (!w || !w.field) continue;
+      // Don't overwrite a more-specific AI confidence entry
+      if (out[w.field]) continue;
+      out[w.field] = {
+        field: w.field,
+        level: w.level === 'error' ? 'low' : 'medium',
+        reason: w.message
+      };
+    }
+    return out;
+  })();
+  const ConfidenceBadge = ({
+    field
+  }) => {
+    const info = confidenceByField[field];
+    if (!info) return null;
+    const palette = info.level === 'low' ? {
+      fill: 'var(--red)',
+      bg: 'rgba(220,60,60,0.15)',
+      icon: '!'
+    } : info.level === 'medium' ? {
+      fill: 'var(--orange)',
+      bg: 'rgba(220,140,40,0.15)',
+      icon: '?'
+    } : null;
+    if (!palette) return null;
+    const tip = (info.reason || 'AI flagged ' + field + ' as ' + info.level + ' confidence') + ' — verify against the document.';
+    return /*#__PURE__*/React.createElement("span", {
+      title: tip,
+      "aria-label": tip,
+      style: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 14,
+        height: 14,
+        marginLeft: 6,
+        fontSize: 9,
+        fontWeight: 700,
+        background: palette.bg,
+        color: palette.fill,
+        borderRadius: 999,
+        lineHeight: 1,
+        cursor: 'help',
+        verticalAlign: 'middle'
+      }
+    }, palette.icon);
+  };
+  const extractionWarnings = (() => {
+    const raw = form?._extractedRaw;
+    if (!raw) return [];
+    const lowConfFields = (Array.isArray(raw.confidence) ? raw.confidence : []).filter(c => c && (c.level === 'low' || c.level === 'medium'));
+    const sanityWarns = (Array.isArray(raw.warnings) ? raw.warnings : []).filter(w => w && (w.level === 'warning' || w.level === 'error'));
+    const autoFixes = Array.isArray(raw.autoFixes) ? raw.autoFixes : [];
+    return {
+      lowConfFields,
+      sanityWarns,
+      autoFixes
+    };
+  })();
+  const hasExtractionInfo = !!(extractionWarnings && (extractionWarnings.lowConfFields && extractionWarnings.lowConfFields.length || extractionWarnings.sanityWarns && extractionWarnings.sanityWarns.length || extractionWarnings.autoFixes && extractionWarnings.autoFixes.length));
+  const [extractionInfoCollapsed, setExtractionInfoCollapsed] = useState(false);
+  const ExtractionInfoBanner = () => {
+    if (!hasExtractionInfo) return null;
+    const {
+      lowConfFields,
+      sanityWarns,
+      autoFixes
+    } = extractionWarnings;
+    const sev = sanityWarns.some(w => w.level === 'error') ? 'error' : sanityWarns.length || lowConfFields.length ? 'warning' : 'info';
+    const bg = sev === 'error' ? 'rgba(220,60,60,0.10)' : sev === 'warning' ? 'rgba(220,140,40,0.10)' : 'rgba(91,168,160,0.10)';
+    const border = sev === 'error' ? 'var(--red)' : sev === 'warning' ? 'var(--orange)' : 'var(--teal)';
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        background: bg,
+        border: '1px solid ' + border,
+        borderRadius: 8,
+        padding: '10px 12px',
+        marginBottom: 12,
+        fontSize: 11.5,
+        color: 'var(--text2)'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 8,
+        cursor: 'pointer'
+      },
+      onClick: () => setExtractionInfoCollapsed(v => !v)
+    }, /*#__PURE__*/React.createElement("strong", {
+      style: {
+        color: 'var(--text)',
+        fontSize: 12
+      }
+    }, sev === 'error' ? '⛔ AI flagged this extraction' : '🔍 AI extraction notes', /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: 'var(--text3)',
+        fontSize: 10,
+        fontWeight: 400,
+        marginLeft: 8
+      }
+    }, autoFixes.length ? autoFixes.length + ' autofix • ' : '', sanityWarns.length ? sanityWarns.length + ' warning • ' : '', lowConfFields.length ? lowConfFields.length + ' low-conf field' + (lowConfFields.length === 1 ? '' : 's') : '')), /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: 'var(--text3)',
+        fontSize: 11
+      }
+    }, extractionInfoCollapsed ? '▸' : '▾')), !extractionInfoCollapsed && /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 8,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 4
+      }
+    }, autoFixes.map((f, i) => /*#__PURE__*/React.createElement("div", {
+      key: 'fix' + i,
+      style: {
+        display: 'flex',
+        gap: 6,
+        alignItems: 'baseline'
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: 'var(--teal)',
+        fontSize: 10,
+        fontWeight: 700,
+        minWidth: 54
+      }
+    }, "AUTOFIX"), /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: 'var(--text2)'
+      }
+    }, /*#__PURE__*/React.createElement("strong", null, f.field), ": ", JSON.stringify(f.before), " \u2192 ", JSON.stringify(f.after), " ", /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: 'var(--text3)'
+      }
+    }, "(", f.message || f.ruleId, ")")))), sanityWarns.map((w, i) => /*#__PURE__*/React.createElement("div", {
+      key: 'warn' + i,
+      style: {
+        display: 'flex',
+        gap: 6,
+        alignItems: 'baseline'
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: w.level === 'error' ? 'var(--red)' : 'var(--orange)',
+        fontSize: 10,
+        fontWeight: 700,
+        minWidth: 54
+      }
+    }, w.level === 'error' ? 'ERROR' : 'WARNING'), /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: 'var(--text2)'
+      }
+    }, w.field ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("strong", null, w.field), ": ") : null, w.message))), lowConfFields.map((c, i) => /*#__PURE__*/React.createElement("div", {
+      key: 'conf' + i,
+      style: {
+        display: 'flex',
+        gap: 6,
+        alignItems: 'baseline'
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: c.level === 'low' ? 'var(--red)' : 'var(--orange)',
+        fontSize: 10,
+        fontWeight: 700,
+        minWidth: 54
+      }
+    }, (c.level || '').toUpperCase(), " CONF"), /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: 'var(--text2)'
+      }
+    }, /*#__PURE__*/React.createElement("strong", null, c.field), c.reason ? /*#__PURE__*/React.createElement(React.Fragment, null, ": ", c.reason) : null)))));
+  };
+
   // ── SAFE OVERLAY CLICK — only closes on a pure click whose mousedown AND mouseup
   // both landed on the overlay itself. This defeats the drag-out-then-release close
   // bug where a user clicks inside a field, drags the cursor outside, and releases
@@ -58922,7 +59272,7 @@ function PolicyFormModal({
     active: true,
     onFiles: files => scanIntoForm(files),
     label: "\uD83D\uDCCE Drop or paste policy docs here to auto-fill this form"
-  }), showFuzzy && !isEdit && /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement(ExtractionInfoBanner, null), showFuzzy && !isEdit && /*#__PURE__*/React.createElement("div", {
     className: "fuzzy-alert"
   }, /*#__PURE__*/React.createElement("h4", null, "\uD83D\uDD0D Possible Repository Matches"), /*#__PURE__*/React.createElement("p", {
     style: {
@@ -59053,12 +59403,16 @@ function PolicyFormModal({
     className: "grid-2"
   }, /*#__PURE__*/React.createElement("div", {
     className: "field"
-  }, /*#__PURE__*/React.createElement("label", null, isCashInvestment ? 'Provider / Bank' : 'Insurer/Platform'), /*#__PURE__*/React.createElement(InsurerSelect, {
+  }, /*#__PURE__*/React.createElement("label", null, isCashInvestment ? 'Provider / Bank' : 'Insurer/Platform', /*#__PURE__*/React.createElement(ConfidenceBadge, {
+    field: "insurer"
+  })), /*#__PURE__*/React.createElement(InsurerSelect, {
     value: form.insurer,
     onChange: v => set('insurer', v)
   })), /*#__PURE__*/React.createElement("div", {
     className: "field"
-  }, /*#__PURE__*/React.createElement("label", null, "Product Name"), /*#__PURE__*/React.createElement(FuzzyInput, {
+  }, /*#__PURE__*/React.createElement("label", null, "Product Name", /*#__PURE__*/React.createElement(ConfidenceBadge, {
+    field: "productName"
+  })), /*#__PURE__*/React.createElement(FuzzyInput, {
     value: form.productName,
     onChange: v => set('productName', v),
     suggestions: repoList.filter(r => !form.insurer || form.insurer === '' || r.insurer === form.insurer).map(r => ({
@@ -59079,7 +59433,9 @@ function PolicyFormModal({
     className: "grid-3"
   }, /*#__PURE__*/React.createElement("div", {
     className: "field"
-  }, /*#__PURE__*/React.createElement("label", null, "Policy Number"), /*#__PURE__*/React.createElement("input", {
+  }, /*#__PURE__*/React.createElement("label", null, "Policy Number", /*#__PURE__*/React.createElement(ConfidenceBadge, {
+    field: "policyNumber"
+  })), /*#__PURE__*/React.createElement("input", {
     value: form.policyNumber,
     onChange: e => set('policyNumber', e.target.value),
     placeholder: "e.g. 12345678"
@@ -59205,7 +59561,13 @@ function PolicyFormModal({
       justifyContent: 'space-between',
       alignItems: 'center'
     }
-  }, /*#__PURE__*/React.createElement("span", null, "Premium ($)"), /*#__PURE__*/React.createElement("select", {
+  }, /*#__PURE__*/React.createElement("span", null, "Premium ($)", /*#__PURE__*/React.createElement(ConfidenceBadge, {
+    field: "annualPremium"
+  }), /*#__PURE__*/React.createElement(ConfidenceBadge, {
+    field: "premiumAmount"
+  }), /*#__PURE__*/React.createElement(ConfidenceBadge, {
+    field: "premFrequency"
+  })), /*#__PURE__*/React.createElement("select", {
     value: form.premFrequency || 'annual',
     onChange: e => set('premFrequency', e.target.value),
     style: {
@@ -59307,7 +59669,9 @@ function PolicyFormModal({
     }
   }, "Switch to MediSave"))), !isISP && !isCSL && /*#__PURE__*/React.createElement("div", {
     className: "field"
-  }, /*#__PURE__*/React.createElement("label", null, "Sum Assured / Face Amount"), /*#__PURE__*/React.createElement("input", {
+  }, /*#__PURE__*/React.createElement("label", null, "Sum Assured / Face Amount", /*#__PURE__*/React.createElement(ConfidenceBadge, {
+    field: "sumAssured"
+  })), /*#__PURE__*/React.createElement("input", {
     type: "number",
     value: form.sumAssured,
     onChange: e => set('sumAssured', e.target.value),
@@ -59474,13 +59838,17 @@ function PolicyFormModal({
     }
   }, /*#__PURE__*/React.createElement("div", {
     className: "field"
-  }, /*#__PURE__*/React.createElement("label", null, "Inception Date"), /*#__PURE__*/React.createElement("input", {
+  }, /*#__PURE__*/React.createElement("label", null, "Inception Date", /*#__PURE__*/React.createElement(ConfidenceBadge, {
+    field: "inceptionDate"
+  })), /*#__PURE__*/React.createElement("input", {
     type: "date",
     value: form.inceptionDate,
     onChange: e => set('inceptionDate', e.target.value)
   })), /*#__PURE__*/React.createElement("div", {
     className: "field"
-  }, /*#__PURE__*/React.createElement("label", null, "Maturity Date"), /*#__PURE__*/React.createElement("input", {
+  }, /*#__PURE__*/React.createElement("label", null, "Maturity Date", /*#__PURE__*/React.createElement(ConfidenceBadge, {
+    field: "maturityDate"
+  })), /*#__PURE__*/React.createElement("input", {
     type: "date",
     value: form.maturityDate,
     onChange: e => set('maturityDate', e.target.value)
@@ -75368,7 +75736,7 @@ function Settings() {
       color: 'var(--text4)',
       letterSpacing: '0.04em'
     }
-  }, "Single-file HTML \xB7 React 18 \xB7 Chart.js \xB7 IndexedDB \xB7 jsPDF \xB7 Supabase Auth")), /*#__PURE__*/React.createElement("div", {
+  }, "Single-file HTML \xB7 React 18 \xB7 Chart.js \xB7 IndexedDB \xB7 jsPDF \xB7 Supabase Auth")), /*#__PURE__*/React.createElement(AIMemoryBrowser, null), /*#__PURE__*/React.createElement("div", {
     className: "card",
     style: {
       marginTop: 16,
@@ -75389,6 +75757,341 @@ function Settings() {
       fontWeight: 500
     }
   }, "Sign Out")));
+}
+
+// rc2.1 — AI Memory browse panel. Read-only view into:
+//   - extraction_corrections: every field the FC has corrected (the AI's
+//     learning corpus)
+//   - extraction_log: the last few extraction runs (raw AI response,
+//     parsed output, final saved policy id)
+// Both are in IndexedDB locally. Lazy-loaded on tab open.
+function AIMemoryBrowser() {
+  const [tab, setTab] = useState('corrections');
+  const [corrections, setCorrections] = useState(null);
+  const [logRows, setLogRows] = useState(null);
+  const [expanded, setExpanded] = useState({});
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const cs = await PolicyDB.getRecentCorrections(50).catch(() => []);
+        if (!cancelled) setCorrections(cs);
+        const log = await getRecentExtractionLog(20).catch(() => []);
+        if (!cancelled) setLogRows(log);
+      } catch (e) {
+        console.warn('[AIMemoryBrowser] load failed:', e?.message || e);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const toggle = id => setExpanded(prev => ({
+    ...prev,
+    [id]: !prev[id]
+  }));
+  return /*#__PURE__*/React.createElement("div", {
+    className: "card",
+    style: {
+      marginTop: 16
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 8,
+      flexWrap: 'wrap'
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", {
+    style: {
+      fontFamily: 'var(--font-serif, Newsreader, serif)',
+      fontSize: 18,
+      fontWeight: 500,
+      letterSpacing: '-0.005em',
+      margin: 0
+    }
+  }, "AI memory"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11.5,
+      color: 'var(--text3)',
+      marginTop: 3
+    }
+  }, "What PolicyLens has learned from your corrections + the recent extraction history.")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 6
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setTab('corrections'),
+    style: {
+      padding: '5px 12px',
+      fontSize: 11,
+      fontWeight: 600,
+      borderRadius: 999,
+      background: tab === 'corrections' ? 'var(--gold-dim)' : 'transparent',
+      color: tab === 'corrections' ? 'var(--gold)' : 'var(--text3)',
+      border: '1px solid ' + (tab === 'corrections' ? 'var(--gold)' : 'var(--border)'),
+      cursor: 'pointer'
+    }
+  }, "Corrections ", corrections ? '· ' + corrections.length : ''), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setTab('log'),
+    style: {
+      padding: '5px 12px',
+      fontSize: 11,
+      fontWeight: 600,
+      borderRadius: 999,
+      background: tab === 'log' ? 'var(--gold-dim)' : 'transparent',
+      color: tab === 'log' ? 'var(--gold)' : 'var(--text3)',
+      border: '1px solid ' + (tab === 'log' ? 'var(--gold)' : 'var(--border)'),
+      cursor: 'pointer'
+    }
+  }, "Extraction log ", logRows ? '· ' + logRows.length : ''))), tab === 'corrections' && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 12
+    }
+  }, corrections === null && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: 'var(--text3)',
+      fontStyle: 'italic'
+    }
+  }, "Loading\u2026"), corrections && corrections.length === 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: '14px 0',
+      fontSize: 12,
+      color: 'var(--text3)',
+      fontStyle: 'italic'
+    }
+  }, "No corrections recorded yet. Edit an AI-extracted field and click Save \u2014 your correction will be captured here and fed back into the next extraction prompt."), corrections && corrections.length > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 6
+    }
+  }, corrections.slice(0, 30).map((c, i) => /*#__PURE__*/React.createElement("div", {
+    key: c.id || i,
+    style: {
+      padding: '8px 10px',
+      background: 'var(--bg2)',
+      borderRadius: 6,
+      border: '1px solid var(--border)',
+      fontSize: 11.5
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      gap: 8,
+      flexWrap: 'wrap'
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
+    style: {
+      color: 'var(--text)'
+    }
+  }, c.insurer || 'Unknown insurer'), c.productName ? /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: 'var(--text3)'
+    }
+  }, " \xB7 ", c.productName) : null), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 10,
+      color: 'var(--text4)'
+    }
+  }, c.timestamp ? new Date(c.timestamp).toLocaleDateString('en-SG') : '')), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 4,
+      fontSize: 11
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: 'var(--text3)'
+    }
+  }, c.field, ": "), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: 'var(--red)',
+      textDecoration: 'line-through'
+    }
+  }, String(c.aiValue ?? '∅').slice(0, 60)), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: 'var(--text3)'
+    }
+  }, " \u2192 "), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: 'var(--teal)',
+      fontWeight: 600
+    }
+  }, String(c.correctedValue ?? '∅').slice(0, 60))), c.learningHint && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: 'var(--text4)',
+      marginTop: 2,
+      fontStyle: 'italic'
+    }
+  }, c.learningHint))), corrections.length > 30 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10.5,
+      color: 'var(--text3)',
+      fontStyle: 'italic',
+      marginTop: 4
+    }
+  }, "+ ", corrections.length - 30, " more (showing first 30)"))), tab === 'log' && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 12
+    }
+  }, logRows === null && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: 'var(--text3)',
+      fontStyle: 'italic'
+    }
+  }, "Loading\u2026"), logRows && logRows.length === 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: '14px 0',
+      fontSize: 12,
+      color: 'var(--text3)',
+      fontStyle: 'italic'
+    }
+  }, "No extractions logged yet. Use Add Policy \u2192 Scan, or drop a doc onto the Dashboard, and the run will appear here."), logRows && logRows.length > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 6
+    }
+  }, logRows.map((r, i) => {
+    const id = r.id || i;
+    const isOpen = !!expanded[id];
+    return /*#__PURE__*/React.createElement("div", {
+      key: id,
+      style: {
+        background: 'var(--bg2)',
+        borderRadius: 6,
+        border: '1px solid var(--border)',
+        fontSize: 11.5
+      }
+    }, /*#__PURE__*/React.createElement("button", {
+      onClick: () => toggle(id),
+      style: {
+        background: 'none',
+        border: 'none',
+        padding: '8px 10px',
+        width: '100%',
+        textAlign: 'left',
+        cursor: 'pointer',
+        display: 'flex',
+        justifyContent: 'space-between',
+        gap: 8,
+        alignItems: 'flex-start'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        minWidth: 0,
+        flex: 1
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 6,
+        alignItems: 'baseline',
+        flexWrap: 'wrap'
+      }
+    }, /*#__PURE__*/React.createElement("strong", {
+      style: {
+        color: 'var(--text)'
+      }
+    }, r.insurer || r.fileName || 'Extraction'), r.productName ? /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: 'var(--text3)'
+      }
+    }, r.productName) : null, r.errorMessage ? /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: 'var(--red)',
+        fontSize: 10,
+        fontWeight: 600
+      }
+    }, "ERROR") : null, r.finalPolicyId ? /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: 'var(--teal)',
+        fontSize: 10,
+        fontWeight: 600
+      }
+    }, "SAVED") : /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: 'var(--orange)',
+        fontSize: 10,
+        fontWeight: 600
+      }
+    }, "UNSAVED")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10.5,
+        color: 'var(--text3)',
+        marginTop: 2
+      }
+    }, r.model || 'unknown model', " \xB7 ", r.promptVersion || 'no prompt version', " \xB7 ", r.durationMs ? r.durationMs + 'ms · ' : '', r.timestamp ? new Date(r.timestamp).toLocaleString('en-SG') : '')), /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: 'var(--text3)',
+        fontSize: 11,
+        marginTop: 2
+      }
+    }, isOpen ? '▾' : '▸')), isOpen && /*#__PURE__*/React.createElement("div", {
+      style: {
+        padding: '0 10px 10px',
+        borderTop: '1px solid var(--border)'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10.5,
+        color: 'var(--text3)',
+        margin: '6px 0 4px',
+        fontWeight: 600,
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em'
+      }
+    }, "Parsed output"), /*#__PURE__*/React.createElement("pre", {
+      style: {
+        margin: 0,
+        padding: 8,
+        background: 'var(--bg)',
+        borderRadius: 4,
+        fontSize: 10,
+        maxHeight: 220,
+        overflow: 'auto',
+        color: 'var(--text2)',
+        whiteSpace: 'pre-wrap'
+      }
+    }, JSON.stringify(r.parsedOutput, null, 2)), r.rawResponse && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10.5,
+        color: 'var(--text3)',
+        margin: '10px 0 4px',
+        fontWeight: 600,
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em'
+      }
+    }, "Raw AI response (first 40 KB)"), /*#__PURE__*/React.createElement("pre", {
+      style: {
+        margin: 0,
+        padding: 8,
+        background: 'var(--bg)',
+        borderRadius: 4,
+        fontSize: 9.5,
+        maxHeight: 200,
+        overflow: 'auto',
+        color: 'var(--text3)',
+        whiteSpace: 'pre-wrap'
+      }
+    }, r.rawResponse.slice(0, 4000), r.rawResponse.length > 4000 ? '\n…(truncated)' : '')), r.errorMessage && /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 8,
+        padding: 8,
+        background: 'rgba(220,60,60,0.10)',
+        border: '1px solid rgba(220,60,60,0.4)',
+        borderRadius: 4,
+        fontSize: 10.5,
+        color: 'var(--red)'
+      }
+    }, r.errorMessage)));
+  }))));
 }
 
 // ═══════════════════════════════════════════════════════════════
