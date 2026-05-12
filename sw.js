@@ -1,4 +1,4 @@
-const SW_VERSION = 'v2.3.0-rc2e.23';
+const SW_VERSION = 'v2.3.0-rc2e.35-idbfix';
 const DB_NAME = 'PolicyLensSW';
 const DB_VERSION = 1;
 const SESSION_STORE = 'sessions';
@@ -8,7 +8,33 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil((async () => {
+    await self.clients.claim();
+    const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const client of clients) {
+      try { client.postMessage({ type: 'POLICYLENS_SW_ACTIVATED', version: SW_VERSION }); } catch (_) {}
+      try {
+        const url = new URL(client.url);
+        if (url.pathname.includes('/tools/policylens') && url.searchParams.get('_plsw') !== SW_VERSION) {
+          url.searchParams.set('_plsw', SW_VERSION);
+          client.navigate(url.href);
+        }
+      } catch (_) {}
+    }
+  })());
+});
+
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  if (req.mode === 'navigate') {
+    try {
+      event.respondWith(fetch(new Request(req, { cache: 'no-store' })).catch(() => fetch(req)));
+    } catch (_) {
+      event.respondWith(fetch(req));
+    }
+    return;
+  }
+  event.respondWith(fetch(req));
 });
 
 function openDB() {

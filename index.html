@@ -40,7 +40,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.23';
+const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.35-idbfix';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -13186,7 +13186,7 @@ function isLikelyFundName(name) {
 // ═══════════════════════════════════════════════════════════════
 
 const DB_NAME = 'PolicyLensV4';
-const DB_VER = 12;
+const DB_VER = 13;
 const openDB = () => new Promise((res, rej) => {
   const r = indexedDB.open(DB_NAME, DB_VER);
   r.onupgradeneeded = e => {
@@ -13347,7 +13347,20 @@ const openDB = () => new Promise((res, rej) => {
     } catch (_) {}
   };
   r.onsuccess = e => res(e.target.result);
-  r.onerror = e => rej(e.target.error);
+  r.onerror = e => {
+    const err = e.target.error;
+    if (err && err.name === 'VersionError') {
+      try {
+        const fallback = indexedDB.open(DB_NAME);
+        fallback.onsuccess = ev => res(ev.target.result);
+        fallback.onerror = ev => rej(ev.target.error || err);
+      } catch (fallbackErr) {
+        rej(fallbackErr || err);
+      }
+      return;
+    }
+    rej(err);
+  };
 });
 const dbOp = (store, mode, fn) => openDB().then(db => new Promise((res, rej) => {
   const tx = db.transaction(store, mode);
