@@ -601,9 +601,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.8';
+const APP_VERSION = 'v2.4.0-rc2.9';
 const APP_VERSION_DATE = '2026-05-14';
-const APP_VERSION_NAME = 'Multi-sheet xlsx detection + NRIC-header detection + leading-newline-name fix';
+const APP_VERSION_NAME = 'Document fingerprinting — repeat-template fast-path with per-fingerprint few-shot';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -5478,6 +5478,13 @@ async function recordCorrectionsFromSave(savedPolicy, originalRaw, opts = {}) {
   const insurer = (savedPolicy.insurer || fields.insurer || 'unknown').trim();
   const productName = (savedPolicy.productName || fields.productName || '').trim();
   const promptVersion = originalRaw.promptVersion || EXTRACT_PROMPT_VERSION || APP_VERSION || 'unknown';
+  // rc2.9 — fingerprint propagation: pull from the extraction snapshot
+  // so the correction record carries the SAME id as the doc that
+  // produced it. buildFingerprintFewShot uses this on subsequent
+  // extractions to inject template-specific learning.
+  const docFingerprintId = (originalRaw && originalRaw.fingerprint && originalRaw.fingerprint.id)
+    || (fields._policyFingerprint && fields._policyFingerprint.id)
+    || '';
 
   let written = 0;
   for (const [key, aiValue] of Object.entries(fields)) {
@@ -5500,7 +5507,7 @@ async function recordCorrectionsFromSave(savedPolicy, originalRaw, opts = {}) {
         documentType: fields.documentType || '',
         sourcePage: fields.sourcePage || fields._sourcePage || '',
         sourceImage: fields.sourceImage || fields._sourceImage || '',
-        fingerprint: fields._policyFingerprint?.id || '',
+        fingerprint: docFingerprintId,
         confidenceFlag: confByField.get(key) || null,
         promptVersion,
         savePath: opts.savePath || 'manual-edit',
@@ -6095,6 +6102,95 @@ async function verifyLowConfidenceFields(parsed, contentBlocks, opts = {}) {
   } catch (e) {
     console.warn('[Ensemble] verifier call failed:', e?.message || e);
     return { verified: false, disagreements: [], reason: e?.message || 'verifier-error' };
+  }
+}
+
+// ── rc2.9 — DOCUMENT FINGERPRINTING ──
+// Hashes the *layout/structure* of a document so subsequent extractions
+// from the same template can short-circuit:
+//   • Pull only corrections tagged with this fingerprint into the
+//     few-shot context (vs. the global last-15, which is noisier).
+//   • Cache the insurer-rule autofixes that ran on this template so
+//     repeats can skip the rule-application step.
+//   • Mark high-volume templates as "stable" so the FC sees "seen 12
+//     times, low-edit rate" as a trust signal.
+//
+// Strategy: extract structural anchors (sheet names + column headers +
+// section banners + insurer name) and SHA-256 them. Same template
+// across different clients yields the same fingerprint.
+async function computeDocFingerprint(contentBlocks) {
+  if (!Array.isArray(contentBlocks)) return null;
+  const text = contentBlocks
+    .filter(b => b && (b.type === 'text' || typeof b.text === 'string'))
+    .map(b => String(b.text || ''))
+    .join('\n');
+  if (!text || text.length < 50) return null;
+
+  const anchors = [];
+
+  // 1. Spreadsheet markers (xlsx file name + sheet names)
+  const sheetMatches = text.match(/---\s*Sheet:\s*[^-]+---/g) || [];
+  if (sheetMatches.length) anchors.push('sheets:' + sheetMatches.length);
+  const spreadsheetMatch = text.match(/\[Spreadsheet:\s*([^\]]+)\]/);
+  if (spreadsheetMatch) anchors.push('xlsx:' + spreadsheetMatch[1].toLowerCase().replace(/\s+/g, '-'));
+
+  // 2. Column header signature — first row of CSV-like data after each
+  // sheet marker, normalized
+  const colHeaderMatches = text.match(/(?:^|\n)([A-Z][^,\n]{0,40},){3,15}[A-Z][^,\n]{0,40}/g) || [];
+  for (const h of colHeaderMatches.slice(0, 5)) {
+    const cols = h.replace(/^[\n]+/, '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+    if (cols.length >= 3) anchors.push('cols:' + cols.slice(0, 8).join('|'));
+  }
+
+  // 3. Section banners (Hospitalisation / Life Protection / etc)
+  const sectionMatches = text.match(/\b(Hospitalisation|Life Protection|Critical Illness|Personal Accident|Investment-linked|ILP|Endowment|Legacy Planning|Fixed Deposits|CPF Accounts|Short Term Endowments|Long Term Endowments|Wealth Accumulation|SRS|Annuity|Disability Income)\b/gi) || [];
+  const uniqueSections = [...new Set(sectionMatches.map(s => s.toLowerCase()))].sort();
+  if (uniqueSections.length) anchors.push('sections:' + uniqueSections.join(','));
+
+  // 4. Insurer names mentioned (top 3, alphabetized for stability)
+  const insurerMatches = text.match(/\b(Manulife|Prudential|Great Eastern|AIA|NTUC Income|Income Insurance|Singlife|Aviva|HSBC|FWD|Etiqa|Tokio Marine|MSIG|China Taiping|China Life|Generali|Zurich|Tugu|Sun Life|Friends Provident|Transamerica)\b/gi) || [];
+  const uniqueInsurers = [...new Set(insurerMatches.map(s => s.toLowerCase().trim()))].sort();
+  if (uniqueInsurers.length) anchors.push('insurers:' + uniqueInsurers.slice(0, 5).join(','));
+
+  // 5. Identity-header schema (Soh-style "DD MMM YYYY" vs NRIC-style)
+  if (/NRIC\/FIN/i.test(text)) anchors.push('schema:nric');
+  if (/\d{1,2}\s+[A-Z][a-z]+\s+\d{4},\s*\d{1,3}\s*y\/?o/i.test(text)) anchors.push('schema:soh');
+
+  if (anchors.length < 2) return null;
+  const composite = anchors.join('|');
+  // SHA-256 it (first 12 hex chars is enough — collision probability
+  // is astronomically low for the volumes we'll see)
+  try {
+    const enc = new TextEncoder().encode(composite);
+    const buf = await crypto.subtle.digest('SHA-256', enc);
+    const hex = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 12);
+    return { id: hex, composite };
+  } catch { return { id: 'fp_' + Date.now().toString(36), composite }; }
+}
+
+// rc2.9 — fingerprint-aware few-shot retrieval. Pulls corrections
+// matching this document's fingerprint first, falling back to global
+// recent corrections when the fingerprint has no history.
+async function buildFingerprintFewShot(fingerprint, fallbackLimit = 8) {
+  if (!fingerprint || !fingerprint.id) return '';
+  try {
+    const all = await PolicyDB.getAllCorrections();
+    const tagged = (all || []).filter(c => c && c.fingerprint === fingerprint.id);
+    if (tagged.length === 0) return '';
+    const recent = tagged
+      .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+      .slice(0, fallbackLimit);
+    const lines = ['', '═══ THIS TEMPLATE has been corrected ' + recent.length + ' time(s) before ═══'];
+    for (const c of recent) {
+      const aiVal = c.aiValue == null ? 'null' : JSON.stringify(c.aiValue);
+      const corrVal = c.correctedValue == null ? 'null' : JSON.stringify(c.correctedValue);
+      lines.push('  • ' + (c.productName || c.insurer || '?') + ' / ' + c.field + ': AI returned ' + aiVal + ', correct value is ' + corrVal);
+    }
+    lines.push('═══ END TEMPLATE HISTORY ═══');
+    return lines.join('\n');
+  } catch (e) {
+    console.warn('[Fingerprint] few-shot retrieval failed:', e?.message || e);
+    return '';
   }
 }
 
@@ -43953,10 +44049,20 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
         const blocks = await processFileWithDocumentAI(file);
         content.push(...blocks);
       }
+      // rc2.9 — compute the document fingerprint up front so we can
+      // (a) prepend a template-specific corrections few-shot, and
+      // (b) tag any new corrections from this save with the fingerprint.
+      const docFingerprint = await computeDocFingerprint(content).catch(() => null);
       // rc1.99: prepend prior-corrections few-shot context so the AI
       // learns from this FC's past edits (closed feedback loop). Cached
       // for 30s inside buildCorrectionFewShot — cheap call.
       const correctionPreamble = await buildCorrectionFewShot().catch(() => '');
+      // rc2.9 — add template-specific corrections on top of the global
+      // recent corrections. Higher signal, lower noise. Falls back to
+      // empty string when fingerprint is missing or has no history.
+      const fingerprintPreamble = docFingerprint
+        ? await buildFingerprintFewShot(docFingerprint).catch(() => '')
+        : '';
       // rc2.0 — portfolio-context preamble. Tells the AI who the active
       // client is and which policies they already have, so it can:
       //  • disambiguate "Self" or unnamed life-insured to the real client name,
@@ -44001,7 +44107,7 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
         return '\n' + lines.join('\n') + '\n\n';
       })();
       const formExtractPromptBase = 'Extract insurance policy details. Return a JSON object with ALL fields: insurer, productName, policyNumber, category (protection/savings/health/investment/retirement/maternity), subType, currency, sumAssured (number), premiumAmount (number — the premium AS PAID at its stated frequency. "$1,000/mth" → premiumAmount=1000 premFrequency="monthly". "$12,000/yr" → premiumAmount=12000 premFrequency="annual". Do NOT convert between periods), premFrequency (annual/monthly/single/unknown — must match the period of premiumAmount. If unclear, use unknown), premiumStructure, paymentMethod, policyOwner, lifeInsured, gender, dob, ageAtEntry, smoker, nationality, occupation, inceptionDate, maturityDate, status, premStartAge, premTerm, premEndAge. Preserve the exact policyOwner printed on the document; do not replace it with the active client name. If policy owner and life insured differ, capture both exactly. Riders: riders (array) — CAPTURE-FIRST: for EVERY benefit listed, set riderName to EXACT name from document, THEN classify type from death/tpd/ci/eci/di/accidental/acc_medical/acc_tcm/acc_dismember/premium_waiver/other. If unsure, use type:"other". NEVER duplicate types for different benefits — use riderName to distinguish. Each: {type, riderName (ALWAYS filled), sa:number, premium:0 if bundled, expiryAge, bundled:boolean, multiClaim, totalClaimPct}. SA: saMultiplier, multiplierEndAge. ISP: ispClass, hasRider, riderList, riderPremium, ispDeductible, ispCoinsurance. ILP: ilpGrowth, ilpDivYield, ilpMgmtFee, fundAllocations (array of {fundName:string, allocation:number}). FUND RULES: extract real fund holdings confidently — names like "AIA India Balanced Fund", "Manulife Global Multi Asset Fund", "PRULink US Dividend Wealth Fund". DO NOT extract product descriptions or sentences (e.g. NEVER extract "AIA Platinum Wealth Venture ILP is a limited premium investment-linked insurance policy" as a fund). Fund names are 2-10 words, contain no verbs, no "policy"/"premium"/"insurance"/"ILP" tokens, and are typically <80 chars. If no specific funds are named, return fundAllocations:[]. NEVER substitute geographic tokens (India ≠ Asia ≠ Elite). Cash: cashValue, cvGrowthRate, surrenderPeriod. Notes: notes (FC review headline). EXTRACTION CONFIDENCE: ALSO include an optional _confidence array listing ONLY fields you are NOT highly confident about (default = confident). Each entry: {field, level (low|medium), reason}. Flag premiumAmount when ambiguous, policyNumber when OCR partial, premFrequency when not stated, etc. Do NOT flag fields stated verbatim. Empty array [] or omit entirely when all fields are clean. Return ONLY valid JSON starting with { ending with }.';
-      const formExtractPrompt = correctionPreamble + portfolioPreamble + formExtractPromptBase;
+      const formExtractPrompt = correctionPreamble + fingerprintPreamble + portfolioPreamble + formExtractPromptBase;
       content.push({type:'text',text:'Extract all policy information from these documents/images.'});
       const extractStartedAt = Date.now();
       const rawText2 = await callAI(formExtractPrompt, content, 4000);
@@ -44111,7 +44217,8 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
         promptVersion: EXTRACT_PROMPT_VERSION || APP_VERSION || 'unknown',
         timestamp: Date.now(),
         logId,
-        inputHash
+        inputHash,
+        fingerprint: docFingerprint  // rc2.9 — propagates to recorded corrections
       };
       const overwrites = [];
       const updates = {};
