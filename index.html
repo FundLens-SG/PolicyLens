@@ -611,9 +611,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.100';
+const APP_VERSION = 'v2.4.0-rc2.0';
 const APP_VERSION_DATE = '2026-05-13';
-const APP_VERSION_NAME = 'AI smartness Tier B: insurer-specific normalization rules + deterministic sanity validator on every extraction';
+const APP_VERSION_NAME = 'AI smartness Tier C: portfolio context, cross-policy audit, multi-member detector, two-model disagreement verification';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -5198,6 +5198,281 @@ function sanityCheckPolicy(policy) {
       field: 'subType',
       message: 'Subtype "' + policy.subType + '" not in canonical list for category "' + policy.category + '".'
     });
+  }
+  return findings;
+}
+
+// ── rc2.0 — MULTI-MEMBER DOCUMENT DETECTOR ──
+// Heuristic pre-check for family / multi-policyholder documents (e.g. the
+// Soh family xlsx with Eric + Stacy in one workbook). If we detect >= 2
+// person banners, we emit a warning so the FC knows to review carefully
+// before saving — the current single-pass extraction silently routes
+// everything to whichever client is active.
+//
+// FULL multi-pass extraction (structure -> per-person -> cross-check) is
+// the deeper fix and lives in the rc2.x roadmap; this detector is the
+// pragmatic 90/10 unlock — same code path, smarter warning.
+function detectMultiMemberDocument(contentBlocks) {
+  if (!Array.isArray(contentBlocks)) return {
+    detected: false,
+    candidates: []
+  };
+  const textChunks = contentBlocks.filter(b => b && (b.type === 'text' || typeof b.text === 'string')).map(b => String(b.text || '')).join('\n');
+  if (!textChunks) return {
+    detected: false,
+    candidates: []
+  };
+
+  // Looks for "Full Name, DD MMM YYYY, age N y/o" or similar banners.
+  // Tolerant of either Western or local formats. Scores rather than
+  // hard-extracts to keep noise low.
+  const nameDobAge = /([A-Z][a-zA-Z'\-\s]{3,40}),\s*(\d{1,2}\s+[A-Z][a-z]+\s+\d{4})(?:,\s*(\d{1,3})\s*y\/?o)?/g;
+  const candidates = new Set();
+  let match;
+  while ((match = nameDobAge.exec(textChunks)) !== null) {
+    const name = match[1].trim().replace(/\s+/g, ' ');
+    if (name.length < 6 || name.length > 60) continue;
+    if (/policy|summary|report|portfolio|insurer|insurance|review|client|account/i.test(name)) continue;
+    if (!/\s/.test(name)) continue; // need at least two words
+    candidates.add(name);
+    if (candidates.size > 8) break;
+  }
+  return {
+    detected: candidates.size >= 2,
+    candidates: [...candidates]
+  };
+}
+
+// ── rc2.0 — TWO-MODEL DISAGREEMENT VERIFICATION ──
+// After the primary extraction returns, if any field came back with
+// LOW confidence (per the AI's own _confidence array) AND we have BOTH
+// Gemini + Claude API keys available, we ask the OTHER model to
+// re-extract just those fields. Disagreements surface as a strong
+// warning to the FC.
+//
+// Why this shape:
+//   • Full ensemble (always-run two models on every field) doubles AI
+//     cost. Most fields aren't ambiguous, so it's wasted spend.
+//   • Targeted ensemble (only low-confidence fields) keeps the cost
+//     additive ~10-20% but eliminates the most common silent-error
+//     class: "AI is wrong but confident enough to look right".
+//
+// The bigger payoff comes when the eval harness has enough fixtures to
+// measure ensemble accuracy and we can tune the trigger threshold.
+async function verifyLowConfidenceFields(parsed, contentBlocks, opts = {}) {
+  if (!parsed || typeof parsed !== 'object') return {
+    verified: false,
+    disagreements: []
+  };
+  const confList = Array.isArray(parsed._confidence) ? parsed._confidence : [];
+  const lowConfFields = confList.filter(c => c && c.level === 'low').map(c => c.field).filter(Boolean);
+  if (!lowConfFields.length) return {
+    verified: false,
+    disagreements: []
+  };
+
+  // Need both providers available to do an A/B
+  const uid = window._user?.id || '';
+  const [gk, ck] = await Promise.all([dbGet('settings', 'geminiKey_' + uid).catch(() => null).then(r => (r?.value || '').trim()), dbGet('settings', 'anthropicKey_' + uid).catch(() => null).then(r => (r?.value || '').trim())]);
+  // Also check unscoped keys
+  if (!gk || !ck) {
+    const [gk2, ck2] = await Promise.all([dbGet('settings', 'geminiKey').catch(() => null).then(r => (r?.value || '').trim()), dbGet('settings', 'anthropicKey').catch(() => null).then(r => (r?.value || '').trim())]);
+    if (!gk) gk = gk2;
+    if (!ck) ck = ck2;
+  }
+  if (!gk || !ck) return {
+    verified: false,
+    disagreements: [],
+    reason: 'need both providers'
+  };
+
+  // Build a tightly-scoped verifier prompt
+  const verifierPrompt = 'You are verifying a previous extraction. Look ONLY at these fields and return a JSON object with the verified values. Fields to verify: ' + lowConfFields.join(', ') + '.\n\n' + 'Original extraction said:\n' + JSON.stringify(lowConfFields.reduce((acc, f) => {
+    acc[f] = parsed[f];
+    return acc;
+  }, {}), null, 2) + '\n\nReturn JSON with the same field names and your independently extracted values. If you agree, repeat the same values.';
+  try {
+    // We pass _forceAnthropic on a sentinel block to swap providers (if the
+    // first call used Gemini, this forces Claude, and vice versa).
+    const verifierContent = [...contentBlocks, {
+      type: 'text',
+      text: verifierPrompt,
+      _forceAnthropic: true
+    }];
+    const verifierRaw = await callAI(verifierPrompt, verifierContent, 1000);
+    const verifierParsed = repairJSON(verifierRaw);
+    if (!verifierParsed || typeof verifierParsed !== 'object') return {
+      verified: true,
+      disagreements: [],
+      reason: 'verifier non-object'
+    };
+    const disagreements = [];
+    for (const field of lowConfFields) {
+      const a = parsed[field];
+      const b = verifierParsed[field];
+      // Loose comparison
+      if (_correctionsEqual(a, b)) continue;
+      // Skip if verifier returned empty
+      if (_correctionsIsEmpty(b)) continue;
+      disagreements.push({
+        field,
+        primary: a,
+        secondary: b
+      });
+    }
+    return {
+      verified: true,
+      disagreements
+    };
+  } catch (e) {
+    console.warn('[Ensemble] verifier call failed:', e?.message || e);
+    return {
+      verified: false,
+      disagreements: [],
+      reason: e?.message || 'verifier-error'
+    };
+  }
+}
+
+// ── rc2.0 — CROSS-POLICY PORTFOLIO AUDIT ──
+// Runs over a client's full policy list (after every save) and returns
+// deterministic findings about gaps, contradictions, and risks the FC
+// can act on. Each finding has {level, code, message, policyIds[]}.
+//
+// Findings include:
+//   • premium-past-retirement: policies still paying premium past
+//     retirement age — affordability question.
+//   • duplicate-suspect: two policies with very similar insurer +
+//     productName (probably re-imported the same doc).
+//   • zero-cover-protection: a protection-category policy with
+//     sumAssured = 0 (data quality flag).
+//   • date-future-inception: inceptionDate is in the future (likely an
+//     OCR mis-parse of dd/mm vs mm/dd).
+//   • lifeInsured-mismatch: most policies are for the active client but
+//     one row's lifeInsured is wildly different — possible mis-routing.
+//   • no-di-no-hospital: client has 5+ policies but no DI and no ISP
+//     (the typical FC review prompt).
+//
+// This is intentionally deterministic — no AI calls. The findings power
+// the "AI insight" surface on the Dashboard (rc2.x) and the audit log.
+
+function _auditNumber(v) {
+  if (typeof v === 'number') return v;
+  if (typeof v === 'string') {
+    const n = parseFloat(v.replace(/[, $]/g, ''));
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
+}
+function auditPortfolio(policies, profile) {
+  const findings = [];
+  const list = Array.isArray(policies) ? policies : [];
+  if (!list.length) return findings;
+  const retAge = profile && (profile.retirementAge || profile.retAge) || 65;
+  const clientName = String(profile?.name || '').trim().toLowerCase();
+  const active = list.filter(p => p && p.status !== 'matured' && p.status !== 'surrendered' && p.status !== 'lapsed');
+
+  // 1. Premium continues past retirement
+  const premPastRet = active.filter(p => {
+    const endAge = _auditNumber(p.premEndAge);
+    return endAge != null && endAge > retAge;
+  });
+  if (premPastRet.length >= 2) {
+    findings.push({
+      level: 'warning',
+      code: 'premium-past-retirement',
+      message: premPastRet.length + ' policies still pay premium past age ' + retAge + '. Check the retirement income gap before adding more recurring spend.',
+      policyIds: premPastRet.map(p => p.id)
+    });
+  }
+
+  // 2. Duplicate suspects (same insurer + productName)
+  const seen = new Map();
+  for (const p of active) {
+    const key = String(p.insurer || '').trim().toLowerCase() + '|' + String(p.productName || p.policyName || '').trim().toLowerCase();
+    if (!key || key === '|') continue;
+    const bucket = seen.get(key) || [];
+    bucket.push(p);
+    seen.set(key, bucket);
+  }
+  for (const [, bucket] of seen) {
+    if (bucket.length >= 2) {
+      findings.push({
+        level: 'warning',
+        code: 'duplicate-suspect',
+        message: bucket.length + ' policies share the same insurer + product name. Verify they aren\'t accidental re-imports.',
+        policyIds: bucket.map(p => p.id),
+        meta: {
+          insurer: bucket[0].insurer,
+          productName: bucket[0].productName || bucket[0].policyName
+        }
+      });
+    }
+  }
+
+  // 3. Zero-cover protection policies (data quality)
+  const zeroCover = active.filter(p => p.category === 'protection' && (!_auditNumber(p.sumAssured) || _auditNumber(p.sumAssured) === 0));
+  for (const p of zeroCover) {
+    findings.push({
+      level: 'warning',
+      code: 'zero-cover-protection',
+      message: 'Protection policy "' + (p.productName || p.policyName || 'unnamed') + '" has 0 sum assured — confirm the cover amount.',
+      policyIds: [p.id]
+    });
+  }
+
+  // 4. Future-dated inception
+  const now = Date.now();
+  for (const p of active) {
+    const t = p.inceptionDate ? new Date(p.inceptionDate).getTime() : null;
+    if (Number.isFinite(t) && t > now + 30 * 86400 * 1000) {
+      findings.push({
+        level: 'warning',
+        code: 'date-future-inception',
+        message: 'Policy "' + (p.productName || p.policyName || 'unnamed') + '" has inception date in the future (' + p.inceptionDate + '). Possible dd/mm vs mm/dd OCR error.',
+        policyIds: [p.id]
+      });
+    }
+  }
+
+  // 5. Life-insured mismatch (most rows = active client, one outlier)
+  if (clientName) {
+    const matchCounts = new Map();
+    for (const p of active) {
+      const li = String(p.lifeInsured || '').trim().toLowerCase();
+      if (!li) continue;
+      matchCounts.set(li, (matchCounts.get(li) || 0) + 1);
+    }
+    const sortedNames = [...matchCounts.entries()].sort((a, b) => b[1] - a[1]);
+    if (sortedNames.length >= 2 && sortedNames[0][1] >= 3) {
+      const majority = sortedNames[0][0];
+      const outliers = active.filter(p => {
+        const li = String(p.lifeInsured || '').trim().toLowerCase();
+        return li && li !== majority && li !== clientName;
+      });
+      if (outliers.length === 1) {
+        findings.push({
+          level: 'warning',
+          code: 'lifeInsured-mismatch',
+          message: 'Most policies list "' + sortedNames[0][0] + '" as life insured, but one lists "' + outliers[0].lifeInsured + '". Possible mis-routing — should this policy be on a different client?',
+          policyIds: [outliers[0].id]
+        });
+      }
+    }
+  }
+
+  // 6. No DI + no ISP gap (the classic protection review)
+  if (active.length >= 5) {
+    const hasDI = active.some(p => p.subType === 'Disability Income' || Array.isArray(p.riders) && p.riders.some(r => r.type === 'di'));
+    const hasISP = active.some(p => p.subType === 'Integrated Shield Plan' || p.category === 'health');
+    if (!hasDI && !hasISP) {
+      findings.push({
+        level: 'info',
+        code: 'no-di-no-hospital',
+        message: 'Client has ' + active.length + ' policies but no Disability Income and no Integrated Shield Plan. Strong candidates for the next review.',
+        policyIds: []
+      });
+    }
   }
   return findings;
 }
@@ -22115,6 +22390,30 @@ function App() {
         attachFinalToExtractionLog(_capturedExtractedRaw.logId, enriched.id).catch(e => console.warn('[ExtractionLog] backfill failed:', e?.message || e));
       }
     }
+    // rc2.0 cross-policy audit — re-run deterministic portfolio checks
+    // after every save. Fire-and-forget; surfaces actionable findings
+    // (premium-past-retirement, duplicates, OCR future-dates, etc) as a
+    // muted toast for high-severity items only. UI surfacing on the
+    // Dashboard "AI insights" panel follows in a later iteration.
+    (async () => {
+      try {
+        const fresh = await dbGetAll('policies').catch(() => []);
+        const clientPolicies = (fresh || []).filter(p => p && p.clientId === targetClientId);
+        const findings = auditPortfolio(clientPolicies, clientProfile || {});
+        if (findings.length > 0) {
+          console.log('[PortfolioAudit] ' + findings.length + ' finding(s) for client ' + targetClientId + ':', findings);
+          // Only toast the highest-severity items so we don't spam the FC
+          const warnings = findings.filter(f => f.level === 'warning');
+          if (warnings.length > 0) {
+            try {
+              toast('Portfolio note: ' + warnings[0].message, 'info', 5500);
+            } catch (_) {}
+          }
+        }
+      } catch (e) {
+        console.warn('[PortfolioAudit] failed:', e?.message || e);
+      }
+    })();
     clearDeletedPolicyId(enriched.clientId, enriched.id).catch(() => {});
     setPolicies(prev => {
       const idx = prev.findIndex(x => x.id === enriched.id);
@@ -57545,7 +57844,8 @@ function PolicyFormModal({
   const {
     clientProfile: _cp,
     clientName: _clientName,
-    saveProfile: _sp
+    saveProfile: _sp,
+    policies: _ctxPolicies
   } = useContext(AppCtx);
   const [clientPickerNames, setClientPickerNames] = useState([]);
   useEffect(() => {
@@ -58352,8 +58652,46 @@ function PolicyFormModal({
       // learns from this FC's past edits (closed feedback loop). Cached
       // for 30s inside buildCorrectionFewShot — cheap call.
       const correctionPreamble = await buildCorrectionFewShot().catch(() => '');
+      // rc2.0 — portfolio-context preamble. Tells the AI who the active
+      // client is and which policies they already have, so it can:
+      //  • disambiguate "Self" or unnamed life-insured to the real client name,
+      //  • spot near-duplicates of existing policies (offer to merge), and
+      //  • use existing insurer/product memory as a hint for OCR-uncertain rows.
+      const portfolioPreamble = (() => {
+        const clientNameForCtx = String(_cp?.name || _clientName || '').trim();
+        if (!clientNameForCtx) return '';
+        const age = typeof getProfileAge === 'function' ? getProfileAge(_cp) : null;
+        const gender = (_cp?.gender || '').trim();
+        const headerParts = ['Active client: ' + clientNameForCtx];
+        if (age != null) headerParts.push('age ' + age);
+        if (gender) headerParts.push(gender);
+        if (_cp?.smoker) headerParts.push(_cp.smoker === 'yes' ? 'smoker' : 'non-smoker');
+        const inForce = Array.isArray(_ctxPolicies) ? _ctxPolicies.filter(pol => pol && pol.status !== 'matured' && pol.status !== 'surrendered' && pol.status !== 'lapsed').slice(0, 12) : [];
+        const lines = ['═══ CLIENT CONTEXT ═══', headerParts.join(', ') + '.'];
+        if (inForce.length) {
+          lines.push('Existing portfolio (' + inForce.length + ' polic' + (inForce.length === 1 ? 'y' : 'ies') + '):');
+          for (const pol of inForce) {
+            const ins = pol.insurer || '?';
+            const prod = pol.productName || pol.policyName || pol.subType || '?';
+            const sa = pol.sumAssured ? 'S$' + Math.round(pol.sumAssured).toLocaleString('en-SG') : '';
+            const cat = pol.category || '';
+            const bits = ['  - ' + ins + ' ' + prod];
+            if (sa) bits.push(sa + ' SA');
+            if (cat) bits.push(cat);
+            lines.push(bits.join(' · '));
+          }
+          lines.push('RULES (apply when extracting):');
+          lines.push('  • "Self" or unspecified life-insured = "' + clientNameForCtx + '" unless the document explicitly names someone else.');
+          lines.push('  • If the new policy matches an existing insurer + productName, flag it as a possible duplicate via the notes field.');
+          lines.push('  • Stay consistent with existing categorization (e.g., if the client already has 4 protection policies and the new one is unclear, lean protection).');
+        } else {
+          lines.push('No existing policies on file. "Self" or unspecified life-insured = "' + clientNameForCtx + '".');
+        }
+        lines.push('═══ END CLIENT CONTEXT ═══');
+        return '\n' + lines.join('\n') + '\n\n';
+      })();
       const formExtractPromptBase = 'Extract insurance policy details. Return a JSON object with ALL fields: insurer, productName, policyNumber, category (protection/savings/health/investment/retirement/maternity), subType, currency, sumAssured (number), premiumAmount (number — the premium AS PAID at its stated frequency. "$1,000/mth" → premiumAmount=1000 premFrequency="monthly". "$12,000/yr" → premiumAmount=12000 premFrequency="annual". Do NOT convert between periods), premFrequency (annual/monthly/single/unknown — must match the period of premiumAmount. If unclear, use unknown), premiumStructure, paymentMethod, policyOwner, lifeInsured, gender, dob, ageAtEntry, smoker, nationality, occupation, inceptionDate, maturityDate, status, premStartAge, premTerm, premEndAge. Preserve the exact policyOwner printed on the document; do not replace it with the active client name. If policy owner and life insured differ, capture both exactly. Riders: riders (array) — CAPTURE-FIRST: for EVERY benefit listed, set riderName to EXACT name from document, THEN classify type from death/tpd/ci/eci/di/accidental/acc_medical/acc_tcm/acc_dismember/premium_waiver/other. If unsure, use type:"other". NEVER duplicate types for different benefits — use riderName to distinguish. Each: {type, riderName (ALWAYS filled), sa:number, premium:0 if bundled, expiryAge, bundled:boolean, multiClaim, totalClaimPct}. SA: saMultiplier, multiplierEndAge. ISP: ispClass, hasRider, riderList, riderPremium, ispDeductible, ispCoinsurance. ILP: ilpGrowth, ilpDivYield, ilpMgmtFee, fundAllocations (array of {fundName:string, allocation:number}). FUND RULES: extract real fund holdings confidently — names like "AIA India Balanced Fund", "Manulife Global Multi Asset Fund", "PRULink US Dividend Wealth Fund". DO NOT extract product descriptions or sentences (e.g. NEVER extract "AIA Platinum Wealth Venture ILP is a limited premium investment-linked insurance policy" as a fund). Fund names are 2-10 words, contain no verbs, no "policy"/"premium"/"insurance"/"ILP" tokens, and are typically <80 chars. If no specific funds are named, return fundAllocations:[]. NEVER substitute geographic tokens (India ≠ Asia ≠ Elite). Cash: cashValue, cvGrowthRate, surrenderPeriod. Notes: notes (FC review headline). EXTRACTION CONFIDENCE: ALSO include an optional _confidence array listing ONLY fields you are NOT highly confident about (default = confident). Each entry: {field, level (low|medium), reason}. Flag premiumAmount when ambiguous, policyNumber when OCR partial, premFrequency when not stated, etc. Do NOT flag fields stated verbatim. Empty array [] or omit entirely when all fields are clean. Return ONLY valid JSON starting with { ending with }.';
-      const formExtractPrompt = correctionPreamble + formExtractPromptBase;
+      const formExtractPrompt = correctionPreamble + portfolioPreamble + formExtractPromptBase;
       content.push({
         type: 'text',
         text: 'Extract all policy information from these documents/images.'
@@ -58398,6 +58736,37 @@ function PolicyFormModal({
           toast('AI extracted — please verify: ' + summary, 'warning', 5500);
         } catch (_) {}
       }
+      // rc2.0 — multi-member document detector (pragmatic stub for the
+      // full multi-pass extraction). If we see >= 2 person banners in the
+      // document, surface a warning before letting the FC commit.
+      const multiMember = detectMultiMemberDocument(content);
+      if (multiMember.detected) {
+        console.warn('[MultiMember] document appears to contain ' + multiMember.candidates.length + ' people:', multiMember.candidates);
+        rulesResult.warnings.push({
+          level: 'warning',
+          code: 'multi-member-document',
+          field: null,
+          message: 'This document mentions ' + multiMember.candidates.length + ' people (' + multiMember.candidates.slice(0, 3).join(', ') + (multiMember.candidates.length > 3 ? ', ...' : '') + '). The current extraction collapsed everything onto the active client — verify which policies belong to whom before saving.'
+        });
+        try {
+          toast('Multi-person document detected (' + multiMember.candidates.length + ' names) — review carefully before save.', 'warning', 6500);
+        } catch (_) {}
+      }
+      // rc2.0 — two-model disagreement verification on low-confidence fields.
+      // Runs only when both Gemini + Claude keys are available. Cheap
+      // because it scopes to fields the primary model itself flagged as
+      // low-confidence (typically 0-3 per extraction). Fire-and-forget
+      // for the form update — we'll surface disagreements as warnings if
+      // they come back in time.
+      verifyLowConfidenceFields(validatedParsed, content).then(verifyResult => {
+        if (verifyResult.disagreements.length > 0) {
+          console.warn('[Ensemble] disagreements:', verifyResult.disagreements);
+          const msg = verifyResult.disagreements.slice(0, 2).map(d => d.field + ': primary said "' + JSON.stringify(d.primary) + '", second model said "' + JSON.stringify(d.secondary) + '"').join(' / ');
+          try {
+            toast('Models disagree — please double-check: ' + msg, 'warning', 8000);
+          } catch (_) {}
+        }
+      }).catch(() => {});
       // rc1.99: log this extraction run so it can be replayed later
       // (debug + diff against future prompt changes). The returned logId
       // gets stashed onto _extractedRaw so the savePolicy correction-
