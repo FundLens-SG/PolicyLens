@@ -601,9 +601,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc1.79';
-const APP_VERSION_DATE = '2026-05-08';
-const APP_VERSION_NAME = 'Individual report polish: planning-gaps columns rebalanced, inflation-bridge redesigned, name/meta spacing fixed, individual policy register full remarks';
+const APP_VERSION = 'v2.4.0-rc1.98';
+const APP_VERSION_DATE = '2026-05-13';
+const APP_VERSION_NAME = 'Manual policy save hardened: active-client recovery, awaited modal saves, CRMLens policies inbound bridge, safer parsing and repository guards';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -14663,6 +14663,7 @@ setTimeout(() => runActiveLearning(false).catch(() => {}), 10000);
 // ═══════════════════════════════════════════════════════════════
 
 function fuzzyMatch(input, candidates, threshold=0.4) {
+  candidates = Array.isArray(candidates) ? candidates : [];
   const normalize = s => (s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
   const ngrams = (s,n=2) => {const r=[];for(let i=0;i<=s.length-n;i++)r.push(s.slice(i,i+n));return r;};
   const similarity = (a,b) => {
@@ -18075,6 +18076,28 @@ async function sbPoliciesPull() {
   } catch(e) { console.warn('[Sync] Policies pull failed:', e.message); return null; }
 }
 
+async function sbCrmLensPoliciesPull() {
+  const s = getSB();
+  const uid = sbGetUserId();
+  if (!s || !uid) return [];
+  try {
+    const { data, error } = await s.schema('policylens').from('user_policies').select('*').eq('user_id', uid);
+    if (error) { console.warn('[CRMLensSync] Policies pull error:', error.message); return []; }
+    return (data || [])
+      .filter(row => !row.deleted_at)
+      .filter(row => {
+        const payload = row.data || {};
+        return String(row.id || '').startsWith('crmlens:') || payload._source === 'crmlens' || !!payload._crmlensPolicyId;
+      })
+      .map(row => ({
+        id: row.id,
+        data: row.data || {},
+        versions: row.field_versions || {},
+        updated_at: row.updated_at
+      }));
+  } catch(e) { console.warn('[CRMLensSync] Policies pull failed:', e.message); return []; }
+}
+
 // ── App settings sync ──
 // Whitelist of setting keys that get synced across devices.
 // Add new ones here as needed. Excluded by design:
@@ -19362,6 +19385,39 @@ function App() {
     return { clientId, profile: nextProfile, policies: migrated, driveState: nextDriveState };
   };
 
+  const inferClientNameForPolicySave = (policyCandidate) => {
+    const p = policyCandidate || {};
+    const owner = p.policyOwner === '__other' ? p.policyOwnerOther : p.policyOwner;
+    const life = p.lifeInsured === '__other' ? p.lifeInsuredOther : p.lifeInsured;
+    return String(clientProfile?.name || clientName || owner || life || 'Untitled Client').trim() || 'Untitled Client';
+  };
+
+  const ensureActiveClientForPolicySave = async (policyCandidate, preferredClientId) => {
+    let clientId = preferredClientId || null;
+    if (clientId) {
+      const existingDs = await PolicyDB.getDriveState(clientId).catch(() => null);
+      if (existingDs) return clientId;
+      try { localStorage.setItem('policylens_active_client_id', clientId); } catch(_) {}
+    }
+
+    const inferredName = inferClientNameForPolicySave(policyCandidate);
+    const inferredProfile = {
+      ...(clientProfile || {}),
+      name: (clientProfile?.name || clientName || inferredName || 'Untitled Client')
+    };
+    const recovered = await ensureLegacyActiveClient({
+      profile: inferredProfile,
+      name: inferredName,
+      policyList: []
+    });
+    if (recovered?.clientId) {
+      try { await markDriveSyncPending(recovered.clientId, 'policy-save-client-recover'); } catch(_) {}
+      try { toast('Created client workspace for ' + (recovered.profile?.name || inferredName), 'info', 3500); } catch(_) {}
+      return recovered.clientId;
+    }
+    return null;
+  };
+
   // Refresh driveState for active client on sync status changes
   useEffect(() => {
     const loadDS = async () => {
@@ -19724,6 +19780,103 @@ function App() {
   // useEffect with []) can always call the freshest version with
   // the latest closure over policies/clientProfile/loading state.
   const runCloudSyncRef = useRef(null);
+
+  async function importCrmLensPoliciesFromSupabase(reason) {
+    const cloudRows = await sbCrmLensPoliciesPull();
+    if (!cloudRows.length) return { imported: 0, updated: 0, clientsCreated: 0, skipped: 0 };
+
+    const localPolicies = await dbGetAll('policies').catch(() => []);
+    const byId = new Map((localPolicies || []).map(p => [p.id, p]));
+    const states = await PolicyDB.getAllDriveStates().catch(() => []);
+    const stateById = new Map((states || []).map(s => [s.clientId, s]));
+    const changedClientIds = new Set();
+    let imported = 0;
+    let updated = 0;
+    let clientsCreated = 0;
+    let skipped = 0;
+    const now = new Date().toISOString();
+
+    for (const row of cloudRows) {
+      const data = row.data || {};
+      // rc1.98 — namespace CRMLens clientIds so they can't collide with local
+      // PolicyLens UUIDs. raw "abc123" becomes "crmlens:abc123" on import.
+      const rawClientId = String(data.clientId || data._crmlensClientId || '').trim();
+      if (!rawClientId) { skipped++; continue; }
+      const clientId = rawClientId.startsWith('crmlens:') ? rawClientId : ('crmlens:' + rawClientId);
+      // rc1.98 — name-fallback order fixed. Explicit CRMLens client_name
+      // FIRST (authoritative), then policyOwner, then lifeInsured (last —
+      // LA may be a dependant on a joint policy, not the policyholder).
+      const clientName = String(
+        data._crmlens?.client_name || data.policyOwner || data.lifeInsured || 'CRMLens Client'
+      ).trim() || 'CRMLens Client';
+
+      if (!stateById.has(clientId)) {
+        const nextState = {
+          clientId,
+          fileId: null,
+          folderId: null,
+          tierFolderId: null,
+          headRevisionId: null,
+          lastSyncedAt: null,
+          pendingWrite: true,
+          pendingSince: now,
+          pendingReason: reason || 'crmlens-import',
+          pendingError: null,
+          clientName,
+          tier: UNASSIGNED_TIER,
+          familyGroup: '',
+          lastReviewedAt: null,
+          localOnly: true,
+          source: 'crmlens'
+        };
+        await PolicyDB.saveDriveState(nextState).catch(() => {});
+        await dbPut('settings', { key:'clientProfile_' + clientId, value: stampProfileSyncMeta({ name: clientName, dependants: [] }, 'crmlens-import') }).catch(() => {});
+        await dbPut('settings', { key:'clientName_' + clientId, value: clientName }).catch(() => {});
+        stateById.set(clientId, nextState);
+        clientsCreated++;
+        changedClientIds.add(clientId);
+      }
+
+      const existing = byId.get(row.id);
+      const rowUpdatedAt = row.updated_at || '';
+      if (existing && rowUpdatedAt && existing._crmlensSupabaseUpdatedAt === rowUpdatedAt) continue;
+
+      const nextPolicy = normalizePolicyForStorage({
+        ...data,
+        id: row.id,
+        clientId,
+        _source: data._source || 'crmlens',
+        _fieldVersions: row.versions || {},
+        _crmlensImportedAt: existing?._crmlensImportedAt || now,
+        _crmlensSupabaseUpdatedAt: rowUpdatedAt || existing?._crmlensSupabaseUpdatedAt || null
+      }, { currentClientName: clientName, source: 'crmlens-import' });
+
+      if (!existing || !_syncDeepEqual(nextPolicy, existing)) {
+        await dbPut('policies', nextPolicy);
+        byId.set(row.id, nextPolicy);
+        changedClientIds.add(clientId);
+        if (existing) updated++; else imported++;
+      }
+    }
+
+    const changed = imported + updated + clientsCreated;
+    if (changed > 0) {
+      const activeCid = activeClientIdRef.current || activeClientId;
+      const reloaded = await dbGetAll('policies').catch(() => []);
+      if (activeCid) setPolicies((reloaded || []).filter(p => p.clientId === activeCid));
+      else setPolicies(reloaded || []);
+      try { window.dispatchEvent(new Event('policylens-clients-changed')); } catch(_) {}
+      try { scheduleDriveClientsManifestSync('crmlens-import', 1200); } catch(_) {}
+      changedClientIds.forEach(cid => {
+        try { scheduleDriveWriteForClient(cid, reason || 'crmlens-import', 1500).catch(() => {}); } catch(_) {}
+      });
+      try {
+        toast('Imported ' + (imported + updated) + ' CRMLens polic' + ((imported + updated) === 1 ? 'y' : 'ies') + (clientsCreated ? ' and ' + clientsCreated + ' client' + (clientsCreated === 1 ? '' : 's') : ''), 'success', 4500);
+      } catch(_) {}
+    }
+    return { imported, updated, clientsCreated, skipped };
+  }
+
   const runCloudSync = async (opts) => {
     const force = opts && opts.force;
     if (cloudSyncRanRef.current && !force) return;
@@ -19818,8 +19971,12 @@ function App() {
 
       if (!_clientSyncOn) {
         const settingsChanges = await syncAppSettingsOnly();
+        const crmLensImport = await importCrmLensPoliciesFromSupabase('drive-mode-crmlens-import').catch(e => {
+          console.warn('[CRMLensSync] Import failed:', e?.message || e);
+          return null;
+        });
         lastSyncRef.current = Date.now();
-        console.log('[Sync] Settings-only sync done:', settingsChanges, 'settings changes');
+        console.log('[Sync] Settings-only sync done:', settingsChanges, 'settings changes', 'CRMLens import:', crmLensImport);
         return;
       }
 
@@ -20364,9 +20521,11 @@ function App() {
     if (!targetClientId) {
       try { targetClientId = localStorage.getItem('policylens_active_client_id'); } catch(_) {}
     }
+    targetClientId = await ensureActiveClientForPolicySave(p, targetClientId);
     if (!targetClientId) {
+      const err = new Error('No active client workspace is available for this policy save.');
       console.warn('[savePolicy] No active client - policy not saved:', p.id);
-      return;
+      throw err;
     }
     p.clientId = targetClientId;
     p = assignDeterministicPolicyId(p, targetClientId);
@@ -36281,7 +36440,13 @@ function Policies() {
   const dismissDraft = () => { clearDraft(); setDraftBanner(false); };
 
   const handleFormClose = () => { setShowForm(false); };
-  const handleFormSave = (p) => { savePolicy(p); setShowForm(false); setScanResult(null); clearDraft(); };
+  const handleFormSave = async (p) => {
+    const saved = await savePolicy(p);
+    if (!saved?.id) throw new Error('Policy was not saved. Please select or create a client, then try again.');
+    setScanResult(null);
+    clearDraft();
+    return saved;
+  };
 
   const filtered = filter==='all'?policies:policies.filter(p=>p.category===filter);
   // Separate matured policies (authoritative: maturity date wins over stale status flags)
@@ -41297,6 +41462,10 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
   const [repoMatches, setRepoMatches] = useState(null);
   const [pendingRepoItem, setPendingRepoItem] = useState(null);
   const [formScanning, setFormScanning] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const repoList = useMemo(() => Array.isArray(repo) ? repo : [], [repo]);
+  const repoReady = Array.isArray(repo);
   // rc2e.31: per-field "rename mode" toggles. When the current owner/LA value
   // isn't in the client's profile (e.g. an external import like "RetireLens"),
   // an "✎ Rename" chip flips the dropdown to a plain text input scoped to that
@@ -41681,58 +41850,84 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
   const [fuzzyMatches, setFuzzyMatches] = useState([]);
   useEffect(() => {
     if(!form.productName || form.productName.length < 3 || isEdit) return;
-    const matches = fuzzyMatch(form.productName + ' ' + form.insurer, repo);
+    const matches = fuzzyMatch(form.productName + ' ' + form.insurer, repoList);
     setFuzzyMatches(matches.slice(0,3));
     setShowFuzzy(matches.length > 0);
-  }, [form.productName, form.insurer]);
+  }, [form.productName, form.insurer, repoList, isEdit]);
 
-  const handleSubmit = () => {
-    if(onDraftClear)onDraftClear();
-    // rc2e.31: resolve "Other (type below)" sentinel to the typed name BEFORE
-    // save. Without this, picking Other and typing saved the literal string
-    // "__other" as the owner/LA — corrupted data.
-    const resolvedOwner = form.policyOwner === '__other' ? String(form.policyOwnerOther||'').trim() : form.policyOwner;
-    const resolvedLife  = form.lifeInsured === '__other' ? String(form.lifeInsuredOther||'').trim() : form.lifeInsured;
-    onSave({
-      ...form,
-      policyOwner: resolvedOwner,
-      lifeInsured: resolvedLife,
-      sumAssured:parseFloat(form.sumAssured)||0,
-      annualPremium:parseFloat(form.annualPremium)||0,
-      monthlyBenefit:parseFloat(form.monthlyBenefit)||0,
-    });
-    // Auto-offer to save to repository
-    if(form.productName && form.insurer && repo) {
-      const exists = repo.find(r => r.productName === form.productName && r.insurer === form.insurer);
-      const advisorName = window._prof?.full_name||window._user?.user_metadata?.full_name||'Advisor';
-      if(!exists && confirm('Save "'+form.insurer+' '+form.productName+'" to the shared Policy Repository?\n\nThis makes it available for all advisors to search and auto-fill.')) {
-        // Build clean notes from form data
-        const notesParts = [];
-        if(form.subType) notesParts.push(form.subType+'.');
-        if(form.premiumStructure) notesParts.push('Premium: '+form.premiumStructure+'.');
-        if(form.notes) notesParts.push(form.notes);
-        // Rider summary
-        const riderNotes = (form.riders||[]).filter(r=>r.riderName||!r.bundled||r.sa).map(r=>(r.riderName||{death:'Death & TI',tpd:'TPD',ci:'CI',eci:'ECI',di:'DI',accidental:'ADD',acc_medical:'Med Reimb',acc_tcm:'TCM',acc_dismember:'Dismember',premium_waiver:'Waiver',other:'Other'}[r.type]||r.type)+' SA $'+(parseFloat(r.sa)||0).toLocaleString()+(r.bundled===false?' (separate rider)':' (part of plan)')).join('; ');
-        if(riderNotes) notesParts.push('Riders: '+riderNotes+'.');
-        const repoItem = {
-          id:'repo-'+Date.now(),
-          insurer:form.insurer, productName:form.productName, productCode:form.productCode||'',
-          category:form.category, subType:form.subType, currency:form.currency||'SGD',
-          notes:notesParts.join(' '),
-          votes:{}, editHistory:[{by:advisorName,name:advisorName,at:new Date().toISOString(),date:new Date().toISOString(),action:'Created from policy form'}],
-        };
-        if(onSaveRepo) onSaveRepo(repoItem);
-      } else if(exists) {
-        // Product exists — offer to update with this advisor's version
-        const hasNewInfo = form.notes && form.notes.length > 20 && !exists.notes?.includes(form.notes.slice(0,30));
-        if(hasNewInfo && confirm('Update repository notes for "'+exists.productName+'" with your version?')) {
-          const advisorName2 = window._prof?.full_name||window._user?.user_metadata?.full_name||'Advisor';
-          const updatedNotes = exists.notes + '\n\n📝 '+advisorName2+' ('+new Date().toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'})+'):\n'+form.notes;
-          if(onSaveRepo) onSaveRepo({...exists, notes:updatedNotes, editHistory:[...(exists.editHistory||[]),{by:advisorName2,name:advisorName2,at:new Date().toISOString(),date:new Date().toISOString(),action:'Updated notes from policy form'}]});
+  const handleSubmit = async () => {
+    if(saving) return;
+    setSaving(true);
+    setSaveError('');
+    let closed = false;
+    try {
+      // rc2e.31: resolve "Other (type below)" sentinel to the typed name BEFORE
+      // save. Without this, picking Other and typing saved the literal string
+      // "__other" as the owner/LA - corrupted data.
+      const resolvedOwner = form.policyOwner === '__other' ? String(form.policyOwnerOther||'').trim() : form.policyOwner;
+      const resolvedLife  = form.lifeInsured === '__other' ? String(form.lifeInsuredOther||'').trim() : form.lifeInsured;
+      const toNumber = (value) => parseFloat(String(value ?? '').replace(/,/g, '')) || 0;
+      const payload = {
+        ...form,
+        policyOwner: resolvedOwner,
+        lifeInsured: resolvedLife,
+        sumAssured: toNumber(form.sumAssured),
+        annualPremium: toNumber(form.annualPremium),
+        monthlyBenefit: toNumber(form.monthlyBenefit),
+      };
+      const saved = await onSave(payload);
+      if(!saved?.id) throw new Error('Policy was not saved. Please select or create a client, then try again.');
+
+      try {
+        if(payload.productName && payload.insurer && repoReady) {
+          const exists = repoList.find(r => r.productName === payload.productName && r.insurer === payload.insurer);
+          const advisorName = window._prof?.full_name||window._user?.user_metadata?.full_name||'Advisor';
+          if(!exists && confirm('Save "'+payload.insurer+' '+payload.productName+'" to the shared Policy Repository?\n\nThis makes it available for all advisors to search and auto-fill.')) {
+            const notesParts = [];
+            if(payload.subType) notesParts.push(payload.subType+'.');
+            if(payload.premiumStructure) notesParts.push('Premium: '+payload.premiumStructure+'.');
+            if(payload.notes) notesParts.push(payload.notes);
+            const riderNotes = (payload.riders||[]).filter(r=>r.riderName||!r.bundled||r.sa).map(r=>(r.riderName||{death:'Death & TI',tpd:'TPD',ci:'CI',eci:'ECI',di:'DI',accidental:'ADD',acc_medical:'Med Reimb',acc_tcm:'TCM',acc_dismember:'Dismember',premium_waiver:'Waiver',other:'Other'}[r.type]||r.type)+' SA $'+(toNumber(r.sa)).toLocaleString()+(r.bundled===false?' (separate rider)':' (part of plan)')).join('; ');
+            if(riderNotes) notesParts.push('Riders: '+riderNotes+'.');
+            const repoItem = {
+              id:'repo-'+Date.now(),
+              insurer:payload.insurer, productName:payload.productName, productCode:payload.productCode||'',
+              category:payload.category, subType:payload.subType, currency:payload.currency||'SGD',
+              notes:notesParts.join(' '),
+              votes:{}, editHistory:[{by:advisorName,name:advisorName,at:new Date().toISOString(),date:new Date().toISOString(),action:'Created from policy form'}],
+            };
+            if(onSaveRepo) await onSaveRepo(repoItem);
+          } else if(exists) {
+            const hasNewInfo = payload.notes && payload.notes.length > 20 && !exists.notes?.includes(payload.notes.slice(0,30));
+            if(hasNewInfo && confirm('Update repository notes for "'+exists.productName+'" with your version?')) {
+              const advisorName2 = window._prof?.full_name||window._user?.user_metadata?.full_name||'Advisor';
+              const updatedNotes = (exists.notes || '') + '\n\n' + advisorName2 + ' ('+new Date().toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'})+'):\n'+payload.notes;
+              if(onSaveRepo) await onSaveRepo({...exists, notes:updatedNotes, editHistory:[...(exists.editHistory||[]),{by:advisorName2,name:advisorName2,at:new Date().toISOString(),date:new Date().toISOString(),action:'Updated notes from policy form'}]});
+            }
+          }
         }
+      } catch(repoErr) {
+        console.warn('[PolicyForm] Repository save/update failed after policy save:', repoErr);
+        try { toast('Policy saved. Repository update failed: ' + (repoErr?.message || repoErr), 'warning', 4500); } catch(_) {}
       }
+
+      if(onDraftClear) onDraftClear();
+      try { toast(isEdit ? 'Policy changes saved' : 'Policy added', 'success', 2500); } catch(_) {}
+      closed = true;
+      onClose();
+    } catch(e) {
+      const msg = e?.message || String(e || 'Unknown save error');
+      console.error('[PolicyForm] Save failed:', e);
+      setSaveError(msg);
+      try { toast('Policy save failed: ' + msg, 'error', 6000); } catch(_) {}
+    } finally {
+      if(!closed) setSaving(false);
     }
   };
+
+  // rc1.98: legacyHandleSubmit removed (was orphan dead code from the
+  // pre-hardened save flow). The async handleSubmit above is the only
+  // path now — proper error propagation, await on save, etc.
 
   // ── Scan into existing form ──
   const scanIntoForm = async (files) => {
@@ -41752,7 +41947,9 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
       const formExtractPrompt = 'Extract insurance policy details. Return a JSON object with ALL fields: insurer, productName, policyNumber, category (protection/savings/health/investment/retirement/maternity), subType, currency, sumAssured (number), premiumAmount (number — the premium AS PAID at its stated frequency. "$1,000/mth" → premiumAmount=1000 premFrequency="monthly". "$12,000/yr" → premiumAmount=12000 premFrequency="annual". Do NOT convert between periods), premFrequency (annual/monthly/single/unknown — must match the period of premiumAmount. If unclear, use unknown), premiumStructure, paymentMethod, policyOwner, lifeInsured, gender, dob, ageAtEntry, smoker, nationality, occupation, inceptionDate, maturityDate, status, premStartAge, premTerm, premEndAge. Preserve the exact policyOwner printed on the document; do not replace it with the active client name. If policy owner and life insured differ, capture both exactly. Riders: riders (array) — CAPTURE-FIRST: for EVERY benefit listed, set riderName to EXACT name from document, THEN classify type from death/tpd/ci/eci/di/accidental/acc_medical/acc_tcm/acc_dismember/premium_waiver/other. If unsure, use type:"other". NEVER duplicate types for different benefits — use riderName to distinguish. Each: {type, riderName (ALWAYS filled), sa:number, premium:0 if bundled, expiryAge, bundled:boolean, multiClaim, totalClaimPct}. SA: saMultiplier, multiplierEndAge. ISP: ispClass, hasRider, riderList, riderPremium, ispDeductible, ispCoinsurance. ILP: ilpGrowth, ilpDivYield, ilpMgmtFee, fundAllocations (array of {fundName:string, allocation:number}). FUND RULES: extract real fund holdings confidently — names like "AIA India Balanced Fund", "Manulife Global Multi Asset Fund", "PRULink US Dividend Wealth Fund". DO NOT extract product descriptions or sentences (e.g. NEVER extract "AIA Platinum Wealth Venture ILP is a limited premium investment-linked insurance policy" as a fund). Fund names are 2-10 words, contain no verbs, no "policy"/"premium"/"insurance"/"ILP" tokens, and are typically <80 chars. If no specific funds are named, return fundAllocations:[]. NEVER substitute geographic tokens (India ≠ Asia ≠ Elite). Cash: cashValue, cvGrowthRate, surrenderPeriod. Notes: notes (FC review headline). EXTRACTION CONFIDENCE: ALSO include an optional _confidence array listing ONLY fields you are NOT highly confident about (default = confident). Each entry: {field, level (low|medium), reason}. Flag premiumAmount when ambiguous, policyNumber when OCR partial, premFrequency when not stated, etc. Do NOT flag fields stated verbatim. Empty array [] or omit entirely when all fields are clean. Return ONLY valid JSON starting with { ending with }.';
       content.push({type:'text',text:'Extract all policy information from these documents/images.'});
       const rawText2 = await callAI(formExtractPrompt, content, 4000);
-      const parsed = repairJSON(rawText2);
+      const parsedRaw = repairJSON(rawText2);
+      const parsed = Array.isArray(parsedRaw) ? parsedRaw.find(item => item && typeof item === 'object' && !Array.isArray(item)) : parsedRaw;
+      if(!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('AI extraction did not return a policy object.');
       // Map AI-facing premiumAmount → internal annualPremium field
       if(parsed && typeof parsed === 'object' && parsed.premiumAmount !== undefined && parsed.annualPremium === undefined) {
         parsed.annualPremium = parsed.premiumAmount;
@@ -41765,7 +41962,7 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
         if(k==='faceAmount') k='sumAssured';
         const current = form[k];
         if(current && current!=='' && current!==0 && current!=='0' && JSON.stringify(current)!==JSON.stringify(v)) overwrites.push(k);
-        updates[k] = typeof v==='number'?v:(typeof v==='string'?v:JSON.stringify(v));
+        updates[k] = v;
       });
       if(overwrites.length>0 && !confirm('Scanned data will update: '+overwrites.join(', ')+'. Proceed?')){setFormScanning(false);return;}
       setForm(f=>({...f,...updates}));
@@ -41856,7 +42053,7 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
         <div className="grid-2">
           <div className="field"><label>{isCashInvestment ? 'Provider / Bank' : 'Insurer/Platform'}</label><InsurerSelect value={form.insurer} onChange={v=>set('insurer',v)} /></div>
           <div className="field"><label>Product Name</label><FuzzyInput value={form.productName} onChange={v=>set('productName',v)}
-            suggestions={repo.filter(r=>!form.insurer||form.insurer===''||r.insurer===form.insurer).map(r=>({label:r.productName,sub:r.insurer+' · '+r.subType+(r.notes?' · '+r.notes.substring(0,60)+'…':''),item:r}))}
+            suggestions={repoList.filter(r=>!form.insurer||form.insurer===''||r.insurer===form.insurer).map(r=>({label:r.productName,sub:r.insurer+' · '+r.subType+(r.notes?' · '+r.notes.substring(0,60)+'…':''),item:r}))}
             onSelect={item=>{if(item.item){set('insurer',item.item.insurer);set('subType',item.item.subType);set('category',item.item.category);if(item.item.currency)set('currency',item.item.currency);}}}
             placeholder="e.g. Heirloom VII — type to search repository" /></div>
         </div>
@@ -43477,7 +43674,7 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
                 <option value="no">No Rider</option><option value="yes">Yes — Rider Attached</option>
               </select></div>
               {form.hasRider && <div className="field"><label>Rider Name</label><FuzzyInput value={form.riderList||''} onChange={v=>set('riderList',v)}
-                suggestions={repo.filter(r=>r.subType==='Rider'||r.category==='health').map(r=>({label:r.productName,sub:r.insurer+(r.notes?' · '+r.notes.substring(0,50)+'…':'')}))}
+                suggestions={repoList.filter(r=>r.subType==='Rider'||r.category==='health').map(r=>({label:r.productName,sub:r.insurer+(r.notes?' · '+r.notes.substring(0,50)+'…':'')}))}
                 placeholder="e.g. PRUExtra Premier CoPay" /></div>}
               {form.hasRider && <div className="field"><label>Rider Premium ($/yr, Cash)</label><input type="number" value={form.riderPremium||''} onChange={e=>set('riderPremium',e.target.value)} /><div style={{fontSize:10,color:'var(--text3)'}}>Always cash — not MediSave payable</div></div>}
             </div>
@@ -44075,7 +44272,7 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
                 ...(form.creditingRates?.current?{creditingRates:form.creditingRates}:{}),
                 ...(form.loyaltyBonus?.rate?{loyaltyBonus:form.loyaltyBonus}:{}),
               };
-              const matches = fuzzyMatch(form.insurer+' '+form.productName, repo, 0.35);
+              const matches = fuzzyMatch(form.insurer+' '+form.productName, repoList, 0.35);
               if(matches.length > 0){ setRepoMatches(matches.slice(0,3)); setPendingRepoItem(repoItem); }
               else { onSaveRepo(repoItem); toast('Saved to repository','success'); }
             }}>📤 Save to Repository</button>}
@@ -44102,8 +44299,9 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
         </div>
 
         <div style={{display:'flex',justifyContent:'flex-end',gap:8,marginTop:16}}>
-          <button className="btn-secondary" onClick={requestClose}>Cancel</button>
-          <button className="btn-primary" onClick={handleSubmit}>{isEdit?'Save Changes':'Add Policy'}</button>
+          {saveError && <div style={{marginRight:'auto',maxWidth:'60%',fontSize:12,color:'var(--red)',lineHeight:1.4}}>{saveError}</div>}
+          <button className="btn-secondary" onClick={requestClose} disabled={saving}>Cancel</button>
+          <button className="btn-primary" onClick={handleSubmit} disabled={saving}>{saving?'Saving...':(isEdit?'Save Changes':'Add Policy')}</button>
         </div>
       </div>
     </div>
