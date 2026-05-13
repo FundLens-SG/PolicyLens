@@ -601,9 +601,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.26';
+const APP_VERSION = 'v2.4.0-rc2.27';
 const APP_VERSION_DATE = '2026-05-14';
-const APP_VERSION_NAME = 'Diagnostics — actionable Gemini error + Claude fallback in end-to-end test';
+const APP_VERSION_NAME = 'Bare "Name" column → productName fallback (fixes "Policy - 2451934552" Soh ILP rows)';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -5349,7 +5349,7 @@ async function pdfToImages(pdfDoc, maxPages=12) {
 // shipped. Cache lookup is keyed by EXTRACT_PIPELINE_VERSION + fileHash,
 // so a re-scan after this bump WILL re-extract (no cache hit) and the
 // rc2.19/2.21 fixes will actually run.
-const EXTRACT_PIPELINE_VERSION = 'v15.32-2026-05-14-section-banners-and-bounding';
+const EXTRACT_PIPELINE_VERSION = 'v15.33-2026-05-14-bare-name-product-fallback';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -9920,6 +9920,13 @@ function inferXlsxColumnMap(headers) {
     policyOwner: find([/\bpolicy\s*owner\b/, /\bowner\b/, /\bproposer\b/]),
     lifeInsured: find([/\blife\s*(assured|insured)\b/, /\bassured\s*life\b/]),
     productName: find([/\bpolicy\s*(name|plan)\b/, /\bplan\s*name\b/, /\bproduct\s*name\b/]),
+    // rc2.27 — fallback: many SG templates use bare "Name" (no "Policy"
+    // prefix) for the product column, especially in ILP / Endowment /
+    // Legacy Planning sections. Without this, productName stays null and
+    // the policy renders as "Policy - <policyNumber>" in the UI.
+    // Resolved AFTER the named patterns above so "Policy Name" still wins
+    // when both exist. Captured below in the productName-bare-fallback
+    // section.
     subType: find([/\bsub\s*type\b/, /\bpolicy\s*type\b/, /\bplan\s*type\b/]),
     sumAssured: find([/\bsum\s*(assured|insured)\b/, /\bcoverage\s*amount\b/, /\bface\s*amount\b/]),
     cashValue: find([/\bnet\s*cash\s*value\b/, /\bcash\s*value\b/, /\bsurrender\s*value\b/]),
@@ -9938,6 +9945,22 @@ function inferXlsxColumnMap(headers) {
     remarks: find([/\bremarks\b/, /\bnotes\b/, /\bcomments?\b/])
   };
   const categoryColumn = find([/\bcategory\b/, /\bclass\b/, /\bcoverage\s*type\b/]);
+  // rc2.27 — bare "Name" → productName fallback. Soh family workbook's
+  // ILP / Endowment / Legacy Planning sections all use just "Name" as the
+  // product column (instead of "Policy Name"). Without this, those rows
+  // render in the UI as "Policy - <policyNumber>" since productName is
+  // unmapped. Conservative: only fires when (a) productName wasn't already
+  // matched by a named pattern, (b) policyNumber IS present (so we know
+  // this is a policy-shaped table, not a contacts or banking table), AND
+  // (c) no other "X Name" column exists in the row (bank name, customer
+  // name, etc.) — that would be ambiguous about which name is the product.
+  if (!columnMap.productName) {
+    const bareName = entries.find(e => e.norm.trim() === 'name');
+    const hasQualifiedName = entries.some(e => /\b\w+\s+name\b/.test(e.norm) && e.norm.trim() !== 'name');
+    if (bareName && columnMap.policyNumber && !hasQualifiedName) {
+      columnMap.productName = bareName.header;
+    }
+  }
   const confidence =
     (columnMap.policyNumber ? 3 : 0) +
     (columnMap.productName ? 3 : 0) +
@@ -10323,9 +10346,16 @@ async function parseXlsxToStructured(file) {
       if (rows.length === 0) continue;
       const labelSuffix = section.sectionLabel ? ' — ' + section.sectionLabel : '';
       const kindTag = section.kind === 'fd' ? '__kind__:fd' : '__kind__:policy';
+      // rc2.27 — version stamp baked into the signature so any improvement
+      // to the column-map detector (like the "bare Name" → productName
+      // fallback just added) invalidates entries cached under the old
+      // detector. Without this, the Soh family workbook's bad mappings
+      // (productName=null for ILP/Endowment/Legacy) would persist as cache
+      // hits even after the regex fix.
+      const COLUMN_MAP_VERSION = 'cmv-2026-05-14-bare-name';
       const normalized = headers.map(h => normalizeXlsxHeaderName(h)).concat(
         section.sectionLabel ? ['__section__:' + section.sectionLabel.toLowerCase()] : [],
-        [kindTag]
+        [kindTag, '__cmv__:' + COLUMN_MAP_VERSION]
       ).sort().join('|');
       const signature = await _sha256Hex(normalized);
       const rawSample = xlsxRowsToCsvSample(headers, rows);
