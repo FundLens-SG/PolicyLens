@@ -121,6 +121,17 @@ Layered 4 new regression assertions on top of the basic detection:
 - **Substring dedup verification:** no candidate may be a strict substring of another.
 - **Performance sanity:** detection must complete <250ms. Catches ReDoS. (Current: <1ms on all 3 files.)
 
+### rc2.19 — Live-test critical fixes (4 more bugs found in production scan)
+User ran the actual Soh family xlsx scan in production and surfaced 4 real bugs my synthetic smoke harness had missed:
+
+- **`tierDefinitions is not defined` killed Apply-Routing.** The `Policies` component did `useContext(AppCtx)` but the destructure omitted `tierDefinitions` — even though it IS provided on the context. `pickDefaultTierForNewClient` (used by `ensureOwnerRouteClient` → `onConfirm` → routing modal Apply button) threw `ReferenceError`, so the modal's primary action silently no-op'd. Console error visible only in DevTools. **FIX:** added `tierDefinitions` to the destructure.
+
+- **Multi-owner xlsx routing collapsed all policies to sheet 1's owner.** The Soh family workbook has 5 sheets (one per family member, DD/MM/JL/JY/JE). `extractSpreadsheetFilesLocally` had a rc2e.41 comment stating *"a single XLSX file represents one client"* and aggregated profiles across sheets — so all 36 policies inherited the FIRST sheet's owner (Eric) regardless of which sheet they came from. **FIX:** detect when distinct identity headers exist (via `normalizePersonNameKey` over each sheet's profile). If they do (`multiOwnerWorkbook === true`), route per-sheet: each policy's `documentOwner` AND `policyOwner` come from ITS sheet's profile. If they don't (Belinda's Wealth + Insurance share one name), keep the old aggregate behavior.
+
+- **Currency/percentage values were being treated as policy numbers.** `isSpreadsheetNonPolicyRow` accepted `"$832,201.05"` and `"1.09% (as of Nov'25)"` as valid policyNumbers because they normalize to 8+ alphanumeric chars and don't match the label blacklist. The column-map detector had picked up cash-value or yield-projection columns as the policy-number column. Result: "Policy - $832,201.05" rows surfaced in the routing modal as if they were real policies. **FIX:** explicit regex rejection of `$N,NNN`, `NN.NN%`, and parenthetical-only values when there's no product name. Conservative — keeps real numeric policy numbers (like Pru's `86278754`).
+
+- **Also committed `package-lock.json`.** When rc2.11 added xlsx as a devDep, the lockfile was generated but historically not tracked. Now committed so `npm ci` on fresh clones gets a deterministic xlsx version.
+
 ---
 
 ## Smoke test results — 3 real FC xlsx files
@@ -174,6 +185,10 @@ Every member of the Soh family is now correctly identified (including the JE she
 | 14 | CommandPalette `Add policy` action dispatched event with no listener | functional | code re-read | rc2.17 |
 | 15 | CommandPalette `New client` action had no listener + no tab switch | functional | code re-read | rc2.17 |
 | 16 | CommandPalette mount-race could drop event on cold tab open | functional | deeper re-read | rc2.18 |
+| 17 | `tierDefinitions` not destructured in Policies — Apply-Routing button threw ReferenceError | functional (blocker) | live production scan | rc2.19 |
+| 18 | Multi-owner xlsx (Soh family) collapsed all 36 policies to sheet 1's owner | functional (blocker) | live production scan | rc2.19 |
+| 19 | Currency/percentage values misread as policyNumber (e.g. `$832,201.05`) | functional | live production scan | rc2.19 |
+| 20 | `package-lock.json` not committed — fresh clones got non-deterministic xlsx versions | infra | follow-up | rc2.19 |
 
 ---
 
