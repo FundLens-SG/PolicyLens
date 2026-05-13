@@ -601,9 +601,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.24';
+const APP_VERSION = 'v2.4.0-rc2.25';
 const APP_VERSION_DATE = '2026-05-14';
-const APP_VERSION_NAME = 'extract_cache bust — Soh-family scan was hitting stale rc2.18 cache (0.5s ghost extractions)';
+const APP_VERSION_NAME = '2-cell banners + plural-aware non-policy filter — Soh family Insurer Hotlines now actually rejected';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -5349,7 +5349,7 @@ async function pdfToImages(pdfDoc, maxPages=12) {
 // shipped. Cache lookup is keyed by EXTRACT_PIPELINE_VERSION + fileHash,
 // so a re-scan after this bump WILL re-extract (no cache hit) and the
 // rc2.19/2.21 fixes will actually run.
-const EXTRACT_PIPELINE_VERSION = 'v15.31-2026-05-14-soh-multi-owner-cache-bust';
+const EXTRACT_PIPELINE_VERSION = 'v15.32-2026-05-14-section-banners-and-bounding';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -9562,7 +9562,12 @@ function _looksLikeXlsxSectionLabel(line) {
   if (!/[a-z]/i.test(s)) return false;
   if (/[$%]|\d{4}|\d[,.]\d|s\d{7}|\bnric\b|\bdob\b|\baddress\b|\bcontact\b/i.test(s)) return false;
   if (/^(no|s\/no|serial)\.?$/i.test(s)) return false;
-  if (/\bpolicy\s+(no|number|name)\b|\binsurer\b|\bsum\s*(assured|insured)\b/i.test(s)) return false;
+  // rc2.25 — was rejecting any label containing "insurer" or "policy",
+  // so "Insurer Hotlines" and "Policy Summary" never registered as
+  // section banners. Only the BARE column-header forms should be
+  // rejected; multi-word section labels are fine.
+  if (/^(policy|insurer|company|provider|sum\s*assured|sum\s*insured|policy\s*name|policy\s*no|policy\s*number)$/i.test(s.trim())) return false;
+  if (/\bpolicy\s+(no|number|name)\b|\bsum\s*(assured|insured)\b/i.test(s)) return false;
   // rc2e.35: don't use isLikelyXlsxProfileNameLine — multi-word section
   // labels like "Short Term Endowments" trip the >=2-words name heuristic.
   // Names typically have parenthetical aliases (e.g. "Tan Kah Lan (Belinda)")
@@ -9571,14 +9576,67 @@ function _looksLikeXlsxSectionLabel(line) {
   if (/\b(mr|mrs|ms|miss|dr|madam|mdm|mister)\b\.?/i.test(s)) return false;
   return true;
 }
+// rc2.25 — banner detector for the row at index r in matrix.
+// Returns the banner label string when the row IS a section banner, or
+// null otherwise. Accepts:
+//   - Single-cell rows where col A has a short section title (e.g.
+//     "Insurance" in Belinda Wealth header).
+//   - Two-cell rows where col A is an emoji/symbol (≤ 3 chars or no 3+
+//     letter sequence) and col B is a section title (e.g. "🏥,Hospitalisation").
+//   - Two-cell rows where col B is "(N)" count and col A is the title
+//     (rare but seen in some templates).
+// Rejects:
+//   - Continuation rows like "1.,,,,Self" (data sparsely in col A and col D)
+//     which after .filter(Boolean) look identical to a 2-cell banner.
+function _detectBannerAtRow(matrix, r) {
+  const cellsRaw = matrix[r] || [];
+  const positions = [];
+  for (let c = 0; c < cellsRaw.length; c++) {
+    const v = xlsxCellText(cellsRaw[c]).trim();
+    if (v) positions.push({ c, v });
+  }
+  if (positions.length === 0) return null;
+  // Single non-empty cell — must be in col 0 (or col 1 if col 0 is empty —
+  // some sheets like Belinda's Wealth have a left margin column).
+  if (positions.length === 1) {
+    const { c, v } = positions[0];
+    if (c <= 1 && _looksLikeXlsxSectionLabel(v)) return v;
+    return null;
+  }
+  // Two non-empty cells, MUST be adjacent (cols 0+1 or 1+2 max) — banners
+  // never span past col 2. The label cell must be a real label, the other
+  // must be a symbol/emoji or short marker like "(7)".
+  if (positions.length === 2 && positions[1].c - positions[0].c <= 2 && positions[1].c <= 2) {
+    const a = positions[0].v;
+    const b = positions[1].v;
+    const aIsSymbol = a.length <= 3 || !/[A-Za-z]{3,}/.test(a);
+    const bIsSymbol = b.length <= 3 || !/[A-Za-z]{3,}/.test(b);
+    if (aIsSymbol && !bIsSymbol && _looksLikeXlsxSectionLabel(b)) return b;
+    if (bIsSymbol && !aIsSymbol && _looksLikeXlsxSectionLabel(a)) return a;
+  }
+  return null;
+}
 function _findSectionLabelAbove(matrix, headerIndex) {
   const stop = Math.max(0, headerIndex - 4);
   for (let r = headerIndex - 1; r >= stop; r--) {
-    const cells = (matrix[r] || []).map(xlsxCellText).filter(Boolean);
-    if (cells.length !== 1) continue;
-    if (_looksLikeXlsxSectionLabel(cells[0])) return { label: cells[0], row: r };
+    const label = _detectBannerAtRow(matrix, r);
+    if (label) return { label, row: r };
   }
   return null;
+}
+// rc2.25 — scan the WHOLE sheet for section banners. Used to bound policy
+// section endIndices so a section's data range stops at the NEXT banner,
+// not at end-of-sheet (otherwise the last detected policy header eats
+// every row to end-of-sheet — including unrelated tables like "Insurer
+// Hotlines" or "CPF Accounts").
+function _findAllSectionBanners(matrix) {
+  const banners = [];
+  const limit = Math.min(matrix.length, 200);
+  for (let r = 0; r < limit; r++) {
+    const label = _detectBannerAtRow(matrix, r);
+    if (label) banners.push({ row: r, label });
+  }
+  return banners;
 }
 // rc2.21 — section-label blacklist. The Soh family workbook has
 // "Insurer Hotlines" (phone numbers + URLs), "CPF Accounts" (account
@@ -9586,7 +9644,13 @@ function _findSectionLabelAbove(matrix, headerIndex) {
 // (No.,Name,Number,... columns) but are NOT policies. Each row of
 // "Insurer Hotlines" was being parsed as an Endowment policy with the
 // phone number set as Life Insured. Reject these by section banner.
-const XLSX_NON_POLICY_SECTION = /\b(insurer\s*hotline|customer\s*hotline|hotline|useful\s*contact|insurer\s*contact|insurer\s*phone|cpf\s*account|cpf\s*balance|government\s*scheme|govt\s*scheme|retirement\s*sum|portal|contact\s*detail|emergency\s*number|advisor\s*detail)\b/i;
+// rc2.25 — added `s?` after each noun to match plural forms ("Hotlines",
+// "Accounts", "Schemes" all leaked through the rc2.21 regex). Also added
+// "endowments / investment-linked policies" combination which appears in
+// the JE sheet as a section header that conflates 2 categories — we
+// allow it through (it's a real policy section) but the matcher is
+// kept open for future tightening.
+const XLSX_NON_POLICY_SECTION = /\b(insurer\s*hotlines?|customer\s*hotlines?|hotlines?|useful\s*contacts?|insurer\s*contacts?|insurer\s*phones?|cpf\s*accounts?|cpf\s*balances?|government\s*schemes?|govt\s*schemes?|retirement\s*sums?|portals?|contact\s*details?|emergency\s*numbers?|advisor\s*details?)\b/i;
 function isXlsxNonPolicySection(label) {
   return XLSX_NON_POLICY_SECTION.test(String(label || ''));
 }
@@ -9633,9 +9697,23 @@ function findAllXlsxPolicyHeaderRows(matrix) {
   }
   // Bound each header's data range at the next section banner (or next
   // header row if there's no banner). End-of-sheet for the last one.
+  // rc2.25 — ALSO consult _findAllSectionBanners. The previous logic only
+  // bounded at the NEXT detected policy header; if a non-policy banner
+  // (like "📲 Insurer Hotlines") came after the last policy header, its
+  // rows got eaten into the last policy section. Now any banner that
+  // comes after a header bounds that header's endIndex.
+  const allBanners = _findAllSectionBanners(matrix);
   for (let k = 0; k < headers.length; k++) {
     const next = headers[k + 1];
-    headers[k].endIndex = next ? (next.sectionRow - 1) : (matrix.length - 1);
+    let endIndex = next ? (next.sectionRow - 1) : (matrix.length - 1);
+    // Find first banner that appears AFTER this header's start row.
+    // If that banner is earlier than the next header (or there's no next
+    // header), use it to bound endIndex.
+    const bannerAfter = allBanners.find(b => b.row > headers[k].headerIndex);
+    if (bannerAfter && bannerAfter.row - 1 < endIndex) {
+      endIndex = bannerAfter.row - 1;
+    }
+    headers[k].endIndex = endIndex;
   }
   return headers;
 }
@@ -9754,6 +9832,12 @@ function isLikelyXlsxProfileNameLine(line) {
   // through as the profile.name.
   if (/^\d{1,2}\s+[A-Za-z]+\s+\d{4}\b/.test(s)) return false;
   if (/\b\d+\s*y\/?o\b/i.test(s)) return false;
+  // rc2.25 — reject xlsx section-banner phrases. JE sheet's row 3 reads
+  // ",Hospitalisation / Protection Plans" — after rejecting "Je" (1 word)
+  // and the DOB row, the function fell through to this section banner and
+  // accepted it as the profile name. All JE policies then routed to
+  // "Hospitalisation / Protection Plans" as if it were a person.
+  if (/\b(hospitalisation|hospitalization|life\s+protection|critical\s+illness|personal\s+accident|investment[\s-]*linked|endowment|legacy\s+planning|fixed\s+deposit|cpf\s+account|insurer\s+hotline|customer\s+hotline|short[\s-]*term\s*endow|long[\s-]*term\s*endow|wealth\s+accumulation|disability\s+income|annuity|protection\s+plan)\b/i.test(s)) return false;
   if (!/[a-z]/i.test(s)) return false;
   const key = normalizePersonNameKey(s);
   if (!key) return false;
