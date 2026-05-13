@@ -40,7 +40,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.3.0-rc2e.35-idbfix';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.30-parser-sync';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -601,9 +601,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.29';
-const APP_VERSION_DATE = '2026-05-14';
-const APP_VERSION_NAME = 'Insurer-alias expansion — GE→Great Eastern, Pru→Prudential, NTUC/Income→NTUC Income, TM→Tokio Marine, Manu→Manulife';
+const APP_VERSION = 'v2.4.0-rc2.30';
+const APP_VERSION_DATE = '2026-05-13';
+const APP_VERSION_NAME = 'XLSX rider coalescence, premium parse guard, re-normalize action, CRMLens bridge refresh';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -3806,6 +3806,37 @@ const _PRESERVE_ACRONYMS = new Set([
   'YRS',
 ]);
 
+const _PRODUCT_BRAND_CASE = [
+  ['Investready', 'InvestReady'],
+  ['Healthshield', 'HealthShield'],
+  ['Lifeready', 'LifeReady'],
+  ['Completecare', 'CompleteCare'],
+  ['Totalcare', 'TotalCare'],
+  ['Readypayout', 'ReadyPayout'],
+  ['Readybuilder', 'ReadyBuilder'],
+  ['Readyprotect', 'ReadyProtect'],
+  ['Retireready', 'RetireReady'],
+  ['Pruactive', 'PruActive'],
+  ['Pruwealth', 'PruWealth'],
+  ['Prushield', 'PruShield'],
+  ['Prucash', 'PRUCash'],
+  ['Prucancer', 'PRUCancer'],
+  ['Pruextra', 'PRUExtra'],
+  ['Incomeshield', 'IncomeShield'],
+  ['Medishield', 'MediShield'],
+  ['Careshield', 'CareShield'],
+  ['Eldershield', 'ElderShield'],
+  ['Vitalhealth', 'VitalHealth'],
+];
+
+function _applyProductBrandCase(s) {
+  let out = String(s || '');
+  for (const [from, to] of _PRODUCT_BRAND_CASE) {
+    out = out.replace(new RegExp('\\b' + from + '\\b', 'g'), to);
+  }
+  return out;
+}
+
 function _titleCaseProductName(s) {
   const raw = String(s || '');
   const v = raw.trim();
@@ -3838,7 +3869,7 @@ function _titleCaseProductName(s) {
     const titled = core.charAt(0).toUpperCase() + core.slice(1).toLowerCase();
     return lead + titled + trail;
   });
-  return out.join('');
+  return _applyProductBrandCase(out.join(''));
 }
 
 // rc2.28 — same logic for insurer names. Identical behavior to product
@@ -5428,7 +5459,7 @@ async function pdfToImages(pdfDoc, maxPages=12) {
 // shipped. Cache lookup is keyed by EXTRACT_PIPELINE_VERSION + fileHash,
 // so a re-scan after this bump WILL re-extract (no cache hit) and the
 // rc2.19/2.21 fixes will actually run.
-const EXTRACT_PIPELINE_VERSION = 'v15.35-2026-05-14-insurer-aliases-ge-pru-tm-manu';
+const EXTRACT_PIPELINE_VERSION = 'v15.36-2026-05-13-xlsx-riders-premium-sync';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -9929,6 +9960,22 @@ function isLikelyXlsxProfileNameLine(line) {
   const words = key.split(' ').filter(Boolean);
   return words.length >= 2 || /\([^)]+\)/.test(s);
 }
+function inferXlsxDocumentNameFromSheetName(sheetName) {
+  const raw = String(sheetName || '').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!raw) return '';
+  let candidate = raw
+    .replace(/\b(policy|summary|portfolio|insurance|policies|worksheet|sheet|tab)\b/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!candidate) return '';
+  if (/^(policy|summary|portfolio|insurance|client|nric|fin|dob|sheet)$/i.test(candidate)) return '';
+  if (isLikelyXlsxProfileNameLine(candidate)) return cleanPersonDisplayName(candidate);
+  if (candidate.length >= 2 && candidate.length <= 30 && /^[A-Za-z][A-Za-z'\-\.\s,]*$/.test(candidate)) {
+    return cleanPersonDisplayName(candidate);
+  }
+  return '';
+}
+
 function extractXlsxDocumentProfile(matrix, headerRowIndex, sheetName, fileName) {
   const profile = {
     name: '',
@@ -10005,10 +10052,82 @@ function extractXlsxDocumentProfile(matrix, headerRowIndex, sheetName, fileName)
       if (address) profile.address = address[1].trim();
     }
   }
+  if (!profile.name) profile.name = inferXlsxDocumentNameFromSheetName(sheetName);
   if (!profile.name) profile.name = inferXlsxDocumentNameFromFile(fileName);
   profile.name = cleanPersonDisplayName(profile.name);
   return normalizePersonNameKey(profile.name) ? profile : null;
 }
+
+function parseXlsxMoneyNumber(value) {
+  if (value == null || value === '') return 0;
+  if (typeof value === 'number') return isFinite(value) ? value : 0;
+  const s = String(value).trim();
+  if (!s || /^[-\u2013\u2014]+$/.test(s)) return 0;
+  const read = (match) => {
+    const n = parseFloat(String(match[1] || '').replace(/,/g, ''));
+    if (!isFinite(n)) return 0;
+    const suffix = String(match[2] || '').trim().toLowerCase();
+    if (suffix === 'k') return n * 1000;
+    if (suffix === 'm') return n * 1000000;
+    return n;
+  };
+  const moneyMatches = [...s.matchAll(/(?:S?\$)\s*(-?\d[\d,]*(?:\.\d+)?)(?:\s*([kKmM]))?/g)];
+  let nums = moneyMatches.map(read).filter(n => isFinite(n) && n !== 0);
+  if (nums.length === 0) {
+    nums = [...s.matchAll(/(-?\d[\d,]*(?:\.\d+)?)(?:\s*([kKmM]))?/g)].map(read).filter(n => isFinite(n) && n !== 0);
+  }
+  if (nums.length === 0) return 0;
+  // rc2.30: "$1,433 + $145.78" used to become 1433145.78 after
+  // stripping symbols. Sum explicit addends, otherwise use the first
+  // money amount so "As at Mar 2026: $37,080 Cash bonus: $39,595.78"
+  // does not silently add unrelated amounts.
+  if (nums.length > 1 && /\+/.test(s)) return nums.reduce((sum, n) => sum + n, 0);
+  return nums[0];
+}
+
+function getXlsxRawEntries(row) {
+  const raw = row?._rawSpreadsheetRow || row || {};
+  return Object.entries(raw).filter(([key, value]) =>
+    value != null && value !== '' && !String(key || '').startsWith('__')
+  );
+}
+
+function getXlsxRawValueByHeader(row, patterns) {
+  const hit = getXlsxRawEntries(row).find(([key]) => {
+    const norm = normalizeXlsxHeaderName(key);
+    return patterns.some(rx => rx.test(norm));
+  });
+  return hit ? String(hit[1] || '').trim() : '';
+}
+
+function getXlsxRawText(row) {
+  return getXlsxRawEntries(row).map(([, value]) => String(value || '').trim()).filter(Boolean).join(' ');
+}
+
+function getXlsxRawOrdinal(row) {
+  return getXlsxRawValueByHeader(row, [/^(no|no\.|number|#)$/, /\bs\/n\b/, /\bserial\b/]);
+}
+
+function getXlsxRawCoverageText(row) {
+  const parts = [];
+  for (const [key, value] of getXlsxRawEntries(row)) {
+    const norm = normalizeXlsxHeaderName(key);
+    if (/\b(coverage|benefit|sum assured|payout|remarks|notes)\b/.test(norm)) {
+      const text = String(value || '').trim();
+      if (text) parts.push(text);
+    }
+  }
+  return parts.join(' | ');
+}
+
+function isLikelyXlsxContinuationRawRow(row) {
+  if (!row || typeof row !== 'object') return false;
+  if (String(getXlsxRawOrdinal(row) || '').trim()) return false;
+  const text = getXlsxRawText(row);
+  if (!text) return false;
+  return /\b(rider|waiver|tpd|critical|ci\b|eci\b|accid|cancer|health\s*plus|vitalhealth|special\s*[a-z]|sum\s*assured|sa\b|co-?payment|deductible)\b/i.test(text);
+}
+
 function inferXlsxColumnMap(headers) {
   const entries = headers.map(header => ({ header, norm: normalizeXlsxHeaderName(header) }));
   const find = (patterns, rejectPatterns = []) => {
@@ -10033,7 +10152,7 @@ function inferXlsxColumnMap(headers) {
     subType: find([/\bsub\s*type\b/, /\bpolicy\s*type\b/, /\bplan\s*type\b/]),
     sumAssured: find([/\bsum\s*(assured|insured)\b/, /\bcoverage\s*amount\b/, /\bface\s*amount\b/]),
     cashValue: find([/\bnet\s*cash\s*value\b/, /\bcash\s*value\b/, /\bsurrender\s*value\b/]),
-    premiumAmount: find([/\bpayment\s*amount\s*due\b/, /\bamount\s*due\b/, /\bpremium\s*amount\b/, /\bregular\s*premium\b/, /\bannual\s*premium\b/, /\bpremium\b/], [/\bend\b/, /\bterm\b/, /\bmode\b/, /\bfrequency\b/]),
+    premiumAmount: find([/\bpayment\s*amount\s*due\b/, /\bamount\s*due\b/, /\bpremium\s*amount\b/, /\bregular\s*premium\b/, /\bannual\s*premium\b/, /\bpremium\b/], [/\bend\b/, /\bterm\b/, /\bmode\b/, /\bfrequency\b/, /\bpaid[\s-]*to[\s-]*date\b/]),
     premiumMode: find([/\bpremium\s*(mode|frequency)\b/, /\bpayment\s*(mode|frequency)\b/, /\bhow\s*often\b/]),
     premiumTerm: find([/\bpremium\s*term\b/, /\bpayment\s*term\b/]),
     inceptionDate: find([/\b(start|commencement|inception|issue|effective)\s*date\b/]),
@@ -10466,7 +10585,7 @@ async function parseXlsxToStructured(file) {
       // detector. Without this, the Soh family workbook's bad mappings
       // (productName=null for ILP/Endowment/Legacy) would persist as cache
       // hits even after the regex fix.
-      const COLUMN_MAP_VERSION = 'cmv-2026-05-14-bare-name';
+      const COLUMN_MAP_VERSION = 'cmv-2026-05-13-paid-to-date-premium';
       const normalized = headers.map(h => normalizeXlsxHeaderName(h)).concat(
         section.sectionLabel ? ['__section__:' + section.sectionLabel.toLowerCase()] : [],
         [kindTag, '__cmv__:' + COLUMN_MAP_VERSION]
@@ -11107,8 +11226,7 @@ function applyColumnMap(rows, columnMap, categoryColumn) {
       if (val == null || val === '') continue;
       const targetField = ({ premiumMode: 'premFrequency', premiumTerm: 'premTerm' })[field] || field;
       if (targetField === 'sumAssured' || targetField === 'annualPremium' || targetField === 'premiumAmount' || targetField === 'cashValue') {
-        const num = parseFloat(String(val).replace(/[^\d.-]/g, ''));
-        const cleanNum = isNaN(num) ? 0 : num;
+        const cleanNum = parseXlsxMoneyNumber(val);
         if (targetField === 'premiumAmount' || targetField === 'annualPremium') {
           policy.premiumAmount = cleanNum;
           policy.annualPremium = cleanNum;
@@ -11135,7 +11253,11 @@ function applyColumnMap(rows, columnMap, categoryColumn) {
       const t = String(row[categoryColumn]).toLowerCase();
       policy.category = normalizeXlsxStorageCategory(/critical|ci\b/.test(t)?'Critical Illness':/shield|isp|hospital/.test(t)?'ISP':/retire|annuity/.test(t)?'Retirement':/endow|saving/.test(t)?'Endowment':/disability|dii/.test(t)?'Disability Income':/accident|pa\b/.test(t)?'Personal Accident':/careshield|eldershield/.test(t)?'CareShield':/ilp|investment.*link/.test(t)?'ILP':/unit trust/.test(t)?'Unit Trust':/maternity/.test(t)?'Maternity':'Life');
     }
-    if (!policy.policyNumber && !policy.productName && !policy.insurer) continue;
+    const rawContinuationSignal = isLikelyXlsxContinuationRawRow(policy);
+    if (!policy.policyNumber && !policy.productName && !policy.insurer && !rawContinuationSignal) continue;
+    if (rawContinuationSignal && !policy.policyNumber && !policy.productName && !policy.insurer) {
+      policy._xlsxContinuationOnly = true;
+    }
     // rc2e.38: normalize Status column to canonical values
     // (paid-up/inforce/lapsed/surrendered/matured). Column map populated
     // policy.status as a raw string; we map it here, not in the FD path.
@@ -11335,6 +11457,115 @@ function applyColumnMap(rows, columnMap, categoryColumn) {
     policies.push(policy);
   }
   return policies;
+}
+
+function classifyXlsxRiderType(text) {
+  const lc = String(text || '').toLowerCase();
+  if (/\b(tpd|total\s+permanent|disablement|disability)\b/.test(lc)) return 'tpd';
+  if (/\b(early\s+critical|eci)\b/.test(lc)) return 'eci';
+  if (/\b(critical|living\s+assurance|ci\b|cancer)\b/.test(lc)) return 'ci';
+  if (/\b(accid|add\b|travelcare|dismember|burns?)\b/.test(lc)) return 'accidental';
+  if (/\bwaiver\b/.test(lc)) return 'premium_waiver';
+  if (/\b(term|death|terminal)\b/.test(lc)) return 'death';
+  return 'other';
+}
+
+function parseXlsxRiderSa(text) {
+  const s = String(text || '');
+  if (!/(sum\s*assured|\bsa\b|death|tpd|critical|ci\b|eci\b|cancer|coverage|benefit|limit|payout)/i.test(s)) return 0;
+  return parseXlsxMoneyNumber(s);
+}
+
+function deriveXlsxRiderName(text, fallbackName) {
+  const raw = String(text || '').replace(/\s+/g, ' ').trim();
+  const fallback = String(fallbackName || '').replace(/\s+/g, ' ').trim();
+  if (fallback) return fallback;
+  const beforeMoney = raw.split(/S?\$/)[0].replace(/[(:,\-\u2013\u2014\s]+$/g, '').trim();
+  if (beforeMoney && /\b(rider|waiver|health\s*plus|vitalhealth|special|booster)\b/i.test(beforeMoney)) return beforeMoney;
+  if (/\bTPD\b/i.test(raw)) return 'TPD Benefit';
+  if (/\bECI\b|early\s+critical/i.test(raw)) return 'Early Critical Illness Benefit';
+  if (/\bCI\b|critical|cancer/i.test(raw)) return 'Critical Illness Benefit';
+  if (/accid/i.test(raw)) return 'Accidental Benefit';
+  if (/death/i.test(raw)) return 'Death Benefit';
+  return beforeMoney || raw.slice(0, 80) || 'Spreadsheet rider';
+}
+
+function getXlsxRiderColumnTexts(row, includeCoverageColumns = false) {
+  const out = [];
+  for (const [key, value] of getXlsxRawEntries(row)) {
+    const norm = normalizeXlsxHeaderName(key);
+    const isRiderCol = /\b(riders?|coverage\s*end)\b/.test(norm);
+    const isCoverageCol = includeCoverageColumns && /\b(coverage|benefit|sum assured|payout|remarks|notes)\b/.test(norm);
+    if (!isRiderCol && !isCoverageCol) continue;
+    const text = String(value || '').replace(/\s+/g, ' ').trim();
+    if (text) out.push(text);
+  }
+  return out;
+}
+
+function makeXlsxRider(text, fallbackName) {
+  const coverageText = String(text || '').replace(/\s+/g, ' ').trim();
+  const riderName = deriveXlsxRiderName(coverageText, fallbackName);
+  if (!riderName) return null;
+  return {
+    type: classifyXlsxRiderType(riderName + ' ' + coverageText),
+    riderName,
+    sa: parseXlsxRiderSa(coverageText),
+    premium: 0,
+    bundled: true,
+    coverageText: coverageText || undefined
+  };
+}
+
+function appendXlsxRider(policy, rider) {
+  if (!policy || !rider?.riderName) return false;
+  policy.riders = Array.isArray(policy.riders) ? policy.riders : [];
+  const key = normalizeTextKey([rider.type, rider.riderName, rider.sa || 0].join('|'));
+  const exists = policy.riders.some(r => normalizeTextKey([r?.type, r?.riderName, r?.sa || 0].join('|')) === key);
+  if (exists) return false;
+  policy.riders.push(rider);
+  policy._xlsxCoalescedRiderCount = (parseInt(policy._xlsxCoalescedRiderCount, 10) || 0) + 1;
+  return true;
+}
+
+function coalesceContinuationRiders(policiesRaw) {
+  const out = [];
+  for (const original of (policiesRaw || [])) {
+    const row = { ...(original || {}) };
+    const hasOrdinal = !!String(getXlsxRawOrdinal(row) || '').trim();
+    const hasPolicyNumber = !!String(row.policyNumber || '').trim();
+    const hasInsurer = !isMissingXlsxInsurer(row.insurer);
+    const hasPremium = parseXlsxMoneyNumber(row.premiumAmount ?? row.annualPremium) > 0;
+    const hasFinancial = hasPremium || parseXlsxMoneyNumber(row.sumAssured) > 0 || parseXlsxMoneyNumber(row.cashValue) > 0;
+    const productName = String(row.productName || row.policyName || '').replace(/\s+/g, ' ').trim();
+    const continuationText = [productName, getXlsxRawCoverageText(row), getXlsxRawText(row)].filter(Boolean).join(' ');
+    const looksContinuation = !hasOrdinal && !hasPolicyNumber && !hasInsurer && !hasFinancial && out.length > 0
+      && (productName || row._xlsxContinuationOnly || isLikelyXlsxContinuationRawRow(row))
+      && /\b(rider|waiver|tpd|critical|ci\b|eci\b|accid|cancer|health\s*plus|vitalhealth|special|booster|sum\s*assured|sa\b|co-?payment|deductible)\b/i.test(continuationText);
+
+    if (looksContinuation) {
+      const prev = out[out.length - 1];
+      const parts = [];
+      if (productName) {
+        const coverage = getXlsxRawCoverageText(row);
+        parts.push({ text: [productName, coverage].filter(Boolean).join(' | '), fallbackName: productName });
+      }
+      for (const text of getXlsxRiderColumnTexts(row, !productName)) {
+        parts.push({ text, fallbackName: '' });
+      }
+      if (!parts.length && continuationText) parts.push({ text: continuationText, fallbackName: productName });
+      for (const part of parts) appendXlsxRider(prev, makeXlsxRider(part.text, part.fallbackName));
+      continue;
+    }
+
+    // rc2.30: base rows can also carry explicit rider info in columns like
+    // "Coverage End (Riders)" while the main Coverage cell is the base death/SA.
+    for (const text of getXlsxRiderColumnTexts(row, false)) {
+      appendXlsxRider(row, makeXlsxRider(text, ''));
+    }
+    out.push(row);
+  }
+  return out;
 }
 // rc2e.36: Cash-investment row applier. Mirrors the AI prompt's
 // FIXED DEPOSITS rules (line ~33390) so AI and local outputs share
@@ -11686,7 +11917,8 @@ async function extractSpreadsheetFilesLocally(files, opts = {}) {
       // per-sheet profile so each sheet's policies inherit the correct
       // owner. aggregateProfile is null in that branch by construction.
       const sheetProfile = aggregateProfile || sheet.documentProfile || null;
-      const policies = policiesRaw
+      const coalescedPoliciesRaw = sheet.kind === 'fd' ? policiesRaw : coalesceContinuationRiders(policiesRaw);
+      const policies = coalescedPoliciesRaw
         .map(p => {
           const sourceDocument = {
             ...(p.sourceDocument || {}),
@@ -19616,6 +19848,14 @@ async function sbPoliciesPull() {
   } catch(e) { console.warn('[Sync] Policies pull failed:', e.message); return null; }
 }
 
+function isCrmLensPolicyRowLike(row) {
+  const payload = row?.data || row || {};
+  return String(row?.id || payload.id || '').startsWith('crmlens:')
+    || payload._source === 'crmlens'
+    || !!payload._crmlensPolicyId
+    || !!payload._crmlensClientId;
+}
+
 async function sbCrmLensPoliciesPull() {
   const s = getSB();
   const uid = sbGetUserId();
@@ -19624,16 +19864,13 @@ async function sbCrmLensPoliciesPull() {
     const { data, error } = await s.schema('policylens').from('user_policies').select('*').eq('user_id', uid);
     if (error) { console.warn('[CRMLensSync] Policies pull error:', error.message); return []; }
     return (data || [])
-      .filter(row => !row.deleted_at)
-      .filter(row => {
-        const payload = row.data || {};
-        return String(row.id || '').startsWith('crmlens:') || payload._source === 'crmlens' || !!payload._crmlensPolicyId;
-      })
+      .filter(row => isCrmLensPolicyRowLike(row))
       .map(row => ({
         id: row.id,
         data: row.data || {},
         versions: row.field_versions || {},
-        updated_at: row.updated_at
+        updated_at: row.updated_at,
+        deleted: !!row.deleted_at
       }));
   } catch(e) { console.warn('[CRMLensSync] Policies pull failed:', e.message); return []; }
 }
@@ -21778,7 +22015,7 @@ function App() {
 
   async function importCrmLensPoliciesFromSupabase(reason) {
     const cloudRows = await sbCrmLensPoliciesPull();
-    if (!cloudRows.length) return { imported: 0, updated: 0, clientsCreated: 0, skipped: 0 };
+    if (!cloudRows.length) return { imported: 0, updated: 0, clientsCreated: 0, removed: 0, skipped: 0 };
 
     const localPolicies = await dbGetAll('policies').catch(() => []);
     const byId = new Map((localPolicies || []).map(p => [p.id, p]));
@@ -21788,10 +22025,21 @@ function App() {
     let imported = 0;
     let updated = 0;
     let clientsCreated = 0;
+    let removed = 0;
     let skipped = 0;
     const now = new Date().toISOString();
 
     for (const row of cloudRows) {
+      if (row.deleted) {
+        const existing = byId.get(row.id);
+        if (existing) {
+          await dbDel('policies', row.id).catch(() => {});
+          byId.delete(row.id);
+          if (existing.clientId) changedClientIds.add(existing.clientId);
+          removed++;
+        }
+        continue;
+      }
       const data = row.data || {};
       // rc1.98 — namespace CRMLens clientIds so they can't collide with local
       // PolicyLens UUIDs. raw "abc123" becomes "crmlens:abc123" on import.
@@ -21854,7 +22102,7 @@ function App() {
       }
     }
 
-    const changed = imported + updated + clientsCreated;
+    const changed = imported + updated + clientsCreated + removed;
     if (changed > 0) {
       const activeCid = activeClientIdRef.current || activeClientId;
       const reloaded = await dbGetAll('policies').catch(() => []);
@@ -21866,10 +22114,10 @@ function App() {
         try { scheduleDriveWriteForClient(cid, reason || 'crmlens-import', 1500).catch(() => {}); } catch(_) {}
       });
       try {
-        toast('Imported ' + (imported + updated) + ' CRMLens polic' + ((imported + updated) === 1 ? 'y' : 'ies') + (clientsCreated ? ' and ' + clientsCreated + ' client' + (clientsCreated === 1 ? '' : 's') : ''), 'success', 4500);
+        toast('Synced ' + (imported + updated) + ' CRMLens polic' + ((imported + updated) === 1 ? 'y' : 'ies') + (removed ? ', removed ' + removed : '') + (clientsCreated ? ' and ' + clientsCreated + ' client' + (clientsCreated === 1 ? '' : 's') : ''), 'success', 4500);
       } catch(_) {}
     }
-    return { imported, updated, clientsCreated, skipped };
+    return { imported, updated, clientsCreated, removed, skipped };
   }
 
   const runCloudSync = async (opts) => {
@@ -22274,7 +22522,20 @@ function App() {
               catch (err) { console.warn('[Realtime] Profile handler error:', err); }
             });
       } else {
-        console.log('[Realtime] Drive mode — skipping user_policies + user_client_profile subscriptions');
+        console.log('[Realtime] Drive mode - subscribing only to CRMLens user_policies bridge');
+        channel = channel
+          .on('postgres_changes', { event:'*', schema:'policylens', table:'user_policies', filter:'user_id=eq.'+uid },
+            async (payload) => {
+              try {
+                const row = payload.new || payload.old || {};
+                if (!isCrmLensPolicyRowLike(row)) return;
+                console.log('[Realtime] CRMLens policy event:', payload.eventType, row?.id);
+                if (shouldSkipRealtime()) return;
+                await importCrmLensPoliciesFromSupabase('realtime-crmlens-import');
+                lastSyncRef.current = Date.now();
+              } catch (err) { console.warn('[Realtime] CRMLens policy handler error:', err); }
+            });
+        console.log('[Realtime] Drive mode - skipping user_client_profile subscription');
       }
       channel = channel
         .on('postgres_changes', { event:'*', schema:'policylens', table:'user_app_settings', filter:'user_id=eq.'+uid },
@@ -39172,6 +39433,54 @@ function Policies() {
     return saved;
   };
 
+  const normalizePolicySnapshotForCurrentPipeline = (policy) => {
+    const original = policy || {};
+    let next = { ...original };
+    if (next.productName) next.productName = _titleCaseProductName(next.productName);
+    if (next.policyName) next.policyName = _titleCaseProductName(next.policyName);
+    if (next.insurer) next.insurer = _titleCaseInsurerName(normalizeInsurerName(next.insurer));
+    if (isMissingXlsxInsurer(next.insurer)) {
+      const inferred = inferInsurerFromProductName(next.productName || next.policyName);
+      if (inferred) next.insurer = inferred;
+    }
+    const sourceName = next.sourceFile || next.documentTitle || '';
+    const looksSpreadsheet = !!next._rawSpreadsheetRow || /\.(xlsx|xls|csv)$/i.test(sourceName);
+    if (looksSpreadsheet) {
+      const enriched = enrichSpreadsheetPolicyCandidate({ ...next }, {
+        fileName: sourceName || 'Saved policy',
+        repo
+      });
+      if (enriched) next = { ...next, ...enriched };
+    }
+    return {
+      ...next,
+      id: original.id,
+      clientId: original.clientId,
+      _pipelineVersion: EXTRACT_PIPELINE_VERSION,
+      _reNormalizedAt: new Date().toISOString()
+    };
+  };
+
+  const runRenormalizeStalePolicies = async (stalePolicies) => {
+    const list = Array.isArray(stalePolicies) ? stalePolicies : [];
+    if (!list.length) return;
+    if (!confirm('Re-normalize ' + list.length + ' saved polic' + (list.length === 1 ? 'y' : 'ies') + ' with the current parser rules? This updates names, insurers, categories and spreadsheet-derived fields without re-reading the original files.')) return;
+    let updated = 0;
+    let failed = 0;
+    for (const policy of list) {
+      try {
+        await savePolicy(normalizePolicySnapshotForCurrentPipeline(policy));
+        updated++;
+      } catch (err) {
+        failed++;
+        console.warn('[ReNormalize] Policy failed:', policy?.id, err?.message || err);
+      }
+    }
+    try {
+      toast('Re-normalized ' + updated + ' polic' + (updated === 1 ? 'y' : 'ies') + (failed ? ' (' + failed + ' failed)' : ''), failed ? 'warning' : 'success', 4500);
+    } catch(_) {}
+  };
+
   const filtered = filter==='all'?policies:policies.filter(p=>p.category===filter);
   // Separate matured policies (authoritative: maturity date wins over stale status flags)
   // Previously we trusted pol.status==='matured' blindly, which mis-classified policies
@@ -43008,21 +43317,13 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
             React.createElement('div', null,
               React.createElement('div', {style:{fontSize:13,fontWeight:600,color:'var(--orange)'}}, '🔄 Pipeline Updated'),
               React.createElement('div', {style:{fontSize:12,color:'var(--text3)'}},
-                stale.length + ' polic' + (stale.length===1?'y':'ies') + ' extracted under older pipeline (' + (stale[0]._pipelineVersion||'unknown') + '). Re-extraction may improve accuracy.'
+                stale.length + ' polic' + (stale.length===1?'y':'ies') + ' saved under older parser rules (' + (stale[0]._pipelineVersion||'unknown') + '). Re-normalizing applies current naming, insurer and spreadsheet cleanup rules.'
               )
             ),
             React.createElement('button', {
               className:'btn-secondary btn-sm',
-              onClick: () => {
-                // Re-extract stale policies — create placeholder files from existing data
-                // and run through the queue. Only replaces on successful new extraction.
-                toast('Re-extraction queued for ' + stale.length + ' policies','info',3000);
-                // Mark policies with updated version to dismiss banner
-                stale.forEach(p => {
-                  savePolicy({...p, _pipelineVersion: EXTRACT_PIPELINE_VERSION, _reExtracted: true});
-                });
-              }
-            }, 'Re-extract ' + stale.length)
+              onClick: () => runRenormalizeStalePolicies(stale)
+            }, 'Re-normalize ' + stale.length)
           )
         );
       })()}
