@@ -611,9 +611,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.28';
+const APP_VERSION = 'v2.4.0-rc2.29';
 const APP_VERSION_DATE = '2026-05-14';
-const APP_VERSION_NAME = 'Title-case productName w/ acronym preservation + JE Je-name fallback + Soh-Family filter';
+const APP_VERSION_NAME = 'Insurer-alias expansion — GE→Great Eastern, Pru→Prudential, NTUC/Income→NTUC Income, TM→Tokio Marine, Manu→Manulife';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -4879,7 +4879,7 @@ async function pdfToImages(pdfDoc, maxPages = 12) {
 // shipped. Cache lookup is keyed by EXTRACT_PIPELINE_VERSION + fileHash,
 // so a re-scan after this bump WILL re-extract (no cache hit) and the
 // rc2.19/2.21 fixes will actually run.
-const EXTRACT_PIPELINE_VERSION = 'v15.34-2026-05-14-title-case-product-names';
+const EXTRACT_PIPELINE_VERSION = 'v15.35-2026-05-14-insurer-aliases-ge-pru-tm-manu';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -10191,8 +10191,10 @@ function inferInsurerFromProductName(productName) {
   const rules = [{
     re: /\baia\b|^aiagen|^aiaplatinum|^aias[a-z0-9]*|^prime life|^prime secure/i,
     name: 'AIA'
-  }, {
-    re: /manulife|manulink|investready|incomegen|retireready|lifeready|manuprotect/i,
+  },
+  // rc2.29 — also match bare "Manu" prefix (FC shorthand)
+  {
+    re: /manulife|manulink|investready|incomegen|retireready|lifeready|manuprotect|\bmanu\b/i,
     name: 'Manulife'
   }, {
     re: /china life/i,
@@ -10212,8 +10214,12 @@ function inferInsurerFromProductName(productName) {
   }, {
     re: /hsbc life/i,
     name: 'HSBC Life'
-  }, {
-    re: /tokio marine/i,
+  },
+  // rc2.29 — also match bare "TM" (FC shorthand for Tokio Marine).
+  // Anchored with \b on both sides so "TM" alone matches but not
+  // substrings of unrelated words.
+  {
+    re: /tokio marine|\btm\b/i,
     name: 'Tokio Marine'
   }, {
     re: /etiqa/i,
@@ -13440,6 +13446,9 @@ const INSURER_ALIASES = {
   'great eastern life assurance': 'Great Eastern',
   'gela': 'Great Eastern',
   'ge life': 'Great Eastern',
+  // rc2.29 — FC convention: bare "GE" used as the insurer column value
+  'ge': 'Great Eastern',
+  'great': 'Great Eastern',
   'prudential assurance': 'Prudential',
   'prudential assurance company': 'Prudential',
   'pac': 'Prudential',
@@ -13449,9 +13458,15 @@ const INSURER_ALIASES = {
   'income insurance': 'NTUC Income',
   'income': 'NTUC Income',
   'ntuc': 'NTUC Income',
+  // rc2.29 — bare "NTUC" → NTUC Income (covered above), also accept the
+  // common typo "ntuc inc" or "ntuc-income" via stripping.
+  'ntuc inc': 'NTUC Income',
   'manulife financial': 'Manulife',
   'manulife asia': 'Manulife',
   'john hancock': 'Manulife',
+  // rc2.29 — bare "Manu" / "MANU" used as the insurer column value
+  'manu': 'Manulife',
+  'manulife sg': 'Manulife',
   'hsbc insurance': 'HSBC Life',
   'hsbc insurance singapore': 'HSBC Life',
   'hsbc': 'HSBC Life',
@@ -13462,6 +13477,8 @@ const INSURER_ALIASES = {
   'tokio marine life': 'Tokio Marine',
   'tokio marine life insurance': 'Tokio Marine',
   'tml': 'Tokio Marine',
+  // rc2.29 — bare "TM" used as the insurer column value
+  'tm': 'Tokio Marine',
   'china life insurance': 'China Life',
   'china taiping insurance': 'China Taiping',
   'ctpis': 'China Taiping',
