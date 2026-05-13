@@ -611,9 +611,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.18';
+const APP_VERSION = 'v2.4.0-rc2.19';
 const APP_VERSION_DATE = '2026-05-14';
-const APP_VERSION_NAME = 'CommandPalette mount-race fix — window-flag fallback for cold tab open';
+const APP_VERSION_NAME = 'Critical live-test fixes — tierDefinitions + multi-owner xlsx routing + $-as-policy-number filter';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -10068,7 +10068,20 @@ function isSpreadsheetNonPolicyRow(policy) {
   const hay = normalizeTextKey([product, policy.policyNumber, policy.insurer, policy.category, policy.subType, policy.sourceSheet].filter(Boolean).join(' '));
   const pn = String(policy.policyNumber || '').trim();
   const pnKey = normalizeTextKey(pn);
-  const hasRealPolicyNumber = normalizePolicyKey(pn).length >= 4 && !/^(year|age|date|dob|name|turn|turn at|turn 55|cpf)$/.test(pnKey);
+  // rc2.19 — currency / percent / parenthetical noise in the policyNumber
+  // column means the column-map detector picked the wrong column (often a
+  // cash-value or yield-projection column). Treat as non-policy when there's
+  // no other signal. Examples seen in the Soh family workbook DD sheet:
+  //   "$832,201.05"      — clearly a cash value
+  //   "1.09% (as of Nov'25)" — clearly a yield projection
+  //   "$606,953.19"      — clearly a cash value
+  const pnLooksLikeMoney = /^[\$£€]\s*[\d,]+(\.\d+)?$/.test(pn);
+  const pnLooksLikePct = /\d+(\.\d+)?\s*%/.test(pn);
+  const pnLooksLikeParen = /^\(.+\)$/.test(pn);
+  if ((pnLooksLikeMoney || pnLooksLikePct || pnLooksLikeParen) && !product) {
+    return true;
+  }
+  const hasRealPolicyNumber = normalizePolicyKey(pn).length >= 4 && !/^(year|age|date|dob|name|turn|turn at|turn 55|cpf)$/.test(pnKey) && !pnLooksLikeMoney && !pnLooksLikePct && !pnLooksLikeParen;
   const hasInsurer = !isMissingXlsxInsurer(policy.insurer);
   const premium = moneyNumber(policy.premiumAmount ?? policy.annualPremium);
   const hasFinancial = premium > 0 || moneyNumber(policy.sumAssured) > 0 || moneyNumber(policy.cashValue) > 0;
@@ -11588,14 +11601,38 @@ async function extractSpreadsheetFilesLocally(files, opts = {}) {
     // contact, address) found on any sheet should apply to all sheets.
     // Without this, Tan Kah Lan's Insurance-sheet Vivolife rows can't
     // derive ageAtEntry because DOB only sits on the Wealth sheet header.
-    let aggregateProfile = null;
+    //
+    // rc2.19 — that single-client assumption is wrong for family
+    // workbooks like the Soh-family summary (5 sheets DD/MM/JL/JY/JE,
+    // one per family member, each with its own banner name). Aggregating
+    // across them caused all 36 policies to inherit the first sheet's
+    // name (Eric), so the routing modal couldn't split the file across
+    // members.
+    //
+    // New behavior: detect when distinct identity headers appear across
+    // sheets. If they do, route per-sheet; if they don't, keep the old
+    // aggregate behavior (Belinda's Wealth + Insurance share one name).
+    const sheetProfilesByName = new Map(); // sheetName -> profile
+    const distinctNames = new Set();
     for (const sheet of sheets) {
       if (!sheet.documentProfile) continue;
-      if (!aggregateProfile) aggregateProfile = {
-        ...sheet.documentProfile
-      };else for (const k of ['name', 'dob', 'nric', 'phone', 'address']) {
-        if (!aggregateProfile[k] && sheet.documentProfile[k]) aggregateProfile[k] = sheet.documentProfile[k];
+      sheetProfilesByName.set(sheet.sheetName, sheet.documentProfile);
+      const n = String(sheet.documentProfile.name || '').trim();
+      if (n) distinctNames.add(normalizePersonNameKey(n) || n.toLowerCase());
+    }
+    const multiOwnerWorkbook = distinctNames.size >= 2;
+    let aggregateProfile = null;
+    if (!multiOwnerWorkbook) {
+      for (const sheet of sheets) {
+        if (!sheet.documentProfile) continue;
+        if (!aggregateProfile) aggregateProfile = {
+          ...sheet.documentProfile
+        };else for (const k of ['name', 'dob', 'nric', 'phone', 'address']) {
+          if (!aggregateProfile[k] && sheet.documentProfile[k]) aggregateProfile[k] = sheet.documentProfile[k];
+        }
       }
+    } else {
+      console.log('[XlsxExtract] Multi-owner workbook detected (' + distinctNames.size + ' distinct identity headers) — routing per-sheet, not aggregate.');
     }
     for (const sheet of sheets) {
       // rc2e.36: FD sections route through applyFdColumnMap; never
@@ -11630,6 +11667,9 @@ async function extractSpreadsheetFilesLocally(files, opts = {}) {
       }
       // rc2e.41: prefer aggregate profile (cross-sheet) over per-sheet,
       // falling back to per-sheet for fields the aggregate is missing.
+      // rc2.19 — in multi-owner workbooks (family summaries), USE the
+      // per-sheet profile so each sheet's policies inherit the correct
+      // owner. aggregateProfile is null in that branch by construction.
       const sheetProfile = aggregateProfile || sheet.documentProfile || null;
       const policies = policiesRaw.map(p => {
         const sourceDocument = {
@@ -11691,6 +11731,22 @@ async function extractSpreadsheetFilesLocally(files, opts = {}) {
               level: 'medium',
               reason: 'Derived from age at entry + premium term'
             });
+          }
+        }
+        // rc2.19 — in multi-owner workbooks, explicitly set policyOwner
+        // from the sheet's profile so each sheet's policies route to
+        // that sheet's owner instead of all collapsing to sheet-1.
+        // Skip if the row already has a real (non-"Self") policyOwner or
+        // a non-"Self" lifeInsured that names a different person.
+        const profileName = String(sheetProfile?.name || '').trim();
+        if (multiOwnerWorkbook && profileName) {
+          const liRaw = String(p.lifeInsured || '').trim();
+          const liIsSelf = !liRaw || /^self$/i.test(liRaw);
+          const ownerRaw = String(p.policyOwner || '').trim();
+          if (!ownerRaw) {
+            p.policyOwner = profileName;
+            p._policyOwnerSource = 'xlsx-sheet-banner';
+            if (liIsSelf) p.lifeInsured = profileName;
           }
         }
         return {
@@ -52041,7 +52097,8 @@ function Policies() {
     activeClientId,
     clientName,
     switchClient,
-    setTab
+    setTab,
+    tierDefinitions
   } = useContext(AppCtx);
   const isMobile = useViewportIsMobile();
   const [showForm, setShowForm] = useState(false);
