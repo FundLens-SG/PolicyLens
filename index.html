@@ -611,9 +611,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.30';
+const APP_VERSION = 'v2.4.0-rc2.31';
 const APP_VERSION_DATE = '2026-05-13';
-const APP_VERSION_NAME = 'XLSX rider coalescence, premium parse guard, re-normalize action, CRMLens bridge refresh';
+const APP_VERSION_NAME = 'PolicyLens clients auto-publish to CRMLens roster';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -20011,6 +20011,253 @@ function scheduleCrmLensPushBack(policy, versions, delay = 1200) {
   });
 }
 
+// rc2.31 - PolicyLens -> CRMLens roster bridge.
+// CRMLens's Clients page reads public.crm_people. PolicyLens client data is
+// Drive-authoritative, so publish a lightweight roster row for every local
+// PolicyLens client instead of waiting for a manual CRMLens import scan.
+const CRMLENS_POLICYLENS_CLIENT_PREFIX = 'policylens:';
+let _crmPeopleMirrorTimer = null;
+function crmPeopleIdForPolicyLensClient(clientId) {
+  const raw = String(clientId || '').trim();
+  if (!raw || raw.startsWith('crmlens:')) return '';
+  return raw.startsWith(CRMLENS_POLICYLENS_CLIENT_PREFIX) ? raw : CRMLENS_POLICYLENS_CLIENT_PREFIX + raw;
+}
+function safeCrmPeopleText(value, fallback = '') {
+  const s = String(value == null ? '' : value).trim();
+  return s || fallback;
+}
+function driveFolderUrlFromId(id) {
+  const s = String(id || '').trim();
+  return s ? 'https://drive.google.com/drive/folders/' + encodeURIComponent(s) : '';
+}
+function driveFileUrlFromId(id) {
+  const s = String(id || '').trim();
+  return s ? 'https://drive.google.com/file/d/' + encodeURIComponent(s) + '/view' : '';
+}
+function crmPeopleRowFromPolicyLensClient(ds, profile, ownerEmail, nowIso) {
+  if (!ds?.clientId) return null;
+  const crmClientId = crmPeopleIdForPolicyLensClient(ds.clientId);
+  if (!crmClientId) return null;
+  const name = cleanPersonDisplayName(profile?.name || ds.clientName || '') || 'PolicyLens client';
+  const tier = safeCrmPeopleText(ds.tier || profile?.tier, UNASSIGNED_TIER);
+  const isProspect = /^prospects?$/i.test(tier) || /^prospect$/i.test(String(profile?.status || ''));
+  const section = isProspect ? 'Prospects' : 'Clients';
+  const clientStatus = isProspect ? 'prospect' : 'client';
+  const folderId = safeCrmPeopleText(ds.folderId);
+  const fileId = isValidDriveFileId(ds.fileId) ? String(ds.fileId).trim() : '';
+  const folderUrl = driveFolderUrlFromId(folderId);
+  const fileUrl = driveFileUrlFromId(fileId);
+  const reviewUrl = '/tools/policylens/?clientId=' + encodeURIComponent(ds.clientId);
+  const metadata = {
+    email: safeCrmPeopleText(profile?.email || profile?.email_masked),
+    dob: safeCrmPeopleText(profile?.dob),
+    occupation: safeCrmPeopleText(profile?.occupation),
+    tier: tier === UNASSIGNED_TIER ? '' : tier,
+    tags: [safeCrmPeopleText(profile?.gender), safeCrmPeopleText(profile?.maritalStatus || profile?.marital_status), safeCrmPeopleText(ds.familyGroup || profile?.familyGroup)].filter(Boolean),
+    nextAction: safeCrmPeopleText(profile?.nextAction || profile?.next_action),
+    policylens_client_id: ds.clientId,
+    policylens_client_name: name,
+    policylens_section: tier,
+    policylens_review_url: reviewUrl,
+    policylens_synced_at: nowIso,
+    policylens_source: 'drive_state',
+    appscriptClient: {
+      id: crmClientId,
+      registered_name: name,
+      preferred_name: name,
+      status: clientStatus,
+      tier: tier,
+      source: 'policylens',
+      dob: safeCrmPeopleText(profile?.dob),
+      gender: safeCrmPeopleText(profile?.gender),
+      marital_status: safeCrmPeopleText(profile?.maritalStatus || profile?.marital_status),
+      occupation: safeCrmPeopleText(profile?.occupation),
+      phone: safeCrmPeopleText(profile?.phone || profile?.phone_masked),
+      phone_masked: safeCrmPeopleText(profile?.phone_masked || profile?.phone),
+      email: safeCrmPeopleText(profile?.email || profile?.email_masked),
+      email_masked: safeCrmPeopleText(profile?.email_masked || profile?.email),
+      notes: safeCrmPeopleText(profile?.notes),
+      external_policy_status: 'declared_or_documented',
+      data_confidence: 'medium',
+      client_folder_id: folderId,
+      client_folder_url: folderUrl,
+      policylens_client_id: ds.clientId,
+      policylens_client_name: name,
+      policylens_section: tier,
+      policylens_client_folder_id: folderId,
+      policylens_client_folder_url: folderUrl,
+      policylens_client_file_id: fileId,
+      policylens_client_file_url: fileUrl,
+      policylens_review_url: reviewUrl,
+      policylens_synced_at: nowIso,
+      created_at: ds.createdAt || ds.created_at || ds.lastSyncedAt || nowIso,
+      updated_at: nowIso
+    }
+  };
+  return {
+    owner_email: ownerEmail,
+    client_id: crmClientId,
+    name,
+    section,
+    source: 'policylens',
+    phone: safeCrmPeopleText(profile?.phone || profile?.phone_masked),
+    referred_by: safeCrmPeopleText(profile?.referredBy || profile?.referred_by),
+    notes: safeCrmPeopleText(profile?.notes),
+    status: 'active',
+    profile_folder_id: folderId || null,
+    profile_folder_url: folderUrl || null,
+    profile_file_id: fileId || null,
+    profile_file_url: fileUrl || null,
+    profile_synced_at: ds.lastSyncedAt || nowIso,
+    metadata
+  };
+}
+async function sbCrmPeopleMirrorPolicyLensClients(reason) {
+  const s = getSB();
+  const ownerEmail = safeCrmPeopleText(getPolicyLensUserEmail()).toLowerCase();
+  if (!s || !ownerEmail) return {
+    ok: false,
+    reason: 'no-session'
+  };
+  try {
+    const [states, settings, tombstones] = await Promise.all([PolicyDB.getAllDriveStates().catch(() => []), dbGetAll('settings').catch(() => []), getClientTrashTombstones().catch(() => [])]);
+    const settingsByKey = new Map((settings || []).map(rec => [rec.key, rec.value]));
+    const now = new Date().toISOString();
+    const rows = [];
+    for (const ds of states || []) {
+      if (!ds?.clientId) continue;
+      if (String(ds.clientId).startsWith('crmlens:') || ds.source === 'crmlens') continue;
+      if ((tombstones || []).some(t => clientTrashTombstoneMatches(t, ds))) continue;
+      const rawProfile = settingsByKey.get('clientProfile_' + ds.clientId) || {};
+      const profile = rawProfile && typeof rawProfile === 'object' ? rawProfile : {};
+      const fallbackName = settingsByKey.get('clientName_' + ds.clientId) || ds.clientName || '';
+      const row = crmPeopleRowFromPolicyLensClient(ds, {
+        name: fallbackName,
+        ...(profile || {})
+      }, ownerEmail, now);
+      if (row) rows.push(row);
+    }
+    if (!rows.length) return {
+      ok: true,
+      mirrored: 0
+    };
+    const ids = rows.map(r => r.client_id);
+    const {
+      data: existingRows,
+      error: readErr
+    } = await s.from('crm_people').select('client_id,metadata,notes,referred_by,phone').eq('owner_email', ownerEmail).in('client_id', ids);
+    if (readErr) console.warn('[CRMLensSync] crm_people pre-read failed:', readErr.message);
+    const existingById = new Map((existingRows || []).map(row => [row.client_id, row]));
+    const mergedRows = rows.map(row => {
+      const existing = existingById.get(row.client_id);
+      if (!existing) return row;
+      const oldMeta = existing.metadata && typeof existing.metadata === 'object' ? existing.metadata : {};
+      const oldClient = oldMeta.appscriptClient && typeof oldMeta.appscriptClient === 'object' ? oldMeta.appscriptClient : {};
+      return {
+        ...row,
+        phone: row.phone || existing.phone || '',
+        referred_by: row.referred_by || existing.referred_by || '',
+        notes: existing.notes || row.notes || '',
+        metadata: {
+          ...oldMeta,
+          ...row.metadata,
+          appscriptClient: {
+            ...oldClient,
+            ...row.metadata.appscriptClient,
+            notes: oldClient.notes || row.metadata.appscriptClient.notes || ''
+          }
+        }
+      };
+    });
+    const {
+      error
+    } = await s.from('crm_people').upsert(mergedRows, {
+      onConflict: 'owner_email,client_id'
+    });
+    if (error) {
+      console.warn('[CRMLensSync] crm_people mirror failed:', error.message);
+      return {
+        ok: false,
+        reason: 'upsert-failed'
+      };
+    }
+    console.log('[CRMLensSync] mirrored', mergedRows.length, 'PolicyLens clients to crm_people', reason || '');
+    return {
+      ok: true,
+      mirrored: mergedRows.length
+    };
+  } catch (e) {
+    console.warn('[CRMLensSync] crm_people mirror exception:', e?.message || e);
+    return {
+      ok: false,
+      reason: 'exception'
+    };
+  }
+}
+async function sbCrmPeopleMarkPolicyLensClientDeleted(clientId, ds, reason) {
+  const s = getSB();
+  const ownerEmail = safeCrmPeopleText(getPolicyLensUserEmail()).toLowerCase();
+  const crmClientId = crmPeopleIdForPolicyLensClient(clientId);
+  if (!s || !ownerEmail || !crmClientId) return false;
+  const now = new Date().toISOString();
+  const name = cleanPersonDisplayName(ds?.clientName || '') || 'PolicyLens client';
+  const {
+    data: existing
+  } = await s.from('crm_people').select('metadata,status').eq('owner_email', ownerEmail).eq('client_id', crmClientId).maybeSingle();
+  const oldMeta = existing?.metadata && typeof existing.metadata === 'object' ? existing.metadata : {};
+  const oldClient = oldMeta.appscriptClient && typeof oldMeta.appscriptClient === 'object' ? oldMeta.appscriptClient : {};
+  const metadata = {
+    ...oldMeta,
+    policylens_client_id: clientId,
+    policylens_client_name: name,
+    policylens_deleted_at: now,
+    policylens_deleted_reason: reason || 'policylens-delete',
+    appscriptClient: {
+      ...oldClient,
+      id: crmClientId,
+      registered_name: oldClient.registered_name || name,
+      preferred_name: oldClient.preferred_name || name,
+      status: 'deleted',
+      previous_status: oldClient.status && oldClient.status !== 'deleted' ? oldClient.status : 'client',
+      deleted_at: now,
+      source: 'policylens',
+      policylens_client_id: clientId,
+      policylens_client_name: name,
+      policylens_synced_at: now
+    }
+  };
+  const {
+    error
+  } = await s.from('crm_people').upsert({
+    owner_email: ownerEmail,
+    client_id: crmClientId,
+    name,
+    section: 'Clients',
+    source: 'policylens',
+    status: 'deleted',
+    profile_folder_id: ds?.folderId || null,
+    profile_file_id: isValidDriveFileId(ds?.fileId) ? ds.fileId : null,
+    profile_synced_at: now,
+    metadata
+  }, {
+    onConflict: 'owner_email,client_id'
+  });
+  if (error) {
+    console.warn('[CRMLensSync] crm_people delete tombstone failed:', error.message);
+    return false;
+  }
+  return true;
+}
+function scheduleCrmPeopleClientMirror(reason, delay = 1800) {
+  clearTimeout(_crmPeopleMirrorTimer);
+  _crmPeopleMirrorTimer = setTimeout(() => {
+    _crmPeopleMirrorTimer = null;
+    sbCrmPeopleMirrorPolicyLensClients(reason || 'scheduled').catch(e => {
+      console.warn('[CRMLensSync] scheduled client mirror failed:', e?.message || e);
+    });
+  }, delay);
+}
+
 // ── App settings sync ──
 // Whitelist of setting keys that get synced across devices.
 // Add new ones here as needed. Excluded by design:
@@ -22937,12 +23184,26 @@ function App() {
           console.log('[Repo] Using local IndexedDB during startup');
         }
       }, 1200);
+      runAfterFirstPaint(() => {
+        sbCrmPeopleMirrorPolicyLensClients('startup').catch(e => console.warn('[CRMLensSync] startup client mirror failed:', e?.message || e));
+      }, 1800);
       setLoading(false);
       // rc1.99: prune old extraction-log rows (>90 days) on startup.
       // Fire-and-forget — never block UI on log housekeeping.
       pruneExtractionLog().catch(() => {});
     })();
   }, []);
+  useEffect(() => {
+    if (loading) return;
+    const h = () => scheduleCrmPeopleClientMirror('clients-changed', 1500);
+    window.addEventListener('policylens-clients-changed', h);
+    scheduleCrmPeopleClientMirror('app-ready', 1200);
+    return () => {
+      window.removeEventListener('policylens-clients-changed', h);
+      clearTimeout(_crmPeopleMirrorTimer);
+      _crmPeopleMirrorTimer = null;
+    };
+  }, [loading]);
 
   // ── v2.2.0-alpha: Drive migration prompt condition check ──
   // Fires after initial IDB load completes AND whenever Drive status changes.
@@ -24507,6 +24768,9 @@ function App() {
     await dbDel('settings', 'clientProfile_' + sourceClientId).catch(() => {});
     await dbDel('settings', 'clientName_' + sourceClientId).catch(() => {});
     await PolicyDB.deleteSyncOutbox(syncOutboxId(sourceClientId)).catch(() => {});
+    sbCrmPeopleMarkPolicyLensClientDeleted(sourceClientId, sourceState || {
+      clientName: sourceName
+    }, 'client-merge').catch(e => console.warn('[CRMLensSync] merged-source mirror failed:', e?.message || e));
     await recordActivity(targetClientId, {
       type: 'client-merge',
       label: 'Merged client',
@@ -24621,6 +24885,9 @@ function App() {
       // the old name. Helper exits cheaply when nothing matches.
       await recalculatePolicyPersonNamesForClient(cid, previousName, n, 'client-name-save').catch(() => {});
       await scheduleDriveWriteForClient(cid, 'client-name-save', 1000);
+      try {
+        window.dispatchEvent(new Event('policylens-clients-changed'));
+      } catch (_) {}
     }
   };
   const saveProfile = async p => {
@@ -24731,6 +24998,9 @@ function App() {
     if (profileClientId && enriched.name && previousProfileName && enriched.name !== previousProfileName) {
       await recalculatePolicyPersonNamesForClient(profileClientId, previousProfileName, enriched.name, 'profile-name-sync').catch(() => {});
     }
+    try {
+      window.dispatchEvent(new Event('policylens-clients-changed'));
+    } catch (_) {}
   };
 
   // saveHouseDefaults: persists firm-level planning defaults to IndexedDB and
@@ -24820,6 +25090,7 @@ function App() {
     const ds = (targetClient && typeof targetClient === 'object' ? targetClient : null) || statesBeforeDelete.find(s => s.clientId === targetId) || (targetId === activeClientIdRef.current ? driveState : null);
     if (!ds) return;
     await recordClientTrashTombstone(ds, 'client-destroy').catch(() => {});
+    sbCrmPeopleMarkPolicyLensClientDeleted(targetId, ds, 'client-destroy').catch(e => console.warn('[CRMLensSync] client delete mirror failed:', e?.message || e));
     scheduleDriveClientsManifestSync('client-destroy');
     let clientTrashed = false;
     if (!isDriveLocalOnly() && getDriveStatus() === 'connected' && ds.folderId) {
