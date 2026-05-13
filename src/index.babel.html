@@ -601,9 +601,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.21';
+const APP_VERSION = 'v2.4.0-rc2.22';
 const APP_VERSION_DATE = '2026-05-14';
-const APP_VERSION_NAME = 'Soh-family noise rejection — Insurer Hotlines/CPF + phone/label/DOB filters';
+const APP_VERSION_NAME = 'Header + New client dropdown — was missed in rc2.20 (only ClientsTab got it)';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -26208,6 +26208,22 @@ function Header() {
   const [newClientModalOpen, setNewClientModalOpen] = useState(false);
   const [newClientData, setNewClientData] = useState({allStates:[],allPolicies:[]});
   const saveButtonRef = useRef(null);
+  // rc2.22 — the Header "+ New client" button (visible across all tabs)
+  // was missed in rc2.20 — only the ClientsTab versions got the dropdown.
+  // This Header button is the one most FCs click. Add the same 4-option
+  // dropdown: manual / take photo / choose from gallery / upload doc.
+  const [headerNewClientMenuOpen, setHeaderNewClientMenuOpen] = useState(false);
+  const headerNewClientCamRef = useRef(null);
+  const headerNewClientGalleryRef = useRef(null);
+  const headerNewClientUploadRef = useRef(null);
+  const launchHeaderNewClientScan = (files) => {
+    setHeaderNewClientMenuOpen(false);
+    if (!files || !files.length) return;
+    window._policylensPendingScanFiles = Array.from(files);
+    try { window.dispatchEvent(new CustomEvent('policylens-scan-files-for-new-client', { detail: { files: Array.from(files) } })); } catch (_) {}
+    setTab('policies');
+    try { toast('Scanning… we’ll show the routing modal when extraction completes', 'info', 4500); } catch (_) {}
+  };
 
   // v2.3.0-rc2c.2a: First-launch toast for repurposed buttons
   useEffect(() => {
@@ -26358,25 +26374,68 @@ function Header() {
           display: 'flex', alignItems: 'center',
           gap: 8, flexShrink: 0,
         }}>
-          {/* + New client (ghost pill on desktop, icon-only on mobile) */}
-          {/* v2.4.0-rc1.64: matches Save button — icon-only 32x32 circle on
-              mobile so the row of header chrome stops eating the tab bar. */}
-          <button onClick={() => setNewClientGuardOpen(true)}
-            title="New client"
-            style={{
-              background: 'transparent', color: T.text2,
-              border: '1px solid ' + T.border,
-              height: 32,
-              width: isMobile ? 32 : undefined,
-              padding: isMobile ? 0 : '0 14px',
-              borderRadius: 999, fontSize: isMobile ? 16 : 12.5, fontWeight: 500,
-              cursor: 'pointer', display: 'inline-flex',
-              alignItems: 'center', justifyContent: 'center',
-              gap: 4,
-              fontFamily: T.sansFamily, flexShrink: 0,
-              whiteSpace: 'nowrap',
-              transition: T.motion ? 'all 180ms ease' : 'none',
-            }}>{isMobile ? '+' : '+ New client'}</button>
+          {/* rc2.22 — + New client now opens a dropdown matching the
+              ClientsTab one (rc2.20). Manual / Photo / Gallery / Upload doc. */}
+          <div style={{position:'relative',display:'inline-block'}}>
+            <input ref={headerNewClientCamRef} type="file" accept="image/*" capture="environment" multiple style={{display:'none'}}
+              onChange={e=>{const f=Array.from(e.target.files||[]);e.target.value='';launchHeaderNewClientScan(f);}} />
+            <input ref={headerNewClientGalleryRef} type="file" accept="image/*" multiple style={{display:'none'}}
+              onChange={e=>{const f=Array.from(e.target.files||[]);e.target.value='';launchHeaderNewClientScan(f);}} />
+            <input ref={headerNewClientUploadRef} type="file" accept="image/*,.pdf,.xlsx,.xls,.csv,.doc,.docx,.html,.htm,.txt,.rtf" multiple style={{display:'none'}}
+              onChange={e=>{const f=Array.from(e.target.files||[]);e.target.value='';launchHeaderNewClientScan(f);}} />
+            <button onClick={() => setHeaderNewClientMenuOpen(o => !o)}
+              title="New client"
+              style={{
+                background: 'transparent', color: T.text2,
+                border: '1px solid ' + T.border,
+                height: 32,
+                width: isMobile ? 32 : undefined,
+                padding: isMobile ? 0 : '0 14px',
+                borderRadius: 999, fontSize: isMobile ? 16 : 12.5, fontWeight: 500,
+                cursor: 'pointer', display: 'inline-flex',
+                alignItems: 'center', justifyContent: 'center',
+                gap: 4,
+                fontFamily: T.sansFamily, flexShrink: 0,
+                whiteSpace: 'nowrap',
+                transition: T.motion ? 'all 180ms ease' : 'none',
+              }}>
+              {isMobile ? '+' : '+ New client'}
+              {!isMobile && <span style={{fontSize:8,opacity:0.7,marginLeft:2}}>▾</span>}
+            </button>
+            {headerNewClientMenuOpen && (
+              <>
+                <div onClick={()=>setHeaderNewClientMenuOpen(false)} style={{position:'fixed',inset:0,zIndex:50}} />
+                <div style={{
+                  position:'absolute',top:'calc(100% + 6px)',right:0,zIndex:60,
+                  background:'var(--bg)',border:'1px solid var(--border)',
+                  borderRadius:14,padding:6,minWidth:240,
+                  boxShadow:'0 10px 28px rgba(60,40,20,0.18)'
+                }}>
+                  {[
+                    ['✎','Enter manually','Type a client name and save',()=>{setHeaderNewClientMenuOpen(false); setNewClientGuardOpen(true);}],
+                    ['📷','Take photo','Snap a policy with the camera',()=>{setHeaderNewClientMenuOpen(false); headerNewClientCamRef.current?.click();}],
+                    ['🖼','Choose from gallery','Pick existing images from your device',()=>{setHeaderNewClientMenuOpen(false); headerNewClientGalleryRef.current?.click();}],
+                    ['📄','Upload document','PDFs, Excel, Word, images…',()=>{setHeaderNewClientMenuOpen(false); headerNewClientUploadRef.current?.click();}]
+                  ].map(([icon,title,sub,onClick]) => (
+                    <button key={title} onClick={onClick} style={{
+                      width:'100%',display:'flex',alignItems:'center',gap:12,
+                      padding:'10px 12px',background:'transparent',border:'none',
+                      borderRadius:8,cursor:'pointer',textAlign:'left',
+                      transition:'background 120ms ease'
+                    }}
+                    onMouseEnter={e=>e.currentTarget.style.background='var(--bg2)'}
+                    onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                      <span style={{fontSize:18,flexShrink:0}}>{icon}</span>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:13,fontWeight:600,color:'var(--text)'}}>{title}</div>
+                        <div style={{fontSize:11,color:'var(--text3)',marginTop:1}}>{sub}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
 
           {/* Save checkpoint (ghost pill, opens CheckpointSavePopover) */}
           {/* v2.4.0-rc1.63: button copy was just "⌘ Save" which was vague —
