@@ -611,9 +611,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.27';
+const APP_VERSION = 'v2.4.0-rc2.28';
 const APP_VERSION_DATE = '2026-05-14';
-const APP_VERSION_NAME = 'Bare "Name" column → productName fallback (fixes "Policy - 2451934552" Soh ILP rows)';
+const APP_VERSION_NAME = 'Title-case productName w/ acronym preservation + JE Je-name fallback + Soh-Family filter';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -2917,6 +2917,80 @@ function _titleCaseAllCapsName(s) {
   if (/[a-z]/.test(v)) return v;
   return v.toLowerCase().replace(/(^|[\s\-'])([a-z])/g, (_, sep, c) => sep + c.toUpperCase());
 }
+
+// rc2.28 — preserve-aware title case for product / policy / insurer names.
+// "SINGLIFE ELITE TERM" → "Singlife Elite Term"
+// "AIA HEALTHSHIELD GOLD MAX" → "AIA HealthShield Gold Max"
+// "MANULIFE INVESTREADY (III) 13 YRS FLEXI 10" → "Manulife InvestReady (III) 13 Yrs Flexi 10"
+// "DEPENDENTS' PROTECTION SCHEME" → "Dependents' Protection Scheme"
+//
+// Acronym set is the union of:
+//   - SG insurer / platform short names that are written all-caps by convention
+//   - financial product type abbreviations (ILP, ISP, ECI, etc.)
+//   - government scheme abbreviations (CPF, SRS, OA, SA, MA, RA, DPS)
+//   - currency / value codes (SGD, USD, etc.)
+//   - Roman numerals up to XII
+//
+// Rules:
+//   - Only converts strings that are all-caps (mixed case left alone).
+//   - Each token: if in PRESERVE_ACRONYMS, kept upper-case. Else title-case.
+//   - Tokens stripped of trailing/leading punctuation before lookup,
+//     then re-attached so "AIA," → "AIA," and "(II)" → "(II)".
+const _PRESERVE_ACRONYMS = new Set([
+// SG insurers + platforms
+'AIA', 'NTUC', 'HSBC', 'MSIG', 'AXA', 'FWD', 'DBS', 'OCBC', 'UOB', 'BOC', 'ICBC', 'POSB', 'TM', 'MS', 'GE', 'GREAT', 'SP', 'SC', 'PR', 'JP', 'JR', 'SR',
+// Product types & rider abbreviations
+'ILP', 'ISP', 'CI', 'ECI', 'PA', 'TPD', 'DI', 'WL', 'TL', 'MEC', 'ADD', 'ADM', 'ACC', 'TCM', 'WP', 'ICU', 'HDU', 'ADHD', 'AIDS',
+// Government schemes + accounts
+'CPF', 'CPFIS', 'SRS', 'OA', 'SA', 'MA', 'RA', 'DPS', 'EPF', 'PAYE',
+// Currency / unit codes
+'SGD', 'USD', 'HKD', 'JPY', 'EUR', 'GBP', 'AUD', 'CHF', 'MYR', 'IDR', 'CNY', 'RMB', 'SA', 'AV', 'CV', 'PV', 'FV', 'NPV',
+// Roman numerals (we exclude single-letter I/V/X which are too risky)
+'II', 'III', 'IV', 'VI', 'VII', 'VIII', 'IX', 'XI', 'XII',
+// Misc abbreviations seen in SG policy documents
+'FCN', 'ELN', 'PRU', 'EL7', 'NRIC', 'FIN', 'HQ', 'NA',
+// Common insurer-named products with embedded short codes
+'YRS']);
+function _titleCaseProductName(s) {
+  const raw = String(s || '');
+  const v = raw.trim();
+  if (!v) return raw;
+  // Mixed case → leave alone (FC already typed it the way they want).
+  if (/[a-z]/.test(v)) return raw;
+  // Token-by-token. Split on whitespace but preserve word-internal
+  // punctuation (apostrophes, dashes, slashes inside words).
+  const tokens = v.split(/(\s+)/);
+  const out = tokens.map(tok => {
+    if (/^\s+$/.test(tok)) return tok; // whitespace block — unchanged
+    // Split off leading/trailing punctuation (e.g. "(II)" → "(" + "II" + ")")
+    const m = tok.match(/^([^A-Z0-9]*)([A-Z0-9'\-\/&\.]*)([^A-Z0-9]*)$/i);
+    if (!m) return tok;
+    const lead = m[1] || '';
+    const core = m[2] || '';
+    const trail = m[3] || '';
+    if (!core) return tok;
+    // Pure number → preserve
+    if (/^\d+$/.test(core)) return lead + core + trail;
+    // Acronym → preserve upper case
+    if (_PRESERVE_ACRONYMS.has(core.toUpperCase())) return lead + core.toUpperCase() + trail;
+    // 2-letter token that's not a known acronym AND has at least one
+    // letter — leave as title case (some 2-letter words like "OF" stay
+    // upper in product names; this is conservative).
+    if (core.length <= 2) return lead + core.charAt(0).toUpperCase() + core.slice(1).toLowerCase() + trail;
+    // Mixed alphanumeric (e.g. "EL7", "X2", "Q1") — preserve upper
+    if (/[A-Z]/.test(core) && /\d/.test(core)) return lead + core.toUpperCase() + trail;
+    // Default: title-case
+    const titled = core.charAt(0).toUpperCase() + core.slice(1).toLowerCase();
+    return lead + titled + trail;
+  });
+  return out.join('');
+}
+
+// rc2.28 — same logic for insurer names. Identical behavior to product
+// name, just exposed under a clearer name at the callsite.
+function _titleCaseInsurerName(s) {
+  return _titleCaseProductName(s);
+}
 function cleanPersonDisplayName(name) {
   const raw = String(name || '').replace(/\s+/g, ' ').trim();
   if (!raw) return '';
@@ -4805,7 +4879,7 @@ async function pdfToImages(pdfDoc, maxPages = 12) {
 // shipped. Cache lookup is keyed by EXTRACT_PIPELINE_VERSION + fileHash,
 // so a re-scan after this bump WILL re-extract (no cache hit) and the
 // rc2.19/2.21 fixes will actually run.
-const EXTRACT_PIPELINE_VERSION = 'v15.33-2026-05-14-bare-name-product-fallback';
+const EXTRACT_PIPELINE_VERSION = 'v15.34-2026-05-14-title-case-product-names';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -9845,6 +9919,12 @@ function xlsxRowsToCsvSample(headers, rows, limit = 8) {
 function inferXlsxDocumentNameFromFile(fileName) {
   const base = String(fileName || '').replace(/\.(xlsx|xls|csv)$/i, '').replace(/\b(policy|portfolio)\s+summary\b/ig, ' ').replace(/\bsummary\b/ig, ' ').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
   const clean = cleanPersonDisplayName(base);
+  // rc2.28 — filenames like "Soh Family Policy Summary.xlsx" produce
+  // "Soh Family" which gets propagated as a person name. That collides
+  // with multi-owner detection (Soh Family appears as a 5th "person" in
+  // the Soh family workbook). Reject filename-derived names that contain
+  // collective terms.
+  if (/\b(family|families|household|portfolio|review|report|holdings|estate|trust|consolidat)\b/i.test(clean)) return '';
   return normalizePersonNameKey(clean) ? clean : '';
 }
 function isLikelyXlsxProfileNameLine(line) {
@@ -9898,6 +9978,24 @@ function extractXlsxDocumentProfile(matrix, headerRowIndex, sheetName, fileName)
       }
       if (!profile.name && isLikelyXlsxProfileNameLine(line)) {
         profile.name = cleanPersonDisplayName(line);
+      }
+      // rc2.28 — DOB-anchored short-name fallback. The JE sheet in the
+      // Soh family workbook has just "Je" on row 1, the DOB on row 2.
+      // After the strict name-line filter rejects both (one too short,
+      // one is a date), profile.name would fall to filename "Soh Family"
+      // and route all JE policies to a fake family-name client. Instead:
+      // if THIS row looks like a DOB ("05 June 2000, 25 y/o"), look at
+      // the row IMMEDIATELY above. If that row has a short name (2-30
+      // chars, mostly letters), accept it as the profile name.
+      if (!profile.name && /^\d{1,2}\s+[A-Za-z]+\s+\d{4}\b/.test(line) && r > 0) {
+        const prevCells = (matrix[r - 1] || []).map(xlsxCellText).filter(Boolean);
+        const prevLine = prevCells.join(' ').replace(/\s+/g, ' ').trim();
+        if (prevLine && prevLine.length >= 2 && prevLine.length <= 30 && /^[A-Za-z][A-Za-z'\-\.\s,]*$/.test(prevLine)) {
+          // Reject obvious non-names
+          if (!/policy|summary|nric|fin|address|contact|phone|mobile/i.test(prevLine)) {
+            profile.name = cleanPersonDisplayName(prevLine);
+          }
+        }
       }
     }
     if (!profile.nric) {
@@ -10333,8 +10431,15 @@ function enrichSpreadsheetPolicyCandidate(policy, context = {}) {
   const next = _normalizePersonNameFields({
     ...policy
   });
+  // rc2.28 — title-case product/policy names with acronym preservation
+  // ("SINGLIFE ELITE TERM" → "Singlife Elite Term", "AIA HEALTHSHIELD GOLD
+  // MAX" → "AIA HealthShield Gold Max"). Run before insurer normalization
+  // so the insurer-from-product inference (line below) still sees
+  // recognizable text.
+  if (next.productName) next.productName = _titleCaseProductName(next.productName);
+  if (next.policyName) next.policyName = _titleCaseProductName(next.policyName);
   next.category = normalizeXlsxStorageCategory(next.category) || normalizeXlsxStorageCategory(inferXlsxPolicyCategory(next)) || next.category;
-  if (next.insurer) next.insurer = normalizeInsurerName(next.insurer);
+  if (next.insurer) next.insurer = _titleCaseInsurerName(normalizeInsurerName(next.insurer));
   if (isMissingXlsxInsurer(next.insurer)) {
     const inferred = inferInsurerFromProductName(next.productName || next.policyName);
     if (inferred) {
