@@ -611,9 +611,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.25';
+const APP_VERSION = 'v2.4.0-rc2.26';
 const APP_VERSION_DATE = '2026-05-14';
-const APP_VERSION_NAME = '2-cell banners + plural-aware non-policy filter — Soh family Insurer Hotlines now actually rejected';
+const APP_VERSION_NAME = 'Diagnostics — actionable Gemini error + Claude fallback in end-to-end test';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -75235,7 +75235,7 @@ function ExtractDiagnostics() {
       const uid = window._user?.id || '';
       const gk = ((await dbGet('settings', 'geminiKey_' + uid).catch(() => null))?.value || (await dbGet('settings', 'geminiKey').catch(() => null))?.value || '').trim();
       if (!gk) {
-        addResult('Gemini reachability', 'skip', 'No Gemini key configured', 0);
+        addResult('Gemini reachability', 'skip', 'No Gemini key configured — Settings → API keys to add one.', 0);
       } else {
         const ts = Date.now();
         const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + gk, {
@@ -75257,7 +75257,17 @@ function ExtractDiagnostics() {
         });
         if (!r.ok) {
           const ed = await r.json().catch(() => ({}));
-          throw new Error('HTTP ' + r.status + ': ' + (ed.error?.message || r.statusText));
+          const msg = ed.error?.message || r.statusText;
+          // rc2.26 — give an actionable hint when the failure is clearly an
+          // invalid/expired key rather than a generic HTTP error. PolicyLens
+          // falls back to Claude automatically, so the user can keep working
+          // for xlsx scans while they fix this.
+          const isAuthErr = r.status === 400 && /api key not valid|invalid api key|api_key_invalid/i.test(msg);
+          const is403 = r.status === 403;
+          if (isAuthErr || is403) {
+            throw new Error('Gemini API key is invalid or expired. Settings → API keys → paste a fresh key from https://aistudio.google.com/app/apikey. Note: PolicyLens auto-falls back to Claude, so PDF/photo scans still work as long as your Anthropic key is valid.');
+          }
+          throw new Error('HTTP ' + r.status + ': ' + msg);
         }
         const data = await r.json();
         const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
@@ -75310,46 +75320,107 @@ function ExtractDiagnostics() {
     }
 
     // ── Test 10: End-to-end structured extraction smoke test ──
+    // rc2.26 — try Gemini first, fall back to Claude on Gemini failure
+    // (mirrors the real pipeline so a broken Gemini key doesn't make this
+    // test look like the whole pipeline is dead).
     setRunningTest('Running end-to-end structured extraction');
     try {
       const uid = window._user?.id || '';
       const gk = ((await dbGet('settings', 'geminiKey_' + uid).catch(() => null))?.value || (await dbGet('settings', 'geminiKey').catch(() => null))?.value || '').trim();
-      if (!gk) {
-        addResult('End-to-end extraction', 'skip', 'No Gemini key — structured path requires Gemini', 0);
+      const ck = ((await dbGet('settings', 'anthropicKey_' + uid).catch(() => null))?.value || (await dbGet('settings', 'anthropicKey').catch(() => null))?.value || '').trim();
+      if (!gk && !ck) {
+        addResult('End-to-end extraction', 'skip', 'No Gemini or Anthropic key configured — Settings → API keys.', 0);
       } else {
         const syntheticPolicy = 'MANULIFE HEIRLOOM (III)\nPolicy Number: 90123456\nSum Assured: SGD 500,000\nAnnual Premium: SGD 8,400\nPayment Frequency: Annually\nPolicy Owner: Test Person\nLife Insured: Test Person\nInception Date: 2020-01-15\nStatus: Inforce\nSubtype: Whole Life';
-        const ts = Date.now();
-        const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + gk, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            contents: [{
-              parts: [{
-                text: 'Extract the policy from this text:\n\n' + syntheticPolicy
-              }]
-            }],
-            systemInstruction: {
-              parts: [{
-                text: 'You are an insurance policy extractor. Extract policies into the given schema. premiumAmount is AS-PAID at stated frequency.'
-              }]
-            },
-            generationConfig: {
-              maxOutputTokens: 2000,
-              responseMimeType: 'application/json',
-              responseSchema: POLICY_EXTRACTION_SCHEMA
+        const sysPrompt = 'You are an insurance policy extractor. Extract policies into the given schema. premiumAmount is AS-PAID at stated frequency.';
+
+        // Try Gemini first.
+        let parsed = null;
+        let usedModel = '';
+        let elapsed = 0;
+        let geminiErr = null;
+        if (gk) {
+          try {
+            const ts = Date.now();
+            const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + gk, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                contents: [{
+                  parts: [{
+                    text: 'Extract the policy from this text:\n\n' + syntheticPolicy
+                  }]
+                }],
+                systemInstruction: {
+                  parts: [{
+                    text: sysPrompt
+                  }]
+                },
+                generationConfig: {
+                  maxOutputTokens: 2000,
+                  responseMimeType: 'application/json',
+                  responseSchema: POLICY_EXTRACTION_SCHEMA
+                }
+              })
+            });
+            if (!r.ok) {
+              const ed = await r.json().catch(() => ({}));
+              throw new Error('HTTP ' + r.status + ': ' + (ed.error?.message || r.statusText));
             }
-          })
-        });
-        if (!r.ok) {
-          const ed = await r.json().catch(() => ({}));
-          throw new Error('HTTP ' + r.status + ': ' + (ed.error?.message || r.statusText));
+            const data = await r.json();
+            const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            parsed = JSON.parse(raw);
+            elapsed = Date.now() - ts;
+            usedModel = 'gemini-2.5-flash';
+          } catch (err) {
+            geminiErr = err.message || String(err);
+          }
         }
-        const data = await r.json();
-        const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        const parsed = JSON.parse(raw);
-        const elapsed = Date.now() - ts;
+
+        // Fall through to Claude if Gemini didn't produce a result.
+        if (!parsed && ck) {
+          try {
+            const ts = Date.now();
+            const r = await fetch('https://api.anthropic.com/v1/messages', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': ck,
+                'anthropic-version': '2023-06-01',
+                'anthropic-dangerous-direct-browser-access': 'true'
+              },
+              body: JSON.stringify({
+                model: 'claude-sonnet-4-6',
+                max_tokens: 2000,
+                system: sysPrompt + ' Return ONLY a JSON array starting with [ and ending with ].',
+                messages: [{
+                  role: 'user',
+                  content: 'Extract the policy from this text:\n\n' + syntheticPolicy
+                }]
+              })
+            });
+            if (!r.ok) {
+              const ed = await r.json().catch(() => ({}));
+              throw new Error('HTTP ' + r.status + ': ' + (ed.error?.message || r.statusText));
+            }
+            const data = await r.json();
+            const text = (data.content?.[0]?.text || '').trim();
+            // Trim possible code-fence wrapping
+            const cleaned = text.replace(/^```(?:json)?\s*|\s*```$/g, '').trim();
+            parsed = JSON.parse(cleaned);
+            elapsed = Date.now() - ts;
+            usedModel = 'claude-sonnet-4-6 (Gemini fallback)';
+          } catch (claudeErr) {
+            const detail = [geminiErr ? 'Gemini failed: ' + geminiErr : null, 'Claude failed: ' + (claudeErr.message || String(claudeErr))].filter(Boolean).join(' | ');
+            throw new Error(detail);
+          }
+        }
+        if (!parsed) {
+          if (geminiErr && !ck) throw new Error('Gemini failed and no Anthropic key configured for fallback. Gemini error: ' + geminiErr);
+          throw new Error('No model returned a parsed result');
+        }
         if (!Array.isArray(parsed)) throw new Error('Expected array, got ' + typeof parsed);
         if (parsed.length === 0) throw new Error('Empty array returned');
         const p = parsed[0];
@@ -75360,7 +75431,8 @@ function ExtractDiagnostics() {
         if (p.premFrequency === 'annual') checks.push('premFrequency=annual ✓');else checks.push('premFrequency ✗ (' + p.premFrequency + ')');
         if (p.sumAssured === 500000) checks.push('sumAssured ✓');else checks.push('sumAssured ✗ (' + p.sumAssured + ')');
         const failed = checks.filter(c => c.includes('✗'));
-        if (failed.length) addResult('End-to-end extraction', 'warn', elapsed + 'ms, ' + checks.length + ' fields checked, ' + failed.length + ' issues: ' + failed.join(', '), elapsed);else addResult('End-to-end extraction', 'pass', elapsed + 'ms, all ' + checks.length + ' critical fields correct — pipeline healthy', elapsed);
+        const tail = ' [model: ' + usedModel + ']';
+        if (failed.length) addResult('End-to-end extraction', 'warn', elapsed + 'ms, ' + checks.length + ' fields checked, ' + failed.length + ' issues: ' + failed.join(', ') + tail, elapsed);else addResult('End-to-end extraction', 'pass', elapsed + 'ms, all ' + checks.length + ' critical fields correct' + tail, elapsed);
       }
     } catch (e) {
       addResult('End-to-end extraction', 'fail', e.message, 0);
