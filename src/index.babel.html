@@ -601,9 +601,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.19';
+const APP_VERSION = 'v2.4.0-rc2.20';
 const APP_VERSION_DATE = '2026-05-14';
-const APP_VERSION_NAME = 'Critical live-test fixes — tierDefinitions + multi-owner xlsx routing + $-as-policy-number filter';
+const APP_VERSION_NAME = '+ New Client dropdown — manual / photo / gallery / upload doc';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -24867,6 +24867,27 @@ function ClientsTab() {
   // v2.4.0-rc1.52: family-view merge modal — source client + open flag
   const [familyMergeOpen, setFamilyMergeOpen] = useState(false);
   const [familyMergeSource, setFamilyMergeSource] = useState(null);
+  // rc2.20 — "+ New client" dropdown: lets the FC kick off a new client
+  // either manually (existing flow) OR by scanning a document/gallery/photo,
+  // which routes the extraction through the Policies tab pipeline and
+  // surfaces the "Create new owner/client" routing modal.
+  const [newClientMenuOpen, setNewClientMenuOpen] = useState(false);
+  const newClientCamRef = useRef(null);
+  const newClientGalleryRef = useRef(null);
+  const newClientUploadRef = useRef(null);
+  // Helper: hand files off to the Policies pipeline. The active client is
+  // intentionally cleared so the routing modal defaults to "create new owner".
+  const launchNewClientScan = (files) => {
+    setNewClientMenuOpen(false);
+    if (!files || !files.length) return;
+    // Dispatch a custom event with the FileList — Policies component listens
+    // and feeds into stagePhotos(). We also set a window flag in case the
+    // Policies component isn't mounted yet (cold tab switch).
+    window._policylensPendingScanFiles = Array.from(files);
+    try { window.dispatchEvent(new CustomEvent('policylens-scan-files-for-new-client', { detail: { files: Array.from(files) } })); } catch (_) {}
+    setTab('policies');
+    try { toast('Scanning… we’ll show the routing modal when extraction completes', 'info', 4500); } catch (_) {}
+  };
   // rc2.17 — CommandPalette dispatches policylens-open-new-client to
   // request the New-Client modal. Previously dispatched but never
   // listened to. Respects the same guard as the in-tab + button: if
@@ -25524,11 +25545,56 @@ function ClientsTab() {
               ⟲ Reconcile
             </button>
           )}
-          <button onClick={() => activeClientId ? setClientsGuardOpen(true) : setShowNewClient(true)}
-            title="New Client"
-            style={{background:'color-mix(in oklch, var(--gold) 21%, transparent)',color:'var(--gold)',border:'1px solid color-mix(in oklch, var(--gold) 56%, transparent)',borderRadius:isMobile?'50%':8,width:isMobile?32:'auto',height:isMobile?32:'auto',padding:isMobile?0:'6px 14px',fontSize:isMobile?18:11,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,lineHeight:1}}>
-            {isMobile ? '+' : '+ New Client'}
-          </button>
+          {/* rc2.20 — + New Client now opens a dropdown: manual entry,
+              take photo, choose from gallery, or upload a document. The
+              scan paths route through the Policies queue + routing modal. */}
+          <div style={{position:'relative',flexShrink:0}}>
+            <input ref={newClientCamRef} type="file" accept="image/*" capture="environment" multiple style={{display:'none'}}
+              onChange={e=>{const f=Array.from(e.target.files||[]);e.target.value='';launchNewClientScan(f);}} />
+            <input ref={newClientGalleryRef} type="file" accept="image/*" multiple style={{display:'none'}}
+              onChange={e=>{const f=Array.from(e.target.files||[]);e.target.value='';launchNewClientScan(f);}} />
+            <input ref={newClientUploadRef} type="file" accept="image/*,.pdf,.xlsx,.xls,.csv,.doc,.docx,.html,.htm,.txt,.rtf" multiple style={{display:'none'}}
+              onChange={e=>{const f=Array.from(e.target.files||[]);e.target.value='';launchNewClientScan(f);}} />
+            <button onClick={() => setNewClientMenuOpen(o => !o)}
+              title="New Client"
+              style={{background:'color-mix(in oklch, var(--gold) 21%, transparent)',color:'var(--gold)',border:'1px solid color-mix(in oklch, var(--gold) 56%, transparent)',borderRadius:isMobile?'50%':8,width:isMobile?32:'auto',height:isMobile?32:'auto',padding:isMobile?0:'6px 14px',fontSize:isMobile?18:11,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,flexShrink:0,lineHeight:1}}>
+              {isMobile ? '+' : '+ New Client'}
+              {!isMobile && <span style={{fontSize:8,opacity:0.7,marginLeft:2}}>▾</span>}
+            </button>
+            {newClientMenuOpen && (
+              <>
+                <div onClick={()=>setNewClientMenuOpen(false)} style={{position:'fixed',inset:0,zIndex:50}} />
+                <div style={{
+                  position:'absolute',top:'calc(100% + 6px)',right:0,zIndex:60,
+                  background:'var(--bg)',border:'1px solid var(--border)',
+                  borderRadius:14,padding:6,minWidth:240,
+                  boxShadow:'0 10px 28px rgba(60,40,20,0.18)'
+                }}>
+                  {[
+                    ['✎','Enter manually','Type a client name and save',()=>{setNewClientMenuOpen(false); if (activeClientId) setClientsGuardOpen(true); else setShowNewClient(true);}],
+                    ['📷','Take photo','Snap a policy with the camera',()=>{setNewClientMenuOpen(false); newClientCamRef.current?.click();}],
+                    ['🖼','Choose from gallery','Pick existing images from your device',()=>{setNewClientMenuOpen(false); newClientGalleryRef.current?.click();}],
+                    ['📄','Upload document','PDFs, Excel, Word, images…',()=>{setNewClientMenuOpen(false); newClientUploadRef.current?.click();}]
+                  ].map(([icon,title,sub,onClick]) => (
+                    <button key={title} onClick={onClick} style={{
+                      width:'100%',display:'flex',alignItems:'center',gap:12,
+                      padding:'10px 12px',background:'transparent',border:'none',
+                      borderRadius:8,cursor:'pointer',textAlign:'left',
+                      transition:'background 120ms ease'
+                    }}
+                    onMouseEnter={e=>e.currentTarget.style.background='var(--bg2)'}
+                    onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                      <span style={{fontSize:18,flexShrink:0}}>{icon}</span>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:13,fontWeight:600,color:'var(--text)'}}>{title}</div>
+                        <div style={{fontSize:11,color:'var(--text3)',marginTop:1}}>{sub}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
       {/* v2.4.0-rc1.8: Microcopy summary stays inline with the filter pills.
@@ -25605,7 +25671,9 @@ function ClientsTab() {
         <div style={{textAlign:'center',padding:'60px 20px',color:'var(--text3)'}}>
           <div style={{fontSize:40,marginBottom:12}}>👥</div>
           <p style={{fontSize:14,marginBottom:16}}>No clients yet. Create your first client to get started.</p>
-          <button onClick={() => activeClientId ? setClientsGuardOpen(true) : setShowNewClient(true)}
+          {/* rc2.20 — empty-state button also opens the same dropdown
+              so the FC can scan straight into a new client. */}
+          <button onClick={() => setNewClientMenuOpen(true)}
             style={{background:'color-mix(in oklch, var(--gold) 21%, transparent)',color:'var(--gold)',border:'1px solid color-mix(in oklch, var(--gold) 56%, transparent)',borderRadius:8,padding:'8px 20px',fontSize:13,fontWeight:600,cursor:'pointer'}}>
             + New Client
           </button>
@@ -37935,6 +38003,30 @@ function Policies() {
     };
     window.addEventListener('policylens-open-add-policy', onOpen);
     return () => window.removeEventListener('policylens-open-add-policy', onOpen);
+  }, []);
+  // rc2.20 — ClientsTab's "+ New Client" dropdown can hand files to the
+  // Policies scan pipeline. The Policies component owns stagePhotos +
+  // the extraction queue, so the dropdown dispatches a window event
+  // (and sets a window flag for the cold-tab-switch race). When files
+  // arrive, route through stagePhotos → existing queue → routing modal
+  // ("Create new owner/client: <detected name>") closes the loop.
+  useEffect(() => {
+    const consume = (files) => {
+      if (!Array.isArray(files) || files.length === 0) return;
+      try { stagePhotos(files); } catch (err) { console.warn('[Policies] launch-new-client scan failed:', err); }
+    };
+    if (Array.isArray(window._policylensPendingScanFiles) && window._policylensPendingScanFiles.length) {
+      const f = window._policylensPendingScanFiles;
+      window._policylensPendingScanFiles = null;
+      consume(f);
+    }
+    const onScan = (e) => {
+      window._policylensPendingScanFiles = null;
+      const f = e?.detail?.files;
+      if (Array.isArray(f)) consume(f);
+    };
+    window.addEventListener('policylens-scan-files-for-new-client', onScan);
+    return () => window.removeEventListener('policylens-scan-files-for-new-client', onScan);
   }, []);
   // rc2e.32: Row style helper merges the existing selected/default background
   // with a stronger gold tint + left accent when this policy is "freshly
