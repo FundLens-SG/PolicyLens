@@ -601,9 +601,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.22';
+const APP_VERSION = 'v2.4.0-rc2.23';
 const APP_VERSION_DATE = '2026-05-14';
-const APP_VERSION_NAME = 'Header + New client dropdown — was missed in rc2.20 (only ClientsTab got it)';
+const APP_VERSION_NAME = '+ New client dropdown — escape stacking-context clipping (position:fixed + zIndex 9999)';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -24913,9 +24913,23 @@ function ClientsTab() {
   // which routes the extraction through the Policies tab pipeline and
   // surfaces the "Create new owner/client" routing modal.
   const [newClientMenuOpen, setNewClientMenuOpen] = useState(false);
+  // rc2.23 — escape parent stacking-context clipping with position:fixed
+  // + computed coords from the trigger button's bounding rect.
+  const [newClientMenuPos, setNewClientMenuPos] = useState(null);
+  const newClientBtnRef = useRef(null);
   const newClientCamRef = useRef(null);
   const newClientGalleryRef = useRef(null);
   const newClientUploadRef = useRef(null);
+  const openNewClientMenu = () => {
+    const rect = newClientBtnRef.current?.getBoundingClientRect();
+    if (rect) {
+      setNewClientMenuPos({
+        top: rect.bottom + 6,
+        right: Math.max(8, window.innerWidth - rect.right)
+      });
+    }
+    setNewClientMenuOpen(o => !o);
+  };
   // Helper: hand files off to the Policies pipeline. The active client is
   // intentionally cleared so the routing modal defaults to "create new owner".
   const launchNewClientScan = (files) => {
@@ -25596,17 +25610,20 @@ function ClientsTab() {
               onChange={e=>{const f=Array.from(e.target.files||[]);e.target.value='';launchNewClientScan(f);}} />
             <input ref={newClientUploadRef} type="file" accept="image/*,.pdf,.xlsx,.xls,.csv,.doc,.docx,.html,.htm,.txt,.rtf" multiple style={{display:'none'}}
               onChange={e=>{const f=Array.from(e.target.files||[]);e.target.value='';launchNewClientScan(f);}} />
-            <button onClick={() => setNewClientMenuOpen(o => !o)}
+            <button ref={newClientBtnRef} onClick={openNewClientMenu}
               title="New Client"
               style={{background:'color-mix(in oklch, var(--gold) 21%, transparent)',color:'var(--gold)',border:'1px solid color-mix(in oklch, var(--gold) 56%, transparent)',borderRadius:isMobile?'50%':8,width:isMobile?32:'auto',height:isMobile?32:'auto',padding:isMobile?0:'6px 14px',fontSize:isMobile?18:11,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,flexShrink:0,lineHeight:1}}>
               {isMobile ? '+' : '+ New Client'}
               {!isMobile && <span style={{fontSize:8,opacity:0.7,marginLeft:2}}>▾</span>}
             </button>
-            {newClientMenuOpen && (
+            {newClientMenuOpen && newClientMenuPos && (
               <>
-                <div onClick={()=>setNewClientMenuOpen(false)} style={{position:'fixed',inset:0,zIndex:50}} />
+                <div onClick={()=>setNewClientMenuOpen(false)} style={{position:'fixed',inset:0,zIndex:9998}} />
                 <div style={{
-                  position:'absolute',top:'calc(100% + 6px)',right:0,zIndex:60,
+                  position:'fixed',
+                  top: newClientMenuPos.top + 'px',
+                  right: newClientMenuPos.right + 'px',
+                  zIndex:9999,
                   background:'var(--bg)',border:'1px solid var(--border)',
                   borderRadius:14,padding:6,minWidth:240,
                   boxShadow:'0 10px 28px rgba(60,40,20,0.18)'
@@ -25713,8 +25730,15 @@ function ClientsTab() {
           <div style={{fontSize:40,marginBottom:12}}>👥</div>
           <p style={{fontSize:14,marginBottom:16}}>No clients yet. Create your first client to get started.</p>
           {/* rc2.20 — empty-state button also opens the same dropdown
-              so the FC can scan straight into a new client. */}
-          <button onClick={() => setNewClientMenuOpen(true)}
+              so the FC can scan straight into a new client.
+              rc2.23 — uses openNewClientMenu so the position is computed
+              from the trigger button's rect (without this, the dropdown
+              wouldn't render: rc2.23 dropdown requires newClientMenuPos). */}
+          <button onClick={(e)=>{
+            const rect = e.currentTarget.getBoundingClientRect();
+            setNewClientMenuPos({ top: rect.bottom + 6, right: Math.max(8, window.innerWidth - rect.right) });
+            setNewClientMenuOpen(true);
+          }}
             style={{background:'color-mix(in oklch, var(--gold) 21%, transparent)',color:'var(--gold)',border:'1px solid color-mix(in oklch, var(--gold) 56%, transparent)',borderRadius:8,padding:'8px 20px',fontSize:13,fontWeight:600,cursor:'pointer'}}>
             + New Client
           </button>
@@ -26212,10 +26236,26 @@ function Header() {
   // was missed in rc2.20 — only the ClientsTab versions got the dropdown.
   // This Header button is the one most FCs click. Add the same 4-option
   // dropdown: manual / take photo / choose from gallery / upload doc.
+  // rc2.23 — Header dropdown was being clipped by a parent stacking
+  // context / overflow on the header chrome. Switch to position:fixed
+  // with computed coords from the button's bounding rect so the menu
+  // escapes any parent and renders above all content (zIndex 9999).
   const [headerNewClientMenuOpen, setHeaderNewClientMenuOpen] = useState(false);
+  const [headerNewClientMenuPos, setHeaderNewClientMenuPos] = useState(null);
+  const headerNewClientBtnRef = useRef(null);
   const headerNewClientCamRef = useRef(null);
   const headerNewClientGalleryRef = useRef(null);
   const headerNewClientUploadRef = useRef(null);
+  const openHeaderNewClientMenu = () => {
+    const rect = headerNewClientBtnRef.current?.getBoundingClientRect();
+    if (rect) {
+      setHeaderNewClientMenuPos({
+        top: rect.bottom + 6,
+        right: Math.max(8, window.innerWidth - rect.right)
+      });
+    }
+    setHeaderNewClientMenuOpen(o => !o);
+  };
   const launchHeaderNewClientScan = (files) => {
     setHeaderNewClientMenuOpen(false);
     if (!files || !files.length) return;
@@ -26375,7 +26415,9 @@ function Header() {
           gap: 8, flexShrink: 0,
         }}>
           {/* rc2.22 — + New client now opens a dropdown matching the
-              ClientsTab one (rc2.20). Manual / Photo / Gallery / Upload doc. */}
+              ClientsTab one (rc2.20). Manual / Photo / Gallery / Upload doc.
+              rc2.23 — dropdown uses position:fixed with computed coords +
+              zIndex 9999 to escape parent stacking-context clipping. */}
           <div style={{position:'relative',display:'inline-block'}}>
             <input ref={headerNewClientCamRef} type="file" accept="image/*" capture="environment" multiple style={{display:'none'}}
               onChange={e=>{const f=Array.from(e.target.files||[]);e.target.value='';launchHeaderNewClientScan(f);}} />
@@ -26383,7 +26425,7 @@ function Header() {
               onChange={e=>{const f=Array.from(e.target.files||[]);e.target.value='';launchHeaderNewClientScan(f);}} />
             <input ref={headerNewClientUploadRef} type="file" accept="image/*,.pdf,.xlsx,.xls,.csv,.doc,.docx,.html,.htm,.txt,.rtf" multiple style={{display:'none'}}
               onChange={e=>{const f=Array.from(e.target.files||[]);e.target.value='';launchHeaderNewClientScan(f);}} />
-            <button onClick={() => setHeaderNewClientMenuOpen(o => !o)}
+            <button ref={headerNewClientBtnRef} onClick={openHeaderNewClientMenu}
               title="New client"
               style={{
                 background: 'transparent', color: T.text2,
@@ -26402,11 +26444,16 @@ function Header() {
               {isMobile ? '+' : '+ New client'}
               {!isMobile && <span style={{fontSize:8,opacity:0.7,marginLeft:2}}>▾</span>}
             </button>
-            {headerNewClientMenuOpen && (
+            {headerNewClientMenuOpen && headerNewClientMenuPos && (
               <>
-                <div onClick={()=>setHeaderNewClientMenuOpen(false)} style={{position:'fixed',inset:0,zIndex:50}} />
+                {/* Full-viewport click-catcher behind the menu */}
+                <div onClick={()=>setHeaderNewClientMenuOpen(false)} style={{position:'fixed',inset:0,zIndex:9998}} />
+                {/* Fixed-position menu — escapes any parent overflow/stacking */}
                 <div style={{
-                  position:'absolute',top:'calc(100% + 6px)',right:0,zIndex:60,
+                  position:'fixed',
+                  top: headerNewClientMenuPos.top + 'px',
+                  right: headerNewClientMenuPos.right + 'px',
+                  zIndex:9999,
                   background:'var(--bg)',border:'1px solid var(--border)',
                   borderRadius:14,padding:6,minWidth:240,
                   boxShadow:'0 10px 28px rgba(60,40,20,0.18)'
