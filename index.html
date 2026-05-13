@@ -611,9 +611,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.20';
+const APP_VERSION = 'v2.4.0-rc2.21';
 const APP_VERSION_DATE = '2026-05-14';
-const APP_VERSION_NAME = '+ New Client dropdown — manual / photo / gallery / upload doc';
+const APP_VERSION_NAME = 'Soh-family noise rejection — Insurer Hotlines/CPF + phone/label/DOB filters';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -9528,6 +9528,16 @@ function _findSectionLabelAbove(matrix, headerIndex) {
   }
   return null;
 }
+// rc2.21 — section-label blacklist. The Soh family workbook has
+// "Insurer Hotlines" (phone numbers + URLs), "CPF Accounts" (account
+// balances), and similar reference tables that LOOK like policy tables
+// (No.,Name,Number,... columns) but are NOT policies. Each row of
+// "Insurer Hotlines" was being parsed as an Endowment policy with the
+// phone number set as Life Insured. Reject these by section banner.
+const XLSX_NON_POLICY_SECTION = /\b(insurer\s*hotline|customer\s*hotline|hotline|useful\s*contact|insurer\s*contact|insurer\s*phone|cpf\s*account|cpf\s*balance|government\s*scheme|govt\s*scheme|retirement\s*sum|portal|contact\s*detail|emergency\s*number|advisor\s*detail)\b/i;
+function isXlsxNonPolicySection(label) {
+  return XLSX_NON_POLICY_SECTION.test(String(label || ''));
+}
 function findAllXlsxPolicyHeaderRows(matrix) {
   const limit = Math.min(matrix.length, 200);
   const headers = [];
@@ -9552,6 +9562,10 @@ function findAllXlsxPolicyHeaderRows(matrix) {
     }
     if (!kind) continue;
     const section = _findSectionLabelAbove(matrix, i);
+    // rc2.21 — skip non-policy sections (hotlines, CPF, etc).
+    if (section && isXlsxNonPolicySection(section.label)) {
+      continue;
+    }
     // For an FD-detected header, require a cash-leaning section banner
     // OR an explicit bank-name column to avoid mis-firing on tables
     // that happen to share some keywords. The bank-name keyword is
@@ -9745,6 +9759,12 @@ function isLikelyXlsxProfileNameLine(line) {
   if (!s || s.length < 4) return false;
   const lower = s.toLowerCase();
   if (/\b(policy|portfolio)\s+summary\b|\b(summary|nric|fin|address|contact|phone|mobile|dob|d\.o\.b|date\s+of\s+birth|premium|total|amount|policy\s+no|policy\s+name)\b/.test(lower)) return false;
+  // rc2.21 — reject lines that look like a DOB banner ("05 June 2000, 25 y/o")
+  // or an age/age-band string. JE sheet in the Soh family xlsx has just "Je"
+  // on row 1 and the DOB on row 2 — without this guard the DOB row leaked
+  // through as the profile.name.
+  if (/^\d{1,2}\s+[A-Za-z]+\s+\d{4}\b/.test(s)) return false;
+  if (/\b\d+\s*y\/?o\b/i.test(s)) return false;
   if (!/[a-z]/i.test(s)) return false;
   const key = normalizePersonNameKey(s);
   if (!key) return false;
@@ -10078,10 +10098,30 @@ function isSpreadsheetNonPolicyRow(policy) {
   const pnLooksLikeMoney = /^[\$£€]\s*[\d,]+(\.\d+)?$/.test(pn);
   const pnLooksLikePct = /\d+(\.\d+)?\s*%/.test(pn);
   const pnLooksLikeParen = /^\(.+\)$/.test(pn);
-  if ((pnLooksLikeMoney || pnLooksLikePct || pnLooksLikeParen) && !product) {
+  // rc2.21 — SG phone number patterns (Insurer Hotlines rows leaked).
+  //   "6833 8188"   — 8-digit local SG number with space
+  //   "1800 248 8000" — toll-free SG hotline
+  //   "+65 6833 8188" — international format
+  const pnLooksLikePhone = /^(?:\+?\d{1,3}\s*)?(?:1800|800|6\d{3}|9\d{3}|8\d{3})\s+\d{3,4}(?:\s+\d{3,4})?$/.test(pn);
+  if ((pnLooksLikeMoney || pnLooksLikePct || pnLooksLikeParen || pnLooksLikePhone) && !product) {
     return true;
   }
-  const hasRealPolicyNumber = normalizePolicyKey(pn).length >= 4 && !/^(year|age|date|dob|name|turn|turn at|turn 55|cpf)$/.test(pnKey) && !pnLooksLikeMoney && !pnLooksLikePct && !pnLooksLikeParen;
+  // rc2.21 — same noise leaking into lifeInsured (the column-map sometimes
+  // maps the "Number" or "Amount" column there instead of policyNumber).
+  const li = String(policy.lifeInsured || '').trim();
+  const liLooksLikeMoney = /^[\$£€]\s*[\d,]+(\.\d+)?$/.test(li);
+  const liLooksLikePct = /\d+(\.\d+)?\s*%/.test(li);
+  const liLooksLikePhone = /^(?:\+?\d{1,3}\s*)?(?:1800|800|6\d{3}|9\d{3}|8\d{3})\s+\d{3,4}(?:\s+\d{3,4})?$/.test(li);
+  if ((liLooksLikeMoney || liLooksLikePct || liLooksLikePhone) && !product) {
+    return true;
+  }
+  // rc2.21 — productName looking like a "field label" rather than a real
+  // product. Saw "Premium" and "Yield" appear as productName when the
+  // column-map detector picked the wrong row as the header.
+  if (/^(premium|yield|amount|date|name|number|status|maturity|effective|start|end|year|age|account\s*value|surrender\s*value)$/i.test(productKey)) {
+    return true;
+  }
+  const hasRealPolicyNumber = normalizePolicyKey(pn).length >= 4 && !/^(year|age|date|dob|name|turn|turn at|turn 55|cpf)$/.test(pnKey) && !pnLooksLikeMoney && !pnLooksLikePct && !pnLooksLikeParen && !pnLooksLikePhone;
   const hasInsurer = !isMissingXlsxInsurer(policy.insurer);
   const premium = moneyNumber(policy.premiumAmount ?? policy.annualPremium);
   const hasFinancial = premium > 0 || moneyNumber(policy.sumAssured) > 0 || moneyNumber(policy.cashValue) > 0;
