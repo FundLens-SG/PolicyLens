@@ -30,11 +30,16 @@ const functionNames = [
   'getPolicyAnnualPayout',
   'getPolicyMonthlyPayout',
   'normalizeTextKey',
+  'normalizeName',
   'normalizeCompactKey',
   'normalizePersonNameKey',
+  '_titleCaseAllCapsName',
   'cleanPersonDisplayName',
+  'preferPersonDisplayName',
   'personNameEquivalent',
   'personNameLikelyTypoVariant',
+  'fuzzyNameMatch',
+  'collectDetectedClients',
   'policyPersonKey',
   'policyHasExplicitPeopleConflict',
   'policyInsurerIdentity',
@@ -55,6 +60,7 @@ ${functionNames.map(extractFunctionSource).join('\n\n')}
   getPolicyMonthlyPayout,
   personNameEquivalent,
   personNameLikelyTypoVariant,
+  collectDetectedClients,
   policiesLikelySamePolicy,
   policiesSafeAutoDuplicate
 });
@@ -109,6 +115,57 @@ assertCase('owner routing accepts honorific variants', () => {
 
 assertCase('owner grouping tolerates one-token OCR typo', () => {
   assert(fns.personNameLikelyTypoVariant('Tng Meng Kat', 'Tng Meng Kiat'), 'near-name OCR typo did not match');
+});
+
+assertCase('family routing keeps DOB-anchored short XLSX owner names', () => {
+  const detected = fns.collectDetectedClients([
+    {
+      insurer: 'Singlife',
+      productName: 'Singlife Shield Plan 1',
+      policyOwner: 'Je',
+      lifeInsured: 'Je',
+      documentOwner: 'Je',
+      _policyOwnerSource: 'xlsx-sheet-banner',
+      _xlsxProfile: { name: 'Je' },
+      sourceDocument: { clientName: 'Je' }
+    }
+  ], { name: 'Soh Soon Jooh, Eric' }, []);
+  assert(detected.has('je'), 'short xlsx owner Je was dropped by family routing');
+});
+
+assertCase('family routing keeps dual-role short XLSX life assured names', () => {
+  const detected = fns.collectDetectedClients([
+    {
+      insurer: 'Great Eastern',
+      productName: 'Life Perks 15',
+      policyOwner: 'Teo Sock Choo, Stacy',
+      lifeInsured: 'JE',
+      documentOwner: 'Teo Sock Choo, Stacy',
+      _policyOwnerSource: 'xlsx-sheet-banner',
+      _xlsxProfile: { name: 'Teo Sock Choo, Stacy' },
+      sourceDocument: { clientName: 'Teo Sock Choo, Stacy', sourceFile: 'Soh Family Policy Summary.xlsx' },
+      sourceFile: 'Soh Family Policy Summary.xlsx',
+      sourceSheet: 'MM Policy Summary'
+    },
+    {
+      insurer: 'Singlife',
+      productName: 'Singlife Shield Plan 1',
+      policyOwner: 'Je',
+      lifeInsured: 'Je',
+      documentOwner: 'Je',
+      _policyOwnerSource: 'xlsx-sheet-banner',
+      _xlsxProfile: { name: 'Je' },
+      sourceDocument: { clientName: 'Je', sourceFile: 'Soh Family Policy Summary.xlsx' },
+      sourceFile: 'Soh Family Policy Summary.xlsx',
+      sourceSheet: 'JE Policy Summary'
+    }
+  ], { name: 'Soh Soon Jooh, Eric' }, []);
+  const je = detected.get('je');
+  assert(je, 'dual-role short life assured Je was dropped');
+  assert((je.sourceFields || []).includes('lifeInsured'), 'Je life-assured role was not preserved');
+  assert((je.sourceFields || []).includes('policyOwner'), 'Je owner role was not preserved');
+  assert(je.policyItems.some(item => item.sourceField === 'lifeInsured'), 'Life Perks life-assured row was not linked to Je');
+  assert(je.policyItems.some(item => item.sourceField === 'policyOwner'), 'JE-owned row was not linked to Je');
 });
 
 assertCase('duplicate guard keeps same product for different family members separate', () => {

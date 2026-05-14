@@ -41,7 +41,7 @@ try {
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const FIXTURES = [
-  { label: 'Soh Family',     path: 'C:\\Users\\user\\Downloads\\Soh Family Policy Summary.xlsx',           expectMulti: true,  expectMin: 4 },
+  { label: 'Soh Family',     path: 'C:\\Users\\user\\Downloads\\Soh Family Policy Summary.xlsx',           expectMulti: true,  expectMin: 5, expectCandidates: ['Soh Soon Jooh, Eric', 'Teo Sock Choo, Stacy', 'Soh Jia Le', 'Soh Jia Yi', 'Je'] },
   { label: 'Belinda (Tan Kah Lan)', path: 'C:\\Users\\user\\Downloads\\Tan Kah Lan (Belinda) Policy Summary.xlsx', expectMulti: false, expectMin: 1 },
   { label: 'Eunice Kong',    path: 'C:\\Users\\user\\Downloads\\Eunice Kong policy summary.xlsx',          expectMulti: false, expectMin: 1 }
 ];
@@ -171,6 +171,64 @@ function computeDocFingerprint(contentBlocks) {
   return { id: hex, composite };
 }
 
+function smokeXlsxCellText(value) {
+  return String(value ?? '').replace(/\u00a0/g, ' ').trim();
+}
+
+function smokeLooksLikeXlsxSectionLabel(line) {
+  const s = String(line || '').trim();
+  if (!s || s.length < 3 || s.length > 40) return false;
+  if (!/[a-z]/i.test(s)) return false;
+  if (/[$%]|\d{4}|\d[,.]\d|s\d{7}|\bnric\b|\bdob\b|\baddress\b|\bcontact\b/i.test(s)) return false;
+  if (/^(no|s\/no|serial)\.?$/i.test(s)) return false;
+  if (/^(policy|insurer|company|provider|sum\s*assured|sum\s*insured|policy\s*name|policy\s*no|policy\s*number)$/i.test(s.trim())) return false;
+  if (/\bpolicy\s+(no|number|name)\b|\bsum\s*(assured|insured)\b/i.test(s)) return false;
+  if (/\([^)]+\)/.test(s)) return false;
+  if (/\b(mr|mrs|ms|miss|dr|madam|mdm|mister)\b\.?/i.test(s)) return false;
+  return true;
+}
+
+function smokeLooksLikeXlsxProductContinuationLabel(line) {
+  const s = String(line || '').replace(/\s+/g, ' ').trim();
+  if (!s || s.length < 3 || s.length > 80) return false;
+  if (/\b(policy\s+summary|hospitali[sz]ation|protection|critical\s+illness|personal\s+accident|investment[\s-]*linked|endowments?|legacy\s+planning|fixed\s+deposits?|bank\s+investments?|govt\s+schemes?|government\s+schemes?)\b/i.test(s)) return false;
+  if (/^(aia|singlife|aviva|manulife|prudential|pru|great\s+eastern|ge|ntuc|income|hsbc|fwd|etiqa|tokio\s+marine|tokio|tm|dbs|uob|ocbc|posb|standard\s+chartered|maybank|citi(?:bank)?)\b/i.test(s)) return true;
+  if (/\b(hsg\s*max|health\s*plus|vitalhealth|shield|rider|waiver|completecare|readyprotect|investready|elite\s*term|financier|travelcare|flexiplan|solitaire|assure|vantage|cash\s*max|early\s*critical|cancer\s*care)\b/i.test(s)) return true;
+  return false;
+}
+
+function smokeDetectBannerAtRow(matrix, r) {
+  const cellsRaw = matrix[r] || [];
+  const positions = [];
+  for (let c = 0; c < cellsRaw.length; c++) {
+    const v = smokeXlsxCellText(cellsRaw[c]).trim();
+    if (v) positions.push({ c, v });
+  }
+  if (positions.length === 0) return null;
+  if (positions.length === 1) {
+    const { c, v } = positions[0];
+    if (c <= 1 && smokeLooksLikeXlsxProductContinuationLabel(v)) return null;
+    if (c <= 1 && smokeLooksLikeXlsxSectionLabel(v)) return v;
+    return null;
+  }
+  if (positions.length === 2 && positions[1].c - positions[0].c <= 2 && positions[1].c <= 2) {
+    const a = positions[0].v;
+    const b = positions[1].v;
+    const aIsSymbol = a.length <= 3 || !/[A-Za-z]{3,}/.test(a);
+    const bIsSymbol = b.length <= 3 || !/[A-Za-z]{3,}/.test(b);
+    if (aIsSymbol && !bIsSymbol && smokeLooksLikeXlsxSectionLabel(b)) return b;
+    if (bIsSymbol && !aIsSymbol && smokeLooksLikeXlsxSectionLabel(a)) return a;
+  }
+  return null;
+}
+
+function smokeMatrixForSheet(filePath, sheetName) {
+  const wb = XLSX.read(readFileSync(filePath), { type: 'buffer' });
+  const ws = wb.Sheets[sheetName];
+  if (!ws || !ws['!ref']) return [];
+  return XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', raw: false, blankrows: false });
+}
+
 function smokeTestOne(fixture) {
   const result = { label: fixture.label, ok: true, issues: [], info: {} };
   if (!existsSync(fixture.path)) {
@@ -195,6 +253,14 @@ function smokeTestOne(fixture) {
   if (fixture.expectMin && det.candidates.length < fixture.expectMin) {
     result.ok = false;
     result.issues.push('Expected at least ' + fixture.expectMin + ' candidates, got ' + det.candidates.length);
+  }
+  if (Array.isArray(fixture.expectCandidates) && fixture.expectCandidates.length) {
+    const got = new Set(det.candidates.map(c => String(c).toLowerCase()));
+    const missing = fixture.expectCandidates.filter(c => !got.has(String(c).toLowerCase()));
+    if (missing.length) {
+      result.ok = false;
+      result.issues.push('REGRESSION: missing expected candidate(s): ' + JSON.stringify(missing));
+    }
   }
 
   // Smoke-test specific guards
@@ -276,6 +342,21 @@ function smokeTestOne(fixture) {
   if (perfMs > 250) {
     result.ok = false;
     result.issues.push('REGRESSION: detection took ' + perfMs + 'ms (>250ms threshold) — possible ReDoS');
+  }
+
+  // 8) rc2.35: JE sheet product/rider continuations must not be
+  // mistaken for section banners. If "Singlife Health Plus" becomes a
+  // banner, the parser truncates the JE owner sheet after one policy and
+  // never reaches Manulife CompleteCare / ReadyProtect.
+  if (/Soh Family/i.test(fixture.label)) {
+    const je = smokeMatrixForSheet(fixture.path, 'JE Policy Summary');
+    if (je.length) {
+      const banner = smokeDetectBannerAtRow(je, 6); // row 7 in Excel
+      if (banner) {
+        result.ok = false;
+        result.issues.push('REGRESSION: JE continuation row misdetected as section banner: ' + JSON.stringify(banner));
+      }
+    }
   }
 
   return result;

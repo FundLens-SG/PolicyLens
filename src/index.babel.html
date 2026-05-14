@@ -32,6 +32,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap" rel="stylesheet">
+<script src="./singapore-product-knowledge.js?v=sg-ref-2026-05-14-r1"></script>
 <script>
 // ═══════════════════════════════════════════════════════════════
 // v2.3.0-rc2d.13: SERVICE WORKER REGISTRATION
@@ -40,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.30-parser-sync';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.36-dual-role-je-routing';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -601,9 +602,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.31';
-const APP_VERSION_DATE = '2026-05-13';
-const APP_VERSION_NAME = 'PolicyLens clients auto-publish to CRMLens roster';
+const APP_VERSION = 'v2.4.0-rc2.36';
+const APP_VERSION_DATE = '2026-05-15';
+const APP_VERSION_NAME = 'Dual-role JE family routing';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -3925,6 +3926,8 @@ function preferPersonDisplayName(existing, incoming) {
     const bHadTitle = /^(mr|mrs|ms|mdm|madam|dr|miss|master|mstr)\.?\s+/i.test(String(incoming || '').trim());
     if (aHadTitle && !bHadTitle) return b;
     if (!aHadTitle && bHadTitle) return a;
+    if (/^[A-Z]{2,}$/.test(a) && /[a-z]/.test(b)) return b;
+    if (/^[A-Z]{2,}$/.test(b) && /[a-z]/.test(a)) return a;
     return a.length <= b.length ? a : b;
   }
   return a;
@@ -5459,7 +5462,7 @@ async function pdfToImages(pdfDoc, maxPages=12) {
 // shipped. Cache lookup is keyed by EXTRACT_PIPELINE_VERSION + fileHash,
 // so a re-scan after this bump WILL re-extract (no cache hit) and the
 // rc2.19/2.21 fixes will actually run.
-const EXTRACT_PIPELINE_VERSION = 'v15.36-2026-05-13-xlsx-riders-premium-sync';
+const EXTRACT_PIPELINE_VERSION = 'v15.39-2026-05-14-je-continuations';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -7976,17 +7979,55 @@ function fuzzyNameMatch(extracted, candidate) {
 function collectDetectedClients(policies, currentProfile, allDriveStates) {
   const currentName = currentProfile?.name||'';
   const detected = new Map();
+  const isXlsxPolicyContext = (policy) => {
+    const names = [policy?.sourceFile, policy?.documentTitle, policy?.sourceDocument?.sourceFile, policy?.sourceDocument?.sourceSheet, policy?.sourceSheet].filter(Boolean).join(' ');
+    return !!policy?._xlsxProfile || /\.(xlsx|xls|csv)\b/i.test(names) || /\bPolicy Summary\b/i.test(String(policy?.sourceSheet || ''));
+  };
+  const trustedShortXlsxPersonNames = new Map();
+  for (const policy of (policies || [])) {
+    if (!isXlsxPolicyContext(policy)) continue;
+    const sourceNames = [
+      policy?._xlsxProfile?.name,
+      policy?.sourceDocument?.clientName,
+      policy?.documentOwner
+    ].filter(Boolean);
+    for (const sourceName of sourceNames) {
+      const display = cleanPersonDisplayName(sourceName);
+      const key = normalizePersonNameKey(display);
+      if (!key || key.length < 2 || key.length > 30) continue;
+      if (!/^[a-z][a-z\s'\-.]*$/i.test(display)) continue;
+      trustedShortXlsxPersonNames.set(key, preferPersonDisplayName(trustedShortXlsxPersonNames.get(key), display));
+    }
+  }
   const isWeakOwnerName = (name) => {
     const n = normalizePersonNameKey(name) || normalizeName(name);
     if (!n || n.length < 3) return true;
     if (/^(policy owner|owner|policyholder|life insured|life assured|insured|applicant|proposer|payor|payer|self|same as|not applicable|n\/a|na|nil|unknown|null)$/.test(n)) return true;
     return false;
   };
+  const isTrustedShortXlsxPersonName = (policy, name) => {
+    const key = normalizePersonNameKey(name);
+    if (!key || key.length < 2 || key.length > 30) return false;
+    if (!/^[a-z][a-z\s'\-.]*$/i.test(String(name || '').trim())) return false;
+    const sourceNames = [
+      policy?._xlsxProfile?.name,
+      policy?.sourceDocument?.clientName,
+      policy?.documentOwner
+    ].filter(Boolean);
+    const matchesSheetIdentity = sourceNames.some(sourceName => normalizePersonNameKey(sourceName) === key);
+    if (matchesSheetIdentity && (
+      policy?._policyOwnerSource === 'xlsx-sheet-banner' ||
+      !!policy?._xlsxProfile ||
+      !!policy?.sourceDocument?.clientName
+    )) return true;
+    if (trustedShortXlsxPersonNames.has(key) && isXlsxPolicyContext(policy)) return true;
+    return false;
+  };
   const addDetected = (p, idx, detectedName, sourceField, ownerStrong, lifeInsuredStrong) => {
     let key = normalizePersonNameKey(detectedName);
     if (!key) return;
     if (currentName && fuzzyNameMatch(detectedName, currentName)) return;
-    const displayName = cleanPersonDisplayName(detectedName);
+    const displayName = trustedShortXlsxPersonNames.get(key) || cleanPersonDisplayName(detectedName);
     for (const [existingKey, existingInfo] of detected.entries()) {
       if (personNameLikelyTypoVariant(displayName, existingInfo.displayName)) {
         key = existingKey;
@@ -8036,13 +8077,12 @@ function collectDetectedClients(policies, currentProfile, allDriveStates) {
   policies.forEach((p,idx) => {
     const ownerName = (p.policyOwner||'').trim();
     const lifeInsuredName = (p.lifeInsured||'').trim();
-    const ownerStrong = ownerName && !isWeakOwnerName(ownerName);
-    const lifeInsuredStrong = lifeInsuredName && !isWeakOwnerName(lifeInsuredName);
+    const ownerStrong = ownerName && (!isWeakOwnerName(ownerName) || isTrustedShortXlsxPersonName(p, ownerName));
+    const lifeInsuredStrong = lifeInsuredName && (!isWeakOwnerName(lifeInsuredName) || isTrustedShortXlsxPersonName(p, lifeInsuredName));
     if (ownerStrong) {
       addDetected(p, idx, ownerName, 'policyOwner', ownerStrong, lifeInsuredStrong);
-      return;
     }
-    if (lifeInsuredStrong) {
+    if (lifeInsuredStrong && (!ownerName || !personNameEquivalent(ownerName, lifeInsuredName))) {
       addDetected(p, idx, lifeInsuredName, 'lifeInsured', ownerStrong, lifeInsuredStrong);
     }
   });
@@ -8772,7 +8812,62 @@ function normaliseTextForMatch(s) {
     .trim();
 }
 
+function singaporeProductKnowledgeApi() {
+  try {
+    if (typeof window !== 'undefined') {
+      return window.PolicyLensSingaporeProductKnowledge || window.CKGPolicyProductKnowledge || null;
+    }
+    return (typeof globalThis !== 'undefined') ? (globalThis.PolicyLensSingaporeProductKnowledge || globalThis.CKGPolicyProductKnowledge || null) : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function findSingaporeProductReference(productName, insurer = '') {
+  const api = singaporeProductKnowledgeApi();
+  if (!api || typeof api.findProduct !== 'function') return null;
+  try {
+    return api.findProduct(productName || '', { insurer: insurer || '' });
+  } catch (_) {
+    return null;
+  }
+}
+
+function isSingaporeProductFalsePositive(productName) {
+  const api = singaporeProductKnowledgeApi();
+  if (!api || typeof api.isFalsePositiveName !== 'function') return false;
+  try {
+    return api.isFalsePositiveName(productName || '');
+  } catch (_) {
+    return false;
+  }
+}
+
+let SINGAPORE_PRODUCT_REFERENCE_REPO_CACHE = null;
+function augmentRepoWithSingaporeProductReference(repo) {
+  const base = Array.isArray(repo) ? repo : [];
+  const api = singaporeProductKnowledgeApi();
+  if (!api || typeof api.toRepoEntries !== 'function') return base;
+  let entries = SINGAPORE_PRODUCT_REFERENCE_REPO_CACHE;
+  if (!entries) {
+    try { entries = api.toRepoEntries() || []; } catch (_) { entries = []; }
+    SINGAPORE_PRODUCT_REFERENCE_REPO_CACHE = entries;
+  }
+  if (!Array.isArray(entries) || entries.length === 0) return base;
+  const out = base.slice();
+  const seen = new Set(out.map(r => normaliseTextForMatch((r?.insurer || '') + '|' + (r?.productName || ''))));
+  for (const r of entries) {
+    if (!r || !r.insurer || !r.productName) continue;
+    const key = normaliseTextForMatch((r.insurer || '') + '|' + (r.productName || ''));
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(r);
+  }
+  return out;
+}
+
 function fuzzyMatchReposFromText(sourceText, repo) {
+  repo = augmentRepoWithSingaporeProductReference(repo);
   if(!sourceText || !repo || !Array.isArray(repo) || repo.length === 0) return [];
   const text = normaliseTextForMatch(sourceText);
   if(text.length < 20) return [];  // too short to match reliably
@@ -8871,6 +8966,7 @@ function buildRepoPriorBlock(matches, maxInclude) {
 // ═══════════════════════════════════════════════════════════════════════
 
 function matchRepoForPolicy(policy, repo) {
+  repo = augmentRepoWithSingaporeProductReference(repo);
   if(!policy || !policy.insurer || !policy.productName || !repo || !Array.isArray(repo)) return null;
   const polInsurer = normaliseTextForMatch(policy.insurer);
   const polProduct = normaliseTextForMatch(policy.productName);
@@ -8910,6 +9006,7 @@ function matchRepoForPolicy(policy, repo) {
 }
 
 function matchRepoForPolicyLoose(policy, repo) {
+  repo = augmentRepoWithSingaporeProductReference(repo);
   if(!policy || !policy.productName || !repo || !Array.isArray(repo)) return null;
   const polProduct = normaliseTextForMatch(policy.productName);
   const polProductCompact = normalizeCompactKey(policy.productName);
@@ -8950,6 +9047,16 @@ function reconcilePolicyAgainstRepo(policy, repo) {
   if((!policy.insurer || /^unknown$/i.test(String(policy.insurer).trim())) && r.insurer) {
     changes.push({ field: 'insurer', from: policy.insurer || null, to: r.insurer, action: 'filled' });
     policy.insurer = r.insurer;
+  }
+
+  // PRODUCT NAME - normalize only on high-confidence reference matches.
+  if (r.productName && policy.productName && match.score >= 0.92) {
+    const fromName = normaliseTextForMatch(policy.productName);
+    const toName = normaliseTextForMatch(r.productName);
+    if (fromName && toName && fromName !== toName) {
+      changes.push({ field: 'productName', from: policy.productName, to: r.productName, action: 'normalised' });
+      policy.productName = r.productName;
+    }
   }
 
   // CATEGORY — fill or override (classification authority)
@@ -9642,12 +9749,23 @@ function findXlsxPolicyHeaderRow(matrix) {
 function scoreXlsxFdHeaderRow(cells) {
   let score = 0;
   let cashClues = 0;
+  const norms = (cells || []).map(normalizeXlsxHeaderName);
+  const hasYieldLike = norms.some(h => /\byield\b|\binterest\s*rate\b|\b%\s*p\.?\s*a\.?\b|\brate\s*\(%|\brate\b/.test(h));
   for (const raw of cells || []) {
     const h = normalizeXlsxHeaderName(raw);
     if (!h) continue;
     if (/\bbank\s*name\b|\binstitution\b|\bissuer\b/.test(h)) { score += 4; cashClues += 2; }
     if (/\b(deposit|principal|fd|t[-\s]*bill|bond)\s*amount\b|\bdeposit\s*sum\b/.test(h)) { score += 4; cashClues += 2; }
     if (/^amount$|\bdeposit\b|\bprincipal\b/.test(h)) { score += 2; cashClues++; }
+    // rc2.32: Soh family MM sheet uses a compact FD table:
+    //   No. | Name | Premium | Yield
+    // Under a "Fixed Deposits / Bank Investments" banner, "Name" is the
+    // bank/product label and "Premium" is the deposited principal. Only
+    // boost these bare headers when a yield/rate column is also present,
+    // so ordinary policy tables with "Name" + "Premium" don't become FD
+    // candidates.
+    if (hasYieldLike && /^name$/.test(h)) { score += 2; cashClues++; }
+    if (hasYieldLike && /^premium$/.test(h)) { score += 3; cashClues++; }
     if (/\byield\b|\binterest\s*rate\b|\b%\s*p\.?\s*a\.?\b|\brate\s*\(%/.test(h)) { score += 3; cashClues++; }
     if (/\b(maturity|expiry)\s*date\b/.test(h)) { score += 2; cashClues++; }
     if (/\b(effective|start|placement|inception)\s*date\b/.test(h)) score += 1;
@@ -9686,6 +9804,18 @@ function _looksLikeXlsxSectionLabel(line) {
   if (/\b(mr|mrs|ms|miss|dr|madam|mdm|mister)\b\.?/i.test(s)) return false;
   return true;
 }
+function _looksLikeXlsxProductContinuationLabel(line) {
+  const s = String(line || '').replace(/\s+/g, ' ').trim();
+  if (!s || s.length < 3 || s.length > 80) return false;
+  // rc2.35: one-cell continuation rows can look like banners when an
+  // XLSX template leaves only the product/rider name populated. The JE
+  // sheet's "Singlife Health Plus" row was truncating the section before
+  // Manulife CompleteCare / ReadyProtect could be read.
+  if (/\b(policy\s+summary|hospitali[sz]ation|protection|critical\s+illness|personal\s+accident|investment[\s-]*linked|endowments?|legacy\s+planning|fixed\s+deposits?|bank\s+investments?|govt\s+schemes?|government\s+schemes?)\b/i.test(s)) return false;
+  if (/^(aia|singlife|aviva|manulife|prudential|pru|great\s+eastern|ge|ntuc|income|hsbc|fwd|etiqa|tokio\s+marine|tokio|tm|dbs|uob|ocbc|posb|standard\s+chartered|maybank|citi(?:bank)?)\b/i.test(s)) return true;
+  if (/\b(hsg\s*max|health\s*plus|vitalhealth|shield|rider|waiver|completecare|readyprotect|investready|elite\s*term|financier|travelcare|flexiplan|solitaire|assure|vantage|cash\s*max|early\s*critical|cancer\s*care)\b/i.test(s)) return true;
+  return false;
+}
 // rc2.25 — banner detector for the row at index r in matrix.
 // Returns the banner label string when the row IS a section banner, or
 // null otherwise. Accepts:
@@ -9710,6 +9840,7 @@ function _detectBannerAtRow(matrix, r) {
   // some sheets like Belinda's Wealth have a left margin column).
   if (positions.length === 1) {
     const { c, v } = positions[0];
+    if (c <= 1 && _looksLikeXlsxProductContinuationLabel(v)) return null;
     if (c <= 1 && _looksLikeXlsxSectionLabel(v)) return v;
     return null;
   }
@@ -9870,7 +10001,20 @@ const XLSX_KNOWN_PRODUCT_RULES = [
 function inferXlsxProductRule(productName) {
   const t = String(productName || '');
   if (!t.trim()) return null;
-  return XLSX_KNOWN_PRODUCT_RULES.find(r => r.re.test(t)) || null;
+  const fixedRule = XLSX_KNOWN_PRODUCT_RULES.find(r => r.re.test(t));
+  if (fixedRule) return fixedRule;
+  const ref = findSingaporeProductReference(t);
+  if (ref && ref.score >= 0.90) {
+    return {
+      re: { source: 'singapore-product-reference' },
+      category: ref.category,
+      subType: ref.subType,
+      insurer: ref.insurer,
+      productName: ref.productName,
+      _refScore: ref.score
+    };
+  }
+  return null;
 }
 function makeUniqueXlsxHeaders(cells) {
   let last = -1;
@@ -10205,7 +10349,8 @@ function inferXlsxFdColumnMap(headers) {
   };
   const columnMap = {
     bankName:      find([/\bbank\s*name\b/, /\binstitution\b/, /\bissuer\b/, /\bbank\b/]),
-    principal:     find([/\b(deposit|principal|fd|t[-\s]*bill|bond)\s*amount\b/, /^amount$/, /\bdeposit\b/, /\bprincipal\b/]),
+    instrumentName: find([/^name$/, /\bproduct\s*name\b/, /\binstrument\b/, /\bholding\b/]),
+    principal:     find([/\b(deposit|principal|fd|t[-\s]*bill|bond)\s*amount\b/, /^amount$/, /^premium$/, /\bdeposit\b/, /\bprincipal\b/]),
     yieldPct:      find([/\byield\b/, /\binterest\s*rate\b/, /\b%\s*p\.?\s*a\.?\b/, /\brate\b/]),
     startDate:     find([/\b(effective|start|placement|inception)\s*date\b/]),
     maturityDate:  find([/\b(maturity|expiry)\s*date\b/]),
@@ -10334,7 +10479,10 @@ function inferInsurerFromProductName(productName) {
   ];
   const hay = t + ' ' + c;
   const hit = rules.find(rule => rule.re.test(hay));
-  return hit ? normalizeInsurerName(hit.name) : '';
+  if (hit) return normalizeInsurerName(hit.name);
+  const ref = findSingaporeProductReference(productName);
+  if (ref && ref.insurer && ref.score >= 0.88) return normalizeInsurerName(ref.insurer);
+  return '';
 }
 
 function clearXlsxConfidence(policy, fields) {
@@ -10402,6 +10550,7 @@ function isSpreadsheetNonPolicyRow(policy) {
   const hasRealPolicyNumber = normalizePolicyKey(pn).length >= 4
     && !/^(year|age|date|dob|name|turn|turn at|turn 55|cpf)$/.test(pnKey)
     && !pnLooksLikeMoney && !pnLooksLikePct && !pnLooksLikeParen && !pnLooksLikePhone;
+  if (product && isSingaporeProductFalsePositive(product) && !hasRealPolicyNumber) return true;
   const hasInsurer = !isMissingXlsxInsurer(policy.insurer);
   const premium = moneyNumber(policy.premiumAmount ?? policy.annualPremium);
   const hasFinancial = premium > 0 || moneyNumber(policy.sumAssured) > 0 || moneyNumber(policy.cashValue) > 0;
@@ -10451,6 +10600,14 @@ function applyHighConfidenceRepoMatchToPolicy(policy, match, reason = 'repo-matc
     policy.insurer = normalizeInsurerName(r.insurer);
     filled.push('insurer');
   }
+  if (r.productName && policy.productName && match.score >= 0.92) {
+    const fromName = normaliseTextForMatch(policy.productName);
+    const toName = normaliseTextForMatch(r.productName);
+    if (fromName && toName && fromName !== toName) {
+      policy.productName = r.productName;
+      filled.push('productName');
+    }
+  }
   if (r.category) {
     const cat = normalizeXlsxStorageCategory(r.category) || r.category;
     if (cat && policy.category !== cat) {
@@ -10498,6 +10655,35 @@ function enrichSpreadsheetPolicyCandidate(policy, context = {}) {
   // recognizable text.
   if (next.productName) next.productName = _titleCaseProductName(next.productName);
   if (next.policyName)  next.policyName  = _titleCaseProductName(next.policyName);
+  const sgRef = findSingaporeProductReference(next.productName || next.policyName, next.insurer);
+  if (sgRef && sgRef.score >= 0.90) {
+    const refFields = [];
+    if (sgRef.score >= 0.92 && sgRef.productName && next.productName && normaliseTextForMatch(next.productName) !== normaliseTextForMatch(sgRef.productName)) {
+      next.productName = sgRef.productName;
+      refFields.push('productName');
+    }
+    if (sgRef.insurer && isMissingXlsxInsurer(next.insurer)) {
+      next.insurer = sgRef.insurer;
+      refFields.push('insurer');
+    }
+    if (sgRef.category && !next.category) {
+      next.category = sgRef.category;
+      refFields.push('category');
+    }
+    if (sgRef.subType && !next.subType) {
+      next.subType = sgRef.subType;
+      refFields.push('subType');
+    }
+    if (refFields.length) {
+      clearXlsxConfidence(next, refFields);
+      next._singaporeProductReferenceMatch = {
+        productName: sgRef.productName,
+        insurer: sgRef.insurer,
+        score: sgRef.score,
+        version: singaporeProductKnowledgeApi()?.VERSION || ''
+      };
+    }
+  }
   next.category = normalizeXlsxStorageCategory(next.category) || normalizeXlsxStorageCategory(inferXlsxPolicyCategory(next)) || next.category;
   if (next.insurer) next.insurer = _titleCaseInsurerName(normalizeInsurerName(next.insurer));
   if (isMissingXlsxInsurer(next.insurer)) {
@@ -11267,6 +11453,14 @@ function applyColumnMap(rows, columnMap, categoryColumn) {
     // both lose to an explicit category column from the spreadsheet.
     if (row.__sectionContext) policy.sectionContext = row.__sectionContext;
     const productRule = inferXlsxProductRule(policy.productName || policy.policyName || '');
+    if (productRule?._refScore >= 0.92 && productRule.productName && policy.productName && normaliseTextForMatch(policy.productName) !== normaliseTextForMatch(productRule.productName)) {
+      policy.productName = productRule.productName;
+      confidence.push({ field: 'productName', level: 'high', reason: 'Product name normalised from Singapore product reference' });
+    }
+    if (productRule?.insurer && isMissingXlsxInsurer(policy.insurer)) {
+      policy.insurer = productRule.insurer;
+      confidence.push({ field: 'insurer', level: 'high', reason: 'Insurer inferred from Singapore product reference' });
+    }
     if (!policy.category && productRule?.category) {
       policy.category = productRule.category;
       confidence.push({ field: 'category', level: 'high', reason: 'Category derived from Singapore product lookup (' + productRule.re.source + ')' });
@@ -11759,7 +11953,9 @@ function applyFdColumnMap(rows, fdColumnMap, sectionLabel = '') {
       const num = parseFloat(String(row[cm.principal] || '').replace(/[^\d.-]/g, ''));
       return isNaN(num) ? 0 : num;
     })();
+    const instrumentName = String(row[cm.instrumentName] || '').trim();
     let bankName = String(row[cm.bankName] || '').trim();
+    if (!bankName && instrumentName) bankName = inferInsurerFromProductName(instrumentName) || instrumentName;
     if (bankName) lastBank = bankName;
     else bankName = lastBank;
     if (!principal && !bankName) continue;
@@ -11783,15 +11979,17 @@ function applyFdColumnMap(rows, fdColumnMap, sectionLabel = '') {
     })();
     const status = _normalizeFdStatus(row[cm.status], maturityIso);
     const productName = (() => {
+      if (instrumentName) return instrumentName;
       if (bankName && tenureMonths) return bankName + ' ' + tenureMonths + '-month FD';
       if (bankName) return bankName + ' Fixed Deposit';
       return 'Fixed Deposit';
     })();
+    const insurerName = inferInsurerFromProductName(bankName || productName) || bankName || '';
     const policy = {
       _rawSpreadsheetRow: { ...row },
       category: 'cash_investments',
       subType: 'Fixed Deposit',
-      insurer: bankName || '',
+      insurer: insurerName,
       productName,
       fdPrincipal: principal,
       cashValue: principal,

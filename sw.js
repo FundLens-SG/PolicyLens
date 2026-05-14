@@ -1,4 +1,4 @@
-const SW_VERSION = 'v2.4.0-rc2.31-crm-roster';
+const SW_VERSION = 'v2.4.0-rc2.36-dual-role-je-routing';
 const DB_NAME = 'PolicyLensSW';
 const DB_VERSION = 1;
 const SESSION_STORE = 'sessions';
