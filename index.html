@@ -32762,7 +32762,7 @@ const POLICY_EXTRACTION_SCHEMA = {
       riderPremium: {
         type: 'NUMBER',
         nullable: true,
-        description: 'Combined rider premium'
+        description: 'Combined annual cash premium for all ISP riders/add-ons'
       },
       ispDeductible: {
         type: 'NUMBER',
@@ -55122,8 +55122,8 @@ IMPORTANT PLAN IDENTIFICATION: When you see a plan name, use your knowledge of S
 ISP RIDERS — MERGE INTO PARENT ISP (do NOT create as separate policy):
 When you detect an ISP Rider, set these fields on the PARENT Integrated Shield Plan policy:
 - hasRider: true
-- riderList: name of the rider product (e.g. "Max VitalCare", "PRUExtra Plus", "GREAT TotalCare")
-- riderPremium: the rider premium (number, annual — always cash, NOT MediSave payable)
+- riderList: comma-separated rider/add-on product names when there are multiple components (e.g. "AIA HSG Max Rider, AIA Max VitalHealth A, AIA Max A Cancer Care Booster")
+- riderPremium: combined rider/add-on premium (number, annual — always cash, NOT MediSave payable)
 - ispDeductible: deductible AFTER rider (lower than without rider, e.g. $3,500 for panel, $5,000 non-panel)
 - ispCoinsurance: co-pay % AFTER rider (typically 5% for most riders, 0-10% range)
 - ispCoInsCap: co-insurance cap in $ (0 if unlimited/no cap)
@@ -55139,13 +55139,14 @@ Common ISP + Rider pairs:
 
 ISP COMPONENT RIDERS: ISP plans often have multiple component riders visible in the Premium tab. Capture ALL components as riders on the parent ISP with their status:
 - Each component: {type:'other', riderName:'exact name', sa:0, premium:number, bundled:false, riderStatus:'active' or 'terminated'}
+- Also add each component name to the parent policy's comma-separated riderList and add each component premium into riderPremium.
 - If a component shows "Terminated" / "Teminated" / "Expired" → riderStatus:'terminated'
 - "Premium Paying" / "Active" → riderStatus:'active'
 
 If you see ONLY a recognised ISP rider name in the source (no parent ISP in the document), still create ONE policy:
 - productName: the PARENT ISP name (infer from insurer + rider tier)
 - subType: "Integrated Shield Plan" (NOT "ISP Rider")
-- hasRider: true, riderList: the rider name, riderPremium: the rider cost
+- hasRider: true, riderList: the rider/add-on name(s), riderPremium: the rider/add-on cost
 - _inferredParent: true (so the system flags it for user review)
 
 Never infer an ISP parent from insurer-only text, contact details, hotline tables, customer portals, or generic words like "Income". If the source only says "NTUC Income Customer Hotline", that is contact information, NOT Enhanced IncomeShield.
