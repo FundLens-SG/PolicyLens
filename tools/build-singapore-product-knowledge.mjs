@@ -7,7 +7,7 @@ const refDir = 'C:\\Creations\\PolicyLens_Singapore_Reference';
 const policyLensOut = path.join(repoRoot, 'singapore-product-knowledge.js');
 const crmLensOut = 'C:\\Creations\\ckgtools\\public\\tools\\_policy-product-knowledge.js';
 
-const VERSION = 'sg-ref-2026-05-14-r1';
+const VERSION = 'sg-ref-2026-05-15-r2';
 
 const SOURCE_FILES = [
   '01_flat_policy_name_corpus.txt',
@@ -430,8 +430,15 @@ const falsePositives = [
   'GrabInsure',
   'MyDoc',
   'customer service',
+  'customer hotline',
+  'customer portal',
   'insurer hotline',
+  'insurer hotlines',
   'claims hotline',
+  'claims hotlines',
+  'hotline',
+  'portal',
+  'contact details',
   'policy summary',
   'statement of account',
   'premium payment',

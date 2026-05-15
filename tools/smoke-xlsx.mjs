@@ -356,6 +356,20 @@ function smokeTestOne(fixture) {
         result.ok = false;
         result.issues.push('REGRESSION: JE continuation row misdetected as section banner: ' + JSON.stringify(banner));
       }
+      const hotlineBanner = smokeDetectBannerAtRow(je, 15); // row 16 in Excel
+      if (!hotlineBanner || !/insurer hotlines/i.test(hotlineBanner)) {
+        result.ok = false;
+        result.issues.push('REGRESSION: JE insurer hotline section is no longer detected as a non-policy banner');
+      }
+      const fixtureText = je.map(row => row.map(smokeXlsxCellText).join(' | ')).join('\n');
+      if (!/NTUC Income Customer Hotline/i.test(fixtureText)) {
+        result.ok = false;
+        result.issues.push('REGRESSION: JE fixture no longer contains the NTUC Income hotline row this guard covers');
+      }
+      if (/Enhanced\s+IncomeShield|IncomeShield\s+Preferred/i.test(fixtureText)) {
+        result.ok = false;
+        result.issues.push('REGRESSION: JE fixture source unexpectedly contains Enhanced IncomeShield text');
+      }
     }
   }
 
