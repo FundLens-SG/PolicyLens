@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.38-spreadsheet-contact-guard';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.39-isp-rider-coalescing';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -728,9 +728,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.38';
+const APP_VERSION = 'v2.4.0-rc2.39';
 const APP_VERSION_DATE = '2026-05-15';
-const APP_VERSION_NAME = 'Spreadsheet contact guard';
+const APP_VERSION_NAME = 'ISP rider coalescing';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -986,6 +986,19 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.4.0-rc2.39',
+    date: '2026-05-15',
+    name: 'ISP rider coalescing',
+    sections: [
+      {
+        heading: 'Extraction',
+        items: [
+          'Integrated Shield Plan imports now merge plan tiers, cash riders, and cancer/outpatient boosters into the parent Shield policy instead of creating standalone rider policies.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.4.0-rc2.38',
     date: '2026-05-15',
@@ -5614,7 +5627,7 @@ async function pdfToImages(pdfDoc, maxPages=12) {
 // shipped. Cache lookup is keyed by EXTRACT_PIPELINE_VERSION + fileHash,
 // so a re-scan after this bump WILL re-extract (no cache hit) and the
 // rc2.19/2.21 fixes will actually run.
-const EXTRACT_PIPELINE_VERSION = 'v15.40-2026-05-15-spreadsheet-contact-guard';
+const EXTRACT_PIPELINE_VERSION = 'v15.41-2026-05-15-isp-rider-coalescing';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -7366,6 +7379,7 @@ const VALIDATE_RULES = [
   {
     name: 'validate_rider_premium_lte_total_premium',
     run: (policy) => {
+      if (policy?.subType === 'Integrated Shield Plan') return null;
       const total = parseFloat(policy.annualPremium) || 0;
       if (total <= 0) return null;
       const riders = policy.riders;
@@ -11936,6 +11950,143 @@ function appendXlsxRider(policy, rider) {
   return true;
 }
 
+function isIntegratedShieldParentName(name) {
+  const t = normalizeTextKey(name);
+  if (!t) return false;
+  if (isIntegratedShieldRiderName(t) || isIntegratedShieldPlanOptionName(t)) return false;
+  return /\b(aia\s+(?:healthshield|health\s*shield)\s+gold\s+max|aia\s+hsg\s+max|pru\s*shield|prushield|great\s+supremehealth|supremehealth|enhanced\s+incomeshield|incomeshield|income\s+shield|singlife\s+shield|aviva\s+myshield|myshield|hsbc\s+life\s+shield|raffles\s+shield|medishield\s+life)\b/.test(t);
+}
+
+function isIntegratedShieldPlanOptionName(name) {
+  const t = normalizeTextKey(name);
+  if (!t) return false;
+  if (/\b(rider|vitalhealth|vitalcare|totalcare|pruextra|health\s+plus|enhanced\s+care|deluxe\s+care|classic\s+care|assist\s+rider|plus\s+rider|booster|cancer\s+guard|choice\s+rider|key\s+rider)\b/.test(t)) return false;
+  return /\b(aia\s+hsg\s+max\s+special\s+[ab]|aia\s+(?:healthshield|health\s*shield)\s+gold\s+max\s+special\s+[ab])\b/.test(t);
+}
+
+function isIntegratedShieldRiderName(name) {
+  const t = normalizeTextKey(name);
+  if (!t) return false;
+  return /\b(hsg\s+max\s+rider|max\s+vitalhealth|max\s+vitalcare|max\s+essential|max\s+a\s+cancer\s+care\s+booster|cancer\s+care\s+booster|emergency\s+and\s+outpatient\s+care\s+booster|shield\s+benefits\s+preserver|pruextra|pru\s*extra|great\s+totalcare|totalcare|enhanced\s+incomecare|income\s+care|deluxe\s+incomecare|deluxe\s+care|classic\s+care|assist\s+rider|plus\s+rider|daily\s+cash\s+rider|child\s+illness\s+rider|optima\s+care|essential\s+care|co-?pay\s+assist|singlife\s+health\s+plus|health\s+plus|myhealthplus|hsbc\s+life\s+enhanced\s+care|enhanced\s+care|raffles\s+(?:key|choice|premier)\s+rider|choice\s+rider|key\s+rider|premier\s+rider|cancer\s+guard\s+rider|raffles\s+hospital\s+option|high\s+deductible\s+option)\b/.test(t)
+    || /\b(?:shield|incomeshield|healthshield|prushield|supremehealth)\b.*\brider\b/.test(t);
+}
+
+function isIspPolicyLike(policy) {
+  if (!policy || typeof policy !== 'object') return false;
+  const name = policy.productName || policy.policyName || '';
+  const section = policy.sectionContext || '';
+  const subType = String(policy.subType || '').toLowerCase();
+  return isIntegratedShieldParentName(name)
+    || (policy.category === 'health' && /integrated\s+shield/.test(subType))
+    || (/\bhospitali[sz]ation\b|\bmedical\b/.test(String(section).toLowerCase()) && /\bshield\b/i.test(name));
+}
+
+function sameSpreadsheetIspPerson(a, b) {
+  const norm = (p) => normalizePersonNameKey(p?.lifeInsured || p?.policyOwner || p?.documentOwner || p?.sourceDocument?.clientName || '');
+  const ak = norm(a);
+  const bk = norm(b);
+  if (!ak || !bk) return true;
+  try { return personNameEquivalent(ak, bk); } catch (_) { return ak === bk; }
+}
+
+function makeIspRiderFromPolicy(row) {
+  const name = String(row?.productName || row?.policyName || row?.riderList || '').replace(/\s+/g, ' ').trim();
+  if (!name) return null;
+  const coverageText = [
+    getXlsxRawCoverageText(row),
+    row.coverageBenefits,
+    row.notes,
+    row.extractionNotes,
+    row.userRemarks
+  ].filter(Boolean).join(' | ').replace(/\s+/g, ' ').trim();
+  return {
+    type: classifyXlsxRiderType(name + ' ' + coverageText),
+    riderName: name,
+    sa: parseXlsxRiderSa(coverageText),
+    premium: parseXlsxMoneyNumber(row.riderPremium ?? row.premiumAmount ?? row.annualPremium),
+    bundled: false,
+    policyNumber: row.policyNumber || undefined,
+    inceptionDate: row.inceptionDate || undefined,
+    maturityDate: row.maturityDate || undefined,
+    coverageText: coverageText || undefined
+  };
+}
+
+function addIspRiderSummaryFields(parent, rider, row) {
+  if (!parent || !rider) return;
+  parent.hasRider = true;
+  const names = String(parent.riderList || '').split(',').map(s => s.trim()).filter(Boolean);
+  if (rider.riderName && !names.some(n => normalizeTextKey(n) === normalizeTextKey(rider.riderName))) {
+    names.push(rider.riderName);
+  }
+  parent.riderList = names.join(', ');
+  const currentPrem = parseXlsxMoneyNumber(parent.riderPremium);
+  const riderPrem = parseXlsxMoneyNumber(rider.premium);
+  if (riderPrem > 0) parent.riderPremium = currentPrem + riderPrem;
+  if (!parent.ispRiderInceptionDate && row?.inceptionDate) parent.ispRiderInceptionDate = row.inceptionDate;
+  const text = [rider.riderName, rider.coverageText, row?.coverageBenefits, row?.notes, row?.extractionNotes].filter(Boolean).join(' ');
+  if (!parent.ispCoinsurance && /\b5\s*%\s*(?:co[-\s]?pay|co[-\s]?insurance|co[-\s]?payment)\b/i.test(text)) parent.ispCoinsurance = 5;
+  if (!parent.ispCoInsCap) {
+    const cap = text.match(/\b(?:capped?|cap|stop[-\s]?loss)\D{0,25}(?:S?\$)?\s*([\d,]{3,})/i);
+    if (cap) {
+      const n = parseInt(cap[1].replace(/,/g, ''), 10);
+      if (n > 0 && n <= 50000) parent.ispCoInsCap = n;
+    }
+  }
+  parent._xlsxIspCoalescedRiderCount = (parseInt(parent._xlsxIspCoalescedRiderCount, 10) || 0) + 1;
+}
+
+function attachIspComponentToParent(parent, row, asPlanOption = false) {
+  if (!parent || !row) return false;
+  const name = String(row.productName || row.policyName || '').replace(/\s+/g, ' ').trim();
+  if (!name) return false;
+  if (asPlanOption) {
+    parent._xlsxIspPlanOption = name;
+    if (!isIntegratedShieldPlanOptionName(parent.productName || parent.policyName)) {
+      parent.productName = _titleCaseProductName(name);
+    }
+    const note = [getXlsxRawCoverageText(row), row.extractionNotes, row.notes].filter(Boolean).join(' | ').trim();
+    if (note) parent.extractionNotes = [parent.extractionNotes, 'ISP plan option: ' + name + (note ? ' (' + note + ')' : '')].filter(Boolean).join(' | ');
+    return true;
+  }
+  const rider = makeIspRiderFromPolicy(row);
+  if (!rider) return false;
+  const added = appendXlsxRider(parent, rider);
+  addIspRiderSummaryFields(parent, rider, row);
+  return added;
+}
+
+function coalesceIspShieldRows(policiesRaw) {
+  const out = [];
+  const findParent = (row) => {
+    for (let i = out.length - 1; i >= 0; i--) {
+      const candidate = out[i];
+      if (!isIspPolicyLike(candidate)) continue;
+      if (!sameSpreadsheetIspPerson(candidate, row)) continue;
+      const aSheet = String(candidate.sourceSheet || '').trim();
+      const bSheet = String(row.sourceSheet || '').trim();
+      if (aSheet && bSheet && aSheet !== bSheet) continue;
+      return candidate;
+    }
+    return null;
+  };
+  for (const original of (policiesRaw || [])) {
+    const row = { ...(original || {}) };
+    const name = String(row.productName || row.policyName || '').replace(/\s+/g, ' ').trim();
+    const planOption = isIntegratedShieldPlanOptionName(name);
+    const riderLike = isIntegratedShieldRiderName(name) || (String(row.subType || '').toLowerCase() === 'shield rider');
+    if ((planOption || riderLike) && !isIntegratedShieldParentName(name)) {
+      const parent = findParent(row);
+      if (parent) {
+        attachIspComponentToParent(parent, row, planOption);
+        continue;
+      }
+    }
+    out.push(row);
+  }
+  return out;
+}
+
 function coalesceContinuationRiders(policiesRaw) {
   const out = [];
   for (const original of (policiesRaw || [])) {
@@ -12329,7 +12480,7 @@ async function extractSpreadsheetFilesLocally(files, opts = {}) {
       // per-sheet profile so each sheet's policies inherit the correct
       // owner. aggregateProfile is null in that branch by construction.
       const sheetProfile = aggregateProfile || sheet.documentProfile || null;
-      const coalescedPoliciesRaw = sheet.kind === 'fd' ? policiesRaw : coalesceContinuationRiders(policiesRaw);
+      const coalescedPoliciesRaw = sheet.kind === 'fd' ? policiesRaw : coalesceContinuationRiders(coalesceIspShieldRows(policiesRaw));
       const policies = coalescedPoliciesRaw
         .map(p => {
           const sourceDocument = {
@@ -40456,11 +40607,11 @@ NOTES: notes (string — REQUIRED. Always provide a concise 3-5 sentence FC revi
 USER REMARKS: userRemarks (string — if the document contains handwritten notes, comments, annotations, or informal remarks by the user/advisor such as "worth it?", "only till 75 yo", "also have TCM/CHIRO $7", preserve them EXACTLY as written. Do NOT interpret, expand, or rephrase. Include the original text verbatim. If no user remarks detected, leave empty.)
 
 EXCEL/SPREADSHEET HANDLING: If the input is a spreadsheet or tabular data:
-- Each ROW is likely a separate policy. Extract ALL rows as separate policy objects.
+- Each numbered ROW is often a separate policy, but blank-number continuation rows are usually riders, plan tiers, benefits, or remarks for the nearest numbered policy above. Do NOT create standalone policies from continuation rows.
 - Column headers map to fields: look for columns like "Policy Name", "Plan Name", "Insurer", "Company", "Sum Assured", "SA", "Premium", "Annual Premium", etc.
 - If a column mentions "rider" in its name or has separate rider premiums, those are SEPARATE riders (bundled=false, include riderName).
 - If the spreadsheet has rider columns like "CI Rider", "TPD Rider" with SA values, create rider entries for each.
-- Return an ARRAY of policy objects — one per row.
+- Return an ARRAY of policy objects — one per logical policy, not blindly one per row.
 - Infer category and subType from plan names (e.g. "term" → Term Life, "whole life" / "WL" → Whole Life, "ISP" / "shield" → Integrated Shield Plan, "ILP" → ILP (Investment), "endowment" → Endowment, "annuity" / "income" → Retirement).
 - If a plan has a separate rider premium column, set the rider's bundled=false and premium to that value.
 
@@ -40503,23 +40654,26 @@ When you detect an ISP Rider, set these fields on the PARENT Integrated Shield P
 - ispCoInsCap: co-insurance cap in $ (0 if unlimited/no cap)
 
 Common ISP + Rider pairs:
-- AIA: HealthShield Gold Max + Max VitalCare / Max VitalHealth B / HSG Max Rider / Max Essential A / Max Essential Care / Emergency and Outpatient Care / Cancer Care Booster
-- Prudential: PRUShield + PRUExtra / PRUExtra Plus / PRUExtra Premier / PRUExtra Preferred CoPay
-- Great Eastern: GREAT SupremeHealth + GREAT TotalCare / TotalCare Elite / TotalCare Classic
-- NTUC Income: Enhanced IncomeShield + Enhanced IncomeCare / Deluxe IncomeCare
-- Singlife: Singlife Shield + Health Plus Plan 1/2/3 (Private Lite/Classic/Premier)
-- Raffles Health: Raffles Shield + Rider plans
+- AIA: HealthShield Gold Max / HSG Max + HSG Max Special A/B plan tiers + HSG Max Rider / Max VitalHealth / Max VitalCare / Max Essential / Cancer Care Booster / Emergency and Outpatient Care Booster
+- Prudential: PRUShield + PRUExtra / PRUExtra Premier Care / PRUExtra Preferred Care / PRUExtra Plus Care / legacy PRUExtra CoPay/Lite
+- Great Eastern: GREAT SupremeHealth + GREAT TotalCare / GREAT TotalCare 2 / TotalCare Elite / TotalCare Classic
+- Income Insurance / NTUC Income: Enhanced IncomeShield / IncomeShield / IncomeShield Standard + Enhanced IncomeCare / Deluxe IncomeCare / Deluxe Care / Classic Care / Plus Rider / Assist Rider / Daily Cash / Child Illness / Optima Care / Essential Care
+- Singlife / Aviva: Singlife Shield / MyShield + Singlife Health Plus / MyHealthPlus / Health Plus Private/Public/Lite/Prime/Starter
+- HSBC Life: HSBC Life Shield + HSBC Life Enhanced Care / Enhanced Care II
+- Raffles Health: Raffles Shield + Choice Rider / Key Rider / Premier Rider / Cancer Guard Rider / Raffles Hospital Option / High Deductible Option
 
 ISP COMPONENT RIDERS: ISP plans often have multiple component riders visible in the Premium tab. Capture ALL components as riders on the parent ISP with their status:
 - Each component: {type:'other', riderName:'exact name', sa:0, premium:number, bundled:false, riderStatus:'active' or 'terminated'}
 - If a component shows "Terminated" / "Teminated" / "Expired" → riderStatus:'terminated'
 - "Premium Paying" / "Active" → riderStatus:'active'
 
-If you see ONLY the rider (no parent ISP in the document), still create ONE policy:
+If you see ONLY a recognised ISP rider name in the source (no parent ISP in the document), still create ONE policy:
 - productName: the PARENT ISP name (infer from insurer + rider tier)
 - subType: "Integrated Shield Plan" (NOT "ISP Rider")
 - hasRider: true, riderList: the rider name, riderPremium: the rider cost
 - _inferredParent: true (so the system flags it for user review)
+
+Never infer an ISP parent from insurer-only text, contact details, hotline tables, customer portals, or generic words like "Income". If the source only says "NTUC Income Customer Hotline", that is contact information, NOT Enhanced IncomeShield.
 
 NEVER create a separate "ISP Rider" policy. The rider is always part of the parent ISP.
 
@@ -41983,6 +42137,10 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
     // see the same policy (rare but possible when a single policy spans a split boundary).
     // Also portfolio reports list the same policy across multiple sections.
     arr = dedupePolicies(arr);
+    // ISP/shield rows are often emitted as one top-level object per visible
+    // component (base plan, plan tier, cash rider, cancer booster). Model them
+    // as one Integrated Shield Plan with attached riders instead.
+    arr = dedupePolicies(coalesceIspShieldRows(arr));
 
     // ── POST-EXTRACT REPO RECONCILIATION (Prong 2 of repo-grounded priors) ──
     // Safety net for image-only scans where text-based prior injection couldn't

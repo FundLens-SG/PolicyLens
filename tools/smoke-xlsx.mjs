@@ -371,6 +371,35 @@ function smokeTestOne(fixture) {
         result.issues.push('REGRESSION: JE fixture source unexpectedly contains Enhanced IncomeShield text');
       }
     }
+
+    // 9) rc2.39: JL's AIA HealthShield stack is one Integrated Shield
+    // policy with a plan option and riders/add-ons, not five standalone
+    // policies. Keep the fixture shape visible to this harness so future
+    // extraction changes do not regress silently.
+    const jl = smokeMatrixForSheet(fixture.path, 'JL Policy Summary');
+    if (jl.length) {
+      const jlShieldRows = [5, 6, 7, 8, 9]
+        .map(idx => (jl[idx] || []).map(smokeXlsxCellText).join(' | '))
+        .join('\n');
+      const expectedJlParts = [
+        /AIA\s+HEALTHSHIELD\s+GOLD\s+MAX/i,
+        /AIA\s+HSG\s+MAX\s+SPECIAL\s+A/i,
+        /AIA\s+HSG\s+MAX\s+RIDER/i,
+        /AIA\s+MAX\s+VITALHEALTH\s+A/i,
+        /AIA\s+MAX\s+A\s+CANCER\s+CARE\s+BOOSTER/i
+      ];
+      for (const rx of expectedJlParts) {
+        if (!rx.test(jlShieldRows)) {
+          result.ok = false;
+          result.issues.push('REGRESSION: JL AIA Shield stack fixture no longer contains expected row: ' + rx);
+        }
+      }
+      const jlBanner = smokeDetectBannerAtRow(jl, 6); // row 7 in Excel
+      if (jlBanner) {
+        result.ok = false;
+        result.issues.push('REGRESSION: JL AIA Shield plan option misdetected as section banner: ' + JSON.stringify(jlBanner));
+      }
+    }
   }
 
   return result;

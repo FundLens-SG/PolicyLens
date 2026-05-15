@@ -60,6 +60,17 @@
       return f && (n === f || n.includes(f));
     });
   }
+  function isInsurerOnlyName(value){
+    const n = normalizeText(value);
+    if (!n) return false;
+    const insurerOnly = new Set([
+      'aia','great eastern','ge','prudential','pru','ntuc income','income','income insurance',
+      'singlife','aviva','hsbc life','hsbc','manulife','tokio marine','etiqa','fwd',
+      'raffles health','raffles health insurance','cpf board','cpf','china life','china taiping',
+      'sompo','msig','aig','allianz','liberty','tugu','chubb','hl assurance','qbe','ecics'
+    ]);
+    return insurerOnly.has(n);
+  }
   function scoreName(input, candidate){
     const a = normalizeText(input);
     const b = normalizeText(candidate);
@@ -78,7 +89,7 @@
   }
   function findProduct(input, opts){
     opts = opts || {};
-    if (!input || isFalsePositiveName(input)) return null;
+    if (!input || isFalsePositiveName(input) || isInsurerOnlyName(input)) return null;
     const wantedInsurer = canonicalInsurer(opts.insurer || '');
     let best = null;
     for (const row of PRODUCTS) {

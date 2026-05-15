@@ -32,6 +32,8 @@ for (const [query, insurer, productName, category] of cases) {
 
 assert.equal(api.findProduct('AIA Vitality'), null, 'known wellness platform should not match as a policy');
 assert.equal(api.isFalsePositiveName('DBS Insurance'), true, 'distribution brand should be a false positive');
+assert.equal(api.findProduct('NTUC Income'), null, 'insurer-only text should not match IncomeShield products');
+assert.equal(api.findProduct('Income'), null, 'generic insurer/product token should not match Income products');
 assert.equal(api.findProduct('NTUC Income Customer Hotline'), null, 'hotline rows should not match NTUC Income policies');
 assert.equal(api.isFalsePositiveName('Customer Portal'), true, 'customer portal table labels should be false positives');
 assert.equal(api.isFalsePositiveName('Insurer Hotlines'), true, 'insurer hotline section labels should be false positives');
