@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.46-extraction-reconciliation';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.47-shield-components';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -738,9 +738,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.46';
+const APP_VERSION = 'v2.4.0-rc2.47';
 const APP_VERSION_DATE = '2026-05-16';
-const APP_VERSION_NAME = 'Extraction reconciliation';
+const APP_VERSION_NAME = 'Canonical Shield components';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1214,6 +1214,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.47',
+  date: '2026-05-16',
+  name: 'Canonical Shield components',
+  sections: [{
+    heading: 'Extraction',
+    items: ['Integrated Shield Plans now carry a canonical component model: base ISP, MediShield Life/private components, plan tier, and any number of embedded riders/boosters with source-row evidence.']
+  }]
+}, {
   version: 'v2.4.0-rc2.46',
   date: '2026-05-16',
   name: 'Extraction reconciliation',
@@ -4010,18 +4018,162 @@ function canonicalCoverageName(policy = {}, rider = null) {
   if (rider) return String(rider.riderName || rider.name || rider.type || 'Rider').trim();
   return String(policy._xlsxIspPlanOption || policy.productName || policy.policyName || policy.subType || 'Base policy').trim();
 }
+function canonicalIspComponentType(name = '', text = '') {
+  const haystack = normalizeTextKey([name, text].filter(Boolean).join(' '));
+  if (!haystack) return 'other_component';
+  if (/\bmedishield\s+life\b/.test(haystack)) return 'medishield_life';
+  if (/\b(private|additional)\b.*\b(component|insurance|coverage)\b/.test(haystack)) return 'isp_private_component';
+  if (/\b(special\s+[ab]|plan\s*\d+|standard|private|class\s*[ab]\d?|ward|hsg\s+max|gold\s+max|preferred|advantage|deluxe|elite|plus)\b/.test(haystack) && !/\brider\b/.test(haystack)) return 'ward_plan_option';
+  if (/\b(cancer|oncology|non\s+cdl|cdl|booster|cancer\s+guard)\b/.test(haystack)) return 'cancer_booster';
+  if (/\b(outpatient|emergency|vitalhealth|vitalcare|essential|optima|health\s+plus|myhealthplus)\b/.test(haystack)) return 'outpatient_booster';
+  if (/\b(co\s*pay|co\s*payment|co\s*insurance|deductible|waiver|assist|totalcare|income\s*care|pruextra|enhanced\s+care|choice|key|premier)\b/.test(haystack)) return 'co_pay_rider';
+  if (/\bdaily\s+cash|hospital\s+cash|cash\s+rider\b/.test(haystack)) return 'cash_rider';
+  if (/\brider\b/.test(haystack)) return 'shield_rider';
+  return 'other_component';
+}
+function canonicalIspComponentKey(policy = {}, role = '', name = '', policyNumber = '', sourceRow = '') {
+  return normalizeTextKey([canonicalPolicyId(policy), role, name, policyNumber, sourceRow].filter(v => v !== null && v !== undefined && String(v).trim() !== '').join('|'));
+}
+function buildIspCanonicalComponents(policy = {}) {
+  if (!isIspPolicyLike(policy)) return [];
+  const policyId = canonicalPolicyId(policy);
+  const rows = [];
+  const sourceSheet = policy.sourceSheet || policy._sourceTrace?.sourceSheet || '';
+  const sourceRow = policy.sourceRow || policy._sourceTrace?.sourceRow || null;
+  const baseName = String(policy._xlsxIspBaseProductName || policy.productName || policy.policyName || 'Integrated Shield Plan').trim();
+  const baseKey = canonicalIspComponentKey(policy, 'base_plan', baseName, policy.policyNumber || '', sourceRow || '');
+  const basePremium = canonicalMoney(policy.premiumAmount ?? policy.annualPremium);
+  const baseEvidence = canonicalEvidenceForField(policy, 'premiumAmount') || canonicalEvidenceForField(policy, 'productName');
+  const baseVerification = canonicalVerificationStateForField(policy, policy.premiumAmount ? 'premiumAmount' : 'annualPremium');
+  const baseReview = canonicalReviewStateForField(policy, policy.premiumAmount ? 'premiumAmount' : 'annualPremium');
+  rows.push({
+    table: 'policy_components',
+    policy_id: policyId,
+    component_key: baseKey,
+    parent_component_key: null,
+    component_role: 'base_plan',
+    component_type_id: 'integrated_shield_plan',
+    component_name: baseName,
+    source_policy_number: policy.policyNumber || '',
+    premium_amount: basePremium,
+    premium_scope: basePremium ? 'policy_total' : '',
+    premium_frequency: policy.premFrequency || (basePremium ? 'annual' : ''),
+    medisave_eligible: true,
+    cash_only: false,
+    ward_class: policy.ispClass || policy.hospitalWard || '',
+    effective_from: policy.inceptionDate || null,
+    effective_to: policy.maturityDate || null,
+    source_sheet: sourceSheet,
+    source_row: sourceRow,
+    verification_state: baseVerification,
+    review_state: baseReview,
+    evidence: baseEvidence
+  });
+  const addFixedChild = (role, typeId, name, premiumFields = []) => {
+    const premiumValue = premiumFields.map(field => canonicalMoney(policy[field])).find(Boolean) || null;
+    rows.push({
+      table: 'policy_components',
+      policy_id: policyId,
+      component_key: canonicalIspComponentKey(policy, role, name, policy.policyNumber || '', sourceRow || ''),
+      parent_component_key: baseKey,
+      component_role: role,
+      component_type_id: typeId,
+      component_name: name,
+      source_policy_number: policy.policyNumber || '',
+      premium_amount: premiumValue,
+      premium_scope: premiumValue ? 'component_amount' : '',
+      premium_frequency: premiumValue ? policy.premFrequency || 'annual' : '',
+      medisave_eligible: true,
+      cash_only: false,
+      ward_class: policy.ispClass || policy.hospitalWard || '',
+      effective_from: policy.inceptionDate || null,
+      effective_to: policy.maturityDate || null,
+      source_sheet: sourceSheet,
+      source_row: sourceRow,
+      verification_state: canonicalVerificationStateForField(policy, premiumFields[0] || 'productName'),
+      review_state: canonicalReviewStateForField(policy, premiumFields[0] || 'productName'),
+      evidence: canonicalEvidenceForField(policy, premiumFields[0] || 'productName') || baseEvidence
+    });
+  };
+  addFixedChild('statutory_component', 'medishield_life', 'MediShield Life component', ['mediShieldLifePremium', 'medishieldLifePremium', 'mslPremium']);
+  addFixedChild('private_component', 'isp_private_component', 'ISP private insurance component', ['ispPrivatePremium', 'ispAdditionalPremium', 'privateComponentPremium']);
+  const planOption = String(policy._xlsxIspPlanOption || '').trim();
+  if (planOption && normalizeTextKey(planOption) !== normalizeTextKey(baseName)) {
+    rows.push({
+      table: 'policy_components',
+      policy_id: policyId,
+      component_key: canonicalIspComponentKey(policy, 'plan_option', planOption, policy.policyNumber || '', sourceRow || ''),
+      parent_component_key: baseKey,
+      component_role: 'plan_option',
+      component_type_id: canonicalIspComponentType(planOption),
+      component_name: planOption,
+      source_policy_number: policy.policyNumber || '',
+      premium_amount: null,
+      premium_scope: '',
+      premium_frequency: '',
+      medisave_eligible: true,
+      cash_only: false,
+      ward_class: policy.ispClass || policy.hospitalWard || '',
+      effective_from: policy.inceptionDate || null,
+      effective_to: policy.maturityDate || null,
+      source_sheet: sourceSheet,
+      source_row: sourceRow,
+      verification_state: canonicalVerificationStateForField(policy, 'productName'),
+      review_state: canonicalReviewStateForField(policy, 'productName'),
+      evidence: canonicalEvidenceForField(policy, 'productName') || baseEvidence
+    });
+  }
+  const riders = Array.isArray(policy.riders) ? policy.riders : [];
+  riders.forEach(rider => {
+    if (!rider || !(rider.riderName || rider.name || rider.type)) return;
+    const name = String(rider.riderName || rider.name || rider.type || 'Shield rider').trim();
+    const premium = canonicalMoney(rider.premium);
+    rows.push({
+      table: 'policy_components',
+      policy_id: policyId,
+      component_key: canonicalIspComponentKey(policy, 'rider', name, rider.policyNumber || '', rider.sourceRow || ''),
+      parent_component_key: baseKey,
+      component_role: 'rider',
+      component_type_id: rider.componentType || canonicalIspComponentType(name, rider.coverageText || ''),
+      component_name: name,
+      source_policy_number: rider.policyNumber || '',
+      sum_assured: canonicalMoney(rider.sa ?? rider.riderSA),
+      premium_amount: premium,
+      premium_scope: premium ? 'rider_amount' : '',
+      premium_frequency: rider.premiumFrequency || (premium ? 'annual' : ''),
+      medisave_eligible: false,
+      cash_only: true,
+      co_insurance_pct: canonicalMoney(rider.coInsurancePct || policy.ispCoinsurance),
+      co_insurance_cap: canonicalMoney(rider.coInsuranceCap || policy.ispCoInsCap),
+      ward_class: policy.ispClass || policy.hospitalWard || '',
+      bundled: rider.bundled !== false,
+      effective_from: rider.inceptionDate || policy.inceptionDate || null,
+      effective_to: rider.maturityDate || policy.maturityDate || null,
+      source_sheet: rider.sourceSheet || sourceSheet,
+      source_row: rider.sourceRow || null,
+      coverage_text: rider.coverageText || '',
+      verification_state: canonicalVerificationStateForField(policy, 'riders'),
+      review_state: canonicalReviewStateForField(policy, 'riders'),
+      evidence: rider.evidence || canonicalEvidenceForField(policy, 'riders') || baseEvidence
+    });
+  });
+  return rows;
+}
 function canonicalCoverageRow(policy = {}, component = 'base_policy', rider = null) {
   const policyId = canonicalPolicyId(policy);
   const name = canonicalCoverageName(policy, rider);
   const coverageType = canonicalCoverageType(policy, rider);
   const isIsp = coverageType === 'integrated_shield' || coverageType === 'shield_rider';
   const premiumField = rider ? 'riders' : policy.premiumAmount ? 'premiumAmount' : 'annualPremium';
+  const componentType = isIsp ? rider ? rider.componentType || canonicalIspComponentType(name, rider.coverageText || '') : 'integrated_shield_plan' : coverageType;
   return {
     table: 'policy_coverages',
     id: null,
     policy_id: policyId,
     coverage_key: normalizeTextKey([policyId, component, name, rider?.policyNumber || ''].join('|')),
     component,
+    component_role: rider ? 'rider' : isIsp ? 'base_plan' : 'base_policy',
+    component_type_id: componentType,
     parent_coverage_key: rider ? normalizeTextKey([policyId, 'base_policy', canonicalCoverageName(policy, null), ''].join('|')) : null,
     coverage_type_id: coverageType,
     coverage_name: name,
@@ -4036,6 +4188,8 @@ function canonicalCoverageRow(policy = {}, component = 'base_policy', rider = nu
     co_insurance_pct: isIsp ? canonicalMoney(rider?.coInsurancePct || policy.ispCoinsurance) : null,
     co_insurance_cap: isIsp ? canonicalMoney(rider?.coInsuranceCap || policy.ispCoInsCap) : null,
     ward_class: isIsp ? policy.ispClass || policy.hospitalWard || '' : '',
+    medisave_eligible: isIsp ? !rider : null,
+    cash_only: isIsp ? !!rider : null,
     bundled: rider ? rider.bundled !== false : true,
     effective_from: rider?.inceptionDate || policy.inceptionDate || null,
     effective_to: rider?.maturityDate || policy.maturityDate || null,
@@ -4074,7 +4228,8 @@ function buildPolicyCanonicalPreview(policy = {}) {
     review_state: policy._extractVerifiedAt ? 'approved' : policy._sourceTrace?.reviewState || 'pending',
     extraction_run_id: policy._extractionRun?.id || policy._sourceTrace?.extractionRunId || '',
     participants: buildPolicyCanonicalParticipants(policy),
-    coverages: buildPolicyCanonicalCoverages(policy)
+    coverages: buildPolicyCanonicalCoverages(policy),
+    components: buildIspCanonicalComponents(policy)
   };
 }
 function attachPolicyCanonicalPreview(policy = {}) {
@@ -5427,7 +5582,7 @@ async function pdfToImages(pdfDoc, maxPages = 12) {
 // shipped. Cache lookup is keyed by EXTRACT_PIPELINE_VERSION + fileHash,
 // so a re-scan after this bump WILL re-extract (no cache hit) and the
 // rc2.19/2.21 fixes will actually run.
-const EXTRACT_PIPELINE_VERSION = 'v15.48-2026-05-16-extraction-reconciliation';
+const EXTRACT_PIPELINE_VERSION = 'v15.49-2026-05-16-shield-components';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -12644,6 +12799,15 @@ function isIspPolicyLike(policy) {
   const subType = String(policy.subType || '').toLowerCase();
   return isIntegratedShieldParentName(name) || policy.category === 'health' && /integrated\s+shield/.test(subType) || /\bhospitali[sz]ation\b|\bmedical\b/.test(String(section).toLowerCase()) && /\bshield\b/i.test(name);
 }
+function inferIspComponentType(name = '', coverageText = '') {
+  const t = normalizeTextKey([name, coverageText].filter(Boolean).join(' '));
+  if (!t) return 'shield_rider';
+  if (/\b(cancer|oncology|non\s+cdl|cdl|cancer\s+care|cancer\s+guard)\b/.test(t)) return 'cancer_booster';
+  if (/\b(vitalhealth|vitalcare|outpatient|emergency|essential|optima|health\s+plus|myhealthplus)\b/.test(t)) return 'outpatient_booster';
+  if (/\b(co\s*pay|co\s*payment|co\s*insurance|deductible|waiver|assist|totalcare|income\s*care|pruextra|enhanced\s+care|choice|key|premier)\b/.test(t)) return 'co_pay_rider';
+  if (/\bdaily\s+cash|hospital\s+cash|cash\s+rider\b/.test(t)) return 'cash_rider';
+  return 'shield_rider';
+}
 function sameSpreadsheetIspPerson(a, b) {
   const norm = p => normalizePersonNameKey(p?.lifeInsured || p?.policyOwner || p?.documentOwner || p?.sourceDocument?.clientName || '');
   const ak = norm(a);
@@ -12661,6 +12825,7 @@ function makeIspRiderFromPolicy(row) {
   const coverageText = [getXlsxRawCoverageText(row), row.coverageBenefits, row.notes, row.extractionNotes, row.userRemarks].filter(Boolean).join(' | ').replace(/\s+/g, ' ').trim();
   return {
     type: classifyXlsxRiderType(name + ' ' + coverageText),
+    componentType: inferIspComponentType(name, coverageText),
     riderName: name,
     sa: parseXlsxRiderSa(coverageText),
     premium: parseXlsxMoneyNumber(row.riderPremium ?? row.premiumAmount ?? row.annualPremium),
@@ -12702,6 +12867,7 @@ function attachIspComponentToParent(parent, row, asPlanOption = false) {
   const name = String(row.productName || row.policyName || '').replace(/\s+/g, ' ').trim();
   if (!name) return false;
   if (asPlanOption) {
+    parent._xlsxIspBaseProductName = parent._xlsxIspBaseProductName || parent.productName || parent.policyName || '';
     parent._xlsxIspPlanOption = name;
     if (!isIntegratedShieldPlanOptionName(parent.productName || parent.policyName)) {
       parent.productName = _titleCaseProductName(name);

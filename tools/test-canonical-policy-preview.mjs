@@ -78,6 +78,7 @@ const shieldPolicy = attachPolicyCanonicalPreview({
   id: 'pol-aia-shield',
   insurer: 'AIA',
   productName: 'AIA HSG Max Special A',
+  _xlsxIspBaseProductName: 'AIA HealthShield Gold Max',
   _xlsxIspPlanOption: 'AIA HSG Max Special A',
   policyNumber: 'H230740130',
   category: 'health',
@@ -110,6 +111,7 @@ const shieldPolicy = attachPolicyCanonicalPreview({
   riders: [
     {
       type: 'other',
+      componentType: 'co_pay_rider',
       riderName: 'AIA HSG Max Rider',
       premium: 1061.8,
       bundled: false,
@@ -120,6 +122,7 @@ const shieldPolicy = attachPolicyCanonicalPreview({
     },
     {
       type: 'other',
+      componentType: 'outpatient_booster',
       riderName: 'AIA Max VitalHealth A',
       bundled: false,
       sourceSheet: 'JL Policy Summary',
@@ -127,6 +130,7 @@ const shieldPolicy = attachPolicyCanonicalPreview({
     },
     {
       type: 'ci',
+      componentType: 'cancer_booster',
       riderName: 'AIA Max A Cancer Care Booster',
       premium: 45.8,
       bundled: false,
@@ -146,17 +150,38 @@ const coverages = shieldPolicy._canonicalPreview.coverages;
 assert.equal(coverages.length, 4, 'base ISP plus three riders should be coverage rows');
 assert.equal(coverages[0].coverage_type_id, 'integrated_shield');
 assert.equal(coverages[0].coverage_name, 'AIA HSG Max Special A');
+assert.equal(coverages[0].component_type_id, 'integrated_shield_plan');
 
 const riderRows = coverages.filter(c => c.component === 'rider');
 assert.equal(riderRows.length, 3);
 assert.ok(riderRows.every(c => c.coverage_type_id === 'shield_rider'), 'ISP add-ons should become shield rider coverage children');
 assert.ok(riderRows.every(c => c.parent_coverage_key === coverages[0].coverage_key), 'riders should point at the base ISP coverage key');
+assert.deepEqual(riderRows.map(c => c.component_type_id), ['co_pay_rider', 'outpatient_booster', 'cancer_booster']);
 assert.equal(riderRows[0].premium_amount, 1061.8);
 assert.equal(riderRows[0].co_insurance_pct, 5);
 assert.equal(riderRows[0].co_insurance_cap, 3000);
 assert.equal(riderRows[0].source_row, 7);
 assert.equal(riderRows[0].verification_state, 'extracted');
 assert.equal(riderRows[0].review_state, 'pending');
+assert.equal(riderRows[0].medisave_eligible, false, 'rider rows should be marked cash-only');
+
+const components = shieldPolicy._canonicalPreview.components;
+assert.equal(components.length, 7, 'canonical ISP model should include base, MSL, private component, plan tier, and three riders');
+assert.equal(components[0].component_type_id, 'integrated_shield_plan');
+assert.equal(components[0].component_name, 'AIA HealthShield Gold Max');
+assert.equal(components[0].premium_scope, 'policy_total');
+assert.ok(components.some(c => c.component_type_id === 'medishield_life' && c.medisave_eligible === true));
+assert.ok(components.some(c => c.component_type_id === 'isp_private_component' && c.medisave_eligible === true));
+const planTier = components.find(c => c.component_role === 'plan_option');
+assert.equal(planTier.component_name, 'AIA HSG Max Special A');
+assert.equal(planTier.parent_component_key, components[0].component_key);
+const componentRiders = components.filter(c => c.component_role === 'rider');
+assert.equal(componentRiders.length, 3, 'riders should stay embedded as component rows');
+assert.ok(componentRiders.every(c => c.parent_component_key === components[0].component_key));
+assert.ok(componentRiders.every(c => c.cash_only === true && c.medisave_eligible === false));
+assert.deepEqual(componentRiders.map(c => c.component_type_id), ['co_pay_rider', 'outpatient_booster', 'cancer_booster']);
+assert.equal(componentRiders[0].source_row, 7);
+assert.equal(componentRiders[0].coverage_text, '5% co-payment, capped at S$3,000 with deductible waiver pass');
 
 const verified = buildPolicyCanonicalPreview({
   id: 'pol-verified',
@@ -169,5 +194,6 @@ const verified = buildPolicyCanonicalPreview({
 assert.equal(verified.verification_state, 'advisor_verified');
 assert.equal(verified.review_state, 'approved');
 assert.ok(verified.participants.every(p => p.verification_state === 'advisor_verified'));
+assert.deepEqual(verified.components, [], 'non-ISP policies should not receive Shield component rows');
 
 console.log('Canonical policy preview checks passed.');
