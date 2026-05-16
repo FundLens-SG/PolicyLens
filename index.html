@@ -5789,7 +5789,7 @@ async function pdfToImages(pdfDoc, maxPages = 12) {
 // cache could return a stale 2-policy spreadsheet result before the fixed
 // local XLSX parser ran, so the parser now bypasses extraction/OCR cache
 // for spreadsheets and this version makes existing stale entries unreachable.
-const EXTRACT_PIPELINE_VERSION = 'v15.51-2026-05-17-soh-family-rc2.42';
+const EXTRACT_PIPELINE_VERSION = 'v15.52-2026-05-17-prushield-extra-rider-rc2.43';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -13087,7 +13087,11 @@ function isIntegratedShieldPlanOptionName(name) {
 function isIntegratedShieldRiderName(name) {
   const t = normalizeTextKey(name);
   if (!t) return false;
-  return /\b(hsg\s+max\s+rider|max\s+vitalhealth|max\s+vitalcare|max\s+essential|max\s+a\s+cancer\s+care\s+booster|cancer\s+care\s+booster|emergency\s+and\s+outpatient\s+care\s+booster|shield\s+benefits\s+preserver|pruextra|pru\s*extra|great\s+totalcare|totalcare|enhanced\s+incomecare|income\s+care|deluxe\s+incomecare|deluxe\s+care|classic\s+care|assist\s+rider|plus\s+rider|daily\s+cash\s+rider|child\s+illness\s+rider|optima\s+care|essential\s+care|co-?pay\s+assist|singlife\s+health\s+plus|health\s+plus|myhealthplus|hsbc\s+life\s+enhanced\s+care|enhanced\s+care|raffles\s+(?:key|choice|premier)\s+rider|choice\s+rider|key\s+rider|premier\s+rider|cancer\s+guard\s+rider|raffles\s+hospital\s+option|high\s+deductible\s+option)\b/.test(t) || /\b(?:shield|incomeshield|healthshield|prushield|supremehealth)\b.*\brider\b/.test(t);
+  // rc2.43: Prudential rebranded PRUExtra → PRUShield Extra (e.g. "PRUSHIELD EXTRA PREMIER" is
+  //   the as-charged co-pay rider for PRUSHIELD PREMIER). The old "PRUExtra" pattern still
+  //   covers legacy ISPs; the new "PRUShield Extra" wording is added here. Generalised so
+  //   "PRUShield Extra Plus" / "PRUShield Extra Lite" also coalesce as the rider.
+  return /\b(hsg\s+max\s+rider|max\s+vitalhealth|max\s+vitalcare|max\s+essential|max\s+a\s+cancer\s+care\s+booster|cancer\s+care\s+booster|emergency\s+and\s+outpatient\s+care\s+booster|shield\s+benefits\s+preserver|pruextra|pru\s*extra|prushield\s+extra|great\s+totalcare|totalcare|enhanced\s+incomecare|income\s+care|deluxe\s+incomecare|deluxe\s+care|classic\s+care|assist\s+rider|plus\s+rider|daily\s+cash\s+rider|child\s+illness\s+rider|optima\s+care|essential\s+care|co-?pay\s+assist|singlife\s+health\s+plus|health\s+plus|myhealthplus|hsbc\s+life\s+enhanced\s+care|enhanced\s+care|raffles\s+(?:key|choice|premier)\s+rider|choice\s+rider|key\s+rider|premier\s+rider|cancer\s+guard\s+rider|raffles\s+hospital\s+option|high\s+deductible\s+option)\b/.test(t) || /\b(?:shield|incomeshield|healthshield|prushield|supremehealth)\b.*\brider\b/.test(t);
 }
 function isIspPolicyLike(policy) {
   if (!policy || typeof policy !== 'object') return false;

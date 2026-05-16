@@ -72,14 +72,9 @@
           "policyNo": "85817234",
           "lifeInsured": "Self",
           "premiumAmount": 1464,
-          "inceptionDate": "13 Nov 2023"
-        },
-        {
-          "section": "Hospitalisation",
-          "productName": "PRUSHIELD EXTRA PREMIER",
-          "policyNo": "86426866",
-          "premiumAmount": 3410,
-          "inceptionDate": "13 Nov 2023"
+          "inceptionDate": "13 Nov 2023",
+          "hasRider": true,
+          "riders": ["PRUSHIELD EXTRA"]
         },
         {
           "section": "Life Protection",
