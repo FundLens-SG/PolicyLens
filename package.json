@@ -5,6 +5,7 @@
     "test:golden": "node tools/golden-family-routing-harness.mjs",
     "test:isp-riders": "node tools/test-isp-rider-coalescing.mjs",
     "test:product-knowledge": "node tools/test-singapore-product-knowledge.mjs",
+    "test:canonical-preview": "node tools/test-canonical-policy-preview.mjs",
     "test:xlsx-evidence": "node tools/test-xlsx-evidence-envelope.mjs",
     "split:preview": "node tools/extract-index-modules.mjs --list",
     "eval:extraction": "node tools/eval-extraction.mjs",

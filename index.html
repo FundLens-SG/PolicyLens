@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.41-xlsx-evidence-envelope';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.42-canonical-policy-preview';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -738,9 +738,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.41';
+const APP_VERSION = 'v2.4.0-rc2.42';
 const APP_VERSION_DATE = '2026-05-16';
-const APP_VERSION_NAME = 'XLSX evidence envelope';
+const APP_VERSION_NAME = 'Canonical policy preview';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -1213,6 +1213,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.42',
+  date: '2026-05-16',
+  name: 'Canonical policy preview',
+  sections: [{
+    heading: 'Architecture',
+    items: ['Policy records now carry a transitional canonical preview with policy participants and coverage/rider child rows, giving CRMLens a structured handoff path while the existing PolicyLens UI remains backwards compatible.']
+  }]
+}, {
   version: 'v2.4.0-rc2.41',
   date: '2026-05-16',
   name: 'XLSX evidence envelope',
@@ -3663,7 +3671,7 @@ function enhanceExtractedPolicyIntelligence(policy = {}, existingPolicies = []) 
       reason: 'fingerprint-triage'
     };
   }
-  return next;
+  return attachPolicyCanonicalPreview(next);
 }
 function ensurePolicyFieldEvidence(policy, meta = {}) {
   const next = mergeConfidenceArrayIntoMaps({
@@ -3714,6 +3722,187 @@ function ensurePolicyFieldEvidence(policy, meta = {}) {
   next._pageFingerprint = next._pageFingerprint || buildPolicyPageFingerprint(next, meta);
   return next;
 }
+function canonicalPolicyId(policy = {}) {
+  if (policy.id) return String(policy.id);
+  const fp = policy._policyFingerprint || buildPolicyIdentityFingerprint(policy);
+  return fp?.id || '';
+}
+function canonicalEvidenceForField(policy = {}, field = '') {
+  const ev = policy._fieldEvidence?.[field] || null;
+  const trace = policy._sourceTrace || null;
+  if (!ev && !trace) return null;
+  const evidence = ev?.evidence || {};
+  return {
+    field,
+    value: ev?.value ?? policy[field] ?? null,
+    confidence: ev?.confidence || 'high',
+    sourceKind: evidence.sourceKind || trace?.sourceKind || '',
+    sourceFile: evidence.sourceFile || trace?.sourceFile || policy.sourceFile || policy._sourceFile || '',
+    sourceSheet: evidence.sourceSheet || trace?.sourceSheet || policy.sourceSheet || '',
+    sourceRow: evidence.sourceRow || trace?.sourceRow || policy.sourceRow || null,
+    sourceText: ev?.sourceText || evidence.sourceText || trace?.sourceText || '',
+    pipelineVersion: evidence.pipelineVersion || trace?.pipelineVersion || EXTRACT_PIPELINE_VERSION,
+    extractionRunId: evidence.extractionRunId || trace?.extractionRunId || policy._extractionRun?.id || ''
+  };
+}
+function canonicalVerificationStateForField(policy = {}, field = '') {
+  const evState = policy._fieldEvidence?.[field]?.verificationState || policy._fieldEvidence?.[field]?.evidence?.verificationState;
+  if (evState) return evState;
+  if (policy._extractVerifiedAt && !(policy._extractConfidence && Object.prototype.hasOwnProperty.call(policy._extractConfidence, field))) return 'advisor_verified';
+  if (policy._sourceTrace || policy._fieldEvidence?.[field]) return 'extracted';
+  return 'unverified';
+}
+function canonicalReviewStateForField(policy = {}, field = '') {
+  const verificationState = canonicalVerificationStateForField(policy, field);
+  if (verificationState === 'advisor_verified' || verificationState === 'client_signed_off') return 'approved';
+  return policy._fieldEvidence?.[field]?.reviewState || policy._sourceTrace?.reviewState || 'pending';
+}
+function normalizeCanonicalParticipantRole(role = '') {
+  const key = normalizeTextKey(role);
+  if (/^(policy\s*)?owner|policyholder|holder|proposer|applicant/.test(key)) return 'owner';
+  if (/life|insured|assured|dependent|dependant/.test(key)) return 'life_insured';
+  if (/payor|payer|premium/.test(key)) return 'payer';
+  if (/beneficiar/.test(key)) return 'beneficiary';
+  if (/trustee/.test(key)) return 'trustee';
+  if (/assignee/.test(key)) return 'assignee';
+  if (/nominee/.test(key)) return 'nominee';
+  if (/key\s*person/.test(key)) return 'key_person';
+  if (/document|source|sheet/.test(key)) return 'source_subject';
+  return key || 'unknown';
+}
+function buildPolicyCanonicalParticipants(policy = {}) {
+  const rows = [];
+  const seen = new Set();
+  const policyId = canonicalPolicyId(policy);
+  const add = (role, name, sourceField, extra = {}) => {
+    const displayName = cleanPersonDisplayName(name || '').trim();
+    const partyKey = normalizePersonNameKey(displayName);
+    if (!displayName || !partyKey) return;
+    const canonicalRole = normalizeCanonicalParticipantRole(role);
+    const key = canonicalRole + '|' + partyKey;
+    if (seen.has(key)) return;
+    seen.add(key);
+    rows.push({
+      table: 'policy_participants',
+      policy_id: policyId,
+      party_id: null,
+      party_key: partyKey,
+      display_name: displayName,
+      role: canonicalRole,
+      source_role: role,
+      source_field: sourceField,
+      share_pct: extra.share_pct ?? null,
+      effective_from: extra.effective_from || policy.inceptionDate || null,
+      effective_to: extra.effective_to || null,
+      verification_state: canonicalVerificationStateForField(policy, sourceField),
+      review_state: canonicalReviewStateForField(policy, sourceField),
+      evidence: canonicalEvidenceForField(policy, sourceField)
+    });
+  };
+  add('owner', policy.policyOwner, 'policyOwner');
+  add('life_insured', policy.lifeInsured, 'lifeInsured');
+  add('payer', policy.payer || policy.payor || policy.premiumPayer, policy.payer ? 'payer' : policy.payor ? 'payor' : 'premiumPayer');
+  if (policy.documentOwner && !personNameEquivalent(policy.documentOwner, policy.policyOwner) && !personNameEquivalent(policy.documentOwner, policy.lifeInsured)) {
+    add('source_subject', policy.documentOwner, 'documentOwner');
+  }
+  return rows;
+}
+function canonicalMoney(value) {
+  const n = moneyNumber(value);
+  return n > 0 ? n : null;
+}
+function canonicalCoverageType(policy = {}, rider = null) {
+  const text = normalizeTextKey([rider?.type, rider?.riderName, rider?.coverageText, policy.subType, policy.category, policy.productName, policy.policyName].filter(Boolean).join(' '));
+  const isIsp = isIspPolicyLike(policy) || /\bintegrated\s+shield\b|\bisp\b/.test(String(policy.subType || '').toLowerCase());
+  if (rider && isIsp) return 'shield_rider';
+  if (!rider && isIsp) return 'integrated_shield';
+  if (/premium\s+waiver|waiver/.test(text)) return 'premium_waiver';
+  if (/early\s+critical|eci\b/.test(text)) return 'early_critical_illness';
+  if (/critical|ci\b|cancer/.test(text)) return 'critical_illness';
+  if (/tpd|total\s+permanent|disablement|disability/.test(text)) return 'total_permanent_disability';
+  if (/accident|add\b|personal\s+accident/.test(text)) return 'accidental';
+  if (/death|term|life/.test(text)) return 'death';
+  if (/hospital|medical|shield|health/.test(text)) return 'medical';
+  return 'other';
+}
+function canonicalCoverageName(policy = {}, rider = null) {
+  if (rider) return String(rider.riderName || rider.name || rider.type || 'Rider').trim();
+  return String(policy._xlsxIspPlanOption || policy.productName || policy.policyName || policy.subType || 'Base policy').trim();
+}
+function canonicalCoverageRow(policy = {}, component = 'base_policy', rider = null) {
+  const policyId = canonicalPolicyId(policy);
+  const name = canonicalCoverageName(policy, rider);
+  const coverageType = canonicalCoverageType(policy, rider);
+  const isIsp = coverageType === 'integrated_shield' || coverageType === 'shield_rider';
+  const premiumField = rider ? 'riders' : policy.premiumAmount ? 'premiumAmount' : 'annualPremium';
+  return {
+    table: 'policy_coverages',
+    id: null,
+    policy_id: policyId,
+    coverage_key: normalizeTextKey([policyId, component, name, rider?.policyNumber || ''].join('|')),
+    component,
+    parent_coverage_key: rider ? normalizeTextKey([policyId, 'base_policy', canonicalCoverageName(policy, null), ''].join('|')) : null,
+    coverage_type_id: coverageType,
+    coverage_name: name,
+    source_policy_number: rider?.policyNumber || policy.policyNumber || '',
+    sum_assured: canonicalMoney(rider?.sa ?? rider?.riderSA ?? policy.sumAssured),
+    premium_amount: canonicalMoney(rider?.premium ?? (component === 'base_policy' ? policy.premiumAmount ?? policy.annualPremium : null)),
+    premium_frequency: rider?.premiumFrequency || policy.premFrequency || (canonicalMoney(rider?.premium ?? policy.premiumAmount ?? policy.annualPremium) ? 'annual' : ''),
+    benefit_term_years: canonicalMoney(rider?.benefitTerm || rider?.term || policy.endPolicyTerm || policy.policyTerm),
+    premium_term_years: canonicalMoney(rider?.premiumTerm || policy.premTerm),
+    waiver_flag: coverageType === 'premium_waiver',
+    ci_basis: rider?.ciBasis || null,
+    co_insurance_pct: isIsp ? canonicalMoney(rider?.coInsurancePct || policy.ispCoinsurance) : null,
+    co_insurance_cap: isIsp ? canonicalMoney(rider?.coInsuranceCap || policy.ispCoInsCap) : null,
+    ward_class: isIsp ? policy.ispClass || policy.hospitalWard || '' : '',
+    bundled: rider ? rider.bundled !== false : true,
+    effective_from: rider?.inceptionDate || policy.inceptionDate || null,
+    effective_to: rider?.maturityDate || policy.maturityDate || null,
+    source_sheet: rider?.sourceSheet || policy.sourceSheet || policy._sourceTrace?.sourceSheet || '',
+    source_row: rider?.sourceRow || policy.sourceRow || policy._sourceTrace?.sourceRow || null,
+    verification_state: canonicalVerificationStateForField(policy, premiumField),
+    review_state: canonicalReviewStateForField(policy, premiumField),
+    field_versions: policy._fieldVersions || {},
+    evidence: rider?.evidence || canonicalEvidenceForField(policy, premiumField) || canonicalEvidenceForField(policy, 'productName')
+  };
+}
+function buildPolicyCanonicalCoverages(policy = {}) {
+  const rows = [canonicalCoverageRow(policy, 'base_policy', null)];
+  const riders = Array.isArray(policy.riders) ? policy.riders : [];
+  riders.forEach(rider => {
+    if (!rider || !(rider.riderName || rider.name || rider.type)) return;
+    rows.push(canonicalCoverageRow(policy, 'rider', rider));
+  });
+  return rows;
+}
+function buildPolicyCanonicalPreview(policy = {}) {
+  const policyId = canonicalPolicyId(policy);
+  const hasExtractionEvidence = !!(policy._sourceTrace || policy._fieldEvidence && Object.keys(policy._fieldEvidence).length);
+  return {
+    schemaVersion: 'policylens-canonical-preview/v1',
+    sourceSystem: 'PolicyLens',
+    policy_id: policyId,
+    policy_identity: {
+      insurer: policy.insurer || '',
+      product_name: policy.productName || policy.policyName || '',
+      policy_number: policy.policyNumber || '',
+      category: policy.category || '',
+      sub_type: policy.subType || ''
+    },
+    verification_state: policy._extractVerifiedAt ? 'advisor_verified' : policy._sourceTrace?.verificationState || (hasExtractionEvidence ? 'extracted' : 'unverified'),
+    review_state: policy._extractVerifiedAt ? 'approved' : policy._sourceTrace?.reviewState || 'pending',
+    extraction_run_id: policy._extractionRun?.id || policy._sourceTrace?.extractionRunId || '',
+    participants: buildPolicyCanonicalParticipants(policy),
+    coverages: buildPolicyCanonicalCoverages(policy)
+  };
+}
+function attachPolicyCanonicalPreview(policy = {}) {
+  const next = {
+    ...(policy || {})
+  };
+  next._canonicalPreview = buildPolicyCanonicalPreview(next);
+  return next;
+}
 function normalizePolicyForStorage(policy, meta = {}) {
   // rc2e.47: title-case person-name fields once at the top so any
   // path that funnels through this normalizer (Drive load, manual
@@ -3732,6 +3921,7 @@ function normalizePolicyForStorage(policy, meta = {}) {
     insuranceExtraction: true
   };
   next = ensurePolicyFieldEvidence(next, meta);
+  next = attachPolicyCanonicalPreview(next);
   return assignDeterministicPolicyId(next, next.clientId || meta.clientId || '');
 }
 function isWeakPolicyOwnerValue(name) {
@@ -5056,7 +5246,7 @@ async function pdfToImages(pdfDoc, maxPages = 12) {
 // shipped. Cache lookup is keyed by EXTRACT_PIPELINE_VERSION + fileHash,
 // so a re-scan after this bump WILL re-extract (no cache hit) and the
 // rc2.19/2.21 fixes will actually run.
-const EXTRACT_PIPELINE_VERSION = 'v15.43-2026-05-16-xlsx-evidence-envelope';
+const EXTRACT_PIPELINE_VERSION = 'v15.44-2026-05-16-canonical-policy-preview';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -11073,7 +11263,7 @@ function enrichSpreadsheetPolicyCandidate(policy, context = {}) {
   });
   next.extractionNotes = next.extractionNotes || 'Parsed from spreadsheet';
   next._policyFingerprint = buildPolicyIdentityFingerprint(next);
-  return next;
+  return attachPolicyCanonicalPreview(next);
 }
 
 // v2.3.0-rc2d.1: Parse XLSX/CSV to structured rows + compute header signature for column-map cache.
@@ -12279,6 +12469,9 @@ function makeIspRiderFromPolicy(row) {
     policyNumber: row.policyNumber || undefined,
     inceptionDate: row.inceptionDate || undefined,
     maturityDate: row.maturityDate || undefined,
+    sourceFile: row.sourceFile || row._sourceFile || undefined,
+    sourceSheet: row.sourceSheet || undefined,
+    sourceRow: row.sourceRow || undefined,
     coverageText: coverageText || undefined
   };
 }
