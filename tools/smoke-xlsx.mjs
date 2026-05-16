@@ -400,6 +400,23 @@ function smokeTestOne(fixture) {
         result.issues.push('REGRESSION: JL AIA Shield plan option misdetected as section banner: ' + JSON.stringify(jlBanner));
       }
     }
+
+    // 10) rc2.40: JY is a thin one-policy sheet. It must stay visible
+    // as its own routable client even though the life-insured cell also
+    // mentions "DD Owner".
+    const jy = smokeMatrixForSheet(fixture.path, 'JY Policy Summary');
+    if (jy.length) {
+      const header = (jy[0] || []).map(smokeXlsxCellText).join(' | ');
+      const shieldRows = [5, 6].map(idx => (jy[idx] || []).map(smokeXlsxCellText).join(' | ')).join('\n');
+      if (!/Soh\s+Jia\s+Yi/i.test(header)) {
+        result.ok = false;
+        result.issues.push('REGRESSION: JY sheet owner header is missing');
+      }
+      if (!/AIA\s+HEALTHSHIELD\s+GOLD\s+MAX/i.test(shieldRows) || !/DD\s+Owner/i.test(shieldRows)) {
+        result.ok = false;
+        result.issues.push('REGRESSION: JY thin Shield sheet no longer matches the owner-routing fixture shape');
+      }
+    }
   }
 
   return result;

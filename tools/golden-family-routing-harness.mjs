@@ -168,6 +168,28 @@ assertCase('family routing keeps dual-role short XLSX life assured names', () =>
   assert(je.policyItems.some(item => item.sourceField === 'policyOwner'), 'JE-owned row was not linked to Je');
 });
 
+assertCase('family routing keeps thin XLSX sheet owner clients', () => {
+  const detected = fns.collectDetectedClients([
+    {
+      insurer: 'AIA',
+      productName: 'AIA HSG Max B',
+      policyNumber: 'H230740143',
+      policyOwner: 'Soh Soon Jooh, Eric',
+      lifeInsured: 'Self DD Owner',
+      documentOwner: 'Soh Jia Yi',
+      _policyOwnerSource: 'xlsx-owner-marker',
+      _xlsxProfile: { name: 'Soh Jia Yi' },
+      sourceDocument: { clientName: 'Soh Jia Yi', sourceFile: 'Soh Family Policy Summary.xlsx' },
+      sourceFile: 'Soh Family Policy Summary.xlsx',
+      sourceSheet: 'JY Policy Summary'
+    }
+  ], { name: 'Teo Sock Choo, Stacy' }, []);
+  const jiaYi = detected.get('soh jia yi');
+  assert(jiaYi, 'Soh Jia Yi sheet owner was not detected as a routable client');
+  assert((jiaYi.sourceFields || []).includes('documentOwner'), 'Soh Jia Yi was not anchored by documentOwner/sheet owner');
+  assert(jiaYi.policyItems.some(item => item.sourceField === 'documentOwner'), 'JY sheet-owner policy row was not linked to Soh Jia Yi');
+});
+
 assertCase('duplicate guard keeps same product for different family members separate', () => {
   const a = {
     id: 'a',

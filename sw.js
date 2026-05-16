@@ -1,4 +1,4 @@
-const SW_VERSION = 'v2.4.0-rc2.39-isp-rider-coalescing';
+const SW_VERSION = 'v2.4.0-rc2.40-xlsx-sheet-owner-routing';
 const DB_NAME = 'PolicyLensSW';
 const DB_VERSION = 1;
 const SESSION_STORE = 'sessions';

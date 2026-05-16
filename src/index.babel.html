@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.39-isp-rider-coalescing';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.40-xlsx-sheet-owner-routing';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -728,9 +728,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.39';
-const APP_VERSION_DATE = '2026-05-15';
-const APP_VERSION_NAME = 'ISP rider coalescing';
+const APP_VERSION = 'v2.4.0-rc2.40';
+const APP_VERSION_DATE = '2026-05-16';
+const APP_VERSION_NAME = 'XLSX sheet-owner routing';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -986,6 +986,19 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.4.0-rc2.40',
+    date: '2026-05-16',
+    name: 'XLSX sheet-owner routing',
+    sections: [
+      {
+        heading: 'Extraction',
+        items: [
+          'Family spreadsheet imports now treat each policy-summary sheet banner as a routable client identity, so thin sheets such as Soh Jia Yi are still created even when the row says another family member is the policy owner.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.4.0-rc2.39',
     date: '2026-05-15',
@@ -5627,7 +5640,7 @@ async function pdfToImages(pdfDoc, maxPages=12) {
 // shipped. Cache lookup is keyed by EXTRACT_PIPELINE_VERSION + fileHash,
 // so a re-scan after this bump WILL re-extract (no cache hit) and the
 // rc2.19/2.21 fixes will actually run.
-const EXTRACT_PIPELINE_VERSION = 'v15.41-2026-05-15-isp-rider-coalescing';
+const EXTRACT_PIPELINE_VERSION = 'v15.42-2026-05-16-xlsx-sheet-owner-routing';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -8169,6 +8182,8 @@ function collectDetectedClients(policies, currentProfile, allDriveStates) {
     const n = normalizePersonNameKey(name) || normalizeName(name);
     if (!n || n.length < 3) return true;
     if (/^(policy owner|owner|policyholder|life insured|life assured|insured|applicant|proposer|payor|payer|self|same as|not applicable|n\/a|na|nil|unknown|null)$/.test(n)) return true;
+    if (/^[a-z]{1,4}\s+owner$/.test(n)) return true;
+    if (/\bself\b.*\b[a-z]{1,4}\s+owner\b/.test(n)) return true;
     return false;
   };
   const isTrustedShortXlsxPersonName = (policy, name) => {
@@ -8243,8 +8258,13 @@ function collectDetectedClients(policies, currentProfile, allDriveStates) {
   policies.forEach((p,idx) => {
     const ownerName = (p.policyOwner||'').trim();
     const lifeInsuredName = (p.lifeInsured||'').trim();
+    const documentOwnerName = (p.documentOwner || p.sourceDocument?.clientName || p._xlsxProfile?.name || '').trim();
     const ownerStrong = ownerName && (!isWeakOwnerName(ownerName) || isTrustedShortXlsxPersonName(p, ownerName));
     const lifeInsuredStrong = lifeInsuredName && (!isWeakOwnerName(lifeInsuredName) || isTrustedShortXlsxPersonName(p, lifeInsuredName));
+    const documentOwnerStrong = documentOwnerName && isXlsxPolicyContext(p) && (!isWeakOwnerName(documentOwnerName) || isTrustedShortXlsxPersonName(p, documentOwnerName));
+    if (documentOwnerStrong && (!ownerName || !personNameEquivalent(documentOwnerName, ownerName))) {
+      addDetected(p, idx, documentOwnerName, 'documentOwner', ownerStrong || documentOwnerStrong, lifeInsuredStrong);
+    }
     if (ownerStrong) {
       addDetected(p, idx, ownerName, 'policyOwner', ownerStrong, lifeInsuredStrong);
     }
@@ -10390,6 +10410,23 @@ function extractXlsxDocumentProfile(matrix, headerRowIndex, sheetName, fileName)
   return normalizePersonNameKey(profile.name) ? profile : null;
 }
 
+function getXlsxSheetOwnerCode(sheetName) {
+  const raw = String(sheetName || '').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!raw || !/\bpolicy\s+summary\b/i.test(raw)) return '';
+  const m = raw.match(/^([A-Za-z]{1,4})\b/);
+  return m ? m[1].toUpperCase() : '';
+}
+
+function parseXlsxSelfOwnerMarker(value) {
+  const text = String(value || '').replace(/\s+/g, ' ').trim();
+  if (!text) return { isSelf: false, ownerCode: '' };
+  const ownerCode = (text.match(/\b([A-Z]{1,4})\s+Owner\b/i)?.[1] || '').toUpperCase();
+  return {
+    isSelf: /\bself\b/i.test(text),
+    ownerCode
+  };
+}
+
 function parseXlsxMoneyNumber(value) {
   if (value == null || value === '') return 0;
   if (typeof value === 'number') return isFinite(value) ? value : 0;
@@ -10999,7 +11036,7 @@ async function parseXlsxToStructured(file) {
       // detector. Without this, the Soh family workbook's bad mappings
       // (productName=null for ILP/Endowment/Legacy) would persist as cache
       // hits even after the regex fix.
-      const COLUMN_MAP_VERSION = 'cmv-2026-05-13-paid-to-date-premium';
+      const COLUMN_MAP_VERSION = 'cmv-2026-05-16-sheet-owner-routing';
       const normalized = headers.map(h => normalizeXlsxHeaderName(h)).concat(
         section.sectionLabel ? ['__section__:' + section.sectionLabel.toLowerCase()] : [],
         [kindTag, '__cmv__:' + COLUMN_MAP_VERSION]
@@ -12423,10 +12460,15 @@ async function extractSpreadsheetFilesLocally(files, opts = {}) {
     // sheets. If they do, route per-sheet; if they don't, keep the old
     // aggregate behavior (Belinda's Wealth + Insurance share one name).
     const sheetProfilesByName = new Map(); // sheetName -> profile
+    const sheetProfilesByCode = new Map(); // DD/MM/JL/JY/JE style sheet code -> profile
     const distinctNames = new Set();
     for (const sheet of sheets) {
       if (!sheet.documentProfile) continue;
       sheetProfilesByName.set(sheet.sheetName, sheet.documentProfile);
+      const sheetCode = getXlsxSheetOwnerCode(sheet.documentProfile.sourceSheet || sheet.sheetName);
+      if (sheetCode && sheet.documentProfile.name && !sheetProfilesByCode.has(sheetCode)) {
+        sheetProfilesByCode.set(sheetCode, sheet.documentProfile);
+      }
       const n = String(sheet.documentProfile.name || '').trim();
       if (n) distinctNames.add(normalizePersonNameKey(n) || n.toLowerCase());
     }
@@ -12540,12 +12582,21 @@ async function extractSpreadsheetFilesLocally(files, opts = {}) {
           const profileName = String(sheetProfile?.name || '').trim();
           if (multiOwnerWorkbook && profileName) {
             const liRaw = String(p.lifeInsured || '').trim();
-            const liIsSelf = !liRaw || /^self$/i.test(liRaw);
             const ownerRaw = String(p.policyOwner || '').trim();
-            if (!ownerRaw) {
+            const liMarker = parseXlsxSelfOwnerMarker(liRaw);
+            const ownerMarker = parseXlsxSelfOwnerMarker(ownerRaw);
+            const markerOwnerCode = liMarker.ownerCode || ownerMarker.ownerCode || '';
+            const markerOwnerProfile = markerOwnerCode ? sheetProfilesByCode.get(markerOwnerCode) : null;
+            const markerOwnerName = String(markerOwnerProfile?.name || '').trim();
+            const liIsSelf = !liRaw || /^self$/i.test(liRaw) || liMarker.isSelf || (ownerMarker.isSelf && !p.lifeInsured);
+            if (liIsSelf) p.lifeInsured = profileName;
+            if (markerOwnerName && !personNameEquivalent(markerOwnerName, profileName)) {
+              p.policyOwner = markerOwnerName;
+              p._policyOwnerSource = 'xlsx-owner-marker';
+              p.ownerInferenceReason = 'Spreadsheet life-insured cell referenced "' + markerOwnerCode + ' Owner"; mapped to sheet owner "' + markerOwnerName + '".';
+            } else if (!ownerRaw || isWeakPolicyOwnerValue(ownerRaw) || ownerMarker.isSelf) {
               p.policyOwner = profileName;
               p._policyOwnerSource = 'xlsx-sheet-banner';
-              if (liIsSelf) p.lifeInsured = profileName;
             }
           }
           return {
@@ -31183,13 +31234,31 @@ function PolicyOwnerRoutingModal({ open, detected, currentClientName, allDriveSt
     if (source === 'lifeInsured') return 'current';
     return info?.suggestedMatch ? 'existing:' + info.suggestedMatch.clientId : 'new';
   };
+  const sourcePriorityFor = (sourceField) => (
+    sourceField === 'documentOwner' ? 3 :
+    sourceField === 'policyOwner' ? 2 :
+    sourceField === 'lifeInsured' ? 1 :
+    0
+  );
+  const sourceLabelFor = (source) => {
+    if (source === 'documentOwner') return 'Sheet owner';
+    if (source === 'lifeInsured') return 'Life Assured';
+    return 'Policy Owner';
+  };
   useEffect(() => {
     if (!open || !detected) return;
     const init = {};
     const initPolicyRoutes = {};
+    const initPolicyRoutePriorities = {};
     for (const [key, info] of detected.entries()) {
       init[key] = defaultRouteFor(info);
-      (info.policyItems || []).forEach(item => { initPolicyRoutes[item.policyIndex] = defaultRouteFor(info, item); });
+      (info.policyItems || []).forEach(item => {
+        const priority = sourcePriorityFor(item.sourceField);
+        if (initPolicyRoutes[item.policyIndex] == null || priority > (initPolicyRoutePriorities[item.policyIndex] || 0)) {
+          initPolicyRoutes[item.policyIndex] = defaultRouteFor(info, item);
+          initPolicyRoutePriorities[item.policyIndex] = priority;
+        }
+      });
     }
     // rc2e.47: clean the seed client name so "TAN MEI LIAN Family"
     // becomes "Tan Mei Lian Family" (defense-in-depth — extraction
@@ -31412,7 +31481,7 @@ function PolicyOwnerRoutingModal({ open, detected, currentClientName, allDriveSt
                 <div style={{minWidth:0}}>
                   <div style={{fontWeight:700,fontSize:13,color:'var(--text)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{info.displayName}</div>
                   <div style={{fontSize:9,color:info.needsOwnerQuestion?'var(--gold)':'var(--text3)',marginTop:2}}>
-                    Detected from {sourceFields.size > 1 ? 'mixed owner/life assured fields' : (sourceFields.has('lifeInsured') ? 'Life Assured only - owner needs confirmation' : 'Policy Owner')}
+                    Detected from {sourceFields.size > 1 ? 'mixed owner/life assured fields' : sourceLabelFor(Array.from(sourceFields)[0])}
                   </div>
                 </div>
                 <div style={{fontSize:10,color:'var(--text3)',flexShrink:0}}>{info.policyIndices.length} polic{info.policyIndices.length>1?'ies':'y'}</div>
@@ -31492,7 +31561,7 @@ function PolicyOwnerRoutingModal({ open, detected, currentClientName, allDriveSt
                               {(item.productName || 'Policy')}{item.insurer ? ' - ' + item.insurer : ''}{item.policyNumber ? ' - ' + item.policyNumber : ''}
                             </div>
                             <div style={{fontSize:9,color:item.sourceField==='lifeInsured'?'var(--gold)':'var(--text3)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
-                              {item.sourceField === 'lifeInsured' ? 'Detected as life assured' : 'Detected as owner'} | Owner: {cleanPersonDisplayName(item.policyOwner || '') || 'not stated'} | Life: {cleanPersonDisplayName(item.lifeInsured || '') || 'not stated'}
+                              {item.sourceField === 'lifeInsured' ? 'Detected as life assured' : item.sourceField === 'documentOwner' ? 'Detected from sheet owner' : 'Detected as owner'} | Owner: {cleanPersonDisplayName(item.policyOwner || '') || 'not stated'} | Life: {cleanPersonDisplayName(item.lifeInsured || '') || 'not stated'}
                               {item.ownerInferenceReason ? ' | Trace: ' + item.ownerInferenceReason : ''}
                             </div>
                           </div>
@@ -39880,10 +39949,17 @@ function Policies() {
     const currentOwner = clientProfile?.name || clientName || targetClientName || '';
     const ownerName = targetClientName || currentOwner || info.displayName || policy.policyOwner || '';
     const out = { ...policy, _ownerRoute:routeName, _ownerRoutedFrom:currentOwner };
-    const weakOwner = !out.policyOwner || /^(unknown|null|n\/a|na|nil|same as|self|policy owner|owner|life insured|life assured)$/i.test(String(out.policyOwner).trim());
+    const weakOwner = !out.policyOwner || /^(unknown|null|n\/a|na|nil|same as|self|policy owner|owner|life insured|life assured|[A-Z]{1,4}\s+owner)$/i.test(String(out.policyOwner).trim()) || /\bself\b.*\b[A-Z]{1,4}\s+owner\b/i.test(String(out.policyOwner).trim());
+    const weakLife = !out.lifeInsured || /^(unknown|null|n\/a|na|nil|same as|self|policy owner|owner|life insured|life assured|[A-Z]{1,4}\s+owner)$/i.test(String(out.lifeInsured).trim()) || /\bself\b.*\b[A-Z]{1,4}\s+owner\b/i.test(String(out.lifeInsured).trim());
     const lifeRoute = routeName === 'current' || routeName?.startsWith('life-') || item.sourceField === 'lifeInsured' || info.sourceField === 'lifeInsured';
+    const documentOwnerRoute = item.sourceField === 'documentOwner' || info.sourceField === 'documentOwner';
     const lifeAssuredName = opts.lifeAssuredName || item.displayName || info.displayName || out.lifeInsured || '';
-    if (lifeRoute && (item.sourceField === 'lifeInsured' || info.sourceField === 'lifeInsured' || routeName?.startsWith('life-'))) {
+    if (documentOwnerRoute && (routeName === 'new' || routeName === 'existing' || routeName === 'owner-of-detected')) {
+      out.documentOwner = ownerName;
+      if (weakLife) out.lifeInsured = ownerName;
+      if (weakOwner) out.policyOwner = ownerName;
+      out._ownerRouteQuestion = 'xlsx-sheet-owner-client-scope';
+    } else if (lifeRoute && (item.sourceField === 'lifeInsured' || info.sourceField === 'lifeInsured' || routeName?.startsWith('life-'))) {
       out.lifeInsured = out.lifeInsured || lifeAssuredName || '';
       out.policyOwner = ownerName;
       out._ownerRouteQuestion = routeName === 'current' ? 'life-assured-under-current-client' : 'life-assured-under-routed-owner';
@@ -44959,13 +45035,19 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
               : (info.policyIndices || []).map((idx, i) => ({ policyIndex: idx, sourceField: info.sourceField, ...(info.samplePolicies?.[i] || info.samplePolicies?.[0] || {}) }))
           );
           const policyAssignments = new Map();
+          const assignmentSourcePriority = (sourceField) => (
+            sourceField === 'documentOwner' ? 3 :
+            sourceField === 'policyOwner' ? 2 :
+            sourceField === 'lifeInsured' ? 1 :
+            0
+          );
           for (const [key, info] of detected.entries()) {
             for (const item of itemsForAssignment(info)) {
               const idx = item.policyIndex;
               const route = policyRoutes[idx] || routes[key] || defaultRouteForAssignment(info, item);
               const existing = policyAssignments.get(idx);
               const candidate = {key, info, item, route};
-              if (!existing || (existing.item?.sourceField !== 'policyOwner' && item.sourceField === 'policyOwner')) {
+              if (!existing || assignmentSourcePriority(item.sourceField) > assignmentSourcePriority(existing.item?.sourceField)) {
                 policyAssignments.set(idx, candidate);
               }
             }
