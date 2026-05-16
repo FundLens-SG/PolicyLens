@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.47-shield-components';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.48-review-inbox';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -738,9 +738,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.47';
+const APP_VERSION = 'v2.4.0-rc2.48';
 const APP_VERSION_DATE = '2026-05-16';
-const APP_VERSION_NAME = 'Canonical Shield components';
+const APP_VERSION_NAME = 'Review inbox';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1205,7 +1205,7 @@ if (typeof window !== 'undefined') {
 // END MODULE: DESIGN_SYSTEM_V2
 // ═══════════════════════════════════════════════════════════════
 const DEFAULT_DOCUMENT_AI_PROXY_URL = 'https://policylens-document-ai.chungakwanc.workers.dev';
-const APP_TAB_IDS = new Set(['profile', 'dashboard', 'policies', 'clients', 'repository', 'report', 'settings']);
+const APP_TAB_IDS = new Set(['profile', 'dashboard', 'policies', 'clients', 'repository', 'review', 'report', 'settings']);
 function getInitialPolicyLensTab() {
   try {
     const saved = localStorage.getItem('policylens_last_tab');
@@ -1214,6 +1214,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.48',
+  date: '2026-05-16',
+  name: 'Review inbox',
+  sections: [{
+    heading: 'Review Safety',
+    items: ['Added a Review tab that consolidates stale extraction mismatches, protected-field conflicts, missing fields, low-confidence extraction fields, advisor review reasons, and Drive sync failures into one advisor queue.']
+  }]
+}, {
   version: 'v2.4.0-rc2.47',
   date: '2026-05-16',
   name: 'Canonical Shield components',
@@ -3791,6 +3799,151 @@ function reconcileSavedPoliciesAgainstExtraction(savedPolicies = [], extractedPo
     kept: policies.filter(p => !isExtractionQuarantinedPolicy(p)),
     reviewItems
   };
+}
+function reviewInboxPolicyLabel(policy = {}) {
+  return String(policy.productName || policy.policyName || policy.subType || policy.insurer || 'Policy').trim();
+}
+function reviewInboxSourceLabel(policy = {}) {
+  const trace = policy._sourceTrace || {};
+  return [trace.sourceFile || policy.sourceFile || policy._sourceFile || policy.documentTitle || '', trace.sourceSheet || policy.sourceSheet || '', trace.sourceRow || policy.sourceRow || ''].filter(v => v !== null && v !== undefined && String(v).trim() !== '').join(' / ');
+}
+function buildReviewInboxItems(policies = [], driveState = null, clientProfile = {}) {
+  const items = [];
+  const add = item => {
+    if (!item) return;
+    const key = normalizeTextKey([item.type, item.policyId || '', item.field || '', item.title || '', item.detail || ''].join('|'));
+    if (items.some(existing => existing.key === key)) return;
+    items.push({
+      key,
+      status: 'pending',
+      ...item
+    });
+  };
+  const list = Array.isArray(policies) ? policies : [];
+  for (const policy of list) {
+    if (!policy) continue;
+    const policyId = policy.id || '';
+    const label = reviewInboxPolicyLabel(policy);
+    const source = reviewInboxSourceLabel(policy);
+    if (isExtractionQuarantinedPolicy(policy)) {
+      add({
+        type: 'stale_extraction_mismatch',
+        severity: 'high',
+        policyId,
+        title: label,
+        detail: policy._extractionReconciliation?.reason || 'This extracted policy no longer appears in the latest source scan.',
+        source,
+        action: 'restore_or_archive'
+      });
+      continue;
+    }
+    for (const conflict of Array.isArray(policy._mergeConflicts) ? policy._mergeConflicts : []) {
+      add({
+        type: 'protected_field_conflict',
+        severity: 'high',
+        policyId,
+        title: label,
+        field: conflict.field || '',
+        detail: 'Incoming extraction disagrees with an advisor-verified field.',
+        source,
+        action: 'review_conflict'
+      });
+    }
+    const requiredFields = ['insurer', 'productName', 'category'];
+    for (const field of requiredFields) {
+      const value = field === 'productName' ? policy.productName || policy.policyName : policy[field];
+      if (!String(value || '').trim()) {
+        add({
+          type: 'missing_required_field',
+          severity: 'medium',
+          policyId,
+          title: label,
+          field,
+          detail: 'Missing ' + field + ' on this policy record.',
+          source,
+          action: 'complete_field'
+        });
+      }
+    }
+    if (!String(policy.policyOwner || policy.documentOwner || policy.lifeInsured || '').trim()) {
+      add({
+        type: 'missing_policy_person',
+        severity: 'medium',
+        policyId,
+        title: label,
+        field: 'policyOwner',
+        detail: 'Policy owner or life insured is missing.',
+        source,
+        action: 'complete_field'
+      });
+    }
+    const confidence = policy._extractConfidence || {};
+    const reasons = policy._extractConfidenceReasons || {};
+    Object.entries(confidence).forEach(([field, level]) => {
+      if (level !== 'low' && level !== 'medium') return;
+      add({
+        type: 'low_confidence_field',
+        severity: level === 'low' ? 'high' : 'medium',
+        policyId,
+        title: label,
+        field,
+        detail: reasons[field] || 'Extraction confidence for ' + field + ' is ' + level + '.',
+        source,
+        action: 'verify_field'
+      });
+    });
+    const reviewReasons = [...(Array.isArray(policy._gateReasons) ? policy._gateReasons : []), ...(Array.isArray(policy._reviewReasons) ? policy._reviewReasons : [])];
+    reviewReasons.forEach(reason => {
+      add({
+        type: 'policy_review_reason',
+        severity: 'medium',
+        policyId,
+        title: label,
+        detail: String(reason || 'Policy needs review.'),
+        source,
+        action: 'review_policy'
+      });
+    });
+    (Array.isArray(policy._reviewActions) ? policy._reviewActions : []).forEach(action => {
+      add({
+        type: 'policy_review_action',
+        severity: action?.severity === 'high' ? 'high' : 'medium',
+        policyId,
+        title: label,
+        field: action?.field || '',
+        detail: action?.label || action?.reason || 'Review action required.',
+        source,
+        action: 'review_policy'
+      });
+    });
+  }
+  if (driveState?.pendingError) {
+    add({
+      type: 'sync_failure',
+      severity: 'high',
+      policyId: '',
+      title: clientProfile?.name || driveState.clientName || 'Client sync',
+      detail: driveState.pendingError,
+      source: driveState.pendingReason || 'Drive sync',
+      action: 'retry_sync'
+    });
+  } else if (driveState?.pendingWrite) {
+    add({
+      type: 'sync_pending',
+      severity: 'low',
+      policyId: '',
+      title: clientProfile?.name || driveState.clientName || 'Client sync',
+      detail: 'A Drive write is queued.',
+      source: driveState.pendingReason || 'Drive sync',
+      action: 'watch_sync'
+    });
+  }
+  const rank = {
+    high: 0,
+    medium: 1,
+    low: 2
+  };
+  return items.sort((a, b) => (rank[a.severity] ?? 9) - (rank[b.severity] ?? 9) || String(a.title || '').localeCompare(String(b.title || '')));
 }
 function classifyPolicyDocumentTriage(policy = {}, existingPolicies = []) {
   const explicit = normalizeDocumentTriageType(policy.documentType);
@@ -27089,7 +27242,9 @@ function App() {
     key: "clients"
   }, /*#__PURE__*/React.createElement(ClientsTab, null)), tab === 'repository' && /*#__PURE__*/React.createElement(ErrorBoundary, {
     key: "repo"
-  }, /*#__PURE__*/React.createElement(RepositoryTab, null)), tab === 'report' && /*#__PURE__*/React.createElement(ErrorBoundary, {
+  }, /*#__PURE__*/React.createElement(RepositoryTab, null)), tab === 'review' && /*#__PURE__*/React.createElement(ErrorBoundary, {
+    key: "review"
+  }, /*#__PURE__*/React.createElement(ReviewInboxTab, null)), tab === 'report' && /*#__PURE__*/React.createElement(ErrorBoundary, {
     key: "report"
   }, /*#__PURE__*/React.createElement(ReportTab, null)), tab === 'settings' && /*#__PURE__*/React.createElement(Settings, null)), foundInDrive && /*#__PURE__*/React.createElement(FoundInDriveReviewModal, {
     open: true,
@@ -32652,6 +32807,7 @@ function Header() {
   // Avatar initial for the client switcher (Fraunces, gradient circle)
   const initial = (clientName || '?').trim().slice(0, 1).toUpperCase() || '?';
   const tierLabel = clientProfile?.tier || (activeClientId ? 'Unassigned' : '');
+  const reviewQueueCount = useMemo(() => buildReviewInboxItems(policies, driveState, clientProfile).length, [policies, driveState, clientProfile]);
   const tabs = [{
     id: 'profile',
     label: 'Profile',
@@ -32681,6 +32837,14 @@ function Header() {
     label: 'Settings',
     emoji: '⚙️'
   }];
+  const repoTabIndex = tabs.findIndex(t => t.id === 'repository');
+  if (repoTabIndex >= 0 && !tabs.some(t => t.id === 'review')) {
+    tabs.splice(repoTabIndex + 1, 0, {
+      id: 'review',
+      label: 'Review',
+      emoji: '!'
+    });
+  }
   return /*#__PURE__*/React.createElement("div", {
     style: {
       background: T.bg,
@@ -33106,7 +33270,18 @@ function Header() {
         borderRadius: 999,
         lineHeight: 1.4
       }
-    }, policies.length));
+    }, policies.length), t.id === 'review' && reviewQueueCount > 0 && /*#__PURE__*/React.createElement("span", {
+      style: {
+        marginLeft: 2,
+        padding: '1px 7px',
+        background: active ? 'rgba(255,255,255,0.25)' : 'color-mix(in oklch, var(--gold) 16%, transparent)',
+        color: active ? '#fff' : 'var(--gold)',
+        fontSize: 10,
+        fontWeight: 700,
+        borderRadius: 999,
+        lineHeight: 1.4
+      }
+    }, reviewQueueCount));
   })));
 }
 
@@ -42410,6 +42585,271 @@ const PremiumCashflowChart = memo(function PremiumCashflowChart({
 // ═══════════════════════════════════════════════════════════════
 // MODULE: REVIEW — Guided client review walkthrough
 // ═══════════════════════════════════════════════════════════════
+function ReviewInboxTab() {
+  const {
+    policies,
+    savePolicy,
+    setTab,
+    driveState,
+    clientProfile,
+    runCloudSync
+  } = useContext(AppCtx);
+  const [filter, setFilter] = useState('open');
+  const items = useMemo(() => buildReviewInboxItems(policies, driveState, clientProfile), [policies, driveState, clientProfile]);
+  const visible = filter === 'all' ? items : items.filter(item => item.status !== 'approved');
+  const counts = items.reduce((acc, item) => {
+    acc[item.severity] = (acc[item.severity] || 0) + 1;
+    return acc;
+  }, {});
+  const toneFor = severity => {
+    if (severity === 'high') return {
+      color: 'var(--red)',
+      bg: 'rgba(239,83,80,.07)',
+      border: 'rgba(239,83,80,.18)'
+    };
+    if (severity === 'medium') return {
+      color: 'var(--gold)',
+      bg: 'color-mix(in oklch, var(--gold) 9%, transparent)',
+      border: 'color-mix(in oklch, var(--gold) 24%, transparent)'
+    };
+    return {
+      color: 'var(--teal)',
+      bg: 'rgba(91,168,160,.06)',
+      border: 'rgba(91,168,160,.16)'
+    };
+  };
+  const updatePolicy = async (policyId, updater, successText) => {
+    const policy = (policies || []).find(p => p.id === policyId);
+    if (!policy) return;
+    await savePolicy(updater(policy));
+    try {
+      toast(successText || 'Review item updated', 'success');
+    } catch (_) {}
+  };
+  const markReviewed = item => updatePolicy(item.policyId, policy => ({
+    ...policy,
+    _extractVerifiedAt: policy._extractVerifiedAt || Date.now(),
+    _sourceTrace: {
+      ...(policy._sourceTrace || {}),
+      reviewState: 'approved',
+      verificationState: 'advisor_verified'
+    },
+    _reviewReasons: [],
+    _gateReasons: [],
+    _reviewActions: [],
+    _extractConfidence: {},
+    _extractConfidenceReasons: {}
+  }), 'Marked reviewed');
+  const restoreStale = item => updatePolicy(item.policyId, policy => ({
+    ...policy,
+    _extractVerifiedAt: policy._extractVerifiedAt || Date.now(),
+    _extractionReconciliation: {
+      ...(policy._extractionReconciliation || {}),
+      reviewState: 'approved',
+      advisorRestoredAt: new Date().toISOString()
+    },
+    _sourceTrace: {
+      ...(policy._sourceTrace || {}),
+      reviewState: 'approved',
+      verificationState: 'advisor_verified'
+    }
+  }), 'Restored to active policies');
+  const handlePrimary = async item => {
+    if (item.action === 'retry_sync') {
+      try {
+        await runCloudSync?.();
+        toast('Drive sync retry started', 'info');
+      } catch (err) {
+        toast('Sync retry failed: ' + (err?.message || err), 'error');
+      }
+      return;
+    }
+    if (!item.policyId) return;
+    if (item.type === 'stale_extraction_mismatch') return restoreStale(item);
+    return markReviewed(item);
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: 1180,
+      margin: '0 auto'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      gap: 16,
+      marginBottom: 18,
+      flexWrap: 'wrap'
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h1", {
+    style: {
+      fontFamily: T_V2.serifFamily,
+      fontSize: 30,
+      fontWeight: 400,
+      letterSpacing: '-0.01em',
+      margin: '0 0 4px',
+      color: 'var(--text)'
+    }
+  }, "Review"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: 'var(--text3)'
+    }
+  }, "Advisor queue for extraction, sync, and data quality decisions.")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8,
+      alignItems: 'center',
+      flexWrap: 'wrap'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 11,
+      color: 'var(--red)',
+      background: 'rgba(239,83,80,.07)',
+      border: '1px solid rgba(239,83,80,.18)',
+      borderRadius: 999,
+      padding: '5px 9px',
+      fontWeight: 700
+    }
+  }, "High ", counts.high || 0), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 11,
+      color: 'var(--gold)',
+      background: 'color-mix(in oklch, var(--gold) 9%, transparent)',
+      border: '1px solid color-mix(in oklch, var(--gold) 24%, transparent)',
+      borderRadius: 999,
+      padding: '5px 9px',
+      fontWeight: 700
+    }
+  }, "Medium ", counts.medium || 0), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setFilter(filter === 'open' ? 'all' : 'open'),
+    style: {
+      fontSize: 12,
+      borderRadius: 999,
+      border: '1px solid var(--border)',
+      background: 'var(--bg2)',
+      color: 'var(--text2)',
+      padding: '6px 12px',
+      cursor: 'pointer'
+    }
+  }, filter === 'open' ? 'Show all' : 'Show open'))), visible.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      border: '1px solid rgba(91,168,160,.18)',
+      background: 'rgba(91,168,160,.06)',
+      borderRadius: 10,
+      padding: 18,
+      color: 'var(--teal)',
+      fontSize: 13,
+      fontWeight: 700
+    }
+  }, "No open review items for this client.") : /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'grid',
+      gap: 10
+    }
+  }, visible.map(item => {
+    const tone = toneFor(item.severity);
+    return /*#__PURE__*/React.createElement("div", {
+      key: item.key,
+      style: {
+        display: 'grid',
+        gridTemplateColumns: 'minmax(0,1fr) auto',
+        gap: 12,
+        alignItems: 'center',
+        background: 'var(--bg2)',
+        border: '1px solid var(--border)',
+        borderRadius: 10,
+        padding: 12
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        minWidth: 0
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        flexWrap: 'wrap',
+        marginBottom: 5
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 10,
+        color: tone.color,
+        background: tone.bg,
+        border: '1px solid ' + tone.border,
+        borderRadius: 999,
+        padding: '3px 7px',
+        fontWeight: 800,
+        textTransform: 'uppercase',
+        letterSpacing: '.35px'
+      }
+    }, item.type.replace(/_/g, ' ')), item.field && /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 10,
+        color: 'var(--text3)',
+        border: '1px solid var(--border)',
+        borderRadius: 999,
+        padding: '3px 7px'
+      }
+    }, item.field), item.source && /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 10,
+        color: 'var(--text3)'
+      }
+    }, item.source)), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 13,
+        fontWeight: 800,
+        color: 'var(--text)',
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
+      }
+    }, item.title), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11,
+        color: 'var(--text3)',
+        marginTop: 3,
+        lineHeight: 1.45
+      }
+    }, item.detail)), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 6,
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        flexWrap: 'wrap'
+      }
+    }, item.policyId && /*#__PURE__*/React.createElement("button", {
+      onClick: () => setTab('policies'),
+      style: {
+        fontSize: 11,
+        borderRadius: 8,
+        border: '1px solid var(--border)',
+        background: 'var(--bg3)',
+        color: 'var(--text2)',
+        padding: '6px 10px',
+        cursor: 'pointer'
+      }
+    }, "Open policy"), /*#__PURE__*/React.createElement("button", {
+      onClick: () => handlePrimary(item),
+      style: {
+        fontSize: 11,
+        borderRadius: 8,
+        border: '1px solid ' + tone.border,
+        background: tone.bg,
+        color: tone.color,
+        padding: '6px 10px',
+        fontWeight: 800,
+        cursor: 'pointer'
+      }
+    }, item.type === 'stale_extraction_mismatch' ? 'Restore' : item.action === 'retry_sync' ? 'Retry sync' : 'Mark reviewed')));
+  })));
+}
 function ReviewSession({
   onClose
 }) {
