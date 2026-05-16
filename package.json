@@ -7,6 +7,7 @@
     "test:product-knowledge": "node tools/test-singapore-product-knowledge.mjs",
     "test:canonical-preview": "node tools/test-canonical-policy-preview.mjs",
     "test:clients-manifest": "node tools/test-clients-manifest-inventory.mjs",
+    "test:review-safety": "node tools/test-review-safety.mjs",
     "test:xlsx-evidence": "node tools/test-xlsx-evidence-envelope.mjs",
     "split:preview": "node tools/extract-index-modules.mjs --list",
     "eval:extraction": "node tools/eval-extraction.mjs",

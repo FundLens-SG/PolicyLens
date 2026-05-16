@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.43-client-manifest-inventory';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.44-review-gated-imports';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -728,9 +728,10 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.43';
+const APP_VERSION = 'v2.4.0-rc2.44';
 const APP_VERSION_DATE = '2026-05-16';
-const APP_VERSION_NAME = 'Client manifest inventory';
+const APP_VERSION_NAME = 'Review-gated imports';
+const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -986,6 +987,19 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.4.0-rc2.44',
+    date: '2026-05-16',
+    name: 'Review-gated imports',
+    sections: [
+      {
+        heading: 'Review Safety',
+        items: [
+          'High-confidence scans now stay in the advisor review surface instead of auto-importing, and merge logic preserves advisor-verified fields when new extraction data disagrees.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.4.0-rc2.43',
     date: '2026-05-16',
@@ -4282,6 +4296,16 @@ function policiesSafeAutoDuplicate(a, b) {
   return sameFingerprint || amountMatches >= 2;
 }
 
+function isAdvisorVerifiedPolicyField(policy = {}, field = '') {
+  if (!policy || !field) return false;
+  const evidenceState = policy._fieldEvidence?.[field]?.verificationState || policy._fieldEvidence?.[field]?.evidence?.verificationState;
+  if (evidenceState === 'advisor_verified' || evidenceState === 'client_signed_off') return true;
+  const verifiedFields = policy._advisorVerifiedFields || policy.advisorVerifiedFields || {};
+  if (verifiedFields && verifiedFields[field]) return true;
+  if (policy._extractVerifiedAt && policy._fieldVersions && Object.prototype.hasOwnProperty.call(policy._fieldVersions, field)) return true;
+  return false;
+}
+
 function mergePolicyRecords(base, next) {
   const merged = {...(base || {})};
   const conflicts = [...(Array.isArray(base?._mergeConflicts) ? base._mergeConflicts : [])];
@@ -4313,6 +4337,14 @@ function mergePolicyRecords(base, next) {
     }
     if (empty(merged[k])) {
       if (!empty(v)) merged[k] = v;
+      continue;
+    }
+    if (isAdvisorVerifiedPolicyField(merged, k)) {
+      if (!empty(v)) {
+        const left = String(merged[k]).trim().toLowerCase();
+        const right = String(v).trim().toLowerCase();
+        if (left !== right) conflicts.push({field:k, values:[merged[k], v], kept:merged[k], reason:'advisor_verified'});
+      }
       continue;
     }
     if (empty(v)) continue;
@@ -5880,7 +5912,7 @@ async function pdfToImages(pdfDoc, maxPages=12) {
 // shipped. Cache lookup is keyed by EXTRACT_PIPELINE_VERSION + fileHash,
 // so a re-scan after this bump WILL re-extract (no cache hit) and the
 // rc2.19/2.21 fixes will actually run.
-const EXTRACT_PIPELINE_VERSION = 'v15.45-2026-05-16-client-manifest-inventory';
+const EXTRACT_PIPELINE_VERSION = 'v15.46-2026-05-16-review-gated-imports';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -38514,6 +38546,7 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
   // Guard: fires once via ref. Skipped if any batch is still pending.
   const autoImportFiredRef = useRef(false);
   useEffect(() => {
+    if (!AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS) return;
     // Don't auto-import if already fired
     if (autoImportFiredRef.current) return;
     // Don't auto-import while extraction is still in progress
