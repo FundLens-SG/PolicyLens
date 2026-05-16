@@ -1,4 +1,4 @@
-const SW_VERSION = 'v2.4.0-rc2.42-canonical-policy-preview';
+const SW_VERSION = 'v2.4.0-rc2.43-client-manifest-inventory';
 const DB_NAME = 'PolicyLensSW';
 const DB_VERSION = 1;
 const SESSION_STORE = 'sessions';

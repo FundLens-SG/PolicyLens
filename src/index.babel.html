@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.42-canonical-policy-preview';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.43-client-manifest-inventory';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -728,9 +728,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.42';
+const APP_VERSION = 'v2.4.0-rc2.43';
 const APP_VERSION_DATE = '2026-05-16';
-const APP_VERSION_NAME = 'Canonical policy preview';
+const APP_VERSION_NAME = 'Client manifest inventory';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -986,6 +986,19 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.4.0-rc2.43',
+    date: '2026-05-16',
+    name: 'Client manifest inventory',
+    sections: [
+      {
+        heading: 'Sync',
+        items: [
+          'Drive clients-manifest now includes lightweight policy inventory metadata per client so CRMLens can perform manifest-first loading without walking every client file.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.4.0-rc2.42',
     date: '2026-05-16',
@@ -5867,7 +5880,7 @@ async function pdfToImages(pdfDoc, maxPages=12) {
 // shipped. Cache lookup is keyed by EXTRACT_PIPELINE_VERSION + fileHash,
 // so a re-scan after this bump WILL re-extract (no cache hit) and the
 // rc2.19/2.21 fixes will actually run.
-const EXTRACT_PIPELINE_VERSION = 'v15.44-2026-05-16-canonical-policy-preview';
+const EXTRACT_PIPELINE_VERSION = 'v15.45-2026-05-16-client-manifest-inventory';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -17724,7 +17737,7 @@ const CLIENT_DELETE_SYNC_STATUS_KEY = 'policylens_recent_client_delete_sync_stat
 const CLIENT_DELETE_SYNC_STATUS_TTL_MS = 10 * 60 * 1000;
 const _localDriveWriteHolds = new Map();
 const DRIVE_CLIENTS_MANIFEST_NAME = 'clients-manifest.json';
-const DRIVE_CLIENTS_MANIFEST_VERSION = 1;
+const DRIVE_CLIENTS_MANIFEST_VERSION = 2;
 const DRIVE_CLIENTS_MANIFEST_CACHE_KEY = 'driveClientsManifest';
 const CLIENT_SYNC_PHASES = new Set(['idle','checking','queued','uploading','pulling','conflict','failed']);
 const _clientSyncPhases = new Map();
@@ -18059,11 +18072,82 @@ async function flushPendingClientTrashQueue() {
   return trashed;
 }
 
-function normalizeManifestClient(ds = {}) {
+function summarizeManifestPoliciesByClient(policies = []) {
+  const byClient = new Map();
+  const touch = (clientId) => {
+    if (!clientId) return null;
+    if (!byClient.has(clientId)) {
+      byClient.set(clientId, {
+        policyCount: 0,
+        activePolicyCount: 0,
+        annualPremiumEstimate: 0,
+        lastPolicyUpdatedAt: null,
+        policyRefs: []
+      });
+    }
+    return byClient.get(clientId);
+  };
+  for (const pol of (policies || [])) {
+    const clientId = pol?.clientId || '';
+    const rec = touch(clientId);
+    if (!rec) continue;
+    rec.policyCount += 1;
+    const status = String(pol.status || '').toLowerCase();
+    if (!/\b(terminated|cancelled|canceled|surrendered|lapsed|matured|expired|deleted)\b/.test(status)) rec.activePolicyCount += 1;
+    rec.annualPremiumEstimate += annualizedPremium(pol) || moneyNumber(pol.premiumAmount || pol.annualPremium);
+    const updatedAt = pol._syncUpdatedAt || pol.updatedAt || pol.lastUpdatedAt || pol.modifiedAt || null;
+    if (updatedAt && syncTimeMs(updatedAt) > syncTimeMs(rec.lastPolicyUpdatedAt)) rec.lastPolicyUpdatedAt = updatedAt;
+    const fp = pol._policyFingerprint || buildPolicyIdentityFingerprint(pol);
+    rec.policyRefs.push({
+      policyId: pol.id || '',
+      fingerprint: fp?.id || '',
+      policyNumberKey: normalizePolicyKey(pol.policyNumber || ''),
+      updatedAt
+    });
+  }
+  for (const rec of byClient.values()) {
+    rec.annualPremiumEstimate = Math.round((rec.annualPremiumEstimate || 0) * 100) / 100;
+    rec.policyRefs = rec.policyRefs
+      .filter(ref => ref.policyId || ref.fingerprint || ref.policyNumberKey)
+      .sort((a, b) => syncTimeMs(b.updatedAt) - syncTimeMs(a.updatedAt))
+      .slice(0, 80);
+    rec.fingerprintDigest = normalizePolicyKey(rec.policyRefs.map(ref => ref.fingerprint || ref.policyNumberKey || ref.policyId).join('|')).slice(0, 180);
+  }
+  return byClient;
+}
+
+function normalizeManifestPolicyInventory(raw = {}) {
+  const data = raw && typeof raw === 'object' ? raw : {};
+  const policyRefs = Array.isArray(data.policyRefs) ? data.policyRefs.map(ref => ({
+    policyId: ref?.policyId || '',
+    fingerprint: ref?.fingerprint || '',
+    policyNumberKey: normalizePolicyKey(ref?.policyNumberKey || ''),
+    updatedAt: ref?.updatedAt || null
+  })).filter(ref => ref.policyId || ref.fingerprint || ref.policyNumberKey).slice(0, 80) : [];
+  return {
+    policyCount: Math.max(0, parseInt(data.policyCount, 10) || 0),
+    activePolicyCount: Math.max(0, parseInt(data.activePolicyCount, 10) || 0),
+    annualPremiumEstimate: Math.max(0, Math.round((moneyNumber(data.annualPremiumEstimate) || 0) * 100) / 100),
+    lastPolicyUpdatedAt: data.lastPolicyUpdatedAt || null,
+    fingerprintDigest: data.fingerprintDigest || normalizePolicyKey(policyRefs.map(ref => ref.fingerprint || ref.policyNumberKey || ref.policyId).join('|')).slice(0, 180),
+    policyRefs
+  };
+}
+
+function normalizeManifestClient(ds = {}, policySummary = null) {
   if (!ds?.clientId) return null;
+  const inventory = normalizeManifestPolicyInventory(policySummary || ds.policyInventory || {
+    policyCount: ds.policyCount,
+    activePolicyCount: ds.activePolicyCount,
+    annualPremiumEstimate: ds.annualPremiumEstimate,
+    lastPolicyUpdatedAt: ds.lastPolicyUpdatedAt,
+    fingerprintDigest: ds.policyFingerprintDigest || ds.fingerprintDigest,
+    policyRefs: ds.policyRefs
+  });
   return {
     clientId: ds.clientId,
     clientName: ds.clientName || '',
+    clientKey: ds.clientKey || normalizePersonNameKey(ds.clientName || ''),
     tier: ds.tier || UNASSIGNED_TIER,
     familyGroup: ds.familyGroup || '',
     fileId: isValidDriveFileId(ds.fileId) ? ds.fileId : null,
@@ -18072,7 +18156,13 @@ function normalizeManifestClient(ds = {}) {
     headRevisionId: ds.headRevisionId || null,
     lastSyncedAt: ds.lastSyncedAt || null,
     lastReviewedAt: ds.lastReviewedAt || null,
-    updatedAt: ds.lastSyncedAt || new Date().toISOString()
+    updatedAt: ds.lastSyncedAt || ds.updatedAt || inventory.lastPolicyUpdatedAt || new Date().toISOString(),
+    policyCount: inventory.policyCount,
+    activePolicyCount: inventory.activePolicyCount,
+    annualPremiumEstimate: inventory.annualPremiumEstimate,
+    lastPolicyUpdatedAt: inventory.lastPolicyUpdatedAt,
+    policyFingerprintDigest: inventory.fingerprintDigest,
+    policyInventory: inventory
   };
 }
 
@@ -18129,15 +18219,17 @@ function mergeDriveClientsManifest(a, b) {
 }
 
 async function buildLocalDriveClientsManifest(reason) {
-  const [states, tombstones] = await Promise.all([
+  const [states, tombstones, policies] = await Promise.all([
     PolicyDB.getAllDriveStates().catch(() => []),
-    getClientTrashTombstones().catch(() => [])
+    getClientTrashTombstones().catch(() => []),
+    dbGetAll('policies').catch(() => [])
   ]);
+  const policySummaryByClient = summarizeManifestPoliciesByClient(policies || []);
   return mergeDriveClientsManifest(null, {
     updatedAt: new Date().toISOString(),
     updatedByDevice: getPolicyLensDeviceName(),
     updatedByUser: getPolicyLensUserEmail() || null,
-    clients: (states || []).map(normalizeManifestClient).filter(c => c && isValidDriveFileId(c.fileId)),
+    clients: (states || []).map(ds => normalizeManifestClient(ds, policySummaryByClient.get(ds.clientId))).filter(c => c && isValidDriveFileId(c.fileId)),
     tombstones: tombstones || [],
     reason: reason || 'manifest-sync'
   });
