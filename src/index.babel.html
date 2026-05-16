@@ -6462,7 +6462,12 @@ async function pdfToImages(pdfDoc, maxPages=12) {
 // shipped. Cache lookup is keyed by EXTRACT_PIPELINE_VERSION + fileHash,
 // so a re-scan after this bump WILL re-extract (no cache hit) and the
 // rc2.19/2.21 fixes will actually run.
-const EXTRACT_PIPELINE_VERSION = 'v15.49-2026-05-16-shield-components';
+//
+// rc2e.57 — bumped again for the Soh JE CompleteCare fix. The old content
+// cache could return a stale 2-policy spreadsheet result before the fixed
+// local XLSX parser ran, so the parser now bypasses extraction/OCR cache
+// for spreadsheets and this version makes existing stale entries unreachable.
+const EXTRACT_PIPELINE_VERSION = 'v15.50-2026-05-16-je-completecare-cache-bypass';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -9645,12 +9650,19 @@ async function ingestFile(file) {
   const fileHash = Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2,'0')).join('');
 
   // Check extract_cache — full extraction result already cached?
+  //
+  // rc2e.57: spreadsheet policy summaries are parsed locally and
+  // deterministically. Do not let old content-hash extraction/OCR cache
+  // bypass the current parser, because that is exactly how the Soh JE
+  // workbook kept returning the stale two-policy result after the parser
+  // learned Manulife Early CompleteCare.
+  const isSpreadsheet = isSpreadsheetLikeFile(file);
   let cachedStage = 'queued';
   let cachedResult = null;
   let cachedOcr = null;
   try {
     // Check for a single-file extract cache hit (hash-based)
-    const extractHit = await PolicyDB.getExtractCache(EXTRACT_PIPELINE_VERSION + ':' + fileHash);
+    const extractHit = isSpreadsheet ? null : await PolicyDB.getExtractCache(EXTRACT_PIPELINE_VERSION + ':' + fileHash);
     // v2.0.7: defensive guard — reject empty-array cache entries (poisoned
     // from the pre-v2.0.7 write path). Empty arrays are truthy in JS so the
     // old `extractHit.value` check let them through and silently skipped
@@ -9662,10 +9674,11 @@ async function ingestFile(file) {
       console.log('[Cache] Extract cache HIT for', file.name, '→ skip all stages');
       emitTelemetry('cache_hit', { fileHash: fileHash.slice(0,8), stage: 'extract', fileName: file.name });
     }
+    if (isSpreadsheet) console.log('[Cache] Bypassing extract cache for spreadsheet:', file.name);
   } catch(_) {}
 
   // If no extract hit, check ocr_cache — skip OCR stage?
-  if (cachedStage === 'queued') {
+  if (cachedStage === 'queued' && !isSpreadsheet) {
     try {
       const ocrHit = await PolicyDB.getOcrCache(fileHash);
       if (ocrHit && ocrHit.text && ocrHit.promptVersion === OCR_PROMPT_VERSION) {
@@ -13982,6 +13995,26 @@ function ocrConfidence(parsed) {
 }
 
 async function performOCR(job, file) {
+  if (file && isSpreadsheetLikeFile(file)) {
+    try {
+      const repoList = typeof SEED_REPOSITORY !== 'undefined' ? SEED_REPOSITORY : [];
+      const localSpreadsheetPolicies = await extractSpreadsheetFilesLocally([file], { repo: repoList });
+      if (localSpreadsheetPolicies.length > 0) {
+        console.log('[OCR] Local XLSX parser for', job.fileName, '→', localSpreadsheetPolicies.length, 'policies/instruments');
+        return {
+          text: JSON.stringify(localSpreadsheetPolicies),
+          confidence: 0.98,
+          model: 'local-xlsx',
+          inputTokens: 0,
+          outputTokens: 0,
+          contentBlocks: [{ type:'text', text:'[Local XLSX parser: ' + (file.name || job.fileName || 'spreadsheet') + ']' }]
+        };
+      }
+      console.log('[OCR] Local XLSX parser found no rows for', job.fileName, '— falling through to AI');
+    } catch (localXlsxErr) {
+      console.warn('[OCR] Local XLSX parser failed for', job.fileName, '— falling through to AI:', localXlsxErr?.message || localXlsxErr);
+    }
+  }
   const uid = window._user?.id || '';
   const gk = ((await dbGet('settings','geminiKey_'+uid).catch(()=>null))?.value || (await dbGet('settings','geminiKey').catch(()=>null))?.value || '').trim();
   const ck = ((await dbGet('settings','anthropicKey_'+uid).catch(()=>null))?.value || (await dbGet('settings','anthropicKey').catch(()=>null))?.value || '').trim();
@@ -14136,7 +14169,7 @@ async function tickQueue() {
         console.log('[Queue] All jobs terminal. Done:', doneJobs.length);
         // Cache results for future re-uploads
         for (const j of doneJobs) {
-          if (j.result && j.fileHash) {
+          if (j.result && j.fileHash && !isSpreadsheetLikeFile({ name:j.fileName, type:j.fileType })) {
             try {
               await PolicyDB.putExtractCache({
                 key: EXTRACT_PIPELINE_VERSION + ':' + j.fileHash,
@@ -14253,17 +14286,19 @@ async function processJob(job) {
         console.log('[Queue] OCR stage for', job.fileName);
         const ocrResult = await performOCR(job, file);
         // Record token usage and cost
-        if (ocrResult.model && ocrResult.model !== 'text-layer') {
+        if (ocrResult.model && ocrResult.model !== 'text-layer' && ocrResult.model !== 'local-xlsx') {
           recordSessionCost(ocrResult.model, ocrResult.inputTokens, ocrResult.outputTokens);
         }
         // Cache OCR result
-        try {
-          await PolicyDB.putOcrCache({
-            fileHash: job.fileHash, text: ocrResult.text, confidence: ocrResult.confidence,
-            model: ocrResult.model, promptVersion: OCR_PROMPT_VERSION, createdAt: Date.now(),
-            inputTokens: ocrResult.inputTokens, outputTokens: ocrResult.outputTokens,
-          });
-        } catch(_) {}
+        if (!isSpreadsheetLikeFile(file || { name:job.fileName, type:job.fileType })) {
+          try {
+            await PolicyDB.putOcrCache({
+              fileHash: job.fileHash, text: ocrResult.text, confidence: ocrResult.confidence,
+              model: ocrResult.model, promptVersion: OCR_PROMPT_VERSION, createdAt: Date.now(),
+              inputTokens: ocrResult.inputTokens, outputTokens: ocrResult.outputTokens,
+            });
+          } catch(_) {}
+        }
         job.ocrText = ocrResult.text;
         job.ocrConfidence = ocrResult.confidence;
         job.ocrModel = ocrResult.model;
@@ -43241,12 +43276,36 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
   // path. When provided, skips the file encoding + Gemini API call
   // entirely and jumps straight to parsing + post-processing.
   const extractBatch = async (batchFiles, precomputedRawText) => {
+    let arr;
+    // Hoisted: `expectedCount` is assigned inside the normal-path branch
+    // below but referenced later by the reconciliation logs and cache-write
+    // gate. Declaring it at function scope prevents a ReferenceError on
+    // the precomputed path where the normal branch is skipped entirely.
+    let expectedCount;
+    const spreadsheetBatch = precomputedRawText == null && batchFiles.length > 0 && batchFiles.every(isSpreadsheetLikeFile);
+
+    if (spreadsheetBatch) {
+      try {
+        const localSpreadsheetPolicies = await extractSpreadsheetFilesLocally(batchFiles, { repo });
+        if (localSpreadsheetPolicies.length > 0) {
+          arr = localSpreadsheetPolicies;
+          expectedCount = localSpreadsheetPolicies.length;
+          console.log('[Extract] Local XLSX parser returned', arr.length, 'policies/instruments - skipping cache and AI call');
+          try { toast('Extracted '+arr.length+' item'+(arr.length===1?'':'s')+' from spreadsheet locally', 'success', 3500); } catch(_) {}
+        } else {
+          console.log('[Extract] Local XLSX parser found no policy rows - falling back to AI');
+        }
+      } catch (localXlsxErr) {
+        console.warn('[Extract] Local XLSX parser failed - falling back to AI:', localXlsxErr?.message || localXlsxErr);
+      }
+    }
+
     // ── CONTENT-HASH CACHE CHECK ──
     // Hash the batch's file bytes. If we've already extracted this exact set of files,
     // return the cached AI output — zero token cost, near-instant rescans.
     // Skip the check when using precomputed — the caller has already done the work.
     let cacheKey = null;
-    if (precomputedRawText == null) {
+    if (precomputedRawText == null && !spreadsheetBatch) {
       try {
         cacheKey = await batchCacheKey(batchFiles);
         const cached = await dbGet('extractCache', cacheKey).catch(()=>null);
@@ -43258,27 +43317,6 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       } catch(e) { console.warn('[Extract] Cache check failed (non-fatal):', e.message); }
     }
 
-    let arr;
-    // Hoisted: `expectedCount` is assigned inside the normal-path branch
-    // below but referenced later by the reconciliation logs and cache-write
-    // gate. Declaring it at function scope prevents a ReferenceError on
-    // the precomputed path where the normal branch is skipped entirely.
-    let expectedCount;
-    if (precomputedRawText == null && batchFiles.length > 0 && batchFiles.every(isSpreadsheetLikeFile)) {
-      try {
-        const localSpreadsheetPolicies = await extractSpreadsheetFilesLocally(batchFiles, { repo });
-        if (localSpreadsheetPolicies.length > 0) {
-          arr = localSpreadsheetPolicies;
-          expectedCount = localSpreadsheetPolicies.length;
-          console.log('[Extract] Local XLSX parser returned', arr.length, 'policies/instruments - skipping AI call');
-          try { toast('Extracted '+arr.length+' item'+(arr.length===1?'':'s')+' from spreadsheet locally', 'success', 3500); } catch(_) {}
-        } else {
-          console.log('[Extract] Local XLSX parser found no policy rows - falling back to AI');
-        }
-      } catch (localXlsxErr) {
-        console.warn('[Extract] Local XLSX parser failed - falling back to AI:', localXlsxErr?.message || localXlsxErr);
-      }
-    }
     if (arr == null && precomputedRawText == null && batchFiles.length > 0 && batchFiles.every(isHtmlLikeFile)) {
       try {
         const localHtmlPolicies = await extractPolicyLensHtmlFilesLocally(batchFiles);

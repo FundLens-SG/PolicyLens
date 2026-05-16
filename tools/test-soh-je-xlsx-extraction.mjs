@@ -17,6 +17,27 @@ const start = source.indexOf('function xlsxCellText');
 const end = source.indexOf('// rc2e.36: Cash-investment row applier');
 assert.ok(start > 0 && end > start, 'expected XLSX helper block in src/index.babel.html');
 
+const pipelineVersion = source.match(/const EXTRACT_PIPELINE_VERSION = '([^']+)'/);
+assert.ok(pipelineVersion, 'extract pipeline version should be declared');
+assert.notEqual(
+  pipelineVersion[1],
+  'v15.49-2026-05-16-shield-components',
+  'Soh JE CompleteCare parser fixes must invalidate the stale shield-components cache'
+);
+
+const extractBatchStart = source.indexOf('const extractBatch = async');
+const extractBatchEnd = source.indexOf('if (arr == null && precomputedRawText == null && batchFiles.length > 0 && batchFiles.every(isHtmlLikeFile))', extractBatchStart);
+assert.ok(extractBatchStart > 0 && extractBatchEnd > extractBatchStart, 'extractBatch cache-order snippet should be present');
+const extractBatchHead = source.slice(extractBatchStart, extractBatchEnd);
+const localParserPos = extractBatchHead.indexOf('extractSpreadsheetFilesLocally(batchFiles');
+const cacheLookupPos = extractBatchHead.indexOf("dbGet('extractCache'");
+assert.ok(localParserPos >= 0, 'extractBatch should try the local spreadsheet parser');
+assert.ok(cacheLookupPos >= 0, 'extractBatch should still contain non-spreadsheet cache lookup');
+assert.ok(localParserPos < cacheLookupPos, 'spreadsheet parser must run before extractCache lookup');
+assert.match(extractBatchHead, /precomputedRawText == null && !spreadsheetBatch/, 'spreadsheet batches should bypass stale extractCache hits');
+assert.match(source, /Bypassing extract cache for spreadsheet/, 'queue ingest should bypass spreadsheet extract cache');
+assert.match(source, /Local XLSX parser for/, 'queue OCR path should use the local spreadsheet parser');
+
 function normalizeTextKey(value) {
   return String(value || '')
     .toLowerCase()
