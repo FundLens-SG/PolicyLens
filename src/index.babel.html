@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.48-review-inbox';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.49-client-context';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -728,9 +728,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.48';
+const APP_VERSION = 'v2.4.0-rc2.49';
 const APP_VERSION_DATE = '2026-05-16';
-const APP_VERSION_NAME = 'Review inbox';
+const APP_VERSION_NAME = 'Client context header';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -987,6 +987,19 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.4.0-rc2.49',
+    date: '2026-05-16',
+    name: 'Client context header',
+    sections: [
+      {
+        heading: 'UX',
+        items: [
+          'Added a compact client context strip below the main nav showing age, tier, active policies, annual premium, review queue count, and sync state with direct jumps to Profile, Policies, and Review.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.4.0-rc2.48',
     date: '2026-05-16',
@@ -4862,6 +4875,48 @@ function buildReviewInboxItems(policies = [], driveState = null, clientProfile =
   }
   const rank = { high: 0, medium: 1, low: 2 };
   return items.sort((a, b) => (rank[a.severity] ?? 9) - (rank[b.severity] ?? 9) || String(a.title || '').localeCompare(String(b.title || '')));
+}
+
+function buildClientContextHeaderSummary(ctx = {}) {
+  const policies = Array.isArray(ctx.policies) ? ctx.policies : [];
+  const profile = ctx.clientProfile || {};
+  const driveState = ctx.driveState || null;
+  const clientName = String(ctx.clientName || profile.name || driveState?.clientName || '').trim();
+  const visiblePolicies = policies.filter(policy => !isExtractionQuarantinedPolicy(policy));
+  const activePolicies = visiblePolicies.filter(policy => !['matured', 'surrendered', 'lapsed'].includes(String(policy.status || '').toLowerCase()));
+  const annualPremiumTotal = activePolicies.reduce((sum, policy) => sum + (Number(annualizedPremium(policy)) || 0), 0);
+  const reviewCount = buildReviewInboxItems(policies, driveState, profile).length;
+  const age = getProfileAge(profile);
+  let syncState = 'idle';
+  let syncLabel = 'Local';
+  if (driveState?.pendingError) {
+    syncState = 'failed';
+    syncLabel = 'Sync retry needed';
+  } else if (driveState?.pendingWrite) {
+    syncState = 'queued';
+    syncLabel = 'Sync queued';
+  } else if (driveState?.lastSyncedAt) {
+    syncState = 'synced';
+    syncLabel = 'Synced';
+  } else if (driveState?.fileId) {
+    syncState = 'ready';
+    syncLabel = 'Drive ready';
+  }
+  return {
+    hasClient: !!clientName,
+    clientName,
+    tier: profile.tier || driveState?.tier || UNASSIGNED_TIER,
+    age,
+    dob: profile.dob || '',
+    activePolicyCount: activePolicies.length,
+    totalPolicyCount: visiblePolicies.length,
+    annualPremiumTotal,
+    reviewCount,
+    syncState,
+    syncLabel,
+    lastSyncedAt: driveState?.lastSyncedAt || '',
+    pendingReason: driveState?.pendingReason || ''
+  };
 }
 
 function classifyPolicyDocumentTriage(policy = {}, existingPolicies = []) {
@@ -25602,6 +25657,7 @@ function App() {
       <DriveReconnectBar />
 
       <Header />
+      <ClientContextHeader />
       {/* v2.4.0-rc1.61: explicit width clamp + boxSizing on the app content
           wrapper. Even though `overflow:auto` allowed scroll, child grids
           (KPI strip, policy ledger) could expand the layout column past
@@ -29046,6 +29102,51 @@ function Header() {
 // ═══════════════════════════════════════════════════════════════
 // MODULE: JSON_REPAIR — Fixes truncated JSON from token limits
 // ═══════════════════════════════════════════════════════════════
+function ClientContextHeader() {
+  const { clientName, clientProfile, policies, driveState, setTab } = useContext(AppCtx);
+  const summary = useMemo(() => buildClientContextHeaderSummary({ clientName, clientProfile, policies, driveState }), [clientName, clientProfile, policies, driveState]);
+  if (!summary.hasClient) return null;
+  const syncTone = summary.syncState === 'failed' ? 'var(--red)' : summary.syncState === 'queued' ? 'var(--gold)' : summary.syncState === 'synced' ? 'var(--teal)' : 'var(--text3)';
+  const premiumLabel = summary.annualPremiumTotal > 0 ? '$' + Math.round(summary.annualPremiumTotal).toLocaleString() + '/yr' : '$0/yr';
+  const ageLabel = summary.age != null ? 'Age ' + summary.age : (summary.dob ? 'DOB set' : 'Age missing');
+  return (
+    <div style={{
+      borderBottom:'1px solid var(--border)',
+      background:'color-mix(in oklch, var(--gold) 5%, var(--bg))',
+      padding:'8px clamp(16px, 3vw, 24px)',
+      fontFamily:T_V2.sansFamily
+    }}>
+      <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',maxWidth:1280,margin:'0 auto'}}>
+        <div style={{minWidth:0,flex:'1 1 260px',display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+          <span style={{fontFamily:T_V2.serifFamily,fontSize:16,color:'var(--text)',fontWeight:500,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:260}}>{summary.clientName}</span>
+          <span style={{fontSize:10,color:'var(--text3)',border:'1px solid var(--border)',background:'var(--bg2)',borderRadius:999,padding:'3px 8px',fontWeight:700}}>{summary.tier || 'Unassigned'}</span>
+          <span style={{fontSize:11,color:'var(--text3)'}}>{ageLabel}</span>
+        </div>
+        <button onClick={() => setTab('policies')} style={{fontSize:11,border:'1px solid var(--border)',background:'var(--bg2)',color:'var(--text2)',borderRadius:999,padding:'5px 10px',cursor:'pointer'}}>
+          {summary.activePolicyCount} active / {summary.totalPolicyCount} total
+        </button>
+        <span style={{fontSize:11,color:'var(--text2)',border:'1px solid var(--border)',background:'var(--bg2)',borderRadius:999,padding:'5px 10px',fontWeight:700}}>{premiumLabel}</span>
+        <button onClick={() => setTab('review')} style={{
+          fontSize:11,
+          border:'1px solid ' + (summary.reviewCount ? 'color-mix(in oklch, var(--gold) 28%, transparent)' : 'var(--border)'),
+          background: summary.reviewCount ? 'color-mix(in oklch, var(--gold) 10%, transparent)' : 'var(--bg2)',
+          color: summary.reviewCount ? 'var(--gold)' : 'var(--text3)',
+          borderRadius:999,padding:'5px 10px',fontWeight:800,cursor:'pointer'
+        }}>
+          Review {summary.reviewCount}
+        </button>
+        <button onClick={() => setTab('profile')} style={{fontSize:11,border:'1px solid var(--border)',background:'var(--bg2)',color:'var(--text2)',borderRadius:999,padding:'5px 10px',cursor:'pointer'}}>
+          Profile
+        </button>
+        <span title={summary.pendingReason || summary.lastSyncedAt || summary.syncLabel}
+          style={{fontSize:11,color:syncTone,border:'1px solid var(--border)',background:'var(--bg2)',borderRadius:999,padding:'5px 10px',fontWeight:700}}>
+          {summary.syncLabel}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function repairJSON(raw) {
   let s = raw.replace(/```json\s*|```\s*/g,'').trim();
   // If it doesn't start with { or [, try to find the first one
