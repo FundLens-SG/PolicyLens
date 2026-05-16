@@ -32,7 +32,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap" rel="stylesheet">
-<script src="./singapore-product-knowledge.js?v=sg-ref-2026-05-14-r1"></script>
+<script src="./singapore-product-knowledge.js?v=sg-ref-2026-05-16-r3"></script>
 <script>
 // ═══════════════════════════════════════════════════════════════
 // v2.3.0-rc2d.13: SERVICE WORKER REGISTRATION
@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.44-review-gated-imports';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.45-je-manulife-products';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -728,9 +728,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.44';
+const APP_VERSION = 'v2.4.0-rc2.45';
 const APP_VERSION_DATE = '2026-05-16';
-const APP_VERSION_NAME = 'Review-gated imports';
+const APP_VERSION_NAME = 'JE Manulife product recognition';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -987,6 +987,19 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.4.0-rc2.45',
+    date: '2026-05-16',
+    name: 'JE Manulife product recognition',
+    sections: [
+      {
+        heading: 'Extraction',
+        items: [
+          'JE spreadsheet extraction now recognises Manulife Early CompleteCare, Manulife ReadyProtect, and Manulife Signature Indexed Universal Life rows directly instead of losing or misclassifying them.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.4.0-rc2.44',
     date: '2026-05-16',
@@ -5912,7 +5925,7 @@ async function pdfToImages(pdfDoc, maxPages=12) {
 // shipped. Cache lookup is keyed by EXTRACT_PIPELINE_VERSION + fileHash,
 // so a re-scan after this bump WILL re-extract (no cache hit) and the
 // rc2.19/2.21 fixes will actually run.
-const EXTRACT_PIPELINE_VERSION = 'v15.46-2026-05-16-review-gated-imports';
+const EXTRACT_PIPELINE_VERSION = 'v15.47-2026-05-16-je-manulife-products';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -10454,6 +10467,11 @@ function inferXlsxCategoryFromSection(sectionLabel) {
   return '';
 }
 const XLSX_KNOWN_PRODUCT_RULES = [
+  // Manulife protection / legacy planning rows commonly appear without an
+  // insurer column in FC summary workbooks.
+  { re: /\bmanulife\s+early\s+completecare\b|\bearly\s+completecare\b|\bcompletecare\b/i, category: 'protection', subType: 'Critical Illness', insurer: 'Manulife' },
+  { re: /\bmanulife\s+readyprotect\b|\breadyprotect\b|\bready\s+protect\b/i, category: 'protection', subType: 'Personal Accident', insurer: 'Manulife' },
+  { re: /\bsignature\s+indexed\s+universal\s+life(?:\s+select)?\b|\bsiuls\b|\bsignature\s+life(?:[-\s]*sgd)?\b/i, category: 'protection', subType: 'Indexed UL (IUL)', insurer: 'Manulife' },
   // Retirement (lifetime / income endowments + annuities)
   { re: /\bpremierlife\b|premier\s*life\s*generation/i,           category: 'retirement', subType: 'Lifetime Endowment' },
   { re: /\baia\s*gen\s*3\b|\baia\s+gen3\b/i,                       category: 'retirement', subType: 'Lifetime Endowment' },
@@ -10969,7 +10987,7 @@ function inferInsurerFromProductName(productName) {
   const rules = [
     { re: /\baia\b|^aiagen|^aiaplatinum|^aias[a-z0-9]*|^prime life|^prime secure/i, name: 'AIA' },
     // rc2.29 — also match bare "Manu" prefix (FC shorthand)
-    { re: /manulife|manulink|investready|incomegen|retireready|lifeready|manuprotect|\bmanu\b/i, name: 'Manulife' },
+    { re: /manulife|manulink|investready|incomegen|retireready|lifeready|manuprotect|completecare|readyprotect|signature\s+indexed\s+universal\s+life|signature\s+life|signature\s+wealth|\bsiuls\b|\bmanu\b/i, name: 'Manulife' },
     { re: /china life/i, name: 'China Life' },
     { re: /\bge\b|gepremier|premierlife|great eastern|greateastern|greatlife|great\s*sp\b/i, name: 'Great Eastern' },
     { re: /ntuc|income insurance|incomeshield|gro\s*cash|grocash|cashsure|cashsurance|vivolife/i, name: 'NTUC Income' },
@@ -11388,7 +11406,7 @@ async function parseXlsxToStructured(file) {
       // detector. Without this, the Soh family workbook's bad mappings
       // (productName=null for ILP/Endowment/Legacy) would persist as cache
       // hits even after the regex fix.
-      const COLUMN_MAP_VERSION = 'cmv-2026-05-16-sheet-owner-routing';
+      const COLUMN_MAP_VERSION = 'cmv-2026-05-16-je-manulife-products';
       const normalized = headers.map(h => normalizeXlsxHeaderName(h)).concat(
         section.sectionLabel ? ['__section__:' + section.sectionLabel.toLowerCase()] : [],
         [kindTag, '__cmv__:' + COLUMN_MAP_VERSION]
@@ -14216,7 +14234,7 @@ const SEED_REPOSITORY = [
   // ══════════════════════════════════════════════════
   // MANULIFE — PRODUCTS (verified from policy contracts)
   // ══════════════════════════════════════════════════
-  {id:'repo-siuls3',insurer:'Manulife',productName:'SIULS III',productCode:'SIULS III',category:'protection',subType:'Indexed UL (IUL)',currency:'USD',notes:'FA/IA split. IA has 1-yr segments across 6 indices (S&P500Plus cap 11.30%, Euro Stoxx 50, HSI, MSCI EM, S&P MARC 5%, Barclays Trident). FA min 2% guaranteed. Loyalty 0.80% Yr11+. Charges: Premium 8%→4%, FA charge, COI stops age100, Performance (S&P500Plus only), Surrender 18yr. Features: APS, ELP, Reallocation, Penalty-free Yr11+, Loan, COLI, CVE, Age100 Advantage.',editHistory:[]},
+  {id:'repo-siuls3',insurer:'Manulife',productName:'Signature Indexed Universal Life Select (III)',productCode:'SIULS III',category:'protection',subType:'Indexed UL (IUL)',currency:'USD',notes:'Also shown as SIULS III / Signature Life-SGD in FC summaries. FA/IA split. IA has index-linked segments. FA min 2% guaranteed. Loyalty 0.80% Yr11+. Charges: Premium 8%→4%, FA charge, COI stops age100, Performance, Surrender 18yr. Features: APS, ELP, Reallocation, Penalty-free Yr11+, Loan, COLI, CVE, Age100 Advantage.',editHistory:[]},
   {id:'repo-sigwealth',insurer:'Manulife',productName:'Signature Wealth SGD',productCode:'VUL01',category:'protection',subType:'Variable UL (VUL)',currency:'SGD',notes:'Single premium VUL. Client-directed investment. Solved premium min S$300k. Charges: 4.8% top-up, 1.9% p.a. policy fee (8yr), 0.2% p.a. admin, COI stops age100, Surrender 10yr 12%×declining. Features: Client appoints AM/custodian, min 2% liquidity, partial surrender free, COLI, Age100 Advantage. Full investment risk on client.',editHistory:[]},
   {id:'repo-heirloom7',insurer:'Manulife',productName:'Heirloom VII',productCode:'HRT09',category:'protection',subType:'Universal Life (UL)',currency:'USD',notes:'Non-par UL, flexible premium. Crediting 4.20% current / 1.60% guaranteed. Loyalty 0.35% Yr11-pre100. Charges: Premium 7%/8.5%CVE, FA charge monthly by age band, COI max 110% stops age100, Surrender 18yr. Features: ELP 5yr, QSI (NS rates 3yr), CVE, Penalty-free Yr11+, Loan 90% SV variable, COLI 2×, Age100 Advantage.',editHistory:[]},
   {id:'repo-ml-manuprotect-term',insurer:'Manulife',productName:'ManuProtect Term (II)',productCode:'RLC19',category:'protection',subType:'Term Life',currency:'SGD',notes:'Non-par level term. Available terms 11-40yr or to age 65/75/85. Death + TI (accelerated). TI cap $1M/life, TI+CI cap $2M/life. Conversion privilege to WL/endowment/ILP before age 65, no health evidence. QSI available SI≥$500k. Suicide exclusion 1yr. SDIC protected.',editHistory:[]},

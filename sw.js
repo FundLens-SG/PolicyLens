@@ -1,4 +1,4 @@
-const SW_VERSION = 'v2.4.0-rc2.44-review-gated-imports';
+const SW_VERSION = 'v2.4.0-rc2.45-je-manulife-products';
 const DB_NAME = 'PolicyLensSW';
 const DB_VERSION = 1;
 const SESSION_STORE = 'sessions';
