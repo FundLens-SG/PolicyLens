@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.40-xlsx-sheet-owner-routing';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.41-xlsx-evidence-envelope';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -728,9 +728,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.40';
+const APP_VERSION = 'v2.4.0-rc2.41';
 const APP_VERSION_DATE = '2026-05-16';
-const APP_VERSION_NAME = 'XLSX sheet-owner routing';
+const APP_VERSION_NAME = 'XLSX evidence envelope';
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -986,6 +986,19 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.4.0-rc2.41',
+    date: '2026-05-16',
+    name: 'XLSX evidence envelope',
+    sections: [
+      {
+        heading: 'Extraction',
+        items: [
+          'Spreadsheet extraction now attaches source/run metadata to field evidence so parsed values keep sheet, row, parser version, review state, and verification state context for the future reviewer queue.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.4.0-rc2.40',
     date: '2026-05-16',
@@ -5640,7 +5653,7 @@ async function pdfToImages(pdfDoc, maxPages=12) {
 // shipped. Cache lookup is keyed by EXTRACT_PIPELINE_VERSION + fileHash,
 // so a re-scan after this bump WILL re-extract (no cache hit) and the
 // rc2.19/2.21 fixes will actually run.
-const EXTRACT_PIPELINE_VERSION = 'v15.42-2026-05-16-xlsx-sheet-owner-routing';
+const EXTRACT_PIPELINE_VERSION = 'v15.43-2026-05-16-xlsx-evidence-envelope';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -10824,10 +10837,63 @@ function isSpreadsheetNonPolicyRow(policy) {
   return false;
 }
 
-function addXlsxFieldEvidence(policy, field, sourceText, confidence = 'high', reason = 'Parsed from spreadsheet row.') {
+function getXlsxEvidenceSourceMeta(policy, fileName, sourceText) {
+  const sourceFile = fileName || policy?.sourceFile || policy?._sourceFile || policy?.documentTitle || '';
+  const sourceSheet = policy?.sourceSheet || policy?.sourceDocument?.sourceSheet || '';
+  const sourceRow = policy?.sourceRow || policy?.sourceDocument?.sourceRow || null;
+  const runId = [
+    sourceFile,
+    sourceSheet,
+    sourceRow,
+    policy?.policyNumber,
+    policy?.productName || policy?.policyName
+  ].filter(v => v !== undefined && v !== null && String(v).trim() !== '').join('|');
+  return {
+    sourceKind: 'spreadsheet',
+    parser: 'xlsx-local',
+    pipelineVersion: typeof EXTRACT_PIPELINE_VERSION === 'string' ? EXTRACT_PIPELINE_VERSION : '',
+    promptVersion: typeof EXTRACT_PROMPT_VERSION === 'string' ? EXTRACT_PROMPT_VERSION : '',
+    appVersion: typeof APP_VERSION === 'string' ? APP_VERSION : '',
+    extractionRunId: runId ? ('xlsx:' + normalizeTextKey(runId).slice(0, 160)) : '',
+    sourceFile,
+    sourceSheet,
+    sourceRow,
+    sourceText: sourceText || '',
+    documentOwner: policy?.documentOwner || policy?._xlsxProfile?.name || policy?.sourceDocument?.clientName || ''
+  };
+}
+
+function getXlsxRawEvidenceValue(policy, field) {
+  if (!policy || !field) return undefined;
+  const raw = policy._rawSpreadsheetRow || {};
+  const entries = Object.entries(raw).filter(([key, value]) => key && value !== undefined && value !== null && value !== '');
+  if (!entries.length) return undefined;
+  const patternsByField = {
+    productName: [/\b(policy|plan|product)\s*(name|plan)\b/, /^name$/],
+    policyName: [/\b(policy|plan|product)\s*(name|plan)\b/, /^name$/],
+    policyNumber: [/\b(policy|certificate|contract)\s*(no|number)\b/, /\bpolicy\s*#\b/],
+    policyOwner: [/\bpolicy\s*owner\b/, /\bowner\b/, /\bproposer\b/],
+    lifeInsured: [/\blife\s*(assured|insured)\b/, /\bassured\s*life\b/],
+    insurer: [/\binsurer\b/, /\binsurance\s*company\b/, /\bprovider\b/],
+    premiumAmount: [/\bpremium\b/, /\bpayment\s*amount\b/],
+    annualPremium: [/\bpremium\b/, /\bpayment\s*amount\b/],
+    sumAssured: [/\bsum\s*(assured|insured)\b/, /\bcoverage\s*amount\b/, /\bpayout\b/],
+    cashValue: [/\bcash\s*value\b/, /\bsurrender\s*value\b/]
+  };
+  const patterns = patternsByField[field] || [];
+  const hit = entries.find(([key]) => {
+    const norm = normalizeXlsxHeaderName(key);
+    return patterns.some(rx => rx.test(norm));
+  });
+  return hit ? hit[1] : undefined;
+}
+
+function addXlsxFieldEvidence(policy, field, sourceText, confidence = 'high', reason = 'Parsed from spreadsheet row.', meta = {}) {
   if (policy[field] === undefined || policy[field] === null || policy[field] === '') return;
   policy._fieldEvidence = { ...(policy._fieldEvidence || {}) };
   if (policy._fieldEvidence[field]) return;
+  const sourceMeta = { ...getXlsxEvidenceSourceMeta(policy, policy.sourceFile || policy._sourceFile || '', sourceText), ...(meta || {}) };
+  const rawValue = getXlsxRawEvidenceValue(policy, field);
   policy._fieldEvidence[field] = {
     value: policy[field],
     confidence,
@@ -10835,7 +10901,17 @@ function addXlsxFieldEvidence(policy, field, sourceText, confidence = 'high', re
     sourceText,
     page: policy.sourcePage || policy._sourcePage || null,
     boundingBox: null,
-    reason
+    reason,
+    reviewState: 'pending',
+    verificationState: 'extracted',
+    fieldPath: field,
+    rawValue: rawValue === undefined ? null : rawValue,
+    evidence: {
+      ...sourceMeta,
+      rawText: rawValue === undefined ? sourceText : String(rawValue),
+      page: policy.sourcePage || policy._sourcePage || null,
+      boundingBox: null
+    }
   };
 }
 
@@ -10850,7 +10926,24 @@ function attachXlsxSourceEvidence(policy, fileName) {
   policy._documentTitle = policy._documentTitle || fileName;
   policy.sourcePage = policy.sourcePage || (policy.sourceSheet ? policy.sourceSheet + (policy.sourceRow ? ' row ' + policy.sourceRow : '') : '');
   policy._sourcePage = policy._sourcePage || policy.sourcePage;
-  ['productName','policyNumber','policyOwner','lifeInsured','insurer','premiumAmount','annualPremium','sumAssured','cashValue'].forEach(field => addXlsxFieldEvidence(policy, field, sourceText));
+  const sourceMeta = getXlsxEvidenceSourceMeta(policy, fileName, sourceText);
+  policy._sourceTrace = {
+    ...(policy._sourceTrace || {}),
+    ...sourceMeta,
+    reviewState: policy._sourceTrace?.reviewState || 'pending',
+    verificationState: policy._sourceTrace?.verificationState || 'extracted'
+  };
+  policy._extractionRun = policy._extractionRun || {
+    id: sourceMeta.extractionRunId,
+    sourceKind: sourceMeta.sourceKind,
+    parser: sourceMeta.parser,
+    pipelineVersion: sourceMeta.pipelineVersion,
+    promptVersion: sourceMeta.promptVersion,
+    appVersion: sourceMeta.appVersion,
+    status: 'extracted',
+    warnings: []
+  };
+  ['productName','policyNumber','policyOwner','lifeInsured','insurer','premiumAmount','annualPremium','sumAssured','cashValue'].forEach(field => addXlsxFieldEvidence(policy, field, sourceText, 'high', 'Parsed from spreadsheet row.', sourceMeta));
 }
 
 function applyHighConfidenceRepoMatchToPolicy(policy, match, reason = 'repo-match') {
