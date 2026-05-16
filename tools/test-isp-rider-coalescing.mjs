@@ -131,7 +131,12 @@ const aiaRows = [
 const aia = coalesceIspShieldRows(aiaRows);
 assert.equal(aia.length, 1, 'AIA Shield stack should become one parent ISP policy');
 assert.equal(aia[0].hasRider, true, 'AIA parent should be marked as having rider(s)');
-assert.match(aia[0].productName, /HSG Max Special A/i, 'AIA plan tier should stay on parent policy');
+// rc2.42: the umbrella product name ("AIA HEALTHSHIELD GOLD MAX") must stay on the parent
+//   policy — the plan tier ("AIA HSG MAX SPECIAL A") is tracked separately in
+//   `_xlsxIspPlanOption`. Previously the coalescer overwrote the umbrella name with the plan
+//   tier, which destroyed the policy's canonical identity in the UI.
+assert.match(aia[0].productName, /AIA HEALTHSHIELD GOLD MAX/i, 'umbrella ISP product name should stay on parent policy');
+assert.match(aia[0]._xlsxIspPlanOption || '', /HSG MAX SPECIAL A/i, 'plan tier should be tracked in _xlsxIspPlanOption');
 assert.match(aia[0]._xlsxIspBaseProductName, /AIA HEALTHSHIELD GOLD MAX/i, 'original ISP parent name should be preserved for canonical components');
 assert.equal(aia[0].riders.length, 3, 'AIA parent should retain all three rider/add-on rows');
 assert.match(names(aia[0]), /AIA HSG MAX RIDER/i);

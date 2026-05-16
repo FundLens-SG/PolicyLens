@@ -6467,7 +6467,7 @@ async function pdfToImages(pdfDoc, maxPages=12) {
 // cache could return a stale 2-policy spreadsheet result before the fixed
 // local XLSX parser ran, so the parser now bypasses extraction/OCR cache
 // for spreadsheets and this version makes existing stale entries unreachable.
-const EXTRACT_PIPELINE_VERSION = 'v15.50-2026-05-16-je-completecare-cache-bypass';
+const EXTRACT_PIPELINE_VERSION = 'v15.51-2026-05-17-soh-family-rc2.42';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -10747,6 +10747,14 @@ function normalizeXlsxHeaderName(value) {
     .trim();
 }
 function scoreXlsxPolicyHeaderRow(cells) {
+  // rc2.42: data rows with a numeric ordinal in column 0 ("1.", "2.", "a)", "i)") are
+  //   definitively NOT header rows. Previously, when a data row's cells happened to contain
+  //   header-keyword phrases (e.g. MM Legacy's UOB row had "$2,000,000 Death Sum Assured" in
+  //   the Min. Protection Amount cell, scoring 7 — above the 6 threshold), it got mistaken
+  //   for a section header and either created a phantom section or got filtered out by
+  //   buildXlsxRowsFromHeader's "skip nested headers" guard. Either way the policy was lost.
+  const firstCellText = xlsxCellText((cells || [])[0]).trim();
+  if (/^(?:\d+\.?|\d+\)|[a-z]\)|[ivx]+\.)$/i.test(firstCellText)) return 0;
   let score = 0;
   let policyClues = 0;
   for (const raw of cells || []) {
@@ -10829,7 +10837,11 @@ function scoreXlsxFdHeaderRow(cells) {
 // next section banner.
 function _looksLikeXlsxSectionLabel(line) {
   const s = String(line || '').trim();
-  if (!s || s.length < 3 || s.length > 40) return false;
+  // rc2.42: raised cap from 40 → 60. Real-world section banners can run to ~50 chars
+  //   ("Personal Accident Protection / Travel Insurance" in DD = 47). The previous
+  //   40-cap silently rejected such banners, which caused the following section's
+  //   data rows to be vacuumed into the PREVIOUS section's endIndex.
+  if (!s || s.length < 3 || s.length > 60) return false;
   if (!/[a-z]/i.test(s)) return false;
   if (/[$%]|\d{4}|\d[,.]\d|s\d{7}|\bnric\b|\bdob\b|\baddress\b|\bcontact\b/i.test(s)) return false;
   if (/^(no|s\/no|serial)\.?$/i.test(s)) return false;
@@ -10857,6 +10869,12 @@ function _looksLikeXlsxProductContinuationLabel(line) {
   if (/\b(policy\s+summary|hospitali[sz]ation|protection|critical\s+illness|personal\s+accident|investment[\s-]*linked|endowments?|legacy\s+planning|fixed\s+deposits?|bank\s+investments?|govt\s+schemes?|government\s+schemes?)\b/i.test(s)) return false;
   if (/^(aia|singlife|aviva|manulife|prudential|pru|great\s+eastern|ge|ntuc|income|hsbc|fwd|etiqa|tokio\s+marine|tokio|tm|dbs|uob|ocbc|posb|standard\s+chartered|maybank|citi(?:bank)?)\b/i.test(s)) return true;
   if (/\b(hsg\s*max|health\s*plus|vitalhealth|shield|rider|waiver|completecare|readyprotect|investready|elite\s*term|financier|travelcare|flexiplan|solitaire|assure|vantage|cash\s*max|early\s*critical|cancer\s*care)\b/i.test(s)) return true;
+  // rc2.42: rider/component words that don't include the insurer prefix. These show up as
+  //   B-column continuation rows beneath the parent policy (e.g. JL's "TPD ADVANCE COVER III"
+  //   under SINGLIFE ELITE TERM, MM's "EXTENDED TPD RIDER (5YR DEF'D)" under GE FINANCIER).
+  //   Without these, the row passes _looksLikeXlsxSectionLabel and gets mis-detected as a
+  //   phantom banner.
+  if (/\b(tpd|advance\s*cover|term\s+(?:cover|life|protect)|extended\s*tpd|deluxe|classic\s+care|living\s+(?:joy|assurance))\b/i.test(s)) return true;
   return false;
 }
 // rc2.25 — banner detector for the row at index r in matrix.
@@ -10881,10 +10899,21 @@ function _detectBannerAtRow(matrix, r) {
   if (positions.length === 0) return null;
   // Single non-empty cell — must be in col 0 (or col 1 if col 0 is empty —
   // some sheets like Belinda's Wealth have a left margin column).
+  // rc2.42: tightened the col-1 branch. Single-cell rows in col 1 are now only treated as
+  //   banners when col 0 is a consistent margin (empty in both the row above and below).
+  //   Previously, any single-cell row in cols 0 OR 1 could become a banner — which caused
+  //   JL's continuation row "TPD ADVANCE COVER III" (B-only, surrounded by data rows with
+  //   ordinals in col 0) to be detected as a phantom banner, prematurely truncating the
+  //   Life Protection section before the rider rows could be coalesced.
   if (positions.length === 1) {
     const { c, v } = positions[0];
-    if (c <= 1 && _looksLikeXlsxProductContinuationLabel(v)) return null;
-    if (c <= 1 && _looksLikeXlsxSectionLabel(v)) return v;
+    // rc2.42: col-1 single-cell rows are accepted as banners (some templates have a
+    //   left-margin col 0); discrimination from rider continuation rows is handled by
+    //   _looksLikeXlsxProductContinuationLabel which now covers TPD / Advance Cover /
+    //   Extended TPD / Living Joy / etc. that previously slipped through.
+    if (c > 1) return null;
+    if (_looksLikeXlsxProductContinuationLabel(v)) return null;
+    if (_looksLikeXlsxSectionLabel(v)) return v;
     return null;
   }
   // Two non-empty cells, MUST be adjacent (cols 0+1 or 1+2 max) — banners
@@ -10979,6 +11008,21 @@ function findAllXlsxPolicyHeaderRows(matrix) {
       sectionRow: section ? section.row : i
     });
   }
+  // rc2.42: dedup headers that share the same sectionRow. The policy-header
+  //   scorer occasionally classifies a data row as a header when its cells
+  //   contain phrases like "Sum Assured" or "Premium" (e.g. MM Legacy's UOB
+  //   SIGNATURE LIFE row had "$2,000,000 Death Sum Assured until 2052" in the
+  //   Min. Protection Amount cell, scoring 7 — enough to look like a header).
+  //   When two headers share a banner, the second one is almost always a
+  //   high-scoring data row; keep only the first.
+  const seenBanners = new Set();
+  const dedupedHeaders = [];
+  for (const h of headers) {
+    const bannerKey = h.sectionLabel ? (h.sectionRow + ':' + h.sectionLabel) : '';
+    if (bannerKey && seenBanners.has(bannerKey)) continue;
+    if (bannerKey) seenBanners.add(bannerKey);
+    dedupedHeaders.push(h);
+  }
   // Bound each header's data range at the next section banner (or next
   // header row if there's no banner). End-of-sheet for the last one.
   // rc2.25 — ALSO consult _findAllSectionBanners. The previous logic only
@@ -10987,19 +11031,23 @@ function findAllXlsxPolicyHeaderRows(matrix) {
   // rows got eaten into the last policy section. Now any banner that
   // comes after a header bounds that header's endIndex.
   const allBanners = _findAllSectionBanners(matrix);
-  for (let k = 0; k < headers.length; k++) {
-    const next = headers[k + 1];
+  for (let k = 0; k < dedupedHeaders.length; k++) {
+    const next = dedupedHeaders[k + 1];
     let endIndex = next ? (next.sectionRow - 1) : (matrix.length - 1);
     // Find first banner that appears AFTER this header's start row.
     // If that banner is earlier than the next header (or there's no next
     // header), use it to bound endIndex.
-    const bannerAfter = allBanners.find(b => b.row > headers[k].headerIndex);
+    const bannerAfter = allBanners.find(b => b.row > dedupedHeaders[k].headerIndex);
     if (bannerAfter && bannerAfter.row - 1 < endIndex) {
       endIndex = bannerAfter.row - 1;
     }
-    headers[k].endIndex = endIndex;
+    dedupedHeaders[k].endIndex = endIndex;
   }
-  return headers;
+  // rc2.42: drop headers whose data range collapsed below their own row
+  //   (endIndex <= headerIndex means no rows). Empty sections add noise to
+  //   downstream stages (column-map cache, eval harness counts) without
+  //   ever producing a policy.
+  return dedupedHeaders.filter(h => h.endIndex > h.headerIndex);
 }
 function inferXlsxCategoryFromSection(sectionLabel) {
   const s = String(sectionLabel || '').toLowerCase().trim();
@@ -11021,7 +11069,11 @@ const XLSX_KNOWN_PRODUCT_RULES = [
   // insurer column in FC summary workbooks.
   { re: /\bmanulife\s+early\s+completecare\b|\bearly\s+completecare\b|\bcompletecare\b/i, category: 'protection', subType: 'Critical Illness', insurer: 'Manulife' },
   { re: /\bmanulife\s+readyprotect\b|\breadyprotect\b|\bready\s+protect\b/i, category: 'protection', subType: 'Personal Accident', insurer: 'Manulife' },
-  { re: /\bsignature\s+indexed\s+universal\s+life(?:\s+select)?\b|\bsiuls\b|\bsignature\s+life(?:[-\s]*sgd)?\b/i, category: 'protection', subType: 'Indexed UL (IUL)', insurer: 'Manulife' },
+  // rc2.42: extended to Signature Income / Signature Wealth variants. The Manulife
+  //   Signature family is sold through UOB/DBS Treasures programs — UOB Signature Life,
+  //   DBS Signature Income, DBS Signature Wealth, etc. — all underwritten by Manulife. The
+  //   bank prefix is part of the marketing label, not the insurer.
+  { re: /\bsignature\s+(?:indexed\s+universal\s+life(?:\s+select)?|life|income|wealth)(?:[-\s]*sgd)?\b|\bsiuls\b/i, category: 'protection', subType: 'Indexed UL (IUL)', insurer: 'Manulife' },
   // Retirement (lifetime / income endowments + annuities)
   { re: /\bpremierlife\b|premier\s*life\s*generation/i,           category: 'retirement', subType: 'Lifetime Endowment' },
   { re: /\baia\s*gen\s*3\b|\baia\s+gen3\b/i,                       category: 'retirement', subType: 'Lifetime Endowment' },
@@ -11392,11 +11444,16 @@ function inferXlsxColumnMap(headers) {
     subType: find([/\bsub\s*type\b/, /\bpolicy\s*type\b/, /\bplan\s*type\b/]),
     sumAssured: find([/\bsum\s*(assured|insured)\b/, /\bcoverage\s*amount\b/, /\bface\s*amount\b/]),
     cashValue: find([/\bnet\s*cash\s*value\b/, /\bcash\s*value\b/, /\bsurrender\s*value\b/]),
-    premiumAmount: find([/\bpayment\s*amount\s*due\b/, /\bamount\s*due\b/, /\bpremium\s*amount\b/, /\bregular\s*premium\b/, /\bannual\s*premium\b/, /\bpremium\b/], [/\bend\b/, /\bterm\b/, /\bmode\b/, /\bfrequency\b/, /\bpaid[\s-]*to[\s-]*date\b/]),
+    // rc2.42: drop the mandatory "date" suffix — SG FC summary templates routinely use
+    //   bare "Policy Start" / "Policy End" / "Maturity" / "Inception" headers (Soh family,
+    //   Tan Kah Lan, Eunice Kong all do this). Previously every inceptionDate / maturityDate
+    //   was null because the regex required "date" at the end. Specific multi-word matches
+    //   (e.g. "policy start") still win over the bare fallbacks via ordering.
+    premiumAmount: find([/\bpayment\s*amount\s*due\b/, /\bamount\s*due\b/, /\bpremium\s*amount\b/, /\bregular\s*premium\b/, /\bannual\s*premium\b/, /\bpremium\b/, /^amount$/], [/\bend\b/, /\bterm\b/, /\bmode\b/, /\bfrequency\b/, /\bpaid[\s-]*to[\s-]*date\b/, /\bmin\b/, /\bface\b/]),
     premiumMode: find([/\bpremium\s*(mode|frequency)\b/, /\bpayment\s*(mode|frequency)\b/, /\bhow\s*often\b/]),
     premiumTerm: find([/\bpremium\s*term\b/, /\bpayment\s*term\b/]),
-    inceptionDate: find([/\b(start|commencement|inception|issue|effective)\s*date\b/]),
-    maturityDate: find([/\bmaturity\s*date\b/]),
+    inceptionDate: find([/\b(start|commencement|inception|issue|effective)\s*date\b/, /\bpolicy\s*start\b/, /^start$/, /^inception$/, /^commencement$/], [/\bpremium\s*start\b/]),
+    maturityDate: find([/\bmaturity\s*date\b/, /\bpolicy\s*end\b/, /\bpolicy\s*expiry\b/, /\bcoverage\s*end\b/, /\bend\s*date\b/, /\bexpiry\s*date\b/, /^maturity$/, /^expiry$/, /^end$/], [/\bpremium\s*end\b/]),
     premiumEndDate: find([/\bpremium\s*end\s*date\b/, /\bpremium\s*expiry\b/, /\bpaid\s*up\s*date\b/, /\blast\s*premium\b/]),
     // rc2e.38: capture Status column from XLSX (Tan Kah Lan's Income /
     // Long Term Endowments sections have "Fully Paid" / "Premium Paying"
@@ -12881,6 +12938,24 @@ function getXlsxRiderColumnTexts(row, includeCoverageColumns = false) {
   }
   return out;
 }
+// rc2.42: pure coverage-column text (NOT rider-column). Used by coalesceContinuationRiders
+//   to route coverage continuation rows to the parent's coverage field instead of creating
+//   spurious riders. Example: DD's GE FINANCIER row 13 has H="TPD $220k SA" (coverage column)
+//   and I="Living Assurance Rider $30k" (Coverage End (Riders) column). H is a coverage
+//   continuation of the parent whole-life policy, I is a separate rider. Previously the
+//   parser merged both as riders → 5 spurious riders. With this split, H appends to the
+//   parent's coverage field and only I becomes a rider.
+function getXlsxPureCoverageColumnTexts(row) {
+  const out = [];
+  for (const [key, value] of getXlsxRawEntries(row)) {
+    const norm = normalizeXlsxHeaderName(key);
+    if (/\b(riders?|coverage\s*end)\b/.test(norm)) continue;
+    if (!/\b(coverage|benefit|sum assured|payout)\b/.test(norm)) continue;
+    const text = String(value || '').replace(/\s+/g, ' ').trim();
+    if (text) out.push(text);
+  }
+  return out;
+}
 
 function makeXlsxRider(text, fallbackName) {
   const coverageText = String(text || '').replace(/\s+/g, ' ').trim();
@@ -12918,7 +12993,13 @@ function isIntegratedShieldPlanOptionName(name) {
   const t = normalizeTextKey(name);
   if (!t) return false;
   if (/\b(rider|vitalhealth|vitalcare|totalcare|pruextra|health\s+plus|enhanced\s+care|deluxe\s+care|classic\s+care|assist\s+rider|plus\s+rider|booster|cancer\s+guard|choice\s+rider|key\s+rider)\b/.test(t)) return false;
-  return /\b(aia\s+hsg\s+max\s+special\s+[ab]|aia\s+(?:healthshield|health\s*shield)\s+gold\s+max\s+special\s+[ab])\b/.test(t);
+  // rc2.42: AIA Shield ward-tier plan options ship as bare "A" / "B" / "Standard" suffixes
+  //   in SG FC summaries (e.g. JY's "AIA HSG MAX B" = B-ward variant). Previously only the
+  //   "SPECIAL A" / "SPECIAL B" forms matched, so bare-ward plan-option rows fell through
+  //   as standalone policies instead of coalescing into the umbrella Shield.
+  //   Suffix is anchored at end-of-string ($) so "AIA HSG MAX RIDER" doesn't accidentally
+  //   match "A" / "B" inside other words.
+  return /\b(aia\s+hsg\s+max\s+(?:special\s+[ab]|[ab]|standard)|aia\s+(?:healthshield|health\s*shield)\s+gold\s+max\s+(?:special\s+[ab]|[ab]|standard))$/.test(t);
 }
 
 function isIntegratedShieldRiderName(name) {
@@ -13014,8 +13095,15 @@ function attachIspComponentToParent(parent, row, asPlanOption = false) {
   if (asPlanOption) {
     parent._xlsxIspBaseProductName = parent._xlsxIspBaseProductName || parent.productName || parent.policyName || '';
     parent._xlsxIspPlanOption = name;
-    if (!isIntegratedShieldPlanOptionName(parent.productName || parent.policyName)) {
-      parent.productName = _titleCaseProductName(name);
+    // rc2.42: only overwrite the parent's productName with the plan-option name when the
+    //   parent's existing name ISN'T already a recognised umbrella shield name. Previously
+    //   this guard was inverted — it only skipped the overwrite if the parent was ALREADY a
+    //   plan-option name, which meant a valid umbrella ("AIA HEALTHSHIELD GOLD MAX") got
+    //   replaced by the plan option ("AIA HSG MAX SPECIAL A") and the umbrella identity
+    //   was lost. Also drop the _titleCaseProductName call — SG-convention is UPPERCASE
+    //   on FC summaries, and casing is handled separately by the casing-preservation pass.
+    if (!isIntegratedShieldParentName(parent.productName || parent.policyName)) {
+      parent.productName = name;
     }
     const note = [getXlsxRawCoverageText(row), row.extractionNotes, row.notes].filter(Boolean).join(' | ').trim();
     if (note) parent.extractionNotes = [parent.extractionNotes, 'ISP plan option: ' + name + (note ? ' (' + note + ')' : '')].filter(Boolean).join(' | ');
@@ -13081,11 +13169,43 @@ function coalesceContinuationRiders(policiesRaw) {
         const coverage = getXlsxRawCoverageText(row);
         parts.push({ text: [productName, coverage].filter(Boolean).join(' | '), fallbackName: productName });
       }
-      for (const text of getXlsxRiderColumnTexts(row, !productName)) {
+      // rc2.42: ALWAYS pull only rider-flavored columns here (not coverage columns). Coverage-
+      //   column text on a continuation row describes the PARENT policy's coverage, not a new
+      //   rider. Previously the call was getXlsxRiderColumnTexts(row, !productName) which, when
+      //   productName was empty, also pulled coverage cells — causing DD's GE FINANCIER row 13
+      //   (H="TPD $220k SA" in Coverage column) to be merged as a phantom "TPD Benefit" rider
+      //   alongside the real rider in column I, and DD's AIA Financial Guardian rows 35-37
+      //   (Coverage-only continuation) to become 3 spurious riders.
+      for (const text of getXlsxRiderColumnTexts(row, false)) {
         parts.push({ text, fallbackName: '' });
       }
-      if (!parts.length && continuationText) parts.push({ text: continuationText, fallbackName: productName });
+      // rc2.42: if there are no parts to merge as riders, fall back to the legacy behavior of
+      //   treating the row's raw text as rider material (preserves edge cases like
+      //   _xlsxContinuationOnly rows whose only signal sits in remarks/notes).
+      if (!parts.length && !productName && continuationText) {
+        const pureCoverage = getXlsxPureCoverageColumnTexts(row);
+        if (pureCoverage.length) {
+          // Pure coverage-column continuation — append to parent's coverage field instead of
+          // creating spurious riders.
+          const additions = pureCoverage.filter(t => !String(prev.coverage || '').includes(t));
+          if (additions.length) {
+            prev.coverage = [String(prev.coverage || '').trim(), ...additions].filter(Boolean).join('\n');
+          }
+          continue;
+        }
+        parts.push({ text: continuationText, fallbackName: productName });
+      }
       for (const part of parts) appendXlsxRider(prev, makeXlsxRider(part.text, part.fallbackName));
+      // rc2.42: even when there ARE rider-column parts, also append coverage-column continuation
+      //   to the parent's coverage (e.g. DD's GE FINANCIER row 13 has both: H="TPD $220k SA"
+      //   coverage AND I="Living Assurance Rider" rider).
+      if (!productName) {
+        const pureCoverage = getXlsxPureCoverageColumnTexts(row);
+        const additions = pureCoverage.filter(t => !String(prev.coverage || '').includes(t));
+        if (additions.length) {
+          prev.coverage = [String(prev.coverage || '').trim(), ...additions].filter(Boolean).join('\n');
+        }
+      }
       continue;
     }
 

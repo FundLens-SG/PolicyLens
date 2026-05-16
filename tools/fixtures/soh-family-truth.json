@@ -1,0 +1,260 @@
+{
+  "_note": "Hand-curated ground truth for the Soh Family Policy Summary.xlsx fixture. Built 2026-05-17 from the source workbook (~/Downloads/Soh Family Policy Summary.xlsx) for diff-extraction-against-source.mjs. Fields are partial — only assert what's clearly correct in the source. 'riders' use substring matches (case-insensitive). To regenerate, re-inspect the source xlsx, not previous extractions.",
+  "fileName": "Soh Family Policy Summary.xlsx",
+  "sheets": {
+    "DD Policy Summary": {
+      "documentOwner": "Soh Soon Jooh, Eric",
+      "policies": [
+        {
+          "section": "Hospitalisation",
+          "productName": "SAMWOH CORPORATION GROUP HOSPITAL & SURGICAL",
+          "policyNo": "00104438",
+          "lifeInsured": "Self",
+          "premiumAmount": 313,
+          "inceptionDate": "1 Jan 2019"
+        },
+        {
+          "section": "Life Protection",
+          "productName": "GREAT EASTERN FINANCIER WHOLE LIFE",
+          "policyNo": "0012554905",
+          "lifeInsured": "Self",
+          "premiumAmount": 2150.9,
+          "inceptionDate": "11 Feb 1991",
+          "riders": ["Extended TPD Rider", "Living Assurance Rider", "Term Rider"]
+        },
+        {
+          "section": "Personal Accident",
+          "productName": "GREAT TRAVELCARE",
+          "policyNo": "A5668559",
+          "lifeInsured": "Self"
+        },
+        {
+          "section": "Investment-linked Plans",
+          "productName": "MANULIFE INVESTREADY",
+          "lifeInsured": "Self",
+          "premiumAmount": 12000,
+          "inceptionDate": "12 Nov 2024"
+        },
+        {
+          "section": "Endowment Plans",
+          "productName": "AIA FINANCIAL GUARDIAN",
+          "policyNo": "Q514255969",
+          "lifeInsured": "Self",
+          "premiumAmount": 761.04,
+          "inceptionDate": "02 Nov 1988",
+          "endDate": "2 Nov 2069",
+          "riders": []
+        },
+        {
+          "section": "Legacy Planning",
+          "productName": "SIGNATURE LIFE",
+          "insurer": "Manulife",
+          "policyNo": "1499191470",
+          "lifeInsured": "Self",
+          "premiumAmount": 1064796.83,
+          "sumAssured": 1333333,
+          "inceptionDate": "20 Nov 2020",
+          "endDate": "20 Nov 2068"
+        },
+        {
+          "section": "Legacy Planning",
+          "productName": "SIGNATURE INDEXED UNIVERSAL LIFE",
+          "insurer": "Manulife"
+        }
+      ]
+    },
+    "MM Policy Summary": {
+      "documentOwner": "Teo Sock Choo, Stacy",
+      "policies": [
+        {
+          "section": "Hospitalisation",
+          "productName": "PRUSHIELD PREMIER",
+          "policyNo": "85817234",
+          "lifeInsured": "Self",
+          "premiumAmount": 1464,
+          "inceptionDate": "13 Nov 2023"
+        },
+        {
+          "section": "Hospitalisation",
+          "productName": "PRUSHIELD EXTRA PREMIER",
+          "policyNo": "86426866",
+          "premiumAmount": 3410,
+          "inceptionDate": "13 Nov 2023"
+        },
+        {
+          "section": "Life Protection",
+          "productName": "GE FINANCIER WHOLE LIFE",
+          "policyNo": "0011868900",
+          "lifeInsured": "Self",
+          "premiumAmount": 1101,
+          "inceptionDate": "12 Mar 1990",
+          "riders": ["EXTENDED TPD RIDER"]
+        },
+        {
+          "section": "Life Protection",
+          "productName": "DEPENDENTS' PROTECTION SCHEME",
+          "policyNo": "0220084278",
+          "lifeInsured": "Self",
+          "premiumAmount": 298,
+          "inceptionDate": "14 May 1989",
+          "endDate": "13 May 2033"
+        },
+        {
+          "section": "Life Protection",
+          "productName": "LIFE PERKS 15",
+          "policyNo": "0024445585",
+          "lifeInsured": "JE",
+          "premiumAmount": 725,
+          "inceptionDate": "23 Nov 2001",
+          "riders": ["LIVING JOY RIDER"]
+        },
+        {
+          "section": "Life Protection",
+          "productName": "PRUCASH MAX",
+          "lifeInsured": "Self",
+          "inceptionDate": "30 Apr 2015",
+          "endDate": "30 Apr 2020"
+        },
+        {
+          "section": "Personal Accident",
+          "productName": "PRU PERSONAL ACCIDENT PLAN D",
+          "policyNo": "86278754",
+          "lifeInsured": "Self",
+          "premiumAmount": 747,
+          "inceptionDate": "25 Oct 2023"
+        },
+        {
+          "section": "Investment-linked Plans",
+          "productName": "GREATLINK FLEXIPLAN",
+          "policyNo": "0024400591",
+          "lifeInsured": "Self",
+          "premiumAmount": 1200,
+          "inceptionDate": "26 Oct 2001",
+          "riders": ["Living Assurance"]
+        },
+        {
+          "section": "Investment-linked Plans",
+          "productName": "PRUVANTAGE ASSURE",
+          "lifeInsured": "Self",
+          "premiumAmount": 10000,
+          "inceptionDate": "16 Nov 2023",
+          "riders": []
+        },
+        {
+          "section": "Investment-linked Plans",
+          "productName": "MANULIFE INVESTREADY",
+          "lifeInsured": "Self",
+          "premiumAmount": 50000,
+          "inceptionDate": "28 Mar 2025"
+        },
+        {
+          "section": "Legacy Planning",
+          "productName": "UOB SIGNATURE LIFE",
+          "insurer": "Manulife",
+          "policyNo": "1499191512",
+          "premiumAmount": 607626.5,
+          "inceptionDate": "05 Mar 2021",
+          "endDate": "05 Mar 2067"
+        },
+        {
+          "section": "Legacy Planning",
+          "productName": "DBS SIGNATURE INCOME",
+          "insurer": "Manulife",
+          "policyNo": "1498006992",
+          "lifeInsured": "Self",
+          "premiumAmount": 301843.5,
+          "inceptionDate": "27 Feb 2020"
+        },
+        {
+          "section": "Legacy Planning",
+          "productName": "DBS SIGNATURE WEALTH",
+          "insurer": "Manulife",
+          "lifeInsured": "Self",
+          "inceptionDate": "29 Oct 2020"
+        }
+      ]
+    },
+    "JL Policy Summary": {
+      "documentOwner": "Soh Jia Le",
+      "policies": [
+        {
+          "section": "Hospitalisation",
+          "productName": "AIA HEALTHSHIELD GOLD MAX",
+          "policyNo": "H230740130",
+          "lifeInsured": "Self",
+          "premiumAmount": 640.97,
+          "hasRider": true,
+          "planOption": "AIA HSG MAX SPECIAL A",
+          "riders": ["HSG MAX RIDER", "VITALHEALTH", "CANCER CARE BOOSTER"]
+        },
+        {
+          "section": "Life Protection",
+          "productName": "SINGLIFE ELITE TERM",
+          "policyNo": "83875408",
+          "lifeInsured": "Self",
+          "premiumAmount": 1066.7,
+          "riders": ["TPD ADVANCE COVER", "EARLY CRITICAL ILLNESS WAIVER"]
+        },
+        {
+          "section": "Critical Illness Protection",
+          "productName": "MANULIFE EARLY COMPLETECARE",
+          "insurer": "Manulife",
+          "policyNo": "2470924428",
+          "lifeInsured": "Self",
+          "premiumAmount": 2061.03,
+          "inceptionDate": "29 Sept 2025",
+          "riders": ["EARLY CRITICAL CARE WAIVER"]
+        },
+        {
+          "section": "Personal Accident",
+          "productName": "AIA SOLITAIRE PA",
+          "policyNo": "P565031433",
+          "lifeInsured": "Self",
+          "premiumAmount": 224.11,
+          "inceptionDate": "26 Dec 2022"
+        }
+      ]
+    },
+    "JY Policy Summary": {
+      "documentOwner": "Soh Jia Yi",
+      "policies": [
+        {
+          "section": "Hospitalisation",
+          "productName": "AIA HEALTHSHIELD GOLD MAX",
+          "policyNo": "H230740143",
+          "premiumAmount": 377.79,
+          "planOption": "AIA HSG MAX B",
+          "riders": []
+        }
+      ]
+    },
+    "JE Policy Summary": {
+      "documentOwner": "Je",
+      "policies": [
+        {
+          "section": "Hospitalisation",
+          "productName": "Singlife Shield Plan 1",
+          "lifeInsured": "Self",
+          "hasRider": true,
+          "riders": ["Singlife Health Plus"]
+        },
+        {
+          "section": "Hospitalisation",
+          "productName": "Manulife Early CompleteCare",
+          "insurer": "Manulife",
+          "lifeInsured": "Self",
+          "premiumAmount": 1578.78,
+          "sumAssured": 100000
+        },
+        {
+          "section": "Hospitalisation",
+          "productName": "Manulife ReadyProtect",
+          "insurer": "Manulife",
+          "lifeInsured": "Self",
+          "premiumAmount": 288,
+          "sumAssured": 200000
+        }
+      ]
+    }
+  }
+}
