@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.45-je-manulife-products';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.46-extraction-reconciliation';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -738,9 +738,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.45';
+const APP_VERSION = 'v2.4.0-rc2.46';
 const APP_VERSION_DATE = '2026-05-16';
-const APP_VERSION_NAME = 'JE Manulife product recognition';
+const APP_VERSION_NAME = 'Extraction reconciliation';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1214,6 +1214,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.46',
+  date: '2026-05-16',
+  name: 'Extraction reconciliation',
+  sections: [{
+    heading: 'Extraction',
+    items: ['Spreadsheet imports now reconcile the latest extracted source scope against saved extracted policies, quarantining stale false positives into review instead of leaving them in the active policy list.']
+  }]
+}, {
   version: 'v2.4.0-rc2.45',
   date: '2026-05-16',
   name: 'JE Manulife product recognition',
@@ -3650,6 +3658,132 @@ function assignDeterministicPolicyId(policy = {}, clientId = '') {
     id: stableId
   } : policy;
 }
+function policyHasExplicitAdvisorVerification(policy = {}) {
+  if (!policy || typeof policy !== 'object') return false;
+  const state = policy.verificationState || policy.verification_state || policy._sourceTrace?.verificationState;
+  if (state === 'advisor_verified' || state === 'client_signed_off') return true;
+  const verifiedFields = policy._advisorVerifiedFields || policy.advisorVerifiedFields || {};
+  if (verifiedFields && Object.keys(verifiedFields).some(k => verifiedFields[k])) return true;
+  const evidence = policy._fieldEvidence || {};
+  return Object.values(evidence).some(ev => {
+    const evState = ev?.verificationState || ev?.verification_state || ev?.evidence?.verificationState || ev?.evidence?.verification_state;
+    return evState === 'advisor_verified' || evState === 'client_signed_off';
+  });
+}
+function isExtractionQuarantinedPolicy(policy = {}) {
+  return !!(policy && policy._extractionReconciliation && policy._extractionReconciliation.state === 'stale_source_mismatch' && !policy._extractionReconciliation.advisorRestoredAt);
+}
+function policyExtractionSourceScope(policy = {}) {
+  const trace = policy._sourceTrace || {};
+  const sourceKind = trace.sourceKind || policy.sourceKind || (policy._rawSpreadsheetRow || policy.sourceSheet ? 'spreadsheet' : '');
+  const file = trace.sourceFile || policy.sourceFile || policy._sourceFile || policy.documentTitle || policy._documentTitle || policy.sourceDocument?.sourceFile || '';
+  const sheet = trace.sourceSheet || policy.sourceSheet || policy.sourceDocument?.sourceSheet || '';
+  const owner = trace.documentOwner || policy.documentOwner || policy._xlsxProfile?.name || policy.sourceDocument?.clientName || policy.policyOwner || '';
+  if (!file && !sheet) return '';
+  const kindKey = normalizeTextKey(sourceKind || 'unknown');
+  const fileKey = normalizeTextKey(file);
+  const sheetKey = normalizeTextKey(sheet);
+  const ownerKey = normalizePersonNameKey(owner || '');
+  return [kindKey, fileKey, sheetKey, ownerKey].filter(Boolean).join('|');
+}
+function policyExtractionComparable(policy = {}) {
+  if (!policy || typeof policy !== 'object') return false;
+  if (policyHasExplicitAdvisorVerification(policy)) return false;
+  if (isExtractionQuarantinedPolicy(policy)) return false;
+  const trace = policy._sourceTrace || {};
+  const sourceKind = trace.sourceKind || policy.sourceKind || (policy._rawSpreadsheetRow || policy.sourceSheet ? 'spreadsheet' : '');
+  const sourceKey = policyExtractionSourceScope(policy);
+  if (!sourceKey) return false;
+  if (/spreadsheet|xlsx|csv/i.test(String(sourceKind || ''))) return true;
+  return !!(policy._sourceTrace || policy._fieldEvidence || policy._policyFingerprint);
+}
+function policiesSameExtractionCandidate(saved = {}, extracted = {}) {
+  if (policiesLikelySamePolicy(saved, extracted)) return true;
+  const savedInsurer = policyInsurerIdentity(saved);
+  const extractedInsurer = policyInsurerIdentity(extracted);
+  if (savedInsurer && extractedInsurer && savedInsurer !== extractedInsurer) return false;
+  const savedProduct = policyProductIdentity(saved);
+  const extractedProduct = policyProductIdentity(extracted);
+  if (!savedProduct || !extractedProduct) return false;
+  const productMatch = savedProduct === extractedProduct || savedProduct.includes(extractedProduct) || extractedProduct.includes(savedProduct);
+  if (!productMatch) return false;
+  const savedPerson = policyPersonKey(saved);
+  const extractedPerson = policyPersonKey(extracted);
+  if (savedPerson && extractedPerson && !personNameEquivalent(savedPerson, extractedPerson)) return false;
+  return !!(savedInsurer || extractedInsurer || savedPerson || extractedPerson);
+}
+function reconcileSavedPoliciesAgainstExtraction(savedPolicies = [], extractedPolicies = [], opts = {}) {
+  const saved = Array.isArray(savedPolicies) ? savedPolicies : [];
+  const extracted = Array.isArray(extractedPolicies) ? extractedPolicies : [];
+  const now = opts.now || new Date().toISOString();
+  const scopeBuckets = new Map();
+  for (const raw of extracted) {
+    const policy = raw || {};
+    const scope = policyExtractionSourceScope(policy);
+    if (!scope) continue;
+    if (!scopeBuckets.has(scope)) scopeBuckets.set(scope, []);
+    scopeBuckets.get(scope).push(policy);
+  }
+  if (!scopeBuckets.size) return {
+    policies: saved,
+    quarantined: [],
+    kept: saved,
+    reviewItems: []
+  };
+  const quarantined = [];
+  const reviewItems = [];
+  const policies = saved.map(policy => {
+    if (!policyExtractionComparable(policy)) return policy;
+    const scope = policyExtractionSourceScope(policy);
+    const fresh = scopeBuckets.get(scope);
+    if (!fresh || fresh.length === 0) return policy;
+    const stillPresent = fresh.some(next => policiesSameExtractionCandidate(policy, next));
+    if (stillPresent) return policy;
+    const sourceFile = policy._sourceTrace?.sourceFile || policy.sourceFile || policy._sourceFile || policy.documentTitle || '';
+    const sourceSheet = policy._sourceTrace?.sourceSheet || policy.sourceSheet || '';
+    const reason = 'Saved extracted policy no longer appears in the latest extraction for the same source scope.';
+    const next = {
+      ...policy,
+      _extractionReconciliation: {
+        ...(policy._extractionReconciliation || {}),
+        state: 'stale_source_mismatch',
+        reviewState: 'pending',
+        reason,
+        comparedAt: now,
+        pipelineVersion: typeof EXTRACT_PIPELINE_VERSION === 'string' ? EXTRACT_PIPELINE_VERSION : '',
+        sourceFile,
+        sourceSheet,
+        extractedPolicyCount: fresh.length,
+        extractedPolicyNames: fresh.map(p => p.productName || p.policyName || p.policyNumber || '').filter(Boolean).slice(0, 12)
+      },
+      _sourceTrace: {
+        ...(policy._sourceTrace || {}),
+        reviewState: 'pending',
+        verificationState: policy._sourceTrace?.verificationState || 'extracted'
+      },
+      _reviewReasons: [...new Set([...(Array.isArray(policy._reviewReasons) ? policy._reviewReasons : []), reason])]
+    };
+    quarantined.push(next);
+    reviewItems.push({
+      itemType: 'stale_extraction_mismatch',
+      policyId: next.id || '',
+      productName: next.productName || next.policyName || '',
+      policyNumber: next.policyNumber || '',
+      insurer: next.insurer || '',
+      sourceFile,
+      sourceSheet,
+      reason,
+      reviewState: 'pending'
+    });
+    return next;
+  });
+  return {
+    policies,
+    quarantined,
+    kept: policies.filter(p => !isExtractionQuarantinedPolicy(p)),
+    reviewItems
+  };
+}
 function classifyPolicyDocumentTriage(policy = {}, existingPolicies = []) {
   const explicit = normalizeDocumentTriageType(policy.documentType);
   const hay = normalizeTextKey([policy.documentType, policy.documentTitle, policy.tableType, policy.extractionNotes, policy.notes, policy.userRemarks, policy.productName, policy.policyName, policy.subType, policy.sourceImage, policy.sourcePage, policy._fieldEvidence?.policyNumber?.sourceText, policy._fieldEvidence?.premiumAmount?.sourceText].filter(Boolean).join(' '));
@@ -5293,7 +5427,7 @@ async function pdfToImages(pdfDoc, maxPages = 12) {
 // shipped. Cache lookup is keyed by EXTRACT_PIPELINE_VERSION + fileHash,
 // so a re-scan after this bump WILL re-extract (no cache hit) and the
 // rc2.19/2.21 fixes will actually run.
-const EXTRACT_PIPELINE_VERSION = 'v15.47-2026-05-16-je-manulife-products';
+const EXTRACT_PIPELINE_VERSION = 'v15.48-2026-05-16-extraction-reconciliation';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -25307,6 +25441,52 @@ function App() {
       console.log('[Sync] Renamed policyOwner/lifeInsured on ' + updated + ' policies for client ' + targetClientId + ' (' + oldName + ' → ' + newClean + ')');
     }
     return updated;
+  };
+  const reconcileExtractedSourceForClient = async (targetClientId, extractedPolicies, reason = 'scan-import-reconciliation') => {
+    if (!targetClientId || !Array.isArray(extractedPolicies) || extractedPolicies.length === 0) {
+      return {
+        quarantined: 0,
+        reviewItems: []
+      };
+    }
+    const allPols = await dbGetAll('policies').catch(() => []);
+    const clientPols = (allPols || []).filter(pol => (pol.clientId || targetClientId) === targetClientId);
+    const result = reconcileSavedPoliciesAgainstExtraction(clientPols, extractedPolicies, {
+      now: new Date().toISOString()
+    });
+    if (!result.quarantined.length) return {
+      quarantined: 0,
+      reviewItems: []
+    };
+    const quarantinedById = new Map(result.quarantined.map(pol => [pol.id, pol]));
+    for (const pol of result.quarantined) {
+      const enriched = stampPolicySyncMeta({
+        ...pol,
+        clientId: targetClientId
+      }, reason);
+      await dbPut('policies', enriched);
+      await recordActivity(targetClientId, {
+        type: 'extraction-reconciliation',
+        label: 'Policy sent to review',
+        detail: (enriched.productName || enriched.policyName || enriched.policyNumber || 'Policy') + ' no longer appears in the latest source extraction',
+        level: 'warning'
+      }).catch(() => {});
+      quarantinedById.set(pol.id, enriched);
+    }
+    if (targetClientId === activeClientIdRef.current) {
+      setPolicies(prev => prev.map(pol => quarantinedById.get(pol.id) || pol));
+    }
+    await scheduleDriveWriteForClient(targetClientId, reason, 1000);
+    try {
+      window.dispatchEvent(new Event('policylens-clients-changed'));
+    } catch (_) {}
+    try {
+      toast('Moved ' + result.quarantined.length + ' stale extracted polic' + (result.quarantined.length === 1 ? 'y' : 'ies') + ' to review', 'warning', 6500);
+    } catch (_) {}
+    return {
+      quarantined: result.quarantined.length,
+      reviewItems: result.reviewItems
+    };
   };
   const savePolicy = async incomingP => {
     // rc1.99 feedback capture — extract the raw AI snapshot (if any)
@@ -55298,7 +55478,9 @@ function Policies() {
       toast('Re-normalized ' + updated + ' polic' + (updated === 1 ? 'y' : 'ies') + (failed ? ' (' + failed + ' failed)' : ''), failed ? 'warning' : 'success', 4500);
     } catch (_) {}
   };
-  const filtered = filter === 'all' ? policies : policies.filter(p => p.category === filter);
+  const visiblePolicies = policies.filter(p => !isExtractionQuarantinedPolicy(p));
+  const quarantinedPolicies = policies.filter(isExtractionQuarantinedPolicy);
+  const filtered = filter === 'all' ? visiblePolicies : visiblePolicies.filter(p => p.category === filter);
   // Separate matured policies (authoritative: maturity date wins over stale status flags)
   // Previously we trusted pol.status==='matured' blindly, which mis-classified policies
   // where the AI/scanner had set status wrongly while the maturityDate was clearly in the
@@ -59654,7 +59836,38 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       className: 'btn-secondary btn-sm',
       onClick: () => runRenormalizeStalePolicies(stale)
     }, 'Re-normalize ' + stale.length)));
-  })(), scanProgress && /*#__PURE__*/React.createElement("div", {
+  })(), !showForm && !scanning && quarantinedPolicies.length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "card",
+    style: {
+      marginBottom: 12,
+      padding: 14,
+      borderLeft: '3px solid var(--red)',
+      background: 'color-mix(in oklch, var(--red) 7%, var(--bg2))'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      gap: 10,
+      flexWrap: 'wrap'
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      fontWeight: 700,
+      color: 'var(--red)'
+    }
+  }, "Extraction review hold"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: 'var(--text3)',
+      marginTop: 3
+    }
+  }, quarantinedPolicies.length, " saved extracted polic", quarantinedPolicies.length === 1 ? 'y' : 'ies', " no longer appear in the latest matching source extraction and are hidden from the active list until reviewed.")), /*#__PURE__*/React.createElement("button", {
+    className: "btn-secondary btn-sm",
+    onClick: () => setTab('review')
+  }, "Open review"))), scanProgress && /*#__PURE__*/React.createElement("div", {
     className: "card",
     style: {
       marginBottom: 12,
@@ -61874,6 +62087,13 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       try {
         holdLocalDriveWrite(importClientId, 'scan-import', 120000);
       } catch (_) {}
+      const reconciliationResult = await reconcileExtractedSourceForClient(importClientId, selected, 'scan-import-reconciliation').catch(err => {
+        console.warn('[ExtractionReconcile] skipped:', err?.message || err);
+        return {
+          quarantined: 0,
+          reviewItems: []
+        };
+      });
       // ── DEDUPE AT SAVE TIME (2026-04-09 fix) ──
       // Previously every selected policy got a fresh genId() and
       // was saved as a new entry, even when findExistingMatch had
@@ -62043,6 +62263,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       const parts = [];
       if (newCount > 0) parts.push(newCount + ' new');
       if (mergedCount > 0) parts.push(mergedCount + ' merged into existing');
+      if (reconciliationResult.quarantined > 0) parts.push(reconciliationResult.quarantined + ' stale sent to review');
       toast('Imported ' + (parts.join(', ') || count + ' policies'), 'success');
       if (count > 0) {
         recordActivity(importClientId, {
