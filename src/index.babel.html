@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.52-signature-family-subtypes';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.53-subtype-routing';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -728,9 +728,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.52';
+const APP_VERSION = 'v2.4.0-rc2.53';
 const APP_VERSION_DATE = '2026-05-17';
-const APP_VERSION_NAME = 'Signature family + sub-type corrections';
+const APP_VERSION_NAME = 'Sub-type-driven group routing';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -987,6 +987,20 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.4.0-rc2.53',
+    date: '2026-05-17',
+    name: 'Sub-type-driven group routing',
+    sections: [
+      {
+        heading: 'Policy list grouping',
+        items: [
+          'Sub-type is now a STRONG signal for which group a policy renders in. Previously only the `category` field was consulted, so a policy correctly tagged as `subType:Annuity` but stuck with a stale `category:protection` (from extractions before rc2.52 fixed the Signature family rule) would still appear under Protection. Now Annuity / Lifetime Endowment / Retirement Income / Income Plan / CPF Life always route to "Retirement & Annuities" regardless of the saved category, and Universal Life / Indexed UL / Variable UL always route to "Universal Life".',
+          'This is a defensive UI fix that handles legacy stale data without requiring the FC to click Re-normalize. The underlying category field still drives gap analysis and projections; only the visual grouping is overridden.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.4.0-rc2.52',
     date: '2026-05-17',
@@ -46432,12 +46446,26 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
         {(() => {
           // Group policies into sections
           const isCPFLifePolicy = p => (p.insurer||'').toLowerCase().includes('cpf board') || (p.productName||'').toLowerCase().includes('cpf life');
+          // rc2.53: subType is treated as a STRONG signal for grouping. The category field can
+          //   drift on stale saved policies (e.g. DBS Signature Income saved as
+          //   category:'protection' under the pre-rc2.52 buggy Signature rule, then later
+          //   Re-normalized to subType:'Annuity' but the category persisted incorrectly).
+          //   The grouping below now respects the sub-type even when the saved category
+          //   disagrees — Annuity / Lifetime Endowment / Retirement Income / Income Plan
+          //   always group as Retirement, the UL family always groups as Universal Life.
+          const RETIREMENT_SUBTYPES = new Set(['Annuity','Lifetime Endowment','Retirement Income (Par WL)','Income Plan','Retirement','CPF Life']);
+          const UL_SUBTYPES = new Set(['Universal Life (UL)','Indexed UL (IUL)','Variable UL (VUL)']);
+          const isRetirementGrouped = p => (RETIREMENT_SUBTYPES.has(p.subType) || p.category === 'retirement') && !isCPFLifePolicy(p);
+          const isULGrouped = p => UL_SUBTYPES.has(p.subType);
           const insuranceGroups = [
-            {id:'protection', sub:'Protection', icon:'🛡', color:'#5b8fd9', match: p => p.category==='protection' && !['Universal Life (UL)','Indexed UL (IUL)','Variable UL (VUL)','Personal Accident'].includes(p.subType)},
-            {id:'ul', sub:'Universal Life', icon:'💎', color:'#9d8abf', match: p => ['Universal Life (UL)','Indexed UL (IUL)','Variable UL (VUL)'].includes(p.subType)},
-            {id:'investment', sub:'Investment', icon:'📈', color:'var(--green2)', match: p => p.category==='investment'},
-            {id:'savings', sub:'Endowment & Savings', icon:'💰', color:'var(--blue2)', match: p => p.category==='savings'},
-            {id:'retirement', sub:'Retirement & Annuities', icon:'🏦', color:'var(--green2)', match: p => p.category==='retirement' && !isCPFLifePolicy(p)},
+            // rc2.53: Protection excludes UL family, PA, AND any subType that should clearly
+            //   live under Retirement (Annuity, Lifetime Endowment, etc.). Without this the
+            //   Retirement-grouped check below wouldn't fire for stale-category policies.
+            {id:'protection', sub:'Protection', icon:'🛡', color:'#5b8fd9', match: p => p.category==='protection' && !UL_SUBTYPES.has(p.subType) && p.subType!=='Personal Accident' && !RETIREMENT_SUBTYPES.has(p.subType)},
+            {id:'ul', sub:'Universal Life', icon:'💎', color:'#9d8abf', match: p => isULGrouped(p)},
+            {id:'investment', sub:'Investment', icon:'📈', color:'var(--green2)', match: p => p.category==='investment' && !isULGrouped(p) && !isRetirementGrouped(p)},
+            {id:'savings', sub:'Endowment & Savings', icon:'💰', color:'var(--blue2)', match: p => p.category==='savings' && !isRetirementGrouped(p)},
+            {id:'retirement', sub:'Retirement & Annuities', icon:'🏦', color:'var(--green2)', match: p => isRetirementGrouped(p) && !isULGrouped(p)},
             // Accident & Medical includes: health category, maternity, AND Personal
             // Accident (which is technically under protection category in the schema
             // but belongs here in the UI per CK 2026-04-09 — PA is an A&M product,
