@@ -7987,5 +7987,62 @@
       "AIA Group ECI"
     ],
     "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Citibank",
+    "productName": "Citi Priority Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Citi Priority",
+      "Citi Priority Banking"
+    ],
+    "source": "manual-2026-05-17"
+  },
+  {
+    "insurer": "Citibank",
+    "productName": "Citigold Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Citigold",
+      "Citigold Banking",
+      "Citigold Wealth Management"
+    ],
+    "source": "manual-2026-05-17"
+  },
+  {
+    "insurer": "Citibank",
+    "productName": "Citigold Private Client Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Citigold Private Client",
+      "CGPC",
+      "Citi Private Bank SG"
+    ],
+    "source": "manual-2026-05-17"
+  },
+  {
+    "insurer": "DBS",
+    "productName": "DBS Treasures Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "DBS Treasures",
+      "Treasures Banking"
+    ],
+    "source": "manual-2026-05-17"
+  },
+  {
+    "insurer": "DBS",
+    "productName": "DBS Treasures Private Client Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "DBS Treasures Private Client",
+      "TPC"
+    ],
+    "source": "manual-2026-05-17"
   }
 ]
