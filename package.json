@@ -18,6 +18,7 @@
     "assimilate:catalogue:apply": "node tools/assimilate-catalogue.mjs tools/catalogue-staging --apply",
     "assimilate:selftest": "node tools/assimilate-catalogue.mjs --selftest",
     "test:xlsx-evidence": "node tools/test-xlsx-evidence-envelope.mjs",
+    "test:xlsx-extraction-smoke": "node tools/test-xlsx-extraction-smoke.mjs",
     "split:preview": "node tools/extract-index-modules.mjs --list",
     "eval:extraction": "node tools/eval-extraction.mjs",
     "eval:extraction:verbose": "node tools/eval-extraction.mjs --verbose",
