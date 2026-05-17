@@ -111,6 +111,13 @@ function extractAllSheets(filePath) {
       const rawPolicies = fns.applyColumnMap(rows, map.columnMap, map.categoryColumn);
       const coalesced = fns.coalesceContinuationRiders(fns.coalesceIspShieldRows(rawPolicies));
       for (const p of coalesced) {
+        // rc2.45: mirror the production `enrichSpreadsheetPolicyCandidate` step that fills
+        //   missing insurer from the product-name pattern matcher. Without this the harness
+        //   stops short of the real pipeline and every PRU*/AIA*/Great* policy looks "null".
+        if (!p.insurer || /^unknown$/i.test(String(p.insurer).trim())) {
+          const inferred = fns.inferInsurerFromProductName(p.productName || p.policyName || '');
+          if (inferred) p.insurer = inferred;
+        }
         policies.push({
           ...p,
           _section: section.sectionLabel,

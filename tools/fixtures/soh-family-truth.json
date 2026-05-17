@@ -16,6 +16,7 @@
         {
           "section": "Life Protection",
           "productName": "GREAT EASTERN FINANCIER WHOLE LIFE",
+          "insurer": "Great Eastern",
           "policyNo": "0012554905",
           "lifeInsured": "Self",
           "premiumAmount": 2150.9,
@@ -25,12 +26,14 @@
         {
           "section": "Personal Accident",
           "productName": "GREAT TRAVELCARE",
+          "insurer": "Great Eastern",
           "policyNo": "A5668559",
           "lifeInsured": "Self"
         },
         {
           "section": "Investment-linked Plans",
           "productName": "MANULIFE INVESTREADY",
+          "insurer": "Manulife",
           "lifeInsured": "Self",
           "premiumAmount": 12000,
           "inceptionDate": "12 Nov 2024"
@@ -38,6 +41,7 @@
         {
           "section": "Endowment Plans",
           "productName": "AIA FINANCIAL GUARDIAN",
+          "insurer": "AIA",
           "policyNo": "Q514255969",
           "lifeInsured": "Self",
           "premiumAmount": 761.04,
@@ -69,6 +73,7 @@
         {
           "section": "Hospitalisation",
           "productName": "PRUSHIELD PREMIER",
+          "insurer": "Prudential",
           "policyNo": "85817234",
           "lifeInsured": "Self",
           "premiumAmount": 1464,
@@ -79,6 +84,7 @@
         {
           "section": "Life Protection",
           "productName": "GE FINANCIER WHOLE LIFE",
+          "insurer": "Great Eastern",
           "policyNo": "0011868900",
           "lifeInsured": "Self",
           "premiumAmount": 1101,
@@ -97,6 +103,7 @@
         {
           "section": "Life Protection",
           "productName": "LIFE PERKS 15",
+          "insurer": "Great Eastern",
           "policyNo": "0024445585",
           "lifeInsured": "JE",
           "premiumAmount": 725,
@@ -106,6 +113,7 @@
         {
           "section": "Life Protection",
           "productName": "PRUCASH MAX",
+          "insurer": "Prudential",
           "lifeInsured": "Self",
           "inceptionDate": "30 Apr 2015",
           "endDate": "30 Apr 2020"
@@ -113,6 +121,7 @@
         {
           "section": "Personal Accident",
           "productName": "PRU PERSONAL ACCIDENT PLAN D",
+          "insurer": "Prudential",
           "policyNo": "86278754",
           "lifeInsured": "Self",
           "premiumAmount": 747,
@@ -121,6 +130,7 @@
         {
           "section": "Investment-linked Plans",
           "productName": "GREATLINK FLEXIPLAN",
+          "insurer": "Great Eastern",
           "policyNo": "0024400591",
           "lifeInsured": "Self",
           "premiumAmount": 1200,
@@ -130,6 +140,7 @@
         {
           "section": "Investment-linked Plans",
           "productName": "PRUVANTAGE ASSURE",
+          "insurer": "Prudential",
           "lifeInsured": "Self",
           "premiumAmount": 10000,
           "inceptionDate": "16 Nov 2023",
@@ -138,6 +149,7 @@
         {
           "section": "Investment-linked Plans",
           "productName": "MANULIFE INVESTREADY",
+          "insurer": "Manulife",
           "lifeInsured": "Self",
           "premiumAmount": 50000,
           "inceptionDate": "28 Mar 2025"
@@ -175,6 +187,7 @@
         {
           "section": "Hospitalisation",
           "productName": "AIA HEALTHSHIELD GOLD MAX",
+          "insurer": "AIA",
           "policyNo": "H230740130",
           "lifeInsured": "Self",
           "premiumAmount": 640.97,
@@ -203,6 +216,7 @@
         {
           "section": "Personal Accident",
           "productName": "AIA SOLITAIRE PA",
+          "insurer": "AIA",
           "policyNo": "P565031433",
           "lifeInsured": "Self",
           "premiumAmount": 224.11,

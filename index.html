@@ -5789,7 +5789,7 @@ async function pdfToImages(pdfDoc, maxPages = 12) {
 // cache could return a stale 2-policy spreadsheet result before the fixed
 // local XLSX parser ran, so the parser now bypasses extraction/OCR cache
 // for spreadsheets and this version makes existing stale entries unreachable.
-const EXTRACT_PIPELINE_VERSION = 'v15.52-2026-05-17-prushield-extra-rider-rc2.43';
+const EXTRACT_PIPELINE_VERSION = 'v15.53-2026-05-17-insurer-prefix-detection-rc2.45';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -10984,7 +10984,23 @@ const XLSX_KNOWN_PRODUCT_RULES = [
 }, {
   re: /pruwealth|pru\s*wealth/i,
   category: 'investment',
-  subType: 'ILP (Investment)'
+  subType: 'ILP (Investment)',
+  insurer: 'Prudential'
+},
+// rc2.45: PRUVantage is Prudential's ILP family (PRUVantage Assure, PRUVantage Growth, etc.).
+//   Without this rule subType stayed unmapped and the FC review showed "—" for sub-type.
+{
+  re: /pruvantage|pru\s*vantage/i,
+  category: 'investment',
+  subType: 'ILP (Investment)',
+  insurer: 'Prudential'
+},
+// rc2.45: GREATLink is Great Eastern's ILP family (GreatLink Flexiplan, GreatLink Series, etc.).
+{
+  re: /\bgreatlink\b|great\s*link/i,
+  category: 'investment',
+  subType: 'ILP (Investment)',
+  insurer: 'Great Eastern'
 },
 // Protection (whole life / term)
 {
@@ -11469,14 +11485,25 @@ function inferInsurerFromProductName(productName) {
   }, {
     re: /china life/i,
     name: 'China Life'
-  }, {
-    re: /\bge\b|gepremier|premierlife|great eastern|greateastern|greatlife|great\s*sp\b/i,
+  },
+  // rc2.45: broaden Great Eastern to catch the full "Great*" product family — GREATLINK,
+  //   GREATPRO, GREATLIFE, GREATCARE, GREAT TRAVELCARE, GREAT FINANCIER WL, GREAT TOTALCARE,
+  //   GREAT SUPREMEHEALTH, GREAT TERM, LIFE PERKS (a GE life-savings plan), etc. Singapore's
+  //   "Great" prefix is GE-exclusive across insurance product lines, so the broad pattern is
+  //   safe. The previous specific-list approach left GREATLINK FLEXIPLAN with no insurer.
+  {
+    re: /\bge\b|gepremier|great\s+eastern|greateastern|\bgreat[a-z]+\b|life\s+perks/i,
     name: 'Great Eastern'
   }, {
     re: /ntuc|income insurance|incomeshield|gro\s*cash|grocash|cashsure|cashsurance|vivolife/i,
     name: 'NTUC Income'
-  }, {
-    re: /prudential|\bpru\b|prulife|pruwealth/i,
+  },
+  // rc2.45: catch any "PRU*" prefix (Prudential's product naming convention) — PRUSHIELD,
+  //   PRUEXTRA, PRUVANTAGE, PRUCASH, PRULIFE, PRUWEALTH, PRUACTIVE, PRUSAVER, PRUGEN, etc.
+  //   Previously `\bpru\b` only matched the bare-word abbreviation; the prefix forms
+  //   ("pruvantage" with no boundary after pru) all fell through to empty insurer.
+  {
+    re: /prudential|\bpru[a-z]+\b|\bpru\b/i,
     name: 'Prudential'
   }, {
     re: /singlife|aviva/i,
