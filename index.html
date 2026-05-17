@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.60-phase2-reviews-resolved';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.61-strip-classification-directives';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -738,9 +738,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.60';
+const APP_VERSION = 'v2.4.0-rc2.61';
 const APP_VERSION_DATE = '2026-05-17';
-const APP_VERSION_NAME = 'Phase 2 reviews resolved + bank tier accounts';
+const APP_VERSION_NAME = 'Strip AI classification directives from notes';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1214,6 +1214,17 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.61',
+  date: '2026-05-17',
+  name: 'Strip AI classification directives from notes',
+  sections: [{
+    heading: 'Notes cleanup',
+    items: ['Advisor reported that the AIA Gen2 product card displayed "NOT an ILP. Classify as retirement → Retirement Income (Par WL)." as user-facing notes — clearly an AI classification directive that leaked into the SEED_REPOSITORY during rc2.55 / rc2.58 deep-research merges.', 'Scanned all 385 SEED entries: 44 leaked classification directives found across 37 entries. Patterns: "Classify as X" (most common), "Treat as X" (riders), "NOT an ILP", "CLASSIFY AS … NEVER as …", "Use annuityPayout for …", "No fundAllocations / no ilpGrowth / no management fee".', 'New tools/clean-seed-notes.mjs strips these directives in place while preserving substantive FC content. Uses lookbehind regex with sentence-boundary anchoring (after [.!?]+space) so decimal points like "2.25% p.a." are not split. Mid-sentence clauses ("— NOT an ILP, no fund allocation, no investment component") are also stripped.', 'Sample before/after:', '  AIA Gen2 — before: "Predecessor to AIA Gen3. Limited-pay participating whole life with guaranteed coupons, similar 10-year premium term and 2-generation legacy structure. NOT an ILP. Classify as retirement → Retirement Income (Par WL)."', '  AIA Gen2 — after:  "Predecessor to AIA Gen3. Limited-pay participating whole life with guaranteed coupons, similar 10-year premium term and 2-generation legacy structure."', 'No substantive content lost — every stripped clause is a meta-instruction, not a fact about the product.']
+  }, {
+    heading: 'Validator hardening',
+    items: ['tools/assimilate-catalogue.mjs validator now flags directive-leakage as a warning during ingestion. Future deep-research outputs that contain "Classify as", "NOT an ILP", "Treat as", "CLASSIFY AS", "Use annuityPayout", or "no fundAllocations" in notes will surface as warnings so we strip them before they land in the catalogue.', 'Pairs with the existing marketing-language warning (award-winning, peace of mind, comprehensive, etc.) for a stronger notes quality bar.']
+  }]
+}, {
   version: 'v2.4.0-rc2.60',
   date: '2026-05-17',
   name: 'Phase 2 reviews resolved + bank tier accounts',
@@ -5925,7 +5936,7 @@ async function pdfToImages(pdfDoc, maxPages = 12) {
 // cache could return a stale 2-policy spreadsheet result before the fixed
 // local XLSX parser ran, so the parser now bypasses extraction/OCR cache
 // for spreadsheets and this version makes existing stale entries unreachable.
-const EXTRACT_PIPELINE_VERSION = 'v15.61-2026-05-17-phase2-reviews-rc2.60';
+const EXTRACT_PIPELINE_VERSION = 'v15.62-2026-05-17-strip-directives-rc2.61';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -16099,7 +16110,7 @@ const SEED_REPOSITORY = [
   category: 'retirement',
   subType: 'Retirement Income (Par WL)',
   currency: 'SGD',
-  notes: 'LIMITED-PAY PARTICIPATING WHOLE LIFE with guaranteed coupon income — NOT an ILP, no fund allocation, no investment component. 10-year premium payment term. Guaranteed coupon 2.25% p.a. of insured amount from end of year 10. Non-guaranteed cash dividends (~0.8% typical) — total illustrated payout ~3.05% p.a. Dividends may be retained with AIA at 3.25% (non-guaranteed). Guaranteed cash values accumulate from policy year 3. Lump sum TPD benefit to age 65. Designed for 3-generation legacy: policy assignable to child at age 21 (child receives payouts for life), death benefit to grandchild. Typical illustration: $7,980/yr for $100k SA. Participating whole life — lifetime coverage with regular income from year 10. CLASSIFY AS retirement/Retirement Income (Par WL), NEVER as investment/ILP. No fundAllocations, no ilpGrowth, no management fee. Use annuityPayout for the guaranteed + dividend income.',
+  notes: 'LIMITED-PAY PARTICIPATING WHOLE LIFE with guaranteed coupon income. 10-year premium payment term. Guaranteed coupon 2.25% p.a. of insured amount from end of year 10. Non-guaranteed cash dividends (~0.8% typical) — total illustrated payout ~3.05% p.a. Dividends may be retained with AIA at 3.25% (non-guaranteed). Guaranteed cash values accumulate from policy year 3. Lump sum TPD benefit to age 65. Designed for 3-generation legacy: policy assignable to child at age 21 (child receives payouts for life), death benefit to grandchild. Typical illustration: $7,980/yr for $100k SA. Participating whole life — lifetime coverage with regular income from year 10. No fundAllocations.',
   editHistory: []
 }, {
   id: 'repo-aia-gen2',
@@ -16109,7 +16120,7 @@ const SEED_REPOSITORY = [
   category: 'retirement',
   subType: 'Retirement Income (Par WL)',
   currency: 'SGD',
-  notes: 'Predecessor to AIA Gen3. Limited-pay participating whole life with guaranteed coupons, similar 10-year premium term and 2-generation legacy structure. NOT an ILP. Classify as retirement → Retirement Income (Par WL).',
+  notes: 'Predecessor to AIA Gen3. Limited-pay participating whole life with guaranteed coupons, similar 10-year premium term and 2-generation legacy structure.',
   editHistory: []
 }, {
   id: 'repo-aia-wlc2',
@@ -16481,7 +16492,7 @@ const SEED_REPOSITORY = [
   category: 'protection',
   subType: 'Critical Illness',
   currency: 'SGD',
-  notes: 'Optional rider for AIA Ultimate Critical Cover. It extends the standalone CI policy with relapse and catastrophic-condition benefits. Treat as a rider product rather than a separate base plan.',
+  notes: 'Optional rider for AIA Ultimate Critical Cover. It extends the standalone CI policy with relapse and catastrophic-condition benefits.',
   editHistory: []
 }, {
   id: 'repo-aia-asccbooster',
@@ -16491,7 +16502,7 @@ const SEED_REPOSITORY = [
   category: 'protection',
   subType: 'Early Critical Illness',
   currency: 'SGD',
-  notes: 'Optional booster rider for AIA Absolute Critical Cover. It is used to increase specified early/intermediate/major CI benefit amounts under the ASCC structure. Treat as a rider product tied to ASCC.',
+  notes: 'Optional booster rider for AIA Absolute Critical Cover. It is used to increase specified early/intermediate/major CI benefit amounts under the ASCC structure.',
   editHistory: []
 }, {
   id: 'repo-aia-enhancedcancerprotectplu',
@@ -16501,7 +16512,7 @@ const SEED_REPOSITORY = [
   category: 'protection',
   subType: 'Critical Illness',
   currency: 'SGD',
-  notes: 'Cancer rider/add-on for AIA Enhanced Cancer Protect. It increases coverage for early, intermediate and catastrophic cancer events under the base cancer plan. Treat as a rider product, not as a separate cancer base plan.',
+  notes: 'Cancer rider/add-on for AIA Enhanced Cancer Protect. It increases coverage for early, intermediate and catastrophic cancer events under the base cancer plan.',
   editHistory: []
 }, {
   id: 'repo-aia-aiastarprotectorplus',
@@ -16551,7 +16562,7 @@ const SEED_REPOSITORY = [
   category: 'health',
   subType: 'Integrated Shield Plan',
   currency: 'SGD',
-  notes: 'Optional rider for AIA HealthShield Gold Max B. It covers part of the co-insurance under the base IP, subject to required co-payment and rider conditions. Treat as a Shield rider, not a standalone health plan.',
+  notes: 'Optional rider for AIA HealthShield Gold Max B. It covers part of the co-insurance under the base IP, subject to required co-payment and rider conditions.',
   editHistory: []
 }, {
   id: 'repo-aia-aiamaxvitalhealthproblit',
@@ -16561,7 +16572,7 @@ const SEED_REPOSITORY = [
   category: 'health',
   subType: 'Integrated Shield Plan',
   currency: 'SGD',
-  notes: 'Optional rider for AIA HealthShield Gold Max B Lite. It is a Shield rider designed to cover co-insurance within rider terms and co-payment requirements. Treat as separate from Pro B because it attaches to the B Lite base tier.',
+  notes: 'Optional rider for AIA HealthShield Gold Max B Lite. It is a Shield rider designed to cover co-insurance within rider terms and co-payment requirements.',
   editHistory: []
 }, {
   id: 'repo-aia-emergencycarepro',
@@ -16571,7 +16582,7 @@ const SEED_REPOSITORY = [
   category: 'health',
   subType: 'Integrated Shield Plan',
   currency: 'SGD',
-  notes: 'Optional add-on for AIA Max VitalHealth Pro A. It is used within the Shield rider structure for emergency-care benefits. Treat as a Shield add-on, not a personal accident policy.',
+  notes: 'Optional add-on for AIA Max VitalHealth Pro A. It is used within the Shield rider structure for emergency-care benefits.',
   editHistory: []
 }, {
   id: 'repo-aia-aiababyprotectoriii',
@@ -16581,7 +16592,7 @@ const SEED_REPOSITORY = [
   category: 'maternity',
   subType: 'Maternity Coverage',
   currency: 'SGD',
-  notes: 'Pre-natal rider used with AIA Mum2Baby. It attaches to AIA Pro Lifetime Protector (II) as part of the maternity bundle where the child also has investment-linked protection structure. Treat as a rider product rather than as a standalone maternity base plan.',
+  notes: 'Pre-natal rider used with AIA Mum2Baby. It attaches to AIA Pro Lifetime Protector (II) as part of the maternity bundle where the child also has investment-linked protection structure.',
   editHistory: []
 }, {
   id: 'repo-aia-aiasmartgoal10',
@@ -16591,7 +16602,7 @@ const SEED_REPOSITORY = [
   category: 'savings',
   subType: 'Short-term Endowment',
   currency: 'SGD',
-  notes: '10-year savings plan with 3 years of premium payments. AIA states that 100% of capital is guaranteed at maturity and no health check is required. Classification gotcha: this is a short-term endowment, not an ILP.',
+  notes: '10-year savings plan with 3 years of premium payments. AIA states that 100% of capital is guaranteed at maturity and no health check is required. Classification gotcha: this is a short-term endowment.',
   editHistory: []
 }, {
   id: 'repo-aia-earlycriticalprotectorli',
@@ -16601,7 +16612,7 @@ const SEED_REPOSITORY = [
   category: 'protection',
   subType: 'Early Critical Illness',
   currency: 'SGD',
-  notes: 'Early/intermediate/major-stage CI rider attachable to AIA Guaranteed Protect Plus (IV). AIA product materials describe it as covering a multi-stage CI set plus special conditions. Treat as a rider product under the GPP IV whole life family.',
+  notes: 'Early/intermediate/major-stage CI rider attachable to AIA Guaranteed Protect Plus (IV). AIA product materials describe it as covering a multi-stage CI set plus special conditions.',
   editHistory: []
 }, {
   id: 'repo-aia-criticalprotectorlifeiv',
@@ -16611,7 +16622,7 @@ const SEED_REPOSITORY = [
   category: 'protection',
   subType: 'Critical Illness',
   currency: 'SGD',
-  notes: 'Major critical illness rider attachable to AIA Guaranteed Protect Plus (IV). AIA materials describe coverage for a major CI condition set under the whole life base plan. Treat as rider product, not standalone CI.',
+  notes: 'Major critical illness rider attachable to AIA Guaranteed Protect Plus (IV). AIA materials describe coverage for a major CI condition set under the whole life base plan.',
   editHistory: []
 }, {
   id: 'repo-aia-earlycriticalprotectorwa',
@@ -16621,7 +16632,7 @@ const SEED_REPOSITORY = [
   category: 'protection',
   subType: 'Early Critical Illness',
   currency: 'SGD',
-  notes: 'Premium-waiver rider that waives future premiums upon covered early, intermediate or major-stage CI events. AIA materials list it as attachable to multiple savings and ILP products. Treat as a rider product and check the base plan\'s eligible-rider rules.',
+  notes: 'Premium-waiver rider that waives future premiums upon covered early, intermediate or major-stage CI events. AIA materials list it as attachable to multiple savings and ILP products.',
   editHistory: []
 }, {
   id: 'repo-aia-criticalprotectorwaivero',
@@ -16631,7 +16642,7 @@ const SEED_REPOSITORY = [
   category: 'protection',
   subType: 'Critical Illness',
   currency: 'SGD',
-  notes: 'Premium-waiver rider that waives future premiums upon covered major critical illness events. AIA materials list it as attachable to multiple savings and ILP products. Treat as a rider product and check eligible base-plan rules.',
+  notes: 'Premium-waiver rider that waives future premiums upon covered major critical illness events. AIA materials list it as attachable to multiple savings and ILP products.',
   editHistory: []
 }, {
   id: 'repo-aia-earlycriticalprotectorpa',
@@ -16641,7 +16652,7 @@ const SEED_REPOSITORY = [
   category: 'protection',
   subType: 'Early Critical Illness',
   currency: 'SGD',
-  notes: 'Payor-benefit rider that waives future premiums for a child\'s eligible plan on specified payor events, including covered early/intermediate/major CI, disability or death, subject to policy terms. AIA materials list it for savings and ILP products. Treat as rider product tied to child-policy structures.',
+  notes: 'Payor-benefit rider that waives future premiums for a child\'s eligible plan on specified payor events, including covered early/intermediate/major CI, disability or death, subject to policy terms. AIA materials list it for savings and ILP products.',
   editHistory: []
 }, {
   id: 'repo-great-eastern-greatlifemultiplier',
@@ -16651,7 +16662,7 @@ const SEED_REPOSITORY = [
   category: 'protection',
   subType: 'Whole Life',
   currency: 'SGD',
-  notes: 'Whole-life protection plan designed for death, terminal illness and total permanent disability cover with a multiplier feature during selected years. It is used as a core protection policy rather than an investment account. Critical illness or early critical illness protection can be layered through attached riders where eligible. Do not confuse it with GREAT Life Advantage 4, which is ILP-based.',
+  notes: 'Whole-life protection plan designed for death, terminal illness and total permanent disability cover with a multiplier feature during selected years. It is used as a core protection policy rather than an investment account. Critical illness or early critical illness protection can be layered through attached riders where eligible.',
   editHistory: []
 }, {
   id: 'repo-great-eastern-dependantsprotectionsche',
@@ -16711,7 +16722,7 @@ const SEED_REPOSITORY = [
   category: 'protection',
   subType: 'Indexed UL (IUL)',
   currency: 'SGD',
-  notes: 'Legacy-planning indexed universal life product. It is aimed at high-net-worth legacy needs and has index-linked crediting rather than direct ILP fund ownership. Classify as Indexed UL, not endowment or term life.',
+  notes: 'Legacy-planning indexed universal life product. It is aimed at high-net-worth legacy needs and has index-linked crediting rather than direct ILP fund ownership.',
   editHistory: []
 }, {
   id: 'repo-prudential-prufirstgiftii',
@@ -16721,7 +16732,7 @@ const SEED_REPOSITORY = [
   category: 'maternity',
   subType: 'Maternity Coverage',
   currency: 'SGD',
-  notes: 'Maternity insurance product for expectant mothers and newborn protection. It belongs under maternity coverage even if it includes life or illness benefits for the child. Do not merge it with PRU First Promise because both names may appear separately in client records.',
+  notes: 'Maternity insurance product for expectant mothers and newborn protection. It belongs under maternity coverage even if it includes life or illness benefits for the child.',
   editHistory: []
 }, {
   id: 'repo-manulife-manulifewealthgen',
@@ -16751,7 +16762,7 @@ const SEED_REPOSITORY = [
   category: 'retirement',
   subType: 'Income Plan',
   currency: 'SGD',
-  notes: 'Income-oriented insurance savings plan listed by Manulife. It is used for recurring cash-flow planning and has endowment or participating features depending on plan version. Classify as income plan rather than ILP.',
+  notes: 'Income-oriented insurance savings plan listed by Manulife. It is used for recurring cash-flow planning and has endowment or participating features depending on plan version.',
   editHistory: []
 }, {
   id: 'repo-manulife-manulifegrowsecure',
@@ -16771,7 +16782,7 @@ const SEED_REPOSITORY = [
   category: 'investment',
   subType: 'ILP (Investment)',
   currency: 'SGD',
-  notes: 'Investment-linked policy listed in Manulife investment solutions. It provides policy access to ILP funds through an insurance contract. Do not classify it as a direct unit trust even if the underlying funds resemble unit trusts.',
+  notes: 'Investment-linked policy listed in Manulife investment solutions. It provides policy access to ILP funds through an insurance contract.',
   editHistory: []
 }, {
   id: 'repo-manulife-manulinkinvestorii',
@@ -16791,7 +16802,7 @@ const SEED_REPOSITORY = [
   category: 'protection',
   subType: 'Whole Life',
   currency: 'SGD',
-  notes: 'Whole-life protection plan from Income Insurance. It is used for long-term death, terminal illness and related protection with optional riders depending on underwriting. Classify as whole life rather than term or ILP unless the schedule states otherwise.',
+  notes: 'Whole-life protection plan from Income Insurance. It is used for long-term death, terminal illness and related protection with optional riders depending on underwriting.',
   editHistory: []
 }, {
   id: 'repo-ntuc-income-directstarprotectpro',
@@ -16841,7 +16852,7 @@ const SEED_REPOSITORY = [
   category: 'protection',
   subType: 'Term Life',
   currency: 'SGD',
-  notes: 'Family protection term policy listed by Income. It is a life protection product focused on death or disability lump-sum coverage. Classify as term life unless the actual schedule identifies a whole-life variant.',
+  notes: 'Family protection term policy listed by Income. It is a life protection product focused on death or disability lump-sum coverage.',
   editHistory: []
 }, {
   id: 'repo-ntuc-income-termlifesolitaire',
@@ -16871,7 +16882,7 @@ const SEED_REPOSITORY = [
   category: 'protection',
   subType: 'Critical Illness',
   currency: 'SGD',
-  notes: 'Cancer-focused protection product under Income’s life insurance range. It pays according to covered cancer events rather than reimbursing hospital bills. Classify as critical illness, not Integrated Shield.',
+  notes: 'Cancer-focused protection product under Income’s life insurance range. It pays according to covered cancer events rather than reimbursing hospital bills.',
   editHistory: []
 }, {
   id: 'repo-ntuc-income-lady360',
@@ -16911,7 +16922,7 @@ const SEED_REPOSITORY = [
   category: 'protection',
   subType: 'Term Life',
   currency: 'SGD',
-  notes: 'Bank-distributed protection product listed by Income. It is catalogued under Income because Income is the insurer, with OCBC as distributor. Treat as protection rather than bank deposit or investment product.',
+  notes: 'Bank-distributed protection product listed by Income. It is catalogued under Income because Income is the insurer, with OCBC as distributor.',
   editHistory: []
 }, {
   id: 'repo-ntuc-income-incomeshield',
@@ -16961,7 +16972,7 @@ const SEED_REPOSITORY = [
   category: 'protection',
   subType: 'Personal Accident',
   currency: 'SGD',
-  notes: 'Personal accident insurance product listed by Income. It provides accident-related benefits and may be used for individual or family accident coverage. Classify as PA, not hospital income.',
+  notes: 'Personal accident insurance product listed by Income. It provides accident-related benefits and may be used for individual or family accident coverage.',
   editHistory: []
 }, {
   id: 'repo-ntuc-income-pafitnessprotect',
@@ -17041,7 +17052,7 @@ const SEED_REPOSITORY = [
   category: 'investment',
   subType: 'ILP (Investment)',
   currency: 'SGD',
-  notes: 'Investment-linked policy listed under Income’s savings and investments range. It provides access to ILP investment funds through an insurance wrapper. Classify as ILP investment, not unit trust.',
+  notes: 'Investment-linked policy listed under Income’s savings and investments range. It provides access to ILP investment funds through an insurance wrapper.',
   editHistory: []
 }, {
   id: 'repo-ntuc-income-investflex',
@@ -17061,7 +17072,7 @@ const SEED_REPOSITORY = [
   category: 'investment',
   subType: 'ILP (Investment)',
   currency: 'SGD',
-  notes: 'Investment-linked policy variant under the Invest Flex range. It should be kept separate from Invest Flex Vantage because product mechanics and charges may differ. Classify as ILP investment.',
+  notes: 'Investment-linked policy variant under the Invest Flex range. It should be kept separate from Invest Flex Vantage because product mechanics and charges may differ.',
   editHistory: []
 }, {
   id: 'repo-ntuc-income-investflexvantage',
@@ -17091,7 +17102,7 @@ const SEED_REPOSITORY = [
   category: 'protection',
   subType: 'Term Life',
   currency: 'SGD',
-  notes: 'Term life product from Singlife’s life insurance range. It provides temporary protection and no savings value. Classify as term life rather than whole life.',
+  notes: 'Term life product from Singlife’s life insurance range. It provides temporary protection and no savings value.',
   editHistory: []
 }, {
   id: 'repo-singlife-directsinglifewholelife',
@@ -17171,7 +17182,7 @@ const SEED_REPOSITORY = [
   category: 'protection',
   subType: 'Critical Illness',
   currency: 'SGD',
-  notes: 'Condition-specific CI product focused on heart attack cover. It is a protection product with a narrow trigger set. Classify as critical illness rather than health reimbursement.',
+  notes: 'Condition-specific CI product focused on heart attack cover. It is a protection product with a narrow trigger set.',
   editHistory: []
 }, {
   id: 'repo-fwd-fwdstrokeinsurance',
@@ -17201,7 +17212,7 @@ const SEED_REPOSITORY = [
   category: 'protection',
   subType: 'Personal Accident',
   currency: 'SGD',
-  notes: 'MSIG personal accident plan covering accidental death, permanent total disablement and selected hospital cash or injury benefits. It is general-insurance personal accident cover rather than life insurance. Classify as PA even when hospital cash benefits are included.',
+  notes: 'MSIG personal accident plan covering accidental death, permanent total disablement and selected hospital cash or injury benefits. It is general-insurance personal accident cover rather than life insurance.',
   editHistory: []
 }, {
   id: 'repo-msig-parecoveryplus',
@@ -17211,7 +17222,7 @@ const SEED_REPOSITORY = [
   category: 'protection',
   subType: 'Personal Accident',
   currency: 'SGD',
-  notes: 'MSIG personal accident plan with recovery-support benefits such as medical, disability and post-accident support features. It remains personal accident cover because triggers are accident/injury based. Do not classify as long-term care or hospital income.',
+  notes: 'MSIG personal accident plan with recovery-support benefits such as medical, disability and post-accident support features. It remains personal accident cover because triggers are accident/injury based.',
   editHistory: []
 }, {
   id: 'repo-msig-paprimeplusseriesii',
@@ -17231,7 +17242,7 @@ const SEED_REPOSITORY = [
   category: 'investment',
   subType: 'Unit Trust',
   currency: 'SGD',
-  notes: 'DBS digital portfolio solution that invests in managed portfolios, usually using funds or ETFs according to selected strategy. It is not an insurance policy. Classify as bank-distributed investment portfolio.',
+  notes: 'DBS digital portfolio solution that invests in managed portfolios, usually using funds or ETFs according to selected strategy. It is not an insurance policy.',
   editHistory: []
 }, {
   id: 'repo-dbs-dbsretiredigiportfolio',
@@ -17251,7 +17262,7 @@ const SEED_REPOSITORY = [
   category: 'other_assets',
   subType: 'Regular Savings Plan (RSP)',
   currency: 'SGD',
-  notes: 'Regular savings plan allowing recurring investments into selected ETFs or unit trusts. It is a bank platform product and not an insurance endowment. Classify as regular savings/investment plan.',
+  notes: 'Regular savings plan allowing recurring investments into selected ETFs or unit trusts. It is a bank platform product and not an insurance endowment.',
   editHistory: []
 }, {
   id: 'repo-dbs-dbsunittrusts',
@@ -17331,7 +17342,7 @@ const SEED_REPOSITORY = [
   category: 'investment',
   subType: 'Unit Trust',
   currency: 'SGD',
-  notes: 'OCBC digital advisory portfolio service with automated portfolio management features. It is a bank investment product, not an ILP. Underlying portfolios and rebalancing depend on selected theme and suitability.',
+  notes: 'OCBC digital advisory portfolio service with automated portfolio management features. It is a bank investment product. Underlying portfolios and rebalancing depend on selected theme and suitability.',
   editHistory: []
 }, {
   id: 'repo-ocbc-ocbcunittrusts',
@@ -17341,7 +17352,7 @@ const SEED_REPOSITORY = [
   category: 'investment',
   subType: 'Unit Trust',
   currency: 'SGD',
-  notes: 'OCBC unit trust distribution platform. Investors hold fund units or omnibus fund positions through the bank rather than an insurance wrapper. Classify as unit trust.',
+  notes: 'OCBC unit trust distribution platform. Investors hold fund units or omnibus fund positions through the bank rather than an insurance wrapper.',
   editHistory: []
 }, {
   id: 'repo-ocbc-ocbcstructureddeposits',
@@ -17381,7 +17392,7 @@ const SEED_REPOSITORY = [
   category: 'cash_investments',
   subType: 'Corporate Bond',
   currency: 'SGD',
-  notes: 'Retail Singapore Government bond with step-up interest and monthly issuance/redemption mechanics. It is a government bond holding, not a bank fixed deposit. Classify as bonds or low-risk government securities.',
+  notes: 'Retail Singapore Government bond with step-up interest and monthly issuance/redemption mechanics. It is a government bond holding, not a bank fixed deposit.',
   editHistory: []
 }, {
   id: 'repo-cpf-board-singaporetreasurybills',
@@ -17691,7 +17702,7 @@ const SEED_REPOSITORY = [
   category: 'retirement',
   subType: 'Retirement Income (Par WL)',
   currency: 'SGD',
-  notes: 'Participating whole life retirement / legacy plan structured for multi-generational wealth transfer (insured / child / grandchildren — \'up to 3 generations\'). Pays a guaranteed annual coupon of 2.25% of coverage amount from the end of policy year 10 onwards, withdrawable or accumulated at interest. Non-guaranteed annual dividends and terminal dividends from the participating fund (once credited, annual dividends form part of guaranteed benefits). Life protection on insured to age 100; death benefit then payable to next-generation beneficiary. FC classification trap: this is participating WL with guaranteed coupons, NOT an ILP, despite being commonly mis-tagged on FC summaries as \'investment / ILP\'. Per the brief: retirement / Retirement Income (Par WL) is the correct classification.',
+  notes: 'Participating whole life retirement / legacy plan structured for multi-generational wealth transfer (insured / child / grandchildren — \'up to 3 generations\'). Pays a guaranteed annual coupon of 2.25% of coverage amount from the end of policy year 10 onwards, withdrawable or accumulated at interest. Non-guaranteed annual dividends and terminal dividends from the participating fund (once credited, annual dividends form part of guaranteed benefits). Life protection on insured to age 100; death benefit then payable to next-generation beneficiary. FC classification trap: this is participating WL with guaranteed coupons, despite being commonly mis-tagged on FC summaries as \'investment / ILP\'. Per the brief: retirement / Retirement Income (Par WL) is the correct classification.',
   editHistory: []
 }, {
   id: 'repo-aia-aiagenfitpa',

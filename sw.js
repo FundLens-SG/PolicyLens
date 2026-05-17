@@ -1,4 +1,4 @@
-const SW_VERSION = 'v2.4.0-rc2.60-phase2-reviews-resolved';
+const SW_VERSION = 'v2.4.0-rc2.61-strip-classification-directives';
 const DB_NAME = 'PolicyLensSW';
 const DB_VERSION = 1;
 const SESSION_STORE = 'sessions';

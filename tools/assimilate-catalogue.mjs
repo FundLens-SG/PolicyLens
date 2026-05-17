@@ -424,8 +424,29 @@ function validateEntry(entry, idx, sourcePath) {
   if (entry.confidence != null) must(CONFIDENCES.has(entry.confidence), `confidence "${entry.confidence}" not in {high|medium|low}`);
   if (entry.notes != null) {
     if (typeof entry.notes !== 'string') errors.push({ where, msg: 'notes must be a string' });
-    else if (/\b(award[\s-]?winning|peace of mind|comprehensive|tailored|flexible solutions|hassle[\s-]?free)\b/i.test(entry.notes)) {
-      errors.push({ where, msg: 'notes contains marketing language — paraphrase to facts', severity: 'warn' });
+    else {
+      if (/\b(award[\s-]?winning|peace of mind|comprehensive|tailored|flexible solutions|hassle[\s-]?free)\b/i.test(entry.notes)) {
+        errors.push({ where, msg: 'notes contains marketing language — paraphrase to facts', severity: 'warn' });
+      }
+      // rc2.61: catch leaked AI classification directives. These leaked into rc2.55 notes
+      //   visible to FCs in the policy form (e.g. "NOT an ILP. Classify as retirement →
+      //   Retirement Income (Par WL)."). Classification belongs in the category/subType
+      //   fields, not in user-facing notes.
+      const directivePatterns = [
+        /\bclassif(?:y|ied|ies)\s+as\b/i,
+        /\bcategori[sz]e\s+as\b/i,
+        /\btreat\s+(?:as|it\s+as)\b/i,
+        /\bdo\s+not\s+(?:confuse|merge|classify|treat|mistake)\b/i,
+        /\bCLASSIFY\s+AS\b/,
+        /\bNEVER\s+as\b/,
+        /\bUse\s+annuityPayout\b/i,
+        /\bNOT\s+an?\s+(?:ILP|investment|UL|whole\s+life)\b/,
+        /\bno\s+fundAllocations?\b/i,
+      ];
+      const directiveHits = directivePatterns.filter(re => re.test(entry.notes));
+      if (directiveHits.length > 0) {
+        errors.push({ where, msg: 'notes contains AI classification directive ("Classify as", "NOT an ILP", "Treat as", etc.) — strip before ingestion (the cleaner at tools/clean-seed-notes.mjs handles this)', severity: 'warn' });
+      }
     }
   }
 
