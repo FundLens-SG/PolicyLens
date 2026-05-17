@@ -98,6 +98,98 @@ const SUBTYPE_TO_CATEGORY = (() => {
   return m;
 })();
 
+// rc2.56: subtype hierarchy — parent → [children]. Used by the smart override filter.
+//   Going from a child sub-type to its parent LOSES information (the rider/specificity
+//   distinction); the reverse adds information.
+//   Example: AI proposing 'Shield Rider' → 'Integrated Shield Plan' is a child→parent
+//   demotion, REJECT. The reverse ('Integrated Shield Plan' → 'Shield Rider') would be
+//   parent→child promotion, APPLY.
+const SUBTYPE_CHILDREN = {
+  'Critical Illness': ['Early Critical Illness'],
+  'Endowment': ['Short-term Endowment', 'Lifetime Endowment', 'Education Plan'],
+  'Universal Life (UL)': ['Indexed UL (IUL)', 'Variable UL (VUL)'],
+  'Integrated Shield Plan': ['Shield Rider'],
+  'Long-term Care': ['CareShield Life / Supplement', 'ElderShield 300', 'ElderShield 400'],
+  'Retirement': ['Retirement Income (Par WL)', 'Annuity', 'Income Plan', 'CPF Life', 'Lifetime Endowment'],
+};
+// Build the reverse: child → parent
+const SUBTYPE_PARENT = {};
+for (const [parent, children] of Object.entries(SUBTYPE_CHILDREN)) {
+  for (const ch of children) SUBTYPE_PARENT[ch] = parent;
+}
+
+// rc2.56: classify an override conflict into APPLY / REJECT / REVIEW.
+//   APPLY: safe to auto-merge (fills empty, parent→child promotion, category correction).
+//   REJECT: drops information (child→parent demotion) — keep the existing canonical value.
+//   REVIEW: ambiguous — needs human eyes.
+function classifyOverride(entry, conflicts) {
+  const reasons = [];
+  let verdict = 'APPLY';  // start optimistic, downgrade on any reject/review trigger
+  const confidence = entry.confidence || 'low';
+  const sourceUrl = entry.sources?.[0]?.url || '';
+  const onInsurerDomain = sourceUrl && /\.(aia|greateasternlife|prudential|manulife|income|singlife|hsbc|tokiomarine|etiqa|fwd|chinataiping|chinalife|cpf)\.(com|com\.sg|sg|gov\.sg)/i.test(sourceUrl);
+
+  // Confidence floor — low-confidence overrides always go to review.
+  if (confidence === 'low') { verdict = 'REVIEW'; reasons.push('AI confidence:low'); }
+
+  for (const cf of conflicts) {
+    const was = String(cf.existing || '').trim();
+    const proposed = String(cf.incoming || '').trim();
+    if (cf.field === 'subType') {
+      // Fill-empty: existing was blank, AI proposed something — safe.
+      if (!was) { reasons.push('fills empty subType'); continue; }
+      // Child→parent demotion: REJECT.
+      if (SUBTYPE_PARENT[was] === proposed) {
+        verdict = 'REJECT';
+        reasons.push(`demotes "${was}" (specific) → "${proposed}" (parent) — info loss`);
+        continue;
+      }
+      // Parent→child promotion: APPLY.
+      if ((SUBTYPE_CHILDREN[was] || []).includes(proposed)) {
+        reasons.push(`promotes "${was}" → "${proposed}" (more specific)`);
+        continue;
+      }
+      // Otherwise: sub-types are siblings or unrelated. Needs review unless very high
+      // confidence + insurer-domain source.
+      if (verdict !== 'REJECT' && (confidence !== 'high' || !onInsurerDomain)) {
+        verdict = 'REVIEW';
+        reasons.push(`subType swap "${was}" → "${proposed}" — sibling change, not clearly correct`);
+      } else if (verdict !== 'REJECT') {
+        reasons.push(`subType swap "${was}" → "${proposed}" — high-confidence + insurer source`);
+      }
+    } else if (cf.field === 'category') {
+      // Fill-empty: safe.
+      if (!was) { reasons.push('fills empty category'); continue; }
+      // If the new subType ALSO appears in conflicts and maps to the proposed category,
+      // it's a category correction that follows from the subType change — APPLY.
+      const subTypeConflict = conflicts.find(c => c.field === 'subType');
+      const finalSubType = subTypeConflict ? subTypeConflict.incoming : entry.subType;
+      if (SUBTYPE_TO_CATEGORY[finalSubType] === proposed) {
+        reasons.push(`category "${was}" → "${proposed}" follows from subType "${finalSubType}"`);
+        continue;
+      }
+      // Otherwise category swap without a sub-type driving it — review unless very high confidence.
+      if (verdict !== 'REJECT' && (confidence !== 'high' || !onInsurerDomain)) {
+        verdict = 'REVIEW';
+        reasons.push(`category swap "${was}" → "${proposed}" without a corresponding subType change`);
+      } else if (verdict !== 'REJECT') {
+        reasons.push(`category swap "${was}" → "${proposed}" — high-confidence + insurer source`);
+      }
+    } else if (cf.field === 'insurer') {
+      if (!was) { reasons.push('fills empty insurer'); continue; }
+      // Insurer swap is high-risk. Always review unless confidence:high + insurer-domain source.
+      if (confidence !== 'high' || !onInsurerDomain) {
+        verdict = 'REVIEW';
+        reasons.push(`insurer swap "${was}" → "${proposed}" — needs human verification`);
+      } else {
+        reasons.push(`insurer swap "${was}" → "${proposed}" — high-confidence + insurer source`);
+      }
+    }
+  }
+
+  return { verdict, reasons };
+}
+
 // rc2.54: products that should NEVER be in this catalogue. These are not insurance/wealth
 //   products — they're account types or built-in scheme components handled by other parts
 //   of the app. Surface as info, drop the entry.
@@ -491,11 +583,18 @@ function run() {
         if (conflicts.length === 0) {
           identicalEntries.push({ doc: doc.path, entry: p, existing: full });
         } else {
-          // rc2.54: auto-resolve when AI provided a verifiable source URL (per user's
-          //   conflict policy choice from the brief). AI version wins; original logged.
+          // rc2.56: classify each conflict via the smart override filter. Auto-applies only
+          //   the safe ones (parent→child promotion, category correction following subType,
+          //   fill-empty). Rejects info-losing demotions. Surfaces ambiguous ones for review.
           const hasSourceUrl = Array.isArray(p.sources) && p.sources.some(s => s && /^https?:\/\//.test(s.url || ''));
           if (hasSourceUrl) {
-            autoResolvedConflicts.push({ doc: doc.path, entry: p, existing: full, conflicts, resolution: 'ai_wins_via_source_url' });
+            const cls = classifyOverride(p, conflicts);
+            const record = { doc: doc.path, entry: p, existing: full, conflicts, resolution: cls.verdict.toLowerCase() + '_via_filter', verdict: cls.verdict, reasons: cls.reasons };
+            if (cls.verdict === 'APPLY') autoResolvedConflicts.push(record);
+            else if (cls.verdict === 'REJECT') { /* dropped — keep existing canonical untouched */
+              // Still track so we can report what was rejected. Append to a separate bucket later.
+              record._rejected = true; conflictEntries.push(record);
+            } else conflictEntries.push(record);
           } else {
             conflictEntries.push({ doc: doc.path, entry: p, existing: full, conflicts });
           }
@@ -512,8 +611,12 @@ function run() {
   console.log(`  Validation warnings     : ${allWarnings.length}`);
   console.log(`  ${green('NEW')}                     : ${newEntries.length}`);
   console.log(`  ${dim('IDENTICAL (skip)')}        : ${identicalEntries.length}`);
-  console.log(`  ${green('AUTO-RESOLVED')}           : ${autoResolvedConflicts.length} (AI source URL present)`);
-  console.log(`  ${yellow('CONFLICT (needs review)')}  : ${conflictEntries.length}`);
+  console.log(`  ${green('AUTO-APPLY (safe)')}       : ${autoResolvedConflicts.length} (parent→child, fills empty, category-fix)`);
+  const rejected = conflictEntries.filter(c => c.verdict === 'REJECT').length;
+  const reviewing = conflictEntries.filter(c => c.verdict === 'REVIEW').length;
+  const noVerdict = conflictEntries.filter(c => !c.verdict).length;
+  console.log(`  ${red('AUTO-REJECT (info loss)')}: ${rejected} (e.g. Shield Rider → ISP demotion)`);
+  console.log(`  ${yellow('REVIEW (ambiguous)')}      : ${reviewing + noVerdict} (sibling subType swaps, insurer swaps)`);
 
   if (allErrors.length > 0) {
     console.log('\n' + bold(red('Validation errors:')));
@@ -551,7 +654,10 @@ function run() {
   }
 
   if (conflictEntries.length > 0) {
-    fs.writeFileSync(conflictsPath, JSON.stringify(conflictEntries.map((c, i) => ({
+    // rc2.56: split rejected (auto-skipped, info-losing) from review (needs human eyes).
+    const rejected = conflictEntries.filter(c => c.verdict === 'REJECT');
+    const reviewing = conflictEntries.filter(c => c.verdict !== 'REJECT');
+    const fmt = (c, i) => ({
       number: i + 1,
       product: c.entry.canonicalName,
       insurer: c.entry.insurer,
@@ -562,8 +668,16 @@ function run() {
       })),
       aiSourceUrl: c.entry.sources?.[0]?.url || '',
       aiConfidence: c.entry.confidence || '',
+      verdict: c.verdict || 'REVIEW',
+      reasons: c.reasons || [],
       decision: 'pending — ai_wins | keep_existing | manual'
-    })), null, 2));
+    });
+    if (rejected.length > 0) {
+      fs.writeFileSync(path.join(OUTPUT_DIR, `rejected-${timestamp}.json`), JSON.stringify(rejected.map(fmt), null, 2));
+    }
+    if (reviewing.length > 0) {
+      fs.writeFileSync(conflictsPath, JSON.stringify(reviewing.map(fmt), null, 2));
+    }
   }
 
   if (newEntries.length > 0) {

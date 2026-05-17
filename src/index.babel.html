@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.55-catalogue-expansion';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.56-override-merge';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -728,9 +728,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.55';
+const APP_VERSION = 'v2.4.0-rc2.56';
 const APP_VERSION_DATE = '2026-05-17';
-const APP_VERSION_NAME = 'Catalogue expansion — 159 new SG products';
+const APP_VERSION_NAME = 'Smart override merge — 109 classification corrections';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -987,6 +987,29 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.4.0-rc2.56',
+    date: '2026-05-17',
+    name: 'Smart override merge — 109 classification corrections',
+    sections: [
+      {
+        heading: 'Catalogue cleanup',
+        items: [
+          '109 existing catalogue entries received corrected category / sub-type / insurer from the deep-research run after running through a new smart override filter. The filter sorted 137 raw overrides into three buckets: 97 SAFE (parent→child sub-type promotion, category that follows from sub-type, fills empty), 16 REJECT (would lose information, like demoting "Shield Rider" to its parent "Integrated Shield Plan"), and 24 REVIEW (sibling sub-type swaps and insurer swaps needing human judgement).',
+          'On the 24 REVIEW items, advisor approved 19 corrections including: AIA Retirement Saver (II/III) — Endowment → Retirement Income (Par WL); AIA Platinum Generations (II) — protection → retirement; AIA Pro Lifetime Protector — Whole Life → ILP (Investment); Prestige Life Rewards Series — UL → retirement/Income Plan; Singlife Legacy Invest — UL → ILP (Investment); HSBC Life Emerald Legacy Life III — Whole Life → Universal Life (UL); GREAT Lifetime Payout 2 Special — Annuity → Retirement Income (Par WL); plus AIA Platinum Wealth Legacy (advisor-flipped vs my initial keep recommendation — applied as ILP). Kept existing on 5: Singlife Flexi Retirement II, FWD Flex, and the three Raffles riders.',
+          'tools/apply-overrides.mjs — new tool that takes the smart-filter output and edits SEED_REPOSITORY in src/index.babel.html and PRODUCTS array in singapore-product-knowledge.js in place. 10 SEED entries updated + 99 SG-knowledge entries updated. 7 missed because exact (insurer, productName) match wasn\'t found in either source — defer for next round.'
+        ]
+      },
+      {
+        heading: 'Smart override filter',
+        items: [
+          'tools/assimilate-catalogue.mjs now classifies every auto-resolved conflict by impact: parent→child promotions and fill-empty changes auto-apply; child→parent demotions auto-reject; same-level sibling swaps go to review. Driven by a small SUBTYPE_CHILDREN map (Critical Illness → Early Critical Illness, Endowment → {Short-term, Lifetime, Education}, Universal Life (UL) → {Indexed UL, Variable UL}, Integrated Shield Plan → Shield Rider, Long-term Care → CareShield supplements/ElderShield, Retirement → Retirement Income/Annuity/Income Plan/CPF Life).',
+          'AI confidence floor: any "low" confidence override is forced to REVIEW regardless of other signals. Source-URL gating: insurer-domain URLs (aia.com.sg, prudential.com.sg, etc.) gain trust; non-insurer sources downgrade to REVIEW.',
+          'Reduced manual review from 137 → 24 items. Of those 24, advisor decided in one round. Next deep-research batches will surface a similarly small queue.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.4.0-rc2.55',
     date: '2026-05-17',
@@ -6654,7 +6677,7 @@ async function pdfToImages(pdfDoc, maxPages=12) {
 // cache could return a stale 2-policy spreadsheet result before the fixed
 // local XLSX parser ran, so the parser now bypasses extraction/OCR cache
 // for spreadsheets and this version makes existing stale entries unreachable.
-const EXTRACT_PIPELINE_VERSION = 'v15.56-2026-05-17-catalogue-expansion-rc2.55';
+const EXTRACT_PIPELINE_VERSION = 'v15.57-2026-05-17-override-merge-rc2.56';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -15195,7 +15218,7 @@ const SEED_REPOSITORY = [
   {id:'repo-ml-manuprotect-term',insurer:'Manulife',productName:'ManuProtect Term (II)',productCode:'RLC19',category:'protection',subType:'Term Life',currency:'SGD',notes:'Non-par level term. Available terms 11-40yr or to age 65/75/85. Death + TI (accelerated). TI cap $1M/life, TI+CI cap $2M/life. Conversion privilege to WL/endowment/ILP before age 65, no health evidence. QSI available SI≥$500k. Suicide exclusion 1yr. SDIC protected.',editHistory:[]},
   {id:'repo-ml-manuprotect-dec',insurer:'Manulife',productName:'ManuProtect Decreasing (II)',productCode:'MPDS1',category:'protection',subType:'Term Life',currency:'SGD',notes:'Non-par decreasing term. SA decreases at chosen interest rate (1-5% options). Premium term = policy term minus 2yr. Death + TI. Joint-lives available (first-to-die). Zero cash value. SDIC protected.',editHistory:[]},
   {id:'repo-ml-lifeready-plus',insurer:'Manulife',productName:'LifeReady Plus (II)',productCode:'WLH20',category:'protection',subType:'Whole Life',currency:'SGD',notes:'Par whole life. Limited pay 10/15/20/25yr. Life Benefit Multiplier (III) up to 5× SA to age 70, then reverts to SA + bonuses. Health Advantage premium discount. Retrenchment benefit 6mo waiver. Financial Flexibility Option age 70+. Guaranteed Insurability Option at life events. Bonus: reversionary + surrender/claim escalation (0% Yr1-9, 45% Yr10-14, up to 232% Yr30+).',editHistory:[]},
-  {id:'repo-ml-manuinvest-duo',insurer:'Manulife',productName:'ManuInvest Duo',productCode:'RMH15',category:'investment',subType:'Investment-Linked Policy (ILP)',currency:'SGD',notes:'Protection ILP. MIP 10/15/20yr. Death = higher of SI or AV. TI to age 99, TPD to age 70. Admin charge 5% AV Yr1-5, 1% Yr6+. Surrender 100% Yr1-2, scaling to 8% at MIP end. Welcome bonus 45-52% of Yr1 premiums. Loyalty 0.20% AV Yr7-MIP, 0.80% after MIP. Premium flexibility from Yr6. Auto fund rebalancing Yr2+.',editHistory:[]},
+  {id:'repo-ml-manuinvest-duo',insurer:'Manulife',productName:'ManuInvest Duo',productCode:'RMH15',category:'investment',subType:'ILP (Investment)',currency:'SGD',notes:'Protection ILP. MIP 10/15/20yr. Death = higher of SI or AV. TI to age 99, TPD to age 70. Admin charge 5% AV Yr1-5, 1% Yr6+. Surrender 100% Yr1-2, scaling to 8% at MIP end. Welcome bonus 45-52% of Yr1 premiums. Loyalty 0.20% AV Yr7-MIP, 0.80% after MIP. Premium flexibility from Yr6. Auto fund rebalancing Yr2+.',editHistory:[]},
   {id:'repo-ml-investready-growth',insurer:'Manulife',productName:'InvestReady Growth',productCode:'',category:'investment',subType:'Investment-Linked Policy (ILP)',currency:'SGD',notes:'Investment ILP. MIP 15yr, Flexi Start Yr11. Death = higher of 101% premiums or AV. Admin 2.18% during MIP, 0.95% after. Top-up charge 5%. Welcome bonus 45%. Annual premium bonus 3%. Booster 35% at MIP end. Loyalty 0.3% after MIP. SV breakeven ~Yr17 at 4%.',editHistory:[]},
   {id:'repo-ml-ecc-classic',insurer:'Manulife',productName:'Early CompleteCare (Classic)',productCode:'CCC2A',category:'protection',subType:'Critical Illness',currency:'SGD',notes:'Non-par term CI. 126 conditions across early/intermediate/advanced/extended. Single comprehensive payout 100% SI. Special CI 20% SI max $25k ×6. Recovery Care Plus ICU 4 days 20% SI ×1. Child illness $10k ×2. Death = higher of total premiums or 8× annual premium. 90-day waiting cancer/heart/coronary. Premiums NOT guaranteed.',editHistory:[]},
   {id:'repo-ml-ecc-deluxe',insurer:'Manulife',productName:'Early CompleteCare (Deluxe)',productCode:'CCC2B',category:'protection',subType:'Critical Illness',currency:'SGD',notes:'Non-par term CI multi-payout. 126 conditions. Comprehensive ×1 + Cover Me Again ×4 + Recurring/Relapse ×2. Up to $700k lump-sum + $240k cancer income on $100k SI. Continuous Cancer Income 4% SI/mth up to 60mth. +33% premium vs Classic. Death = higher of premiums less claims or 8× annual premium.',editHistory:[]},
@@ -15228,7 +15251,7 @@ const SEED_REPOSITORY = [
   {id:'repo-pru-pat',insurer:'Prudential',productName:'PRUActive Term',productCode:'PAT',category:'protection',subType:'Term Life',currency:'SGD',notes:'Non-par protection term. Death+TI+TPD (to age 70). Customisable policy term 10-82 yrs, premium term 5-82 yrs. Annual SA increase option 1-10% without medical exam. Optional supplementary: Crisis Care III (multi-stage CI, premiums NOT guaranteed), premium waivers. Conversion privilege available.',editHistory:[]},
   {id:'repo-pru-shield-premier',insurer:'Prudential',productName:'PRUShield Premier',productCode:'PRUSHP',category:'health',subType:'Integrated Shield Plan',currency:'SGD',notes:'ISP — Private hospital ward. MediSave-approved. Enhanced cancer drug treatment. Mobile Inpatient Care @ Home. Congenital abnormalities benefit. Premium adjustments apply. PRUExtra Preferred CoPay rider available (claims-based pricing, PRUPanel Connect discount).',editHistory:[]},
   {id:'repo-pru-shield-plus',insurer:'Prudential',productName:'PRUShield Plus',productCode:'PRUSHPL',category:'health',subType:'Integrated Shield Plan',currency:'SGD',notes:'ISP — Class A restructured hospital. MediSave-approved. Cancer Drug List coverage. Mobile Inpatient Care @ Home. Congenital abnormalities benefit. PRUExtra rider for co-pay reduction. PRUPanel Connect programme for claims-based pricing discounts. No premium increase from Oct 2024.',editHistory:[]},
-  {id:'repo-pru-vas',insurer:'Prudential',productName:'PRUVantage Assure Series',productCode:'PVAS',category:'investment',subType:'Investment-Linked Policy (ILP)',currency:'SGD',notes:'ILP with Wealth Assure feature — locks in coverage at peak policy value for death + accidental disability. Dual Accounts: Growth Account + Flex Account (regular income from Day 1). Low charges from 0.8% p.a. for limited years. Welcome Bonus + Loyalty Bonus. Wealth Share feature for legacy transfer during lifetime. Premium waiver on 35 CI. Available as Single Premium (PRUVantage Assure SP) or Regular Premium (PRUVantage Assure II). Max S$20M or 3× lifetime premium.',editHistory:[]},
+  {id:'repo-pru-vas',insurer:'Prudential',productName:'PRUVantage Assure Series',productCode:'PVAS',category:'savings',subType:'Investment-Linked Policy (ILP)',currency:'SGD',notes:'ILP with Wealth Assure feature — locks in coverage at peak policy value for death + accidental disability. Dual Accounts: Growth Account + Flex Account (regular income from Day 1). Low charges from 0.8% p.a. for limited years. Welcome Bonus + Loyalty Bonus. Wealth Share feature for legacy transfer during lifetime. Premium waiver on 35 CI. Available as Single Premium (PRUVantage Assure SP) or Regular Premium (PRUVantage Assure II). Max S$20M or 3× lifetime premium.',editHistory:[]},
   {id:'repo-pru-cancer360',insurer:'Prudential',productName:'PRUCancer 360',productCode:'PC360',category:'protection',subType:'Critical Illness',currency:'SGD',notes:'Non-par standalone cancer plan. Coverage age 1-100 (max renewal 95). SA $10k-$300k (increments of $10k, max $100k for age 1-16). Early + intermediate + major cancer stages. Only 1 health question to apply. 90-day waiting period for cancer/heart/coronary. Survival period 7 days. Premiums NOT guaranteed. No savings/CV component. SDIC protected.',editHistory:[]},
   {id:'repo-pru-lady',insurer:'Prudential',productName:'PRULady',productCode:'PLADY',category:'protection',subType:'Critical Illness',currency:'SGD',notes:'Non-par female-specific CI plan. Covers female cancers (breast, cervical, ovarian, uterine, fallopian) + pregnancy complications. Standalone or supplementary. Premiums NOT guaranteed. No savings/CV.',editHistory:[]},
   {id:'repo-pru-pa',insurer:'Prudential',productName:'PRUPersonal Accident',productCode:'PPA',category:'protection',subType:'Personal Accident',currency:'SGD',notes:'Personal accident plan. Accidental death + disability. Hospital income benefit. Available as PRUPersonal Accident (full) or PRUPersonal Accident Compact (simplified). Yearly renewable.',editHistory:[]},

@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.55-catalogue-expansion';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.56-override-merge';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -738,9 +738,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.55';
+const APP_VERSION = 'v2.4.0-rc2.56';
 const APP_VERSION_DATE = '2026-05-17';
-const APP_VERSION_NAME = 'Catalogue expansion — 159 new SG products';
+const APP_VERSION_NAME = 'Smart override merge — 109 classification corrections';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1214,6 +1214,17 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.56',
+  date: '2026-05-17',
+  name: 'Smart override merge — 109 classification corrections',
+  sections: [{
+    heading: 'Catalogue cleanup',
+    items: ['109 existing catalogue entries received corrected category / sub-type / insurer from the deep-research run after running through a new smart override filter. The filter sorted 137 raw overrides into three buckets: 97 SAFE (parent→child sub-type promotion, category that follows from sub-type, fills empty), 16 REJECT (would lose information, like demoting "Shield Rider" to its parent "Integrated Shield Plan"), and 24 REVIEW (sibling sub-type swaps and insurer swaps needing human judgement).', 'On the 24 REVIEW items, advisor approved 19 corrections including: AIA Retirement Saver (II/III) — Endowment → Retirement Income (Par WL); AIA Platinum Generations (II) — protection → retirement; AIA Pro Lifetime Protector — Whole Life → ILP (Investment); Prestige Life Rewards Series — UL → retirement/Income Plan; Singlife Legacy Invest — UL → ILP (Investment); HSBC Life Emerald Legacy Life III — Whole Life → Universal Life (UL); GREAT Lifetime Payout 2 Special — Annuity → Retirement Income (Par WL); plus AIA Platinum Wealth Legacy (advisor-flipped vs my initial keep recommendation — applied as ILP). Kept existing on 5: Singlife Flexi Retirement II, FWD Flex, and the three Raffles riders.', 'tools/apply-overrides.mjs — new tool that takes the smart-filter output and edits SEED_REPOSITORY in src/index.babel.html and PRODUCTS array in singapore-product-knowledge.js in place. 10 SEED entries updated + 99 SG-knowledge entries updated. 7 missed because exact (insurer, productName) match wasn\'t found in either source — defer for next round.']
+  }, {
+    heading: 'Smart override filter',
+    items: ['tools/assimilate-catalogue.mjs now classifies every auto-resolved conflict by impact: parent→child promotions and fill-empty changes auto-apply; child→parent demotions auto-reject; same-level sibling swaps go to review. Driven by a small SUBTYPE_CHILDREN map (Critical Illness → Early Critical Illness, Endowment → {Short-term, Lifetime, Education}, Universal Life (UL) → {Indexed UL, Variable UL}, Integrated Shield Plan → Shield Rider, Long-term Care → CareShield supplements/ElderShield, Retirement → Retirement Income/Annuity/Income Plan/CPF Life).', 'AI confidence floor: any "low" confidence override is forced to REVIEW regardless of other signals. Source-URL gating: insurer-domain URLs (aia.com.sg, prudential.com.sg, etc.) gain trust; non-insurer sources downgrade to REVIEW.', 'Reduced manual review from 137 → 24 items. Of those 24, advisor decided in one round. Next deep-research batches will surface a similarly small queue.']
+  }]
+}, {
   version: 'v2.4.0-rc2.55',
   date: '2026-05-17',
   name: 'Catalogue expansion — 159 new SG products',
@@ -5876,7 +5887,7 @@ async function pdfToImages(pdfDoc, maxPages = 12) {
 // cache could return a stale 2-policy spreadsheet result before the fixed
 // local XLSX parser ran, so the parser now bypasses extraction/OCR cache
 // for spreadsheets and this version makes existing stale entries unreachable.
-const EXTRACT_PIPELINE_VERSION = 'v15.56-2026-05-17-catalogue-expansion-rc2.55';
+const EXTRACT_PIPELINE_VERSION = 'v15.57-2026-05-17-override-merge-rc2.56';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -15852,7 +15863,7 @@ const SEED_REPOSITORY = [
   productName: 'ManuInvest Duo',
   productCode: 'RMH15',
   category: 'investment',
-  subType: 'Investment-Linked Policy (ILP)',
+  subType: 'ILP (Investment)',
   currency: 'SGD',
   notes: 'Protection ILP. MIP 10/15/20yr. Death = higher of SI or AV. TI to age 99, TPD to age 70. Admin charge 5% AV Yr1-5, 1% Yr6+. Surrender 100% Yr1-2, scaling to 8% at MIP end. Welcome bonus 45-52% of Yr1 premiums. Loyalty 0.20% AV Yr7-MIP, 0.80% after MIP. Premium flexibility from Yr6. Auto fund rebalancing Yr2+.',
   editHistory: []
@@ -16109,7 +16120,7 @@ const SEED_REPOSITORY = [
   insurer: 'Prudential',
   productName: 'PRUVantage Assure Series',
   productCode: 'PVAS',
-  category: 'investment',
+  category: 'savings',
   subType: 'Investment-Linked Policy (ILP)',
   currency: 'SGD',
   notes: 'ILP with Wealth Assure feature — locks in coverage at peak policy value for death + accidental disability. Dual Accounts: Growth Account + Flex Account (regular income from Day 1). Low charges from 0.8% p.a. for limited years. Welcome Bonus + Loyalty Bonus. Wealth Share feature for legacy transfer during lifetime. Premium waiver on 35 CI. Available as Single Premium (PRUVantage Assure SP) or Regular Premium (PRUVantage Assure II). Max S$20M or 3× lifetime premium.',
