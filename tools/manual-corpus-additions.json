@@ -8044,5 +8044,1937 @@
       "TPC"
     ],
     "source": "manual-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Baby Assurance",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Baby Assurance (II)",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [
+      "Baby Assurance II"
+    ],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Baby Protector",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Baby Protector (II)",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [
+      "Baby Protector II"
+    ],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Family First Baby Cover",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA FAMILY FIRST BABY (CHILD)",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [
+      "Family First Baby Child"
+    ],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Mum2Baby Protect",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [
+      "Mum2Baby Protect"
+    ],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Mum2Baby Choices – AIA Mum2Baby Protect Bundle",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [
+      "AIA Mum2Baby Protect Bundle"
+    ],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Mum2Baby Choices – AIA Mum2Baby Bundle",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [
+      "AIA Mum2Baby Bundle"
+    ],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Smart Baby Shield",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Maternity Benefit Rider",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Pregnancy Risk Cover",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Assisted Reproduction Programme",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Group Maternity Contract Rider",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUFirst Promise – Health Cover for Child",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [
+      "Health Cover for Child"
+    ],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUFirst Gift",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Aviva MyMaternityPlan",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [
+      "MyMaternityPlan"
+    ],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Aviva MyHealthPlus Inpatient Pregnancy Complications Benefit",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [
+      "MyHealthPlus Inpatient Pregnancy Complications"
+    ],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life EmpoweredMum – Transfer Protection Option",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [
+      "Transfer Protection Option"
+    ],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life HappyFamily – EmpoweredMum Family Bundle",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [
+      "HappyFamily EmpoweredMum Bundle"
+    ],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Advance Payment and Waiver of Premium (APWP) Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [
+      "APWP"
+    ],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Accident Indemnity (AI) Rider",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "AI"
+    ],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Accidental Death Benefit (ADB) Rider",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "ADB"
+    ],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Decreasing Term Rider",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Level Term Rider",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Prestige Term Rider",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Financial Guardian Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Lumpsum Critical Life Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Secure Critical Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Smart Protector 3% Coupon Rider",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Smart Protector 5% Coupon Rider",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Payor Benefit (PB) Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [
+      "PB"
+    ],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Payor Benefit Comprehensive (PBC) Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [
+      "PBC"
+    ],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Waiver of Premium Rider (Embedded)",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [
+      "WP"
+    ],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Enhanced Deferred Disability Income (EDDI) Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [
+      "EDDI"
+    ],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Female Cancer Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Critical Cover Extra, Term to 100",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Critical Cover Extra, Term to 65",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Critical Cover Extra, Term to 75",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Early Critical Cover Extra, Term to 100",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Early Critical Cover Extra, Term to 65",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Early Critical Cover Extra, Term to 75",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Accelerating CriticalCare Advantage Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Accelerating CriticalCare Advantage Plus Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT CI Advantage Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT CI Advantage Plus Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT CriticalCare Advantage Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT CriticalCare Advantage Plus Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Critical Cover Complete Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT MultiPay CriticalCare Advantage Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Payer Advantage Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Payer Advantage Rider (CriticalCare)",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Payer Advantage Rider (MultiPay CriticalCare)",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Payer Benefit Advantage Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Payer Benefit Advantage Rider - CriticalCare",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Payer Benefit Advantage Rider - MultiPay CriticalCare",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Premium Waiver Advantage Rider - CriticalCare",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Premium Waiver Advantage Rider - MultiPay CriticalCare",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Living Assurance Rider Plus",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Hospital Income Benefit Rider",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Parent Care Rider",
+    "category": "health",
+    "subType": "Long-term Care",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "PayAssure Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "PayCare Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Payer Benefit Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Smart Early Critical Care Payer Benefit Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Smart Early Critical Care Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Term Multiplier Rider 3",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "TPD Benefit Rider 2",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Critical Illness Multiplier Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Living Multiplier Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Crisis Cover Provider III",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Crisis Cover Limited Pay III",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Crisis Waiver III",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Early Crisis Cover Provider",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Early Crisis Cover Limited Pay",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Early Crisis Waiver",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Early Stage Crisis Waiver",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Early Protect",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Early Protect Plus",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Protect Plus",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Life Protect Plus",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Crisis Care Accelerator Benefit",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Child Cover Benefit",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Spouse Waiver Benefit",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Disability Provider III",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Disability Plus Provider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Additional Accident Benefit",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Fracture Care PA",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUEarly Stage Crisis Cover Supplementary Benefit",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Advanced CI Waiver",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Advance CI Cover",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Disability Cover",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Critical Illness Benefit III",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Payer PremiumEraser",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Critical Illness PremiumEraser",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Critical Waiver Protect Advantage",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Critical Waiver Protect Advantage II",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Critical Illness Link Benefit",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Disability Extended Benefit",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Disability Link Benefit",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Decreasing Term Rider",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Hospital Cash Benefit",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Hospital Income Benefit",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "FlexiPay",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Junior FirstCare",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Comprehensive Accident Benefit",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Comprehensive Payer Benefit",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Term Life Plus Critical Illness Benefit Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Term Life Plus Premium Waiver Benefit Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Term Life Plus Total and Permanent Disability Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Critical Illness Plus Premium Waiver Benefit",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Critical Illness Plus ICU Benefit",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD CI Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Total CI Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Early CI Protection Rider",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Life Protection Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Future First TPD Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Future First Critical Illness Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Protect 1 Lite Rider",
+    "category": "health",
+    "subType": "Long-term Care",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Early CI Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Waiver of Premium Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Critical Illness Accelerating Protector Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Early Critical Illness Accelerating Protector Rider",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Cancer Waiver Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Payer Benefit Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Spouse Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Enhanced Payer Benefit",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Enhanced Spouse Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "China Life",
+    "productName": "China Life Enhanced Payer Benefit Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "China Life",
+    "productName": "China Life Payer Benefit Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "China Life",
+    "productName": "China Life Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "AdvancedCare Rider (II)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "AdvancedCare Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "EarlyCare Rider",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "DisabilityCare Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "CompleteCare Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "Coverage Extender Rider",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "DIRECT - Critical Illness Rider (II)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "GB Term Rider (i-Secure Legacy (II)_AC)",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "Early Payer Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "Early Spouse Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "Early Waiver Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "Enhanced Payer Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "Enhanced Spouse Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "Enhanced Waiver Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "Payer Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "eXTRA secure waiver",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "eXTRA payer waiver",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "DIRECT – Etiqa term life II Critical Illness option",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "DIRECT – Etiqa whole life Critical Illness option",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Care Plus Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "CoverMeAgain Booster",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "CoverMeAgain Booster (Essential)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "CoverMeAgain Booster (Deluxe)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Cancer Care Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Critical Illness Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Critical Care Complete Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Critical Care Complete Rider (I)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Critical Care Payor Benefit (Spouse) Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Critical Care Payor Benefit Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Critical Care Plus Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Critical Care Plus Rider (I)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Critical Care Rider (to Signature Variable Investment and Signature Protection Investment Plan)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Critical Care Waiver Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Critical Care Waiver Rider (II)",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Disability Income Benefit",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Disability Protector Plus",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Early Critical Care Waiver",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Family Income Benefit (Owner)",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Family Income Benefit (Spouse)",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Guaranteed Insurability Benefit Rider",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Hospital cash benefit",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Hospitalisation Benefit Rider (Juvenile)",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Income support benefit",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Income Protector Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Juvenile Care Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Loan Protector - Critical Cover",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Loan Protector - Critical Cover Waiver",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Loan Protector - Employment Cover Waiver",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Loss Of Independence Rider",
+    "category": "health",
+    "subType": "Long-term Care",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife ReadyProtect Accelerate",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife ReadyProtect Advantage",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife ReadyProtect Head Start",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife ReadyProtect Signature",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife ReadyProtect Ultimate",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ManuMediCash",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Medicash Benefit",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Critical Care Xdvance Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Enhanced Death Benefit Rider",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Enhanced Payor Premium Waiver",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Enhanced Waiver of Premium",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Enhanced Waiver of Premium Benefit",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Enhanced Waiver Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Extended Total and Permanent Disability",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Family Income Benefit",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Hospital CashAid",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Benefit",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Lady Plus Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Living Benefit - Whole Life Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Living Benefits (Whole Life Rider)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Plus Rider",
+    "category": "health",
+    "subType": "Shield Rider",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Payor Premium Waiver",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Disability Accelerator",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Hospital & Surgical Rider",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Dread Disease Premium Waiver (ILP)",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Dread Disease Accelerator",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Complete Life Secure – Protection Benefit",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Advanced Critical Secure rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Early Critical Secure rider",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "TPD Advance Cover Plus III",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "CI Advance Cover Plus (2025)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Comprehensive Critical Illness Cover (2025)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Multipay Critical Illness Cover (2025)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Early Critical Illness Advance Cover (2025)",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Critical Illness Advance Cover (2025)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Critical Illness Additional Cover (2025)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Critical Illness Premium Waiver (2025)",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Early Critical Illness Premium Waiver (2025)",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Payer Critical Illness Premium Waiver (2025)",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Payer Early Critical Illness Premium Waiver (2025)",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Pay Protector Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "LivingCare Assurance Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Personal Accident Cover",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Enhanced Family Income Benefit",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Enhanced Payer Benefit",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Enhanced Waiver of Premium",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Disability Advance Rider Series 3",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Disability Advance Rider Series Two",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Early Critical Illness Advance Rider Series 3",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Critical Illness Advance Rider Series 3",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Daily Cash Plus",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Cancer Premium Waiver (2025)",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Critical Care Rider Series 1.1",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Early Care Rider",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Premium Supplementary Benefit (Unit Deducting)",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Critical Illness Cover (2025)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Early Critical Illness Cover II",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "phase-3-maternity-riders-2026-05-17"
   }
 ]

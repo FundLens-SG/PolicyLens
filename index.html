@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.62-corpus-trash-deletion';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.63-maternity-riders-plus-form-ux';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -738,9 +738,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.62';
-const APP_VERSION_DATE = '2026-05-17';
-const APP_VERSION_NAME = 'Corpus trash deletion + build-script deletions hook';
+const APP_VERSION = 'v2.4.0-rc2.63';
+const APP_VERSION_DATE = '2026-05-18';
+const APP_VERSION_NAME = 'Phase 3 maternity + riders catalogue + form UX (maturity age, rider expiry, softer delete)';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1214,6 +1214,17 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.63',
+  date: '2026-05-18',
+  name: 'Phase 3 maternity + riders catalogue + form UX (maturity age, rider expiry, softer delete)',
+  sections: [{
+    heading: 'Phase 3 catalogue ingest — maternity + company-specific riders',
+    items: ['Assimilated 238 new products from GPT-5.5 Pro Phase 3 deep-research run (4 source files: phase-3A-maternity.json + 3 phase-3B rider splits covering AIA/GE/Prudential, Manulife/Income/Singlife, and HSBC/smaller insurers). Pipeline result: 237 NEW · 0 IDENTICAL · 0 CONFLICTS · 1 AUTO-RESOLVED (subType "Long-term Care" entries auto-moved from category=protection → category=health) · 11 advisory warnings only (6 mild conditional-classify-as directives, 3 marketing-language hints, 2 confirmation-of-the-auto-correction). Zero items required FC review — cleanest run of the four phases so far.', 'Corpus growth: 1,736 → 1,973 SG knowledge entries (+237 net after dedup vs existing seed/corpus). manual-corpus-additions.json: 803 → 1,040 entries.', 'SEED_REPOSITORY: 385 → 416 entries (+31). The 31 rich entries selected by the pipeline are the meatier ones with sources + product codes + full notes; the remaining 206 land in singapore-product-knowledge.js as fuzzy-match-only entries (no UI card needed for variant rider names).', 'Coverage added: 20 maternity products (AIA Baby family, GE Maternity Care variants, PRUFirst legacy, Income Maternity 360 legacy, HSBC EmpoweredMum/HappyMummy etc.); 97 Disability Income riders; 66 Critical Illness riders; 17 Early Critical Illness riders; 14 supplementary Term Life riders; 11 Hospital Income riders; 6 Personal Accident riders; 3 Long-term Care riders; plus 3 Whole Life ancillaries and 1 Shield-attached rider entry. Insurer split: Manulife 39, Great Eastern 33, AIA 31, Singlife 30, Prudential 21, HSBC Life 20, NTUC Income 20, China Taiping 15, FWD 12, Tokio Marine 10, Etiqa 4, China Life 3.']
+  }, {
+    heading: 'Form UX',
+    items: ['Maturity Date now accepts an AGE alongside the calendar date. Modern whole-life policies mature at age 99, 120, even 200 — FCs were forced to compute the actual calendar date manually from DOB. The age input lives next to the date picker; when filled, it auto-computes the maturity date (DOB + N years anniversary) and stamps both form.maturityAge and form.maturityDate. If no DOB is on file the age is stored alone (projections that read maturityAge already handle this — see line 6094 and the retirement / annuity rendering paths). Hint banner highlights conventional whole-life ages (99 / 100 / 105 / 120 / 200).', 'Rider Expiry column widened 65px → 85px AND changed from native number input to text+inputMode="numeric". The Chrome up/down spinner was occluding the digits in the narrow column — FCs were seeing only the spinner with no visible value. The new input is centered, accepts only digits, and shows a placeholder ("e.g. 75"). Column header also relabelled "Expiry (age)" so it\'s clear what unit is expected.', 'Rider delete button (red ×) replaced with a softer ghost-style trash icon (🗑) that turns red on hover. Previous solid btn-danger styling was alarming for a routine edit, and the bare × gave no hint of what would happen. Now: explicit "Remove this rider" tooltip, hover affordance, and a confirm() prompt naming the rider type ("Remove Critical Illness?" / "Remove PRUShield Extra?") so accidental clicks don\'t silently nuke a row.']
+  }]
+}, {
   version: 'v2.4.0-rc2.62',
   date: '2026-05-17',
   name: 'Corpus trash deletion + build-script deletions hook',
@@ -16118,7 +16129,7 @@ const SEED_REPOSITORY = [
   category: 'retirement',
   subType: 'Retirement Income (Par WL)',
   currency: 'SGD',
-  notes: 'LIMITED-PAY PARTICIPATING WHOLE LIFE with guaranteed coupon income. 10-year premium payment term. Guaranteed coupon 2.25% p.a. of insured amount from end of year 10. Non-guaranteed cash dividends (~0.8% typical) — total illustrated payout ~3.05% p.a. Dividends may be retained with AIA at 3.25% (non-guaranteed). Guaranteed cash values accumulate from policy year 3. Lump sum TPD benefit to age 65. Designed for 3-generation legacy: policy assignable to child at age 21 (child receives payouts for life), death benefit to grandchild. Typical illustration: $7,980/yr for $100k SA. Participating whole life — lifetime coverage with regular income from year 10. No fundAllocations.',
+  notes: 'LIMITED-PAY PARTICIPATING WHOLE LIFE with guaranteed coupon income. 10-year premium payment term. Guaranteed coupon 2.25% p.a. of insured amount from end of year 10. Non-guaranteed cash dividends (~0.8% typical) — total illustrated payout ~3.05% p.a. Dividends may be retained with AIA at 3.25% (non-guaranteed). Guaranteed cash values accumulate from policy year 3. Lump sum TPD benefit to age 65. Designed for 3-generation legacy: policy assignable to child at age 21 (child receives payouts for life), death benefit to grandchild. Typical illustration: $7,980/yr for $100k SA. Participating whole life — lifetime coverage with regular income from year 10.',
   editHistory: []
 }, {
   id: 'repo-aia-gen2',
@@ -19733,6 +19744,318 @@ const SEED_REPOSITORY = [
   subType: 'Early Critical Illness',
   currency: 'SGD',
   notes: 'AIA Group ECI rider attaching to Group Term Life. Pays out on covered early/intermediate CI diagnosis. Typically attached alongside Group CI.',
+  editHistory: []
+},,
+// ─── ADDED 2026-05-17T16-10-14 (deep-research) ───
+{
+  id: 'repo-prudential-earlyprotect',
+  insurer: 'Prudential',
+  productName: 'Early Protect',
+  productCode: '',
+  category: 'protection',
+  subType: 'Early Critical Illness',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Early Critical Illness. Base-plan context: attaches to or is marketed with PRUActive Protect and PRUActive Life rider stacks. Pre-critical/early-stage CI rider option; PRUActive Protect materials describe early/pre-critical cover as a supplementary option. Premium guarantee details are not fully public unless stated in the cited source. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-prudential-earlyprotectplus',
+  insurer: 'Prudential',
+  productName: 'Early Protect Plus',
+  productCode: '',
+  category: 'protection',
+  subType: 'Early Critical Illness',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Early Critical Illness. Base-plan context: attaches to or is marketed with PRUActive Protect and PRUActive Life rider stacks. Enhanced Early Protect option in PRUActive Protect structures, including pre-critical-stage illness cover. Premium guarantee details are not fully public unless stated in the cited source. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-prudential-protectplus',
+  insurer: 'Prudential',
+  productName: 'Protect Plus',
+  productCode: '',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Critical Illness. Base-plan context: attaches to or is marketed with PRUActive Protect. Supplementary rider/benefit used to build higher critical illness protection under PRUActive Protect. Premium guarantee details are not fully public unless stated in the cited source. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-prudential-lifeprotectplus',
+  insurer: 'Prudential',
+  productName: 'Life Protect Plus',
+  productCode: '',
+  category: 'protection',
+  subType: 'Term Life',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Term Life. Base-plan context: attaches to or is marketed with PRUActive Protect. Supplementary death/life protection option under PRUActive Protect. Premium guarantee details are not fully public unless stated in the cited source. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-prudential-crisiscareacceleratorben',
+  insurer: 'Prudential',
+  productName: 'Crisis Care Accelerator Benefit',
+  productCode: '',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Critical Illness. Base-plan context: attaches to or is marketed with PRUActive Protect, PRUActive Life II/V and related Prudential whole-life plans. Accelerating CI/ICU-style benefit; PRUActive Protect brochure examples show payout under Crisis Care Accelerator Benefit after surgery/ICU event. Premium guarantee details are not fully public unless stated in the cited source. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-prudential-childcoverbenefit',
+  insurer: 'Prudential',
+  productName: 'Child Cover Benefit',
+  productCode: '',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Critical Illness. Base-plan context: attaches to or is marketed with PRUActive Protect for children of eligible insured parents. Complimentary child cover benefit for specified CI/juvenile conditions when both parents meet eligibility rules. Premium guarantee details are not fully public unless stated in the cited source. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-prudential-pruearlystagecrisiscover',
+  insurer: 'Prudential',
+  productName: 'PRUEarly Stage Crisis Cover Supplementary Benefit',
+  productCode: '',
+  category: 'protection',
+  subType: 'Early Critical Illness',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Early Critical Illness. Base-plan context: attaches to or is marketed with basic Prudential plans that allow PRUEarly Stage Crisis Cover as a supplementary benefit. Prudential states PRUEarly Stage Crisis Cover is available as a supplementary benefit to enhance a basic plan; it covers 84 medical conditions including diabetic complications. Premium guarantee details are not fully public unless stated in the cited source. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-hsbc-life-advancedciwaiver',
+  insurer: 'HSBC Life',
+  productName: 'Advanced CI Waiver',
+  productCode: 'PAA9',
+  category: 'protection',
+  subType: 'Disability Income',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Disability Income. Base-plan context: attaches to or is marketed with HSBC Life Term Protect Advantage. Waives future premiums of the basic plan and selected riders upon covered CI diagnosis. Premium guarantee details are not fully public unless stated in the cited source. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-hsbc-life-advancecicover',
+  insurer: 'HSBC Life',
+  productName: 'Advance CI Cover',
+  productCode: '',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Critical Illness. Base-plan context: attaches to or is marketed with HSBC Life Term Protect Advantage. Provides financial support upon covered critical illness conditions. Premium guarantee details are not fully public unless stated in the cited source. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-hsbc-life-disabilitycover',
+  insurer: 'HSBC Life',
+  productName: 'Disability Cover',
+  productCode: '',
+  category: 'protection',
+  subType: 'Disability Income',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Disability Income. Base-plan context: attaches to or is marketed with HSBC Life Term Protect Advantage. Provides financial support for total and permanent disability. Premium guarantee details are not fully public unless stated in the cited source. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-hsbc-life-criticalillnessbenefitii',
+  insurer: 'HSBC Life',
+  productName: 'Critical Illness Benefit III',
+  productCode: 'ACIB3',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Critical Illness. Base-plan context: attaches to or is marketed with HSBC Life – Life Treasure III. Life Treasure III offers Critical Illness Benefit III alongside Early Critical Illness Benefit III; register code ACIB3 is shown for Critical Illness Benefit III. Premium guarantee details are not fully public unless stated in the cited source. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-fwd-fwdtermlifepluscriticali',
+  insurer: 'FWD',
+  productName: 'FWD Term Life Plus Critical Illness Benefit Rider',
+  productCode: '',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Critical Illness. Base-plan context: attaches to or is marketed with FWD Term Life Plus. Critical Illness Benefit add-on rider; FWD notes premiums may be revised with at least 30 calendar days notice. Premiums are not guaranteed where FWD product wording says they may be revised. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-fwd-fwdtermlifepluspremiumwa',
+  insurer: 'FWD',
+  productName: 'FWD Term Life Plus Premium Waiver Benefit Rider',
+  productCode: '',
+  category: 'protection',
+  subType: 'Disability Income',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Disability Income. Base-plan context: attaches to or is marketed with FWD Term Life Plus. Premium waiver add-on rider; premium waiver is not available for certain CI events such as angioplasty under the contract wording. Premiums are not guaranteed where FWD product wording says they may be revised. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-fwd-fwdcriticalillnesspluspr',
+  insurer: 'FWD',
+  productName: 'FWD Critical Illness Plus Premium Waiver Benefit',
+  productCode: '',
+  category: 'protection',
+  subType: 'Disability Income',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Disability Income. Base-plan context: attaches to or is marketed with FWD Critical Illness Plus. Add-on benefit waives premiums under the base policy and applicable optional benefits after the auto-reload period when a valid claim is accepted. Premiums are not guaranteed where FWD product wording says they may be revised. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-fwd-fwdcipremiumwaiverrider',
+  insurer: 'FWD',
+  productName: 'FWD CI Premium Waiver Rider',
+  productCode: '',
+  category: 'protection',
+  subType: 'Disability Income',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Disability Income. Base-plan context: attaches to or is marketed with FWD Future First. Waives future premiums on base plan and attaching riders if the insured is diagnosed with covered late-stage CI. Premiums are not guaranteed where FWD product wording says they may be revised. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-fwd-fwdearlyciprotectionride',
+  insurer: 'FWD',
+  productName: 'FWD Early CI Protection Rider',
+  productCode: '',
+  category: 'protection',
+  subType: 'Early Critical Illness',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Early Critical Illness. Base-plan context: attaches to or is marketed with FWD Life Protection. FWD Life Protection materials describe Early CI Protection Rider as covering 175 conditions including pre-early cancer, special, mental and juvenile conditions. Premiums are not guaranteed where FWD product wording says they may be revised. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-tokio-marine-criticalillnessaccelerat',
+  insurer: 'Tokio Marine',
+  productName: 'Critical Illness Accelerating Protector Rider',
+  productCode: '',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Critical Illness. Base-plan context: attaches to or is marketed with #goAssure. Accelerating critical illness rider for #goAssure ILP protection structure. Premium guarantee details are not fully public unless stated in the cited source. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-tokio-marine-earlycriticalillnessacce',
+  insurer: 'Tokio Marine',
+  productName: 'Early Critical Illness Accelerating Protector Rider',
+  productCode: '',
+  category: 'protection',
+  subType: 'Early Critical Illness',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Early Critical Illness. Base-plan context: attaches to or is marketed with #goAssure. Early critical illness accelerating rider for #goAssure. Premium guarantee details are not fully public unless stated in the cited source. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-china-life-chinalifeenhancedpayerbe',
+  insurer: 'China Life',
+  productName: 'China Life Enhanced Payer Benefit Rider',
+  productCode: '',
+  category: 'protection',
+  subType: 'Disability Income',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Disability Income. Base-plan context: attaches to or is marketed with China Life Whole Life Guardian, Term Guardian, FlexiCash Growth and Lifetime Income Plan regular-premium versions. Waives premiums for the basic plan and riders if the payer dies, suffers TPD or is diagnosed with any of 36 CIs. Premium guarantee details are not fully public unless stated in the cited source. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-china-life-chinalifepayerbenefitrid',
+  insurer: 'China Life',
+  productName: 'China Life Payer Benefit Rider',
+  productCode: '',
+  category: 'protection',
+  subType: 'Disability Income',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Disability Income. Base-plan context: attaches to or is marketed with China Life Whole Life Guardian, Term Guardian, FlexiCash Growth and Lifetime Income Plan regular-premium versions. Waives premiums for the basic plan and riders upon payer death, TPD or terminal illness, subject to exclusions. Premium guarantee details are not fully public unless stated in the cited source. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-china-life-chinalifepremiumwaiverri',
+  insurer: 'China Life',
+  productName: 'China Life Premium Waiver Rider',
+  productCode: '',
+  category: 'protection',
+  subType: 'Disability Income',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Disability Income. Base-plan context: attaches to or is marketed with China Life Whole Life Guardian, Term Guardian, FlexiCash Growth and Lifetime Income Plan regular-premium versions. Waives premiums if the life insured is diagnosed with TPD or any of 36 critical illnesses. Premium guarantee details are not fully public unless stated in the cited source. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-china-taiping-advancedcareriderii',
+  insurer: 'China Taiping',
+  productName: 'AdvancedCare Rider (II)',
+  productCode: '',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Critical Illness. Base-plan context: attaches to or is marketed with China Taiping i-Secure (II). Limited-premium critical-illness rider providing coverage against 55 critical illnesses, attachable only to i-Secure (II) at policy inception. Premium guarantee details are not fully public unless stated in the cited source. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-etiqa-extrasecurewaiver',
+  insurer: 'Etiqa',
+  productName: 'eXTRA secure waiver',
+  productCode: '',
+  category: 'protection',
+  subType: 'Disability Income',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Disability Income. Base-plan context: attaches to or is marketed with Etiqa ePROTECT lifetime, ePROTECT mortgage and related Etiqa protection policies. Continues the policy and attaching riders without premiums after the life insured is first diagnosed with a covered critical illness; policy wording states premiums are not guaranteed and may change with 30 days notice. Premium guarantee details follow the rider wording; eXTRA secure waiver wording states premiums are not guaranteed. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-disabilityaccelerator',
+  insurer: 'NTUC Income',
+  productName: 'Disability Accelerator',
+  productCode: '',
+  category: 'protection',
+  subType: 'Disability Income',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Disability Income. Base-plan context: attaches to or is marketed with TermLife Solitaire and high-coverage term structures. Income TermLife Solitaire examples show Disability Accelerator rider added to term policies. Premium guarantee details are not fully public unless stated in the cited source. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-completelifesecureprotec',
+  insurer: 'NTUC Income',
+  productName: 'Complete Life Secure – Protection Benefit',
+  productCode: '',
+  category: 'protection',
+  subType: 'Whole Life',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Whole Life. Base-plan context: attaches to or is marketed with Complete Life Secure. Compulsory non-participating regular-premium rider paying retrenchment benefit and part of the multiplier cover. Premium guarantee details are not fully public unless stated in the cited source. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-advancedcriticalsecureri',
+  insurer: 'NTUC Income',
+  productName: 'Advanced Critical Secure rider',
+  productCode: '',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Critical Illness. Base-plan context: attaches to or is marketed with Complete Life Secure. Rider provides advanced critical illness protection tied to Complete Life Secure multiplier/sum assured mechanics. Premium guarantee details are not fully public unless stated in the cited source. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-earlycriticalsecurerider',
+  insurer: 'NTUC Income',
+  productName: 'Early Critical Secure rider',
+  productCode: '',
+  category: 'protection',
+  subType: 'Early Critical Illness',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Early Critical Illness. Base-plan context: attaches to or is marketed with Complete Life Secure. Rider provides early/intermediate dread-disease protection and advanced restoration benefit for major cancer, specified heart attack and stroke. Premium guarantee details are not fully public unless stated in the cited source. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-singlife-tpdadvancecoverplusiii',
+  insurer: 'Singlife',
+  productName: 'TPD Advance Cover Plus III',
+  productCode: '',
+  category: 'protection',
+  subType: 'Disability Income',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Disability Income. Base-plan context: attaches to or is marketed with Singlife Elite Term II. Singlife Elite Term II states this rider can be attached and is eligible for base-plan/rider premium-discount structures. Premium guarantee details are not fully public unless stated in the cited source. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-singlife-ciadvancecoverplus2025',
+  insurer: 'Singlife',
+  productName: 'CI Advance Cover Plus (2025)',
+  productCode: '',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Critical Illness. Base-plan context: attaches to or is marketed with Singlife Elite Term II. Singlife Elite Term II brochure/promotions list this as an eligible critical illness rider. Premium guarantee details are not fully public unless stated in the cited source. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-singlife-comprehensivecriticalill',
+  insurer: 'Singlife',
+  productName: 'Comprehensive Critical Illness Cover (2025)',
+  productCode: '',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Critical Illness. Base-plan context: attaches to or is marketed with Singlife Elite Term II and Singlife critical illness rider stacks. Promotion and register list this 2025 comprehensive CI rider. Premium guarantee details are not fully public unless stated in the cited source. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
+  editHistory: []
+}, {
+  id: 'repo-singlife-multipaycriticalillnessc',
+  insurer: 'Singlife',
+  productName: 'Multipay Critical Illness Cover (2025)',
+  productCode: '',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Rider/supplementary benefit for Critical Illness. Base-plan context: attaches to or is marketed with Singlife Elite Term II and Singlife critical illness rider stacks. 2025 multipay CI rider listed in Singlife promotion and PPF register. Premium guarantee details are not fully public unless stated in the cited source. Riders do not have nested riders; check the individual policy schedule for exact waiting periods, exclusions and aggregate caps.',
   editHistory: []
 }];
 
@@ -68956,11 +69279,79 @@ function PolicyFormModal({
     className: "field"
   }, /*#__PURE__*/React.createElement("label", null, "Maturity Date", /*#__PURE__*/React.createElement(ConfidenceBadge, {
     field: "maturityDate"
-  })), /*#__PURE__*/React.createElement("input", {
-    type: "date",
-    value: form.maturityDate,
-    onChange: e => set('maturityDate', e.target.value)
-  })), /*#__PURE__*/React.createElement("div", {
+  })), (() => {
+    const effDob = getProfileEffectiveDob(_cp);
+    const derivedAge = effDob && form.maturityDate ? (() => {
+      const ms = new Date(form.maturityDate).getTime() - effDob.getTime();
+      if (isNaN(ms) || ms <= 0) return '';
+      const yrs = Math.floor(ms / 31557600000);
+      return yrs > 0 && yrs < 200 ? String(yrs) : '';
+    })() : '';
+    const ageVal = form.maturityAge != null && form.maturityAge !== '' ? String(form.maturityAge) : derivedAge;
+    const handleAgeChange = newAge => {
+      set('maturityAge', newAge);
+      if (!newAge) return; // leave date alone if cleared
+      const n = parseInt(newAge, 10);
+      if (!n || n < 1 || n > 200) return;
+      if (effDob) {
+        // Maturity = DOB + n years (anniversary). Keep month/day from DOB.
+        const md = new Date(effDob);
+        md.setFullYear(md.getFullYear() + n);
+        const iso = md.toISOString().slice(0, 10);
+        set('maturityDate', iso);
+      }
+    };
+    const wholeLifeHint = ageVal && [99, 100, 105, 120, 200].includes(parseInt(ageVal, 10));
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 4,
+        alignItems: 'stretch'
+      }
+    }, /*#__PURE__*/React.createElement("input", {
+      type: "date",
+      value: form.maturityDate || '',
+      onChange: e => {
+        set('maturityDate', e.target.value);
+        if (form.maturityAge) set('maturityAge', '');
+      },
+      style: {
+        flex: '1 1 auto',
+        minWidth: 0
+      }
+    }), /*#__PURE__*/React.createElement("input", {
+      type: "number",
+      value: ageVal,
+      onChange: e => handleAgeChange(e.target.value),
+      placeholder: "age",
+      title: "Maturity age (e.g. 99 / 120 for whole life). Auto-computes the date from profile DOB.",
+      min: "1",
+      max: "200",
+      style: {
+        width: 60,
+        fontSize: 11,
+        textAlign: 'center'
+      }
+    })), wholeLifeHint && /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 9,
+        color: 'var(--gold)',
+        marginTop: 2
+      }
+    }, "\u21B3 Whole-life maturity at age ", ageVal), ageVal && !effDob && /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 9,
+        color: 'var(--orange)',
+        marginTop: 2
+      }
+    }, "No DOB in profile \u2014 age stored, date not auto-filled"), ageVal && effDob && form.maturityDate && /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 9,
+        color: 'var(--text3)',
+        marginTop: 2
+      }
+    }, "= age ", ageVal, " (computed from DOB)"));
+  })()), /*#__PURE__*/React.createElement("div", {
     className: "field"
   }, /*#__PURE__*/React.createElement("label", null, "Status"), /*#__PURE__*/React.createElement("select", {
     value: form.status,
@@ -71435,16 +71826,16 @@ function PolicyFormModal({
     }
   }, "Rider Prem"), /*#__PURE__*/React.createElement("th", {
     style: {
-      width: 65
+      width: 85
     }
-  }, "Expiry"), /*#__PURE__*/React.createElement("th", {
+  }, "Expiry (age)"), /*#__PURE__*/React.createElement("th", {
     style: {
       width: 80,
       textAlign: 'center'
     }
   }, "Options"), /*#__PURE__*/React.createElement("th", {
     style: {
-      width: 30
+      width: 34
     }
   }))), /*#__PURE__*/React.createElement("tbody", null, (form.riders || []).map((rd, ri) => /*#__PURE__*/React.createElement("tr", {
     key: rd.id || ri,
@@ -71636,19 +72027,25 @@ function PolicyFormModal({
       textAlign: 'right'
     }
   }, "= ", fmt(parseFloat(rd.premium), form.currency || 'SGD'), "/yr"))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("input", {
-    type: "number",
+    type: "text",
+    inputMode: "numeric",
+    pattern: "[0-9]*",
     value: rd.expiryAge || '',
     onChange: e => {
+      const v = e.target.value.replace(/[^0-9]/g, '');
       const riders = [...(form.riders || [])];
       riders[ri] = {
         ...riders[ri],
-        expiryAge: e.target.value
+        expiryAge: v
       };
       set('riders', riders);
     },
+    placeholder: "e.g. 75",
+    title: "Age the rider expires",
     style: {
       width: '100%',
-      fontSize: 11
+      fontSize: 11,
+      textAlign: 'center'
     }
   })), /*#__PURE__*/React.createElement("td", {
     style: {
@@ -71715,17 +72112,48 @@ function PolicyFormModal({
       color: 'var(--text3)'
     }
   }, "\u2014")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
-    className: "btn-danger btn-sm",
-    style: {
-      padding: '2px 6px',
-      fontSize: 10
-    },
+    title: "Remove this rider",
     onClick: () => {
+      const label = rd.riderName || {
+        death: 'Death & TI',
+        tpd: 'TPD',
+        ci: 'Critical Illness',
+        eci: 'Early CI',
+        di: 'Disability Income',
+        accidental: 'Accidental Death',
+        acc_medical: 'Acc Medical',
+        acc_tcm: 'Acc TCM',
+        acc_dismember: 'Acc Dismemberment',
+        premium_waiver: 'Premium Waiver',
+        other: 'this benefit'
+      }[rd.type] || 'this rider';
+      if (!confirm('Remove ' + label + '?')) return;
       const riders = [...(form.riders || [])];
       riders.splice(ri, 1);
       set('riders', riders);
+    },
+    style: {
+      padding: '2px 8px',
+      fontSize: 12,
+      lineHeight: 1,
+      background: 'transparent',
+      border: '1px solid var(--border)',
+      borderRadius: 4,
+      color: 'var(--text3)',
+      cursor: 'pointer',
+      transition: 'all .15s'
+    },
+    onMouseEnter: e => {
+      e.currentTarget.style.background = 'rgba(239,83,80,.12)';
+      e.currentTarget.style.color = 'var(--red)';
+      e.currentTarget.style.borderColor = 'var(--red)';
+    },
+    onMouseLeave: e => {
+      e.currentTarget.style.background = 'transparent';
+      e.currentTarget.style.color = 'var(--text3)';
+      e.currentTarget.style.borderColor = 'var(--border)';
     }
-  }, "\xD7")))), (!form.riders || form.riders.length === 0) && /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
+  }, "\uD83D\uDDD1")))), (!form.riders || form.riders.length === 0) && /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
     colSpan: 7,
     style: {
       textAlign: 'center',
