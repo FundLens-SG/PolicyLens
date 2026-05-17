@@ -1,4 +1,4 @@
-const SW_VERSION = 'v2.4.0-rc2.53-subtype-routing';
+const SW_VERSION = 'v2.4.0-rc2.55-catalogue-expansion';
 const DB_NAME = 'PolicyLensSW';
 const DB_VERSION = 1;
 const SESSION_STORE = 'sessions';

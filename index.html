@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.53-subtype-routing';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.55-catalogue-expansion';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -738,9 +738,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.53';
+const APP_VERSION = 'v2.4.0-rc2.55';
 const APP_VERSION_DATE = '2026-05-17';
-const APP_VERSION_NAME = 'Sub-type-driven group routing';
+const APP_VERSION_NAME = 'Catalogue expansion — 159 new SG products';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1214,6 +1214,25 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.55',
+  date: '2026-05-17',
+  name: 'Catalogue expansion — 159 new SG products',
+  sections: [{
+    heading: 'Product catalogue',
+    items: ['SEED_REPOSITORY grew from 61 → 220 entries (+159) following a deep-research run by Claude Co-Work and ChatGPT 5.5. Each new entry has FC-grade notes (product structure, coverage, premium notes, distinctive features), insurer + sub-type both verified against the underwriter\'s own product page, and a source URL on file.', 'Coverage now spans 28 SG insurers / banks / brokerages / govt bodies. New breadth: AIA (+100), NTUC Income (+47), Manulife (+16), Singlife (+14), Prudential (+10), HSBC Life (+10), Great Eastern (+6), FWD (+6), Etiqa (+3), Tokio Marine (+3), MSIG (+3), China Taiping (+1), China Life (+1), CPF Board (+7); banks DBS (+8), UOB (+7), OCBC (+7), Standard Chartered (+4), Maybank (+3), Citibank (+3), HSBC (+3); brokerages Syfe (+9), Endowus (+8), StashAway (+7), iFAST (+6), Saxo (+5), Tiger Brokers (+4), Interactive Brokers (+4), moomoo (+4).', 'New product categories surfaced: brokerage cash-management products (Endowus Cash Smart Core/Enhanced/Ultra, Syfe Cash+ Guaranteed/Flexi, StashAway Simple/Simple Plus, Tiger Vault, moomoo Cash Plus, Singlife Account), self-directed brokerage wrappers (FSMOne, Tiger, moomoo, Syfe Trade, SaxoTraderGO, IBKR), regular-savings plans (DBS Invest-Saver, OCBC BCIP, FSMOne RSP), and structured deposits (UOB/OCBC).', 'Of the 622 entries processed (ChatGPT 381 + Claude 241), 309 were new, 169 already in catalogue, 137 conflicts NOT auto-applied (deferred for manual review next round per conservative merge policy), 7 skipped (CPF OA/SA/MA Account types — handled by built-in CPF infra, not catalogue entries).']
+  }, {
+    heading: 'Canonical sub-types',
+    items: ['health adds "Shield Rider" — riders attaching to Integrated Shield Plans (AIA HSG Max Rider, MAX VitalHealth, MAX A Cancer Care Booster, PRUExtra Preferred CoPay, GREAT TotalCare, Singlife Health Plus, NTUC Income Enhanced IncomeShield Rider, etc.) now have their own first-class type instead of collapsing into the parent Integrated Shield Plan.', 'cash_investments adds "Cash Management" (broker / robo-advisor cash sweep products) and "Structured Deposit" (UOB / OCBC principal-protected structured products).', 'other_assets adds "Brokerage Account" (the platform wrapper itself, distinct from individual stock/ETF holdings inside) and "Regular Savings Plan (RSP)" (DCA stock plans like DBS Invest-Saver).']
+  }]
+}, {
+  version: 'v2.4.0-rc2.54',
+  date: '2026-05-17',
+  name: 'Catalogue assimilation pipeline',
+  sections: [{
+    heading: 'Tooling',
+    items: ['tools/assimilate-catalogue.mjs — JSON schema validator, dedup matcher, and patch generator that ingests deep-research output from Claude Co-Work / ChatGPT 5.5 and emits ready-to-apply SEED_REPOSITORY entries.', 'Pipeline auto-rewrites insurer name variants (Tokio Marine Life Singapore → Tokio Marine, iFAST / FSMOne → iFAST, Citi → Citibank, MAS/MOF/IRAS/AIC → CPF Board) and sub-type aliases (Treasury Bills → T-bill, Singapore Government Securities → Corporate Bond) before validation.', 'Auto-resolves conflicts where the AI cited a verifiable source URL (configurable to "skip overrides this round" for conservative merges, which is what we did this round).', 'Self-test: npm run assimilate:selftest. Dry-run: npm run assimilate:catalogue. Apply: npm run assimilate:catalogue:apply.']
+  }]
+}, {
   version: 'v2.4.0-rc2.53',
   date: '2026-05-17',
   name: 'Sub-type-driven group routing',
@@ -5857,7 +5876,7 @@ async function pdfToImages(pdfDoc, maxPages = 12) {
 // cache could return a stale 2-policy spreadsheet result before the fixed
 // local XLSX parser ran, so the parser now bypasses extraction/OCR cache
 // for spreadsheets and this version makes existing stale entries unreachable.
-const EXTRACT_PIPELINE_VERSION = 'v15.55-2026-05-17-signature-family-subtypes-rc2.52';
+const EXTRACT_PIPELINE_VERSION = 'v15.56-2026-05-17-catalogue-expansion-rc2.55';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -16402,6 +16421,1598 @@ const SEED_REPOSITORY = [
   subType: 'CareShield Life / Supplement',
   currency: 'SGD',
   notes: 'PRIVATE SUPPLEMENT — enhanced Plus version of Singlife CareShield. EARLIER TRIGGER than Standard: 2 of 6 ADLs (moderate). Monthly Benefit $200-$5,000 stacks on top of CareShield Life. Fixed or 2%/3% escalation. Lump Sum Benefit 3× first monthly. Rehabilitation Benefit. Premium waiver at 1 ADL. ADD-ON BENEFIT available: additional monthly payout for up to 12 months at 1 ADL (mild disability), giving Plus holders effective 1-ADL coverage. Up to 35% lifetime premium discount. Preferred partner discount for Homage (20% off Severe Disability Assessment, 5% off home care services). SDIC protected. Best for: earlier trigger + lifestyle partner benefits.',
+  editHistory: []
+},
+// ─── ADDED 2026-05-17T11-58-17 (deep-research) ───
+{
+  id: 'repo-aia-uccenhancer',
+  insurer: 'AIA',
+  productName: 'UCC Enhancer',
+  productCode: '',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Optional rider for AIA Ultimate Critical Cover. It extends the standalone CI policy with relapse and catastrophic-condition benefits. Treat as a rider product rather than a separate base plan.',
+  editHistory: []
+}, {
+  id: 'repo-aia-asccbooster',
+  insurer: 'AIA',
+  productName: 'ASCC Booster',
+  productCode: '',
+  category: 'protection',
+  subType: 'Early Critical Illness',
+  currency: 'SGD',
+  notes: 'Optional booster rider for AIA Absolute Critical Cover. It is used to increase specified early/intermediate/major CI benefit amounts under the ASCC structure. Treat as a rider product tied to ASCC.',
+  editHistory: []
+}, {
+  id: 'repo-aia-enhancedcancerprotectplu',
+  insurer: 'AIA',
+  productName: 'Enhanced Cancer Protect Plus',
+  productCode: '',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Cancer rider/add-on for AIA Enhanced Cancer Protect. It increases coverage for early, intermediate and catastrophic cancer events under the base cancer plan. Treat as a rider product, not as a separate cancer base plan.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiastarprotectorplus',
+  insurer: 'AIA',
+  productName: 'AIA Star Protector Plus',
+  productCode: '',
+  category: 'protection',
+  subType: 'Personal Accident',
+  currency: 'SGD',
+  notes: 'Personal accident plan for children. AIA positions it for accidental injuries, burns and common diseases such as HFMD and dengue, with worldwide protection features. Classification gotcha: it is PA/child accident protection, not a child whole life product.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiaprimeassured',
+  insurer: 'AIA',
+  productName: 'AIA Prime Assured',
+  productCode: '',
+  category: 'protection',
+  subType: 'Personal Accident',
+  currency: 'SGD',
+  notes: 'Personal accident plan targeted at seniors. Public AIA materials mention accidental injury coverage, age-related illness coverage such as Alzheimer\'s or Parkinson\'s disease, hospital cash and reimbursement for selected home-care or mobility expenses. Classification gotcha: despite disease features, it is sold under accident protection.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiaplatinumaccidentcare',
+  insurer: 'AIA',
+  productName: 'AIA Platinum AccidentCare',
+  productCode: '',
+  category: 'protection',
+  subType: 'Personal Accident',
+  currency: 'SGD',
+  notes: 'Platinum personal accident plan with worldwide accident protection. AIA materials describe double coverage on commercial flights, emergency evacuation and repatriation, rehabilitation support and accident-expense reimbursements. Classification gotcha: it is PA, not an Integrated Shield Plan.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiamaxvitalhealthproa',
+  insurer: 'AIA',
+  productName: 'AIA Max VitalHealth Pro A',
+  productCode: '',
+  category: 'health',
+  subType: 'Integrated Shield Plan',
+  currency: 'SGD',
+  notes: 'Optional rider for AIA HealthShield Gold Max A. It is designed to reduce out-of-pocket co-insurance and includes a policy-year co-pay cap subject to rider conditions. Cancer Care Pro and Emergency Care Pro are add-ons available to this rider tier.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiamaxvitalhealthprob',
+  insurer: 'AIA',
+  productName: 'AIA Max VitalHealth Pro B',
+  productCode: '',
+  category: 'health',
+  subType: 'Integrated Shield Plan',
+  currency: 'SGD',
+  notes: 'Optional rider for AIA HealthShield Gold Max B. It covers part of the co-insurance under the base IP, subject to required co-payment and rider conditions. Treat as a Shield rider, not a standalone health plan.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiamaxvitalhealthproblit',
+  insurer: 'AIA',
+  productName: 'AIA Max VitalHealth Pro B Lite',
+  productCode: '',
+  category: 'health',
+  subType: 'Integrated Shield Plan',
+  currency: 'SGD',
+  notes: 'Optional rider for AIA HealthShield Gold Max B Lite. It is a Shield rider designed to cover co-insurance within rider terms and co-payment requirements. Treat as separate from Pro B because it attaches to the B Lite base tier.',
+  editHistory: []
+}, {
+  id: 'repo-aia-emergencycarepro',
+  insurer: 'AIA',
+  productName: 'Emergency Care Pro',
+  productCode: '',
+  category: 'health',
+  subType: 'Integrated Shield Plan',
+  currency: 'SGD',
+  notes: 'Optional add-on for AIA Max VitalHealth Pro A. It is used within the Shield rider structure for emergency-care benefits. Treat as a Shield add-on, not a personal accident policy.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiababyprotectoriii',
+  insurer: 'AIA',
+  productName: 'AIA Baby Protector (III)',
+  productCode: '',
+  category: 'maternity',
+  subType: 'Maternity Coverage',
+  currency: 'SGD',
+  notes: 'Pre-natal rider used with AIA Mum2Baby. It attaches to AIA Pro Lifetime Protector (II) as part of the maternity bundle where the child also has investment-linked protection structure. Treat as a rider product rather than as a standalone maternity base plan.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiasmartgoal10',
+  insurer: 'AIA',
+  productName: 'AIA Smart Goal 10',
+  productCode: '',
+  category: 'savings',
+  subType: 'Short-term Endowment',
+  currency: 'SGD',
+  notes: '10-year savings plan with 3 years of premium payments. AIA states that 100% of capital is guaranteed at maturity and no health check is required. Classification gotcha: this is a short-term endowment, not an ILP.',
+  editHistory: []
+}, {
+  id: 'repo-aia-earlycriticalprotectorli',
+  insurer: 'AIA',
+  productName: 'Early Critical Protector Life (IV)',
+  productCode: 'ECPL IV',
+  category: 'protection',
+  subType: 'Early Critical Illness',
+  currency: 'SGD',
+  notes: 'Early/intermediate/major-stage CI rider attachable to AIA Guaranteed Protect Plus (IV). AIA product materials describe it as covering a multi-stage CI set plus special conditions. Treat as a rider product under the GPP IV whole life family.',
+  editHistory: []
+}, {
+  id: 'repo-aia-criticalprotectorlifeiv',
+  insurer: 'AIA',
+  productName: 'Critical Protector Life (IV)',
+  productCode: 'CPL IV',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Major critical illness rider attachable to AIA Guaranteed Protect Plus (IV). AIA materials describe coverage for a major CI condition set under the whole life base plan. Treat as rider product, not standalone CI.',
+  editHistory: []
+}, {
+  id: 'repo-aia-earlycriticalprotectorwa',
+  insurer: 'AIA',
+  productName: 'Early Critical Protector Waiver of Premium (II)',
+  productCode: 'ECPWP II',
+  category: 'protection',
+  subType: 'Early Critical Illness',
+  currency: 'SGD',
+  notes: 'Premium-waiver rider that waives future premiums upon covered early, intermediate or major-stage CI events. AIA materials list it as attachable to multiple savings and ILP products. Treat as a rider product and check the base plan\'s eligible-rider rules.',
+  editHistory: []
+}, {
+  id: 'repo-aia-criticalprotectorwaivero',
+  insurer: 'AIA',
+  productName: 'Critical Protector Waiver of Premium (II)',
+  productCode: 'CPWP II',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Premium-waiver rider that waives future premiums upon covered major critical illness events. AIA materials list it as attachable to multiple savings and ILP products. Treat as a rider product and check eligible base-plan rules.',
+  editHistory: []
+}, {
+  id: 'repo-aia-earlycriticalprotectorpa',
+  insurer: 'AIA',
+  productName: 'Early Critical Protector Payor Benefit (II)',
+  productCode: 'ECPPB II',
+  category: 'protection',
+  subType: 'Early Critical Illness',
+  currency: 'SGD',
+  notes: 'Payor-benefit rider that waives future premiums for a child\'s eligible plan on specified payor events, including covered early/intermediate/major CI, disability or death, subject to policy terms. AIA materials list it for savings and ILP products. Treat as rider product tied to child-policy structures.',
+  editHistory: []
+}, {
+  id: 'repo-great-eastern-greatlifemultiplier',
+  insurer: 'Great Eastern',
+  productName: 'GREAT Life Multiplier',
+  productCode: '',
+  category: 'protection',
+  subType: 'Whole Life',
+  currency: 'SGD',
+  notes: 'Whole-life protection plan designed for death, terminal illness and total permanent disability cover with a multiplier feature during selected years. It is used as a core protection policy rather than an investment account. Critical illness or early critical illness protection can be layered through attached riders where eligible. Do not confuse it with GREAT Life Advantage 4, which is ILP-based.',
+  editHistory: []
+}, {
+  id: 'repo-great-eastern-dependantsprotectionsche',
+  insurer: 'Great Eastern',
+  productName: 'Dependants\' Protection Scheme',
+  productCode: 'DPS',
+  category: 'protection',
+  subType: 'Term Life',
+  currency: 'SGD',
+  notes: 'National term-life insurance scheme administered by appointed private insurers including Great Eastern. It pays a lump sum on death, terminal illness or total permanent disability before the scheme expiry age, subject to scheme rules. It appears in FC books as a protection policy even though premiums are often paid from CPF.',
+  editHistory: []
+}, {
+  id: 'repo-great-eastern-greatflexiadvantage',
+  insurer: 'Great Eastern',
+  productName: 'GREAT Flexi Advantage',
+  productCode: '',
+  category: 'investment',
+  subType: 'ILP (Investment)',
+  currency: 'SGD',
+  notes: 'Investment-linked policy with access to dividend-paying or income-oriented ILP funds. It is designed for investment flexibility and possible cash distributions, not guaranteed endowment returns. Policy value is fund-linked and subject to market risk.',
+  editHistory: []
+}, {
+  id: 'repo-prudential-pruactivelinkguard',
+  insurer: 'Prudential',
+  productName: 'PRUActive LinkGuard',
+  productCode: '',
+  category: 'protection',
+  subType: 'ILP (Protection)',
+  currency: 'SGD',
+  notes: 'Investment-linked protection plan combining life cover with ILP fund exposure. It appears in both life and wealth product groupings, which can cause classification confusion. Use ILP protection when the policy is primarily held for protection with units funding charges and benefits.',
+  editHistory: []
+}, {
+  id: 'repo-prudential-pruactiveprotect',
+  insurer: 'Prudential',
+  productName: 'PRU Active Protect',
+  productCode: '',
+  category: 'protection',
+  subType: 'Personal Accident',
+  currency: 'SGD',
+  notes: 'Accident-focused protection plan listed under Prudential health products. It provides personal accident style benefits rather than long-term life savings. Classification should remain personal accident when evaluating coverage overlap.',
+  editHistory: []
+}, {
+  id: 'repo-prudential-prucaresecure',
+  insurer: 'Prudential',
+  productName: 'PRUCare Secure',
+  productCode: '',
+  category: 'health',
+  subType: 'CareShield Life / Supplement',
+  currency: 'SGD',
+  notes: 'Private CareShield Life supplement that enhances long-term-care payouts upon severe disability claims. It should be included as a private supplement while excluding the base CareShield Life scheme. Premium payment and payout options are subject to policy rules and MediSave limits.',
+  editHistory: []
+}, {
+  id: 'repo-prudential-pruapexlegacyindex',
+  insurer: 'Prudential',
+  productName: 'PRU Apex Legacy Index',
+  productCode: '',
+  category: 'protection',
+  subType: 'Indexed UL (IUL)',
+  currency: 'SGD',
+  notes: 'Legacy-planning indexed universal life product. It is aimed at high-net-worth legacy needs and has index-linked crediting rather than direct ILP fund ownership. Classify as Indexed UL, not endowment or term life.',
+  editHistory: []
+}, {
+  id: 'repo-prudential-prufirstgiftii',
+  insurer: 'Prudential',
+  productName: 'PRU First Gift II',
+  productCode: '',
+  category: 'maternity',
+  subType: 'Maternity Coverage',
+  currency: 'SGD',
+  notes: 'Maternity insurance product for expectant mothers and newborn protection. It belongs under maternity coverage even if it includes life or illness benefits for the child. Do not merge it with PRU First Promise because both names may appear separately in client records.',
+  editHistory: []
+}, {
+  id: 'repo-manulife-manulifewealthgen',
+  insurer: 'Manulife',
+  productName: 'Manulife WealthGen',
+  productCode: '',
+  category: 'savings',
+  subType: 'Endowment',
+  currency: 'SGD',
+  notes: 'Savings insurance plan listed under Manulife savings and retirement products. It is used for wealth accumulation with an insurance wrapper, not as a pure unit-trust account. Exact guarantee and bonus structure should be read from the product summary.',
+  editHistory: []
+}, {
+  id: 'repo-manulife-manulifegoal2025iii',
+  insurer: 'Manulife',
+  productName: 'Manulife Goal 2025 (III)',
+  productCode: '',
+  category: 'savings',
+  subType: 'Short-term Endowment',
+  currency: 'SGD',
+  notes: 'Short-term single-premium endowment from the Manulife Goal series. It is a fixed-tenor savings product rather than a long-term ILP. The year suffix matters because different tranches can have different terms and availability.',
+  editHistory: []
+}, {
+  id: 'repo-manulife-manulifeincomegenii',
+  insurer: 'Manulife',
+  productName: 'Manulife IncomeGen (II)',
+  productCode: '',
+  category: 'retirement',
+  subType: 'Income Plan',
+  currency: 'SGD',
+  notes: 'Income-oriented insurance savings plan listed by Manulife. It is used for recurring cash-flow planning and has endowment or participating features depending on plan version. Classify as income plan rather than ILP.',
+  editHistory: []
+}, {
+  id: 'repo-manulife-manulifegrowsecure',
+  insurer: 'Manulife',
+  productName: 'Manulife GrowSecure',
+  productCode: '',
+  category: 'savings',
+  subType: 'Endowment',
+  currency: 'SGD',
+  notes: 'Savings plan under Manulife savings solutions. It provides insurance-wrapper savings features rather than pure investment-platform access. Keep separate from IncomeSecure and RetireReady because client objectives and payout mechanics differ.',
+  editHistory: []
+}, {
+  id: 'repo-manulife-manulinkinvestor',
+  insurer: 'Manulife',
+  productName: 'Manulink Investor',
+  productCode: '',
+  category: 'investment',
+  subType: 'ILP (Investment)',
+  currency: 'SGD',
+  notes: 'Investment-linked policy listed in Manulife investment solutions. It provides policy access to ILP funds through an insurance contract. Do not classify it as a direct unit trust even if the underlying funds resemble unit trusts.',
+  editHistory: []
+}, {
+  id: 'repo-manulife-manulinkinvestorii',
+  insurer: 'Manulife',
+  productName: 'Manulink Investor (II)',
+  productCode: '',
+  category: 'investment',
+  subType: 'ILP (Investment)',
+  currency: 'SGD',
+  notes: 'Second-generation Manulink Investor product listed under Manulife investment solutions. It is an investment-linked insurance policy, not a direct brokerage or unit-trust platform. Preserve the “(II)” suffix because legacy records may distinguish versions.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-completelifesecure',
+  insurer: 'NTUC Income',
+  productName: 'Complete Life Secure',
+  productCode: '',
+  category: 'protection',
+  subType: 'Whole Life',
+  currency: 'SGD',
+  notes: 'Whole-life protection plan from Income Insurance. It is used for long-term death, terminal illness and related protection with optional riders depending on underwriting. Classify as whole life rather than term or ILP unless the schedule states otherwise.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-directstarprotectpro',
+  insurer: 'NTUC Income',
+  productName: 'DIRECT Star Protect Pro',
+  productCode: '',
+  category: 'protection',
+  subType: 'Whole Life',
+  currency: 'SGD',
+  notes: 'Direct-purchase style whole-life protection product listed by Income. It is a simplified protection plan and should not be merged with Star Term Protect. Use whole-life classification when the policy term is lifetime.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-directstarterm',
+  insurer: 'NTUC Income',
+  productName: 'DIRECT Star Term',
+  productCode: '',
+  category: 'protection',
+  subType: 'Term Life',
+  currency: 'SGD',
+  notes: 'Direct term life product from Income. It provides fixed-term protection with no savings value. It is distinct from DIRECT Star Protect Pro, which is a whole-life product.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-directstartermrenewable',
+  insurer: 'NTUC Income',
+  productName: 'DIRECT Star Term — Renewable',
+  productCode: '',
+  category: 'protection',
+  subType: 'Term Life',
+  currency: 'SGD',
+  notes: 'Renewable direct term product variant. It remains term life even if renewability extends coverage over multiple periods. Keep separate where policy schedules show the renewable version.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-mortgageterm',
+  insurer: 'NTUC Income',
+  productName: 'Mortgage Term',
+  productCode: '',
+  category: 'protection',
+  subType: 'Term Life',
+  currency: 'SGD',
+  notes: 'Mortgage-protection term policy designed around home-loan liabilities. It has no savings or investment purpose. Benefit structure may be level or decreasing depending on policy issue.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-familyprotect',
+  insurer: 'NTUC Income',
+  productName: 'Family Protect',
+  productCode: '',
+  category: 'protection',
+  subType: 'Term Life',
+  currency: 'SGD',
+  notes: 'Family protection term policy listed by Income. It is a life protection product focused on death or disability lump-sum coverage. Classify as term life unless the actual schedule identifies a whole-life variant.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-termlifesolitaire',
+  insurer: 'NTUC Income',
+  productName: 'TermLife Solitaire',
+  productCode: '',
+  category: 'protection',
+  subType: 'Term Life',
+  currency: 'SGD',
+  notes: 'High-net-worth or affluent-client term life solution under Income’s Solitaire range. It provides large-sum temporary protection rather than cash-value savings. It should be separated from Provenance Solitaire and Legacy Flex Solitaire.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-completecriticalprotect',
+  insurer: 'NTUC Income',
+  productName: 'Complete Critical Protect',
+  productCode: '',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Critical illness plan providing lump-sum coverage upon covered CI definitions. It is a protection policy and not medical reimbursement insurance. Use separate classification from Complete Cancer Care where the portfolio specifically lists cancer-only cover.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-completecancercare',
+  insurer: 'NTUC Income',
+  productName: 'Complete Cancer Care',
+  productCode: '',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Cancer-focused protection product under Income’s life insurance range. It pays according to covered cancer events rather than reimbursing hospital bills. Classify as critical illness, not Integrated Shield.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-lady360',
+  insurer: 'NTUC Income',
+  productName: 'Lady 360',
+  productCode: '',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Female-focused protection plan listed in Income life products. It may include cancer or illness benefits for conditions commonly associated with women. It should be categorised as protection/CI rather than maternity unless a schedule specifically relates to pregnancy coverage.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-safraessentialterm',
+  insurer: 'NTUC Income',
+  productName: 'SAFRA Essential Term',
+  productCode: '',
+  category: 'protection',
+  subType: 'Term Life',
+  currency: 'SGD',
+  notes: 'Group or affinity term insurance for SAFRA members. It provides term protection and is not an endowment or ILP. Membership eligibility and group policy terms should be checked separately.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-safralivingcare',
+  insurer: 'NTUC Income',
+  productName: 'SAFRA Living Care',
+  productCode: '',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'SAFRA affinity critical illness or living-benefit protection policy listed by Income. It should be classified as CI protection because benefits are illness-triggered. It is distinct from SAFRA Essential Term.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-ocbcprotect',
+  insurer: 'NTUC Income',
+  productName: 'OCBC Protect',
+  productCode: '',
+  category: 'protection',
+  subType: 'Term Life',
+  currency: 'SGD',
+  notes: 'Bank-distributed protection product listed by Income. It is catalogued under Income because Income is the insurer, with OCBC as distributor. Treat as protection rather than bank deposit or investment product.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-incomeshield',
+  insurer: 'NTUC Income',
+  productName: 'IncomeShield',
+  productCode: '',
+  category: 'health',
+  subType: 'Integrated Shield Plan',
+  currency: 'SGD',
+  notes: 'IncomeShield Integrated Shield Plan family or legacy tier name. It supplements MediShield Life and may appear in older portfolios. Keep separate from Enhanced IncomeShield if the client schedule distinguishes them.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-copayassistplan',
+  insurer: 'NTUC Income',
+  productName: 'Co-Pay Assist Plan',
+  productCode: '',
+  category: 'health',
+  subType: 'Integrated Shield Plan',
+  currency: 'SGD',
+  notes: 'Rider or assist plan associated with IncomeShield cost-sharing. It modifies out-of-pocket exposure on eligible claims and is not a standalone base medical policy. Catalogue separately where rider premiums are visible.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-hospitalcareinsurance',
+  insurer: 'NTUC Income',
+  productName: 'Hospital Care Insurance',
+  productCode: '',
+  category: 'health',
+  subType: 'Hospital Income',
+  currency: 'SGD',
+  notes: 'Hospital cash insurance paying fixed benefits for covered hospitalisation. It does not reimburse actual bills like an Integrated Shield Plan. Classification should be hospital income.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-paassurance',
+  insurer: 'NTUC Income',
+  productName: 'PA Assurance',
+  productCode: '',
+  category: 'protection',
+  subType: 'Personal Accident',
+  currency: 'SGD',
+  notes: 'Personal accident plan from Income covering accidental death, disability and selected injury benefits. It is non-life protection and should not be classified as term life. It may include medical or daily benefits but remains PA.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-pasecure',
+  insurer: 'NTUC Income',
+  productName: 'PA Secure',
+  productCode: '',
+  category: 'protection',
+  subType: 'Personal Accident',
+  currency: 'SGD',
+  notes: 'Personal accident insurance product listed by Income. It provides accident-related benefits and may be used for individual or family accident coverage. Classify as PA, not hospital income.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-pafitnessprotect',
+  insurer: 'NTUC Income',
+  productName: 'PA Fitness Protect',
+  productCode: '',
+  category: 'protection',
+  subType: 'Personal Accident',
+  currency: 'SGD',
+  notes: 'Fitness-related personal accident product from Income. It covers selected accident risks and should be grouped with PA products. It is not a sports investment or health reimbursement plan.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-silvercare',
+  insurer: 'NTUC Income',
+  productName: 'SilverCare',
+  productCode: '',
+  category: 'protection',
+  subType: 'Personal Accident',
+  currency: 'SGD',
+  notes: 'Personal accident or senior accident product listed by Income. It is designed around accident protection for older clients, not retirement income. Record as personal accident even where medical reimbursement features exist.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-specialcareautism',
+  insurer: 'NTUC Income',
+  productName: 'SpecialCare (Autism)',
+  productCode: '',
+  category: 'protection',
+  subType: 'Personal Accident',
+  currency: 'SGD',
+  notes: 'Special-needs personal accident plan for persons with autism. It provides accident and related protection benefits under specific eligibility rules. It is distinct from SpecialCare for Down Syndrome.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-specialcaredownsyndrome',
+  insurer: 'NTUC Income',
+  productName: 'SpecialCare (Down Syndrome)',
+  productCode: '',
+  category: 'protection',
+  subType: 'Personal Accident',
+  currency: 'SGD',
+  notes: 'Special-needs personal accident plan for persons with Down Syndrome. It should be classified as PA rather than health reimbursement or disability income. Eligibility and insured person definitions are important for advice.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-maternity360',
+  insurer: 'NTUC Income',
+  productName: 'Maternity 360',
+  productCode: '',
+  category: 'maternity',
+  subType: 'Maternity Coverage',
+  currency: 'SGD',
+  notes: 'Maternity protection plan covering selected pregnancy complications and congenital illnesses subject to terms. It is used during pregnancy and should not be classified as child education or hospital income. It may include bundled mother-and-child protection.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-luxeplussolitaireii',
+  insurer: 'NTUC Income',
+  productName: 'Luxe Plus Solitaire II',
+  productCode: '',
+  category: 'savings',
+  subType: 'Endowment',
+  currency: 'SGD',
+  notes: 'Solitaire-range savings or income plan for affluent clients. It is an insurance savings product and not a brokerage account. Preserve the “II” suffix because it identifies the product version.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-wealthplussolitaire',
+  insurer: 'NTUC Income',
+  productName: 'Wealth Plus Solitaire',
+  productCode: '',
+  category: 'savings',
+  subType: 'Endowment',
+  currency: 'SGD',
+  notes: 'Solitaire-range wealth accumulation insurance plan. It is a savings/endowment style solution for affluent clients, not a direct unit trust. It may be confused with WealthLink, which is investment-linked.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-astralink',
+  insurer: 'NTUC Income',
+  productName: 'AstraLink',
+  productCode: '',
+  category: 'investment',
+  subType: 'ILP (Investment)',
+  currency: 'SGD',
+  notes: 'Investment-linked policy listed under Income’s savings and investments range. It provides access to ILP investment funds through an insurance wrapper. Classify as ILP investment, not unit trust.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-investflex',
+  insurer: 'NTUC Income',
+  productName: 'Invest Flex',
+  productCode: '',
+  category: 'investment',
+  subType: 'ILP (Investment)',
+  currency: 'SGD',
+  notes: 'Investment-linked insurance product from Income. It is used for flexible investment through ILP funds and may include insurance coverage. It should not be classified as savings/endowment solely because it sits under savings and investments.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-investflextrivantage',
+  insurer: 'NTUC Income',
+  productName: 'Invest Flex TriVantage',
+  productCode: '',
+  category: 'investment',
+  subType: 'ILP (Investment)',
+  currency: 'SGD',
+  notes: 'Investment-linked policy variant under the Invest Flex range. It should be kept separate from Invest Flex Vantage because product mechanics and charges may differ. Classify as ILP investment.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-investflexvantage',
+  insurer: 'NTUC Income',
+  productName: 'Invest Flex Vantage',
+  productCode: '',
+  category: 'investment',
+  subType: 'ILP (Investment)',
+  currency: 'SGD',
+  notes: 'Investment-linked policy variant listed by Income. It provides ILP fund exposure through an insurance contract. Preserve the Vantage suffix in canonical matching.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-wealthlink',
+  insurer: 'NTUC Income',
+  productName: 'WealthLink',
+  productCode: '',
+  category: 'investment',
+  subType: 'ILP (Investment)',
+  currency: 'SGD',
+  notes: 'Investment-linked policy from Income. It is an ILP investment product even though the name may sound like a general wealth platform. It should be separated from Wealth Plus Solitaire, which is an insurance savings product.',
+  editHistory: []
+}, {
+  id: 'repo-singlife-singlifesimpleterm',
+  insurer: 'Singlife',
+  productName: 'Singlife Simple Term',
+  productCode: '',
+  category: 'protection',
+  subType: 'Term Life',
+  currency: 'SGD',
+  notes: 'Term life product from Singlife’s life insurance range. It provides temporary protection and no savings value. Classify as term life rather than whole life.',
+  editHistory: []
+}, {
+  id: 'repo-singlife-directsinglifewholelife',
+  insurer: 'Singlife',
+  productName: 'DIRECT – Singlife Whole Life',
+  productCode: '',
+  category: 'protection',
+  subType: 'Whole Life',
+  currency: 'SGD',
+  notes: 'Direct Purchase Insurance whole-life product from Singlife. It provides lifetime protection under standardised DPI terms. It should be kept separate from Singlife Whole Life Choice.',
+  editHistory: []
+}, {
+  id: 'repo-singlife-singlifeshield',
+  insurer: 'Singlife',
+  productName: 'Singlife Shield',
+  productCode: '',
+  category: 'health',
+  subType: 'Integrated Shield Plan',
+  currency: 'SGD',
+  notes: 'Singlife Integrated Shield Plan family supplementing MediShield Life for eligible medical expenses. It is a medical reimbursement policy with plan tiers and optional riders. MediShield Life base is excluded from the catalogue.',
+  editHistory: []
+}, {
+  id: 'repo-singlife-singlifehealthplus',
+  insurer: 'Singlife',
+  productName: 'Singlife Health Plus',
+  productCode: '',
+  category: 'health',
+  subType: 'Integrated Shield Plan',
+  currency: 'SGD',
+  notes: 'Rider for Singlife Shield that modifies out-of-pocket features and selected benefits. It is attached to an Integrated Shield Plan and should be recorded separately where premium records show rider charges. It is not a standalone hospital income plan.',
+  editHistory: []
+}, {
+  id: 'repo-singlife-mindefmhagrouptermlife',
+  insurer: 'Singlife',
+  productName: 'MINDEF/MHA Group Term Life',
+  productCode: '',
+  category: 'protection',
+  subType: 'Term Life',
+  currency: 'SGD',
+  notes: 'Group term life insurance for eligible MINDEF, MHA and related members. It is a group protection policy, not an individual savings plan. Eligibility and optional covers are governed by the group scheme.',
+  editHistory: []
+}, {
+  id: 'repo-singlife-mindefmhagrouppersonalac',
+  insurer: 'Singlife',
+  productName: 'MINDEF/MHA Group Personal Accident',
+  productCode: '',
+  category: 'protection',
+  subType: 'Personal Accident',
+  currency: 'SGD',
+  notes: 'Group personal accident cover under the MINDEF/MHA insurance scheme. It provides accident-related protection and should not be treated as medical reimbursement insurance. It may be bundled with group term life in client records.',
+  editHistory: []
+}, {
+  id: 'repo-singlife-mindefmhalivingcare',
+  insurer: 'Singlife',
+  productName: 'MINDEF/MHA Living Care',
+  productCode: '',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Critical illness or living-benefit cover under the MINDEF/MHA group scheme. It is a condition-triggered benefit and should be categorised under critical illness protection. Keep separate from group term life.',
+  editHistory: []
+}, {
+  id: 'repo-hsbc-life-hsbclifeshield',
+  insurer: 'HSBC Life',
+  productName: 'HSBC Life – Shield',
+  productCode: '',
+  category: 'health',
+  subType: 'Integrated Shield Plan',
+  currency: 'SGD',
+  notes: 'Integrated Shield Plan family from HSBC Life, inherited through the AXA Singapore integration for some legacy records. It supplements MediShield Life for eligible hospital and surgical bills. Do not catalogue MediShield Life base.',
+  editHistory: []
+}, {
+  id: 'repo-fwd-fwdheartattackinsurance',
+  insurer: 'FWD',
+  productName: 'FWD Heart Attack Insurance',
+  productCode: '',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Condition-specific CI product focused on heart attack cover. It is a protection product with a narrow trigger set. Classify as critical illness rather than health reimbursement.',
+  editHistory: []
+}, {
+  id: 'repo-fwd-fwdstrokeinsurance',
+  insurer: 'FWD',
+  productName: 'FWD Stroke Insurance',
+  productCode: '',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Condition-specific CI product focused on stroke cover. It pays a benefit on covered stroke definitions rather than reimbursing treatment costs. Use CI classification.',
+  editHistory: []
+}, {
+  id: 'repo-fwd-fwdinternationalhealthin',
+  insurer: 'FWD',
+  productName: 'FWD International Health Insurance',
+  productCode: '',
+  category: 'health',
+  subType: 'Integrated Shield Plan',
+  currency: 'SGD',
+  notes: 'International medical insurance product from FWD for private healthcare access across jurisdictions. It is not a Singapore Integrated Shield Plan, but it is a health reimbursement product. Use health classification and flag separately from local IPs in app logic.',
+  editHistory: []
+}, {
+  id: 'repo-msig-protectionplus',
+  insurer: 'MSIG',
+  productName: 'ProtectionPlus',
+  productCode: '',
+  category: 'protection',
+  subType: 'Personal Accident',
+  currency: 'SGD',
+  notes: 'MSIG personal accident plan covering accidental death, permanent total disablement and selected hospital cash or injury benefits. It is general-insurance personal accident cover rather than life insurance. Classify as PA even when hospital cash benefits are included.',
+  editHistory: []
+}, {
+  id: 'repo-msig-parecoveryplus',
+  insurer: 'MSIG',
+  productName: 'PA RecoveryPlus',
+  productCode: '',
+  category: 'protection',
+  subType: 'Personal Accident',
+  currency: 'SGD',
+  notes: 'MSIG personal accident plan with recovery-support benefits such as medical, disability and post-accident support features. It remains personal accident cover because triggers are accident/injury based. Do not classify as long-term care or hospital income.',
+  editHistory: []
+}, {
+  id: 'repo-msig-paprimeplusseriesii',
+  insurer: 'MSIG',
+  productName: 'PA PrimePlus (Series II)',
+  productCode: '',
+  category: 'protection',
+  subType: 'Personal Accident',
+  currency: 'SGD',
+  notes: 'MSIG personal accident plan with high accidental death and disability cover and Series II versioning. It is non-life PA insurance and should be treated separately from life policies. Preserve the series suffix for matching current and legacy wordings.',
+  editHistory: []
+}, {
+  id: 'repo-dbs-dbsdigiportfolio',
+  insurer: 'DBS',
+  productName: 'DBS digiPortfolio',
+  productCode: '',
+  category: 'investment',
+  subType: 'Unit Trust',
+  currency: 'SGD',
+  notes: 'DBS digital portfolio solution that invests in managed portfolios, usually using funds or ETFs according to selected strategy. It is not an insurance policy. Classify as bank-distributed investment portfolio.',
+  editHistory: []
+}, {
+  id: 'repo-dbs-dbsretiredigiportfolio',
+  insurer: 'DBS',
+  productName: 'DBS Retire digiPortfolio',
+  productCode: '',
+  category: 'retirement',
+  subType: 'Retirement',
+  currency: 'SGD',
+  notes: 'DBS retirement-focused digital portfolio variant. It is a bank wealth product for retirement investing rather than an annuity or CPF Life. Exclude CPF Life base from this catalogue.',
+  editHistory: []
+}, {
+  id: 'repo-dbs-dbsinvestsaver',
+  insurer: 'DBS',
+  productName: 'DBS Invest-Saver',
+  productCode: '',
+  category: 'other_assets',
+  subType: 'Regular Savings Plan (RSP)',
+  currency: 'SGD',
+  notes: 'Regular savings plan allowing recurring investments into selected ETFs or unit trusts. It is a bank platform product and not an insurance endowment. Classify as regular savings/investment plan.',
+  editHistory: []
+}, {
+  id: 'repo-dbs-dbsunittrusts',
+  insurer: 'DBS',
+  productName: 'DBS Unit Trusts',
+  productCode: '',
+  category: 'investment',
+  subType: 'Unit Trust',
+  currency: 'SGD',
+  notes: 'Bank-distributed unit trust platform. Investors hold fund units through DBS rather than an insurance policy. CPFIS or SRS eligibility depends on fund and account rules.',
+  editHistory: []
+}, {
+  id: 'repo-uob-uobsgdfixeddeposit',
+  insurer: 'UOB',
+  productName: 'UOB SGD Fixed Deposit',
+  productCode: '',
+  category: 'cash_investments',
+  subType: 'Fixed Deposit',
+  currency: 'SGD',
+  notes: 'UOB Singapore dollar fixed deposit. It is a bank deposit with fixed tenor and rate, not a structured product or endowment. Deposit-insurance treatment depends on eligible deposit rules.',
+  editHistory: []
+}, {
+  id: 'repo-uob-uobstructureddeposits',
+  insurer: 'UOB',
+  productName: 'UOB Structured Deposits',
+  productCode: '',
+  category: 'cash_investments',
+  subType: 'Structured Deposit',
+  currency: 'SGD',
+  notes: 'Structured deposit distributed by UOB with return linked to specified underlyings and principal terms if held to maturity. It is not the same as a vanilla fixed deposit because market-linked conditions apply. Classify separately from structured notes.',
+  editHistory: []
+}, {
+  id: 'repo-uob-uobunittrusts',
+  insurer: 'UOB',
+  productName: 'UOB Unit Trusts',
+  productCode: '',
+  category: 'investment',
+  subType: 'Unit Trust',
+  currency: 'SGD',
+  notes: 'Unit trust investment services distributed by UOB. The client invests in funds rather than an insurance policy. Fund risk, sales charges and platform fees apply depending on fund and channel.',
+  editHistory: []
+}, {
+  id: 'repo-uob-wealthonuobtmrw',
+  insurer: 'UOB',
+  productName: 'Wealth on UOB TMRW',
+  productCode: '',
+  category: 'investment',
+  subType: 'Unit Trust',
+  currency: 'SGD',
+  notes: 'Digital wealth service through UOB TMRW for investment access. It is a bank investment channel rather than an insurance product. Underlying products can include funds or portfolios.',
+  editHistory: []
+}, {
+  id: 'repo-uob-uobgoldsolution',
+  insurer: 'UOB',
+  productName: 'UOB Gold Solution',
+  productCode: '',
+  category: 'other_assets',
+  subType: 'Gold/Precious Metals',
+  currency: 'SGD',
+  notes: 'UOB precious-metals solution for gold exposure. It is an other-asset holding and not a savings endowment. Portfolio risk includes commodity price movements and product-specific spreads/fees.',
+  editHistory: []
+}, {
+  id: 'repo-ocbc-ocbcbluechipinvestmentpl',
+  insurer: 'OCBC',
+  productName: 'OCBC Blue Chip Investment Plan',
+  productCode: '',
+  category: 'other_assets',
+  subType: 'Regular Savings Plan (RSP)',
+  currency: 'SGD',
+  notes: 'OCBC regular investment plan for Singapore blue chips, REITs or ETFs with recurring contributions. It is a brokerage/nominee investment plan and not an insurance savings policy. Use for client schedules showing monthly share investment plans.',
+  editHistory: []
+}, {
+  id: 'repo-ocbc-ocbcroboinvest',
+  insurer: 'OCBC',
+  productName: 'OCBC RoboInvest',
+  productCode: '',
+  category: 'investment',
+  subType: 'Unit Trust',
+  currency: 'SGD',
+  notes: 'OCBC digital advisory portfolio service with automated portfolio management features. It is a bank investment product, not an ILP. Underlying portfolios and rebalancing depend on selected theme and suitability.',
+  editHistory: []
+}, {
+  id: 'repo-ocbc-ocbcunittrusts',
+  insurer: 'OCBC',
+  productName: 'OCBC Unit Trusts',
+  productCode: '',
+  category: 'investment',
+  subType: 'Unit Trust',
+  currency: 'SGD',
+  notes: 'OCBC unit trust distribution platform. Investors hold fund units or omnibus fund positions through the bank rather than an insurance wrapper. Classify as unit trust.',
+  editHistory: []
+}, {
+  id: 'repo-ocbc-ocbcstructureddeposits',
+  insurer: 'OCBC',
+  productName: 'OCBC Structured Deposits',
+  productCode: '',
+  category: 'cash_investments',
+  subType: 'Structured Deposit',
+  currency: 'SGD',
+  notes: 'OCBC structured deposit product with market-linked return conditions and deposit-style principal terms. It is different from vanilla fixed deposits and from structured notes. Minimum placement and terms depend on tranche.',
+  editHistory: []
+}, {
+  id: 'repo-cpf-board-retirementsumscheme',
+  insurer: 'CPF Board',
+  productName: 'Retirement Sum Scheme',
+  productCode: '',
+  category: 'retirement',
+  subType: 'Retirement',
+  currency: 'SGD',
+  notes: 'CPF retirement payout scheme for members not on CPF Life or with eligible legacy arrangements. It is not CPF Life Standard, Basic or Escalating, which are excluded by the brief. Include for legacy CPF payout identification.',
+  editHistory: []
+}, {
+  id: 'repo-cpf-board-supplementaryretirements',
+  insurer: 'CPF Board',
+  productName: 'Supplementary Retirement Scheme',
+  productCode: '',
+  category: 'retirement',
+  subType: 'Retirement',
+  currency: 'SGD',
+  notes: 'Voluntary tax-deferred retirement savings scheme operated through approved SRS operators. It is not an insurance product, and underlying holdings should be classified separately. Include because it appears as a wrapper/funding source in portfolios.',
+  editHistory: []
+}, {
+  id: 'repo-cpf-board-singaporesavingsbonds',
+  insurer: 'CPF Board',
+  productName: 'Singapore Savings Bonds',
+  productCode: '',
+  category: 'cash_investments',
+  subType: 'Corporate Bond',
+  currency: 'SGD',
+  notes: 'Retail Singapore Government bond with step-up interest and monthly issuance/redemption mechanics. It is a government bond holding, not a bank fixed deposit. Classify as bonds or low-risk government securities.',
+  editHistory: []
+}, {
+  id: 'repo-cpf-board-singaporetreasurybills',
+  insurer: 'CPF Board',
+  productName: 'Singapore Treasury Bills',
+  productCode: '',
+  category: 'cash_investments',
+  subType: 'T-bill',
+  currency: 'SGD',
+  notes: 'Short-term Singapore Government Securities issued at discount and redeemed at face value. It is a government fixed-income instrument, not a fixed deposit. Tenor, yield and auction date are issue-specific.',
+  editHistory: []
+}, {
+  id: 'repo-cpf-board-singaporegovernmentsecur',
+  insurer: 'CPF Board',
+  productName: 'Singapore Government Securities Bonds',
+  productCode: '',
+  category: 'cash_investments',
+  subType: 'Corporate Bond',
+  currency: 'SGD',
+  notes: 'Longer-tenor Singapore Government Securities. They are government bonds and may be held directly or through CPF/SRS-eligible channels depending on rules. Market price can fluctuate before maturity.',
+  editHistory: []
+}, {
+  id: 'repo-cpf-board-homeprotectionscheme',
+  insurer: 'CPF Board',
+  productName: 'Home Protection Scheme',
+  productCode: '',
+  category: 'protection',
+  subType: 'Term Life',
+  currency: 'SGD',
+  notes: 'CPF mortgage-reducing insurance scheme protecting HDB housing loan obligations in the event of death, terminal illness or total permanent disability. It is a protection scheme, not CPF Life or MediShield Life. Include because it appears in household protection portfolios.',
+  editHistory: []
+}, {
+  id: 'repo-cpf-board-elderfund',
+  insurer: 'CPF Board',
+  productName: 'ElderFund',
+  productCode: '',
+  category: 'health',
+  subType: 'Long-term Care',
+  currency: 'SGD',
+  notes: 'Government discretionary assistance scheme for severely disabled Singapore Citizens with low MediSave balances and limited financial support. It is not ElderShield base or CareShield Life base. Include for long-term-care planning context where private supplements are absent or insufficient.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiahealthshieldgoldmaxpl',
+  insurer: 'AIA',
+  productName: 'AIA HealthShield Gold Max - Plan A',
+  productCode: 'HSGM-A',
+  category: 'health',
+  subType: 'Integrated Shield Plan',
+  currency: 'SGD',
+  notes: 'Top tier of AIA\'s MediSave-approved Integrated Shield Plan. Coverage for private hospitals and all wards in public/restructured hospitals. Annual policy-year claim limit up to S$2 million. Unlimited lifetime claims (subject to benefit and policy-year limits). Up to 13 months of combined pre- and post-hospitalisation benefit when treated by an AIA preferred provider. Extra coverage of up to S$100,000 per policy year for 30 critical illnesses plus up to 200 days extended post-hospitalisation treatment. No change in premium after a claim (premiums are not guaranteed but are not adjusted based on individual claims experience). Claims are settled in MediSave / cash after MediShield Life base. Companion ride: AIA Max VitalHealth Pro (current MOH-compliant rider) reduces co-insurance and deductible exposure with co-payment capped at S$6,000 per policy year. Shield Benefits Preserver service helps recover claims payable by employer plans first so that HSG Max benefits are preserved. Common pairing: HSGM A + VitalHealth Pro + Cancer Care Pro + Emergency Care Pro.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiahealthshieldgoldmaxaf',
+  insurer: 'AIA',
+  productName: 'AIA HealthShield Gold Max A (For Foreigners)',
+  productCode: 'HSGM-A-FOR',
+  category: 'health',
+  subType: 'Integrated Shield Plan',
+  currency: 'SGD',
+  notes: 'Variant of HSG Max A for foreigners working/living in Singapore. NOT integrated with MediShield Life because foreigners are not covered by MediShield Life. Provides similar comprehensive coverage to HSGM A (private hospital, high annual claim limit, pre/post-hospitalisation benefits) but as a standalone private medical insurance plan. Premium rates are insurer-set and not MediSave-claimable. FC note: many foreign clients confuse this with HSGM A — they look like the same product but the MediShield Life base is absent and premium and claim mechanics differ accordingly.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiahealthshieldgoldmaxbf',
+  insurer: 'AIA',
+  productName: 'AIA HealthShield Gold Max B (For Foreigners)',
+  productCode: 'HSGM-B-FOR',
+  category: 'health',
+  subType: 'Integrated Shield Plan',
+  currency: 'SGD',
+  notes: 'Foreigner variant of HSG Max B. Public-hospital Class-A ward coverage with 70% pro-ration in private hospitals. NOT integrated with MediShield Life as foreigners are not covered by MediShield Life. Premium rates are insurer-set and not MediSave-payable. Common rider pairing: AIA Max VitalHealth B for Foreigners (legacy) or the current AIA Max VitalHealth Pro variant scaled to B tier benefits.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiacancercarepro',
+  insurer: 'AIA',
+  productName: 'AIA Cancer Care Pro',
+  productCode: 'CCP',
+  category: 'health',
+  subType: 'Integrated Shield Plan',
+  currency: 'SGD',
+  notes: 'Current MOH-compliant Shield rider supplementing HSG Max for outpatient cancer treatment. Provides higher coverage for outpatient cancer drugs/services, including selected non-Cancer Drug List (non-CDL) drugs and services. Attachable to AIA HealthShield Gold Max (HSGM A / B / B Lite). Often paired with AIA Max VitalHealth Pro and AIA Emergency Care Pro as the standard \'Pro stack\'. Vitality Coin Boost applies.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiaemergencycarepro',
+  insurer: 'AIA',
+  productName: 'AIA Emergency Care Pro',
+  productCode: 'ECP-IP',
+  category: 'health',
+  subType: 'Integrated Shield Plan',
+  currency: 'SGD',
+  notes: 'Current MOH-compliant Shield rider supplementing HSG Max for emergency and infectious-disease outpatient care. Covers A&E outpatient treatment due to accident, post-A&E treatment, and outpatient coverage for dengue fever and hand-foot-and-mouth disease (HFMD). Attachable to HSG Max A / B / B Lite. Naming-collision warning: do NOT confuse with the unrelated CI rider \'Early Critical Protector\' which is also commonly abbreviated \'ECP\' in FC notes.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiaplatinuminternational',
+  insurer: 'AIA',
+  productName: 'AIA Platinum International Health',
+  productCode: 'APIH',
+  category: 'health',
+  subType: 'Integrated Shield Plan',
+  currency: 'SGD',
+  notes: 'International private medical insurance (IPMI) plan with lifetime global medical coverage. Available to both Singapore residents and non-residents. Worldwide coverage EXCLUDES the USA. Covers inpatient and outpatient treatment, accidental dental treatment, pre- and post-hospitalisation including home nursing and physiotherapy. Includes Teladoc Health second-opinion / specialist network. AIA Vitality integration: 5% first-year premium discount, up to 15% as Vitality status improves. FC note: although AIA categorises this under \'Medical Insurance\' it is structurally an IPMI rather than an MediSave-integrated Shield Plan — keep distinct from HSG Max in client portfolios.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiawealthventure',
+  insurer: 'AIA',
+  productName: 'AIA Wealth Venture',
+  productCode: 'AWV',
+  category: 'investment',
+  subType: 'ILP (Investment)',
+  currency: 'SGD',
+  notes: 'Regular-premium ILP with 8-year premium payment commitment. 100% of premiums invested from day one. Welcome bonus up to 35% across years 1-5 (per annualised regular premium). Investment bonus of 2.5% (of annualised regular premium) at the beginning of years 9-12. Performance bonus from year 9 onwards. After year 10, partial withdrawals at no charge. Optional quarterly dividend payouts when invested in dividend-paying funds (e.g., AIA Global Adventurous Income Fund, AIA Global Dynamic Income Fund). Secondary insured option (spouse / child < age 16); on insured\'s passing the secondary insured continues the policy with no death benefit payout. Surrender / partial-withdrawal charges in first 10 years. No medical check-up required.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiaelitesecureincome',
+  insurer: 'AIA',
+  productName: 'AIA Elite Secure Income',
+  productCode: 'AESI',
+  category: 'investment',
+  subType: 'ILP (Investment)',
+  currency: 'SGD/USD',
+  notes: 'Capital-guaranteed retirement ILP positioned as \'the first affordable plan\' of its kind, from S$300/month. Capital (basic premium, excluding top-ups) is guaranteed — total Secure Monthly Income received will be at least 100% of basic premium invested, provided all premiums paid up to date, no premium holiday, no withdrawals and no policy reinstatement. Choose monthly income amount, payout age, payout period of 10 or 15 years. Perpetual Power-Up Bonus of up to 25% declared every 5 years from end of year 10. Guaranteed issuance, no medical questions. Death and terminal illness assurance included. Power-Up Bonus may be adjusted on partial withdrawal. Payout Age, Monthly Income or Payout Period are locked in at inception and cannot be changed later.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiacriticalprotectorlife',
+  insurer: 'AIA',
+  productName: 'AIA Critical Protector Life (IV)',
+  productCode: 'CPL(IV)',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Current-generation major-stage CI rider attachable to AIA Guaranteed Protect Plus (IV). Covers 73 major-stage critical illnesses. Accelerated against the base WL coverage (claim reduces basic sum assured). Premium typically payable until base plan\'s premium term. Often paired with Early Critical Protector Life (IV) for early/intermediate coverage and with Critical Protector Waiver of Premium (II) for premium waiver on CI.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiacriticalprotectorwaiv',
+  insurer: 'AIA',
+  productName: 'AIA Critical Protector Waiver of Premium (II)',
+  productCode: 'CPWoP(II)',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Premium-waiver rider triggered on major-stage critical illness diagnosis. Attachable to AIA Guaranteed Protect Plus (IV) and other WL/endowment base plans. On qualifying CI claim, waives future premiums on the base plan and on attached riders that fall within the waiver\'s scope. Definitions follow the prior generation\'s covered-condition list; consult product summary for the exact list.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aialifetimecriticalcover',
+  insurer: 'AIA',
+  productName: 'AIA Lifetime Critical Cover Rider',
+  productCode: 'LCC',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Flagship multi-stage CI rider for AIA Pro Lifetime Protector (II). Pays out on diagnosis of covered critical illnesses across multiple stages. Rider terminates when 300% of the coverage amount has been paid. Power reset feature restores 100% coverage 12 months after the latest CI claim (or relapsed CI claim, if Relapse Benefit Rider is attached), allowing further claims for different conditions. Coverage for Special Conditions is up to age 85.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiarelapsebenefitrider',
+  insurer: 'AIA',
+  productName: 'AIA Relapse Benefit Rider',
+  productCode: 'RBR',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Optional add-on for AIA Pro Lifetime Protector (II) and its Lifetime Critical Cover Rider. Provides cover for relapsed critical illnesses with its own waiting period before the power-reset feature on Lifetime Critical Cover is available against the relapsed CI.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiatotaldisabilityaccele',
+  insurer: 'AIA',
+  productName: 'AIA Total Disability Accelerator (II)',
+  productCode: 'TDA(II)',
+  category: 'protection',
+  subType: 'Disability Income',
+  currency: 'SGD',
+  notes: 'TPD acceleration rider for AIA Pro Lifetime Protector (II). Accelerates the base plan\'s death benefit on a qualifying TPD event. Coverage terminates at age 70. Brief categorisation note: subType is set to Disability Income because the brief\'s protection sub-type list does not contain a \'TPD\' option — TPD riders sit under the Disability Income sub-type per the brief\'s schema.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiauccenhancer',
+  insurer: 'AIA',
+  productName: 'AIA UCC Enhancer',
+  productCode: 'UCCE',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Optional booster rider for AIA Ultimate Critical Cover (UCC). Adds coverage for relapses of major CIs and provides an additional payout for catastrophic CI conditions. Pairs only with UCC; not attachable to other CI bases.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiaasccbooster',
+  insurer: 'AIA',
+  productName: 'AIA ASCC Booster',
+  productCode: 'ASCC-B',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Optional booster rider for AIA Absolute Critical Cover. Enhances multi-CI protection and relapse coverage on top of the base ACC plan\'s Power Reset and Power Relapse Benefit. AIA Vitality premium discount applies (10% in year 1 up to 15% with Vitality status improvement). Pairs only with ACC.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiacriticalcoveraccelera',
+  insurer: 'AIA',
+  productName: 'AIA Critical Cover Accelerator',
+  productCode: 'CCA',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Major-stage CI accelerator rider for AIA Life Dividends and similar par WL bases. Accelerates the base plan\'s death benefit on a major-stage CI claim. Premiums payable up to age 65 or 10 years, whichever is longer; coverage to age 100. AIA Vitality premium discount applies (10% first year, up to 15%).',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiaearlycriticalcoveracc',
+  insurer: 'AIA',
+  productName: 'AIA Early Critical Cover Accelerator',
+  productCode: 'ECCA',
+  category: 'protection',
+  subType: 'Early Critical Illness',
+  currency: 'SGD',
+  notes: 'Early/intermediate-stage CI accelerator rider for AIA Life Dividends and similar par WL bases. Pays out on diagnosis of covered early or intermediate CIs and accelerates the base plan\'s death benefit. Premiums payable up to age 65 or 10 years, whichever is longer; coverage to age 100. AIA Vitality premium discount applies (10% first year, up to 15%).',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiacriticalcoverrider',
+  insurer: 'AIA',
+  productName: 'AIA Critical Cover Rider',
+  productCode: 'CCR',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Major-stage CI rider attachable to AIA Secure Flexi Term. Pays on diagnosis of covered major-stage CIs and reduces / extinguishes the base term plan\'s death-benefit coverage on payout. Convertible alongside the base plan to a WL/endowment/ILP under the conversion privilege (before age 70, no further medical underwriting).',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiaearlycriticalcoverrid',
+  insurer: 'AIA',
+  productName: 'AIA Early Critical Cover Rider',
+  productCode: 'ECC',
+  category: 'protection',
+  subType: 'Early Critical Illness',
+  currency: 'SGD',
+  notes: 'Early/intermediate-stage CI rider attachable to AIA Secure Flexi Term. Pays 100% of coverage amount on diagnosis of any covered early or intermediate CI (less amounts owing). A payout reduces the coverage amount of both this rider and the base SFT policy. Only 1 claim per Special Condition, with payout of 20% of coverage amount up to S$25,000. NOTE: ECC does NOT provide a conversion privilege (unlike base SFT, TPD rider and Critical Cover Rider). Naming collision: \'ECP\' is a separate abbreviation used for both \'AIA Enhanced Cancer Protect\' and the \'AIA Emergency Care Pro\' Shield rider — ECC is different again.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiaenhancedcancerprotect',
+  insurer: 'AIA',
+  productName: 'AIA Enhanced Cancer Protect Plus',
+  productCode: 'ECPP',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Optional add-on for AIA Enhanced Cancer Protect (the cancer-only plan). Lifts total cancer cover to up to 400% by adding coverage for early-stage, intermediate-stage and catastrophic cancer on top of the base ECP\'s major-cancer protection (which already includes up to 2 major-cancer relapse payouts).',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiadiabetescarecancercov',
+  insurer: 'AIA',
+  productName: 'AIA Diabetes Care - Cancer Cover (add-on)',
+  productCode: 'ADC-CC',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Optional add-on for AIA Diabetes Care. Pays 20% of coverage amount on early or intermediate-stage cancer (one-time, payable only if no major-cancer payout has been made) and 100% of coverage amount on major cancer. Same simplified underwriting and renewal rules as the base Diabetes Care plan.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiastarprotectorpluschil',
+  insurer: 'AIA',
+  productName: 'AIA Star Protector Plus - Child Critical Illness Benefit',
+  productCode: 'SPP-CCI',
+  category: 'protection',
+  subType: 'Critical Illness',
+  currency: 'SGD',
+  notes: 'Optional add-on for AIA Star Protector Plus. Covers 17 child-specific critical illnesses up to age 21. Conversion option applicable to standard lives only. Pairs only with Star Protector Plus.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiacenturionpadementiabe',
+  insurer: 'AIA',
+  productName: 'AIA Centurion PA - Dementia Benefit',
+  productCode: 'CPA-DB',
+  category: 'health',
+  subType: 'Long-term Care',
+  currency: 'SGD',
+  notes: 'Optional add-on for AIA Centurion PA. Covers Dementia, Alzheimer\'s or Parkinson\'s diseases with reimbursement of day-care, home-care and nursing-home expenses. Simplified underwriting (only 2 health questions, no medical exam). Last entry age 70 ALB; coverage to age 85. Brief categorisation note: subType is Long-term Care because the trigger and benefits are LTC-style (cognitive impairment + care expenses), even though AIA bundles it as a PA add-on.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiaplatinumaccidentcarew',
+  insurer: 'AIA',
+  productName: 'AIA Platinum AccidentCare - Weekly Income Benefit',
+  productCode: 'PAC-WIB',
+  category: 'protection',
+  subType: 'Disability Income',
+  currency: 'SGD',
+  notes: 'Optional weekly income support add-on for AIA Platinum AccidentCare. Provides a weekly cash benefit during recovery from an accident-related disability. Payout capped at 52 weeks total. Pairs only with Platinum AccidentCare.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiaplatinumaccidentcarem',
+  insurer: 'AIA',
+  productName: 'AIA Platinum AccidentCare - Monthly Support Benefit',
+  productCode: 'PAC-MSB',
+  category: 'protection',
+  subType: 'Disability Income',
+  currency: 'SGD',
+  notes: 'Optional monthly income support add-on for AIA Platinum AccidentCare. Provides a monthly cash benefit during recovery from an accident-related disability when claims under the base accidental death/dismemberment/burns benefit (excluding loss of life) for one accident reach 50% or more of coverage amount. Pairs only with Platinum AccidentCare.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiasmartwealthbuilderii',
+  insurer: 'AIA',
+  productName: 'AIA Smart Wealth Builder (II)',
+  productCode: 'ASWB(II)',
+  category: 'savings',
+  subType: 'Lifetime Endowment',
+  currency: 'SGD/USD',
+  notes: 'Lifetime participating endowment with maturity at age 125 of the original insured. 100% capital guarantee on basic premiums (starts at end of year 15 for single premium / 5- / 10-year pay; year 20 for 15-year pay; year 25 for 20-year pay). Single premium or 5 / 10 / 15 / 20-year regular premium options, SGD or USD. Guaranteed cash value plus non-guaranteed annual and terminal bonuses up to age 125. Withdrawals from accrued bonuses allowed but reduce long-term value. Death / TPD / TI benefit = higher of 105% of total premiums paid OR (101% of guaranteed cash value + un-surrendered bonuses), less indebtedness; TPD ceases at age 70. Secondary insured (spouse / child < 16) continues policy on insured\'s passing (no death benefit payout in that case; not available for SRS policies). Critical Illnesses Premium Waiver riders available (II only).',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiagen3ii',
+  insurer: 'AIA',
+  productName: 'AIA Gen3 (II)',
+  productCode: 'AGEN3(II)',
+  category: 'retirement',
+  subType: 'Retirement Income (Par WL)',
+  currency: 'SGD',
+  notes: 'Participating whole life retirement / legacy plan structured for multi-generational wealth transfer (insured / child / grandchildren — \'up to 3 generations\'). Pays a guaranteed annual coupon of 2.25% of coverage amount from the end of policy year 10 onwards, withdrawable or accumulated at interest. Non-guaranteed annual dividends and terminal dividends from the participating fund (once credited, annual dividends form part of guaranteed benefits). Life protection on insured to age 100; death benefit then payable to next-generation beneficiary. FC classification trap: this is participating WL with guaranteed coupons, NOT an ILP, despite being commonly mis-tagged on FC summaries as \'investment / ILP\'. Per the brief: retirement / Retirement Income (Par WL) is the correct classification.',
+  editHistory: []
+}, {
+  id: 'repo-aia-aiagenfitpa',
+  insurer: 'AIA',
+  productName: 'AIA #GenFit PA',
+  productCode: 'GENFIT-PA',
+  category: 'protection',
+  subType: 'Personal Accident',
+  currency: 'SGD',
+  notes: 'Younger-demographic PA plan targeted at Gen Z, integrated with AIA Vitality. Covers personal accident plus reimbursement for repair/replacement of phones, tablets, laptops and fitness trackers damaged, lost or stolen in an accident. Reimburses unused gym or sports membership fees during recovery. AIA Vitality integration provides complimentary basic health screening for the first year, maintainable from year 2 with Gold or Platinum status.',
+  editHistory: []
+}, {
+  id: 'repo-prudential-pruwealthusd',
+  insurer: 'Prudential',
+  productName: 'PRUWealth (USD)',
+  productCode: 'PW-USD',
+  category: 'savings',
+  subType: 'Lifetime Endowment',
+  currency: 'USD',
+  notes: 'USD-denominated participating savings plan. Capital guaranteed feature. Long-term wealth accumulation across changing needs.',
+  editHistory: []
+}, {
+  id: 'repo-prudential-pruvantagelegacyindex',
+  insurer: 'Prudential',
+  productName: 'PRUVantage Legacy Index',
+  productCode: 'PVLI',
+  category: 'protection',
+  subType: 'Indexed UL (IUL)',
+  currency: 'USD',
+  notes: 'Indexed Universal Life (IUL) legacy plan. Designed to safeguard and enhance multi-generational wealth. Index-linked crediting rate with fixed account fallback (typical IUL structure).',
+  editHistory: []
+}, {
+  id: 'repo-manulife-manulifesignaturelegacyh',
+  insurer: 'Manulife',
+  productName: 'Manulife Signature Legacy Harvest',
+  productCode: 'MSLH',
+  category: 'protection',
+  subType: 'Whole Life',
+  currency: 'USD',
+  notes: 'USD-denominated participating WL for HNW and affluent clients. Single-premium structure with projected breakeven as early as end of policy year 5. Highest day-1 surrender value at 85% of single premium for immediate liquidity. Bonus realisation lets policy owners \'harvest\' ad-hoc or yearly bonus withdrawals from year 5. Multi-generational features: change of life insured, secondary life insured, death benefit inheritance in instalments.',
+  editHistory: []
+}, {
+  id: 'repo-manulife-manulifesignaturewealth',
+  insurer: 'Manulife',
+  productName: 'Manulife Signature Wealth',
+  productCode: 'MSW',
+  category: 'protection',
+  subType: 'Variable UL (VUL)',
+  currency: 'USD',
+  notes: 'Variable Universal Life (VUL) plan for HNW clients in the Signature series. Combines life cover with sub-fund-based investment account where premiums beyond cost of insurance go into chosen sub-funds.',
+  editHistory: []
+}, {
+  id: 'repo-manulife-manulifesmartretirev',
+  insurer: 'Manulife',
+  productName: 'Manulife SmartRetire (V)',
+  productCode: 'MSR5',
+  category: 'investment',
+  subType: 'ILP (Investment)',
+  currency: 'SGD',
+  notes: 'Whole-life regular-premium ILP. Customisable retirement goals — lump sum or income stream payout choice. Payout can start from as early as age 40 or as late as age 70 based on lifestyle. Access to Manulife SmartRetire ILP sub-funds.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-vivolife125',
+  insurer: 'NTUC Income',
+  productName: 'VivoLife 125',
+  productCode: 'VL125',
+  category: 'protection',
+  subType: 'Whole Life',
+  currency: 'SGD',
+  notes: 'Regular-premium participating whole life plan with 125% minimum protection multiplier. Covers death (including accidental death before age 70), TPD before age 70, and 30 dread diseases. Premium term options: 5, 10, 15, 20, 25 years, or pay-to-age-64 or 84.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-vivolife180',
+  insurer: 'NTUC Income',
+  productName: 'VivoLife 180',
+  productCode: 'VL180',
+  category: 'protection',
+  subType: 'Whole Life',
+  currency: 'SGD',
+  notes: 'Regular-premium participating whole life plan with 180% minimum protection multiplier. Same coverage scope as VivoLife 125 (death, accidental death to 70, TPD to 70, 30 dread diseases) with higher coverage uplift.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-vivolife350',
+  insurer: 'NTUC Income',
+  productName: 'VivoLife 350',
+  productCode: 'VL350',
+  category: 'protection',
+  subType: 'Whole Life',
+  currency: 'SGD',
+  notes: 'Regular-premium participating whole life plan with 350% minimum protection multiplier — highest multiplier in the VivoLife series. Same coverage scope (death, accidental death to 70, TPD to 70, 30 dread diseases).',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-optimacarerider',
+  insurer: 'NTUC Income',
+  productName: 'Optima Care rider',
+  productCode: 'OPTIMA',
+  category: 'health',
+  subType: 'Integrated Shield Plan',
+  currency: 'SGD',
+  notes: 'Current MOH-compliant IP rider launched 1 April 2026 for Enhanced IncomeShield. Replaces legacy Deluxe Care. Reduces co-insurance and deductible exposure within MOH co-payment rules.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-essentialcarerider',
+  insurer: 'NTUC Income',
+  productName: 'Essential Care rider',
+  productCode: 'ESSENTIAL',
+  category: 'health',
+  subType: 'Integrated Shield Plan',
+  currency: 'SGD',
+  notes: 'Current MOH-compliant IP rider launched 1 April 2026 for Enhanced IncomeShield. Sibling of Optima Care; provides essential out-of-pocket reduction within MOH rider guidelines.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-deluxecarerider',
+  insurer: 'NTUC Income',
+  productName: 'Deluxe Care rider',
+  productCode: 'DELUXE-LEGACY',
+  category: 'health',
+  subType: 'Integrated Shield Plan',
+  currency: 'SGD',
+  notes: 'Legacy IP rider for Enhanced IncomeShield Advantage that reduced co-insurance to 5% (cap S$3,000). Withdrawn from new sale and plan-change effective 1 April 2026 per MOH IP rider revisions. Existing policyholders remain in-force.',
+  editHistory: []
+}, {
+  id: 'repo-ntuc-income-classiccarerider',
+  insurer: 'NTUC Income',
+  productName: 'Classic Care rider',
+  productCode: 'CLASSIC-LEGACY',
+  category: 'health',
+  subType: 'Integrated Shield Plan',
+  currency: 'SGD',
+  notes: 'Legacy IP rider for Enhanced IncomeShield that reduced co-insurance to 10% (cap S$3,000). Withdrawn from new sale and plan-change effective 1 April 2026 per MOH IP rider revisions. Existing policyholders remain in-force.',
+  editHistory: []
+}, {
+  id: 'repo-hsbc-life-hsbclifetreasureii',
+  insurer: 'HSBC Life',
+  productName: 'HSBC Life Treasure II',
+  productCode: 'HLT2',
+  category: 'protection',
+  subType: 'Whole Life',
+  currency: 'SGD',
+  notes: 'Participating whole life plan with multiplier coverage. Death/TPD/terminal illness cover with optional CI riders. Includes payout option for living benefit. Replaced ex-AXA Life Treasure.',
+  editHistory: []
+}, {
+  id: 'repo-hsbc-life-hsbctermprotectadvantage',
+  insurer: 'HSBC Life',
+  productName: 'HSBC Term Protect Advantage',
+  productCode: 'TPA',
+  category: 'protection',
+  subType: 'Term Life',
+  currency: 'SGD',
+  notes: 'Term life protection plan from HSBC Life\'s protection range. Flexible coverage and premium terms with optional CI/TPD add-ons.',
+  editHistory: []
+}, {
+  id: 'repo-hsbc-life-hsbclifeshieldstandard',
+  insurer: 'HSBC Life',
+  productName: 'HSBC Life Shield - Standard',
+  productCode: 'HLS-STD',
+  category: 'health',
+  subType: 'Integrated Shield Plan',
+  currency: 'SGD',
+  notes: 'MOH-mandated standardised IP tier offered by HSBC Life. Standardised benefit limits across all insurers, wards B1 and below.',
+  editHistory: []
+}, {
+  id: 'repo-hsbc-life-hsbclifeenhancedcareiiri',
+  insurer: 'HSBC Life',
+  productName: 'HSBC Life Enhanced Care II rider',
+  productCode: 'HLEC2',
+  category: 'health',
+  subType: 'Integrated Shield Plan',
+  currency: 'SGD',
+  notes: 'IP rider for HSBC Life Shield. Boosts coverage to up to 95% of eligible bills, excluding the MOH-mandated minimum deductible. New riders sold from 1 April 2026 cannot cover the minimum IP deductible per MOH.',
+  editHistory: []
+}, {
+  id: 'repo-tokio-marine-tokiomarinegoluxe',
+  insurer: 'Tokio Marine',
+  productName: 'Tokio Marine #goLuxe',
+  productCode: 'TM-GL',
+  category: 'investment',
+  subType: 'ILP (Investment)',
+  currency: 'SGD',
+  notes: 'Whole-life ILP for wealth accumulation. Wide range of investment options across sectors and markets to balance portfolio risk. HNW-leaning positioning within the TMLS retail shelf.',
+  editHistory: []
+}, {
+  id: 'repo-etiqa-directetiqatermlifeii',
+  insurer: 'Etiqa',
+  productName: 'DIRECT - Etiqa Term Life II',
+  productCode: 'DET2',
+  category: 'protection',
+  subType: 'Term Life',
+  currency: 'SGD',
+  notes: 'Direct Purchase Insurance (DPI) term life plan from Etiqa. Sold without commission. Up to S$1.5M coverage with no medical check for customers up to age 40.',
+  editHistory: []
+}, {
+  id: 'repo-fwd-directfwdtermlife',
+  insurer: 'FWD',
+  productName: 'DIRECT - FWD Term Life',
+  productCode: 'DFTL',
+  category: 'protection',
+  subType: 'Term Life',
+  currency: 'SGD',
+  notes: 'DPI term life plan. Covers death, terminal illness and TPD with option to extend coverage for another 5 years regardless of health, up to age 80.',
+  editHistory: []
+}, {
+  id: 'repo-fwd-directfwdwholelife',
+  insurer: 'FWD',
+  productName: 'DIRECT - FWD Whole Life',
+  productCode: 'DFWL',
+  category: 'protection',
+  subType: 'Whole Life',
+  currency: 'SGD',
+  notes: 'DPI whole life plan. Covers death, terminal illness and TPD. Maturity Benefit. Option to pay to age 70 or 85. Includes lump sum benefit on diagnosis of any of 30 late-stage critical illnesses.',
+  editHistory: []
+}, {
+  id: 'repo-uob-uobprincipalguaranteedst',
+  insurer: 'UOB',
+  productName: 'UOB Principal Guaranteed Structured Deposit',
+  productCode: 'UOB-PGSD',
+  category: 'investment',
+  subType: 'Single Premium Investment',
+  currency: 'SGD',
+  notes: 'UOB structured deposit family. Series-numbered tranches (e.g., 2026 Series 1: 0.95% p.a. guaranteed over 2 years, minimum S$50,000, total guaranteed minimum interest 1.9% if held to maturity). Principal guaranteed at maturity. Subject to MAS deposit insurance scheme (up to S$100,000 per depositor). FC note: identify specific series by tranche code; tranches change quarterly.',
+  editHistory: []
+}, {
+  id: 'repo-maybank-maybankstructureddeposit',
+  insurer: 'Maybank',
+  productName: 'Maybank Structured Deposit',
+  productCode: 'MBB-SD',
+  category: 'investment',
+  subType: 'Single Premium Investment',
+  currency: 'SGD',
+  notes: 'Maybank structured deposit family including Islamic (Shariah-compliant) tranches such as the SG Saver Series-I (2026 Series I: up to 11.28% total profit over 6 years). Medium-to-long-term wrapper with potentially higher returns than time deposits. FC catalogue placeholder — identify specific series by tranche.',
+  editHistory: []
+}, {
+  id: 'repo-hsbc-hsbcwealthportfoliolendi',
+  insurer: 'HSBC',
+  productName: 'HSBC Wealth Portfolio Lending',
+  productCode: 'HSBC-WPL',
+  category: 'investment',
+  subType: 'Single Premium Investment',
+  currency: 'SGD',
+  notes: 'Lombard/portfolio-lending facility for HSBC Premier and Premier Elite clients. Uses portfolio assets (unit trusts, structured products, bonds, equities) as collateral for credit. Not an investment product per se — appears in FC wealth summaries as a leveraged position against AUM.',
+  editHistory: []
+}, {
+  id: 'repo-standard-chartered-standardcharteredwealtha',
+  insurer: 'Standard Chartered',
+  productName: 'Standard Chartered Wealth $aver',
+  productCode: 'SC-WSAVER',
+  category: 'investment',
+  subType: 'Single Premium Investment',
+  currency: 'SGD',
+  notes: 'Standard Chartered Priority Banking deposit account with up to 2.80% p.a. interest based on wealth product holdings (insurance, investments, fund flows). Cash-management wrapper for SC Priority clients; AUM-linked rate structure.',
+  editHistory: []
+}, {
+  id: 'repo-endowus-endowuscashsmart',
+  insurer: 'Endowus',
+  productName: 'Endowus Cash Smart',
+  productCode: 'ENDOW-CS',
+  category: 'investment',
+  subType: 'Single Premium Investment',
+  currency: 'SGD',
+  notes: 'Cash-management portfolio family from Endowus. Multiple risk tiers (Secure / Enhanced / Ultra) constructed from MMFs and short-duration bond funds. Designed as a higher-yielding parking vehicle for idle cash relative to bank deposits.',
+  editHistory: []
+}, {
+  id: 'repo-endowus-endowusfundsmart',
+  insurer: 'Endowus',
+  productName: 'Endowus Fund Smart',
+  productCode: 'ENDOW-FS',
+  category: 'investment',
+  subType: 'Unit Trust',
+  currency: 'SGD',
+  notes: 'DIY fund portfolio builder from Endowus. Lets users construct portfolios from the Endowus universe of unit trusts (cash / CPF / SRS sources supported). Endowus is currently the only robo-advisor in Singapore that supports CPF Ordinary Account investing.',
+  editHistory: []
+}, {
+  id: 'repo-stashaway-stashawaygeneralinvestin',
+  insurer: 'StashAway',
+  productName: 'StashAway General Investing',
+  productCode: 'SA-GI',
+  category: 'investment',
+  subType: 'Unit Trust',
+  currency: 'SGD',
+  notes: 'StashAway\'s flagship global ETF portfolios with automated rebalancing. Uses proprietary ERAA (Economic Regime-based Asset Allocation) algorithm that shifts portfolio allocations based on macroeconomic conditions rather than a fixed allocation. Multiple risk-index tiers (StashAway Risk Index 6.5 through 36).',
+  editHistory: []
+}, {
+  id: 'repo-stashaway-stashawaysimple',
+  insurer: 'StashAway',
+  productName: 'StashAway Simple',
+  productCode: 'SA-SIMPLE',
+  category: 'investment',
+  subType: 'Single Premium Investment',
+  currency: 'SGD',
+  notes: 'StashAway\'s cash-management product. MMF-based, no lock-in. Yield-oriented parking vehicle for idle cash. Multiple Simple variants (Simple Cash, Simple Plus, Simple Guaranteed).',
+  editHistory: []
+}, {
+  id: 'repo-syfe-syfecoreportfolios',
+  insurer: 'Syfe',
+  productName: 'Syfe Core Portfolios',
+  productCode: 'SYFE-CORE',
+  category: 'investment',
+  subType: 'Unit Trust',
+  currency: 'SGD',
+  notes: 'Syfe\'s flagship goal-based portfolios. Multiple risk tiers (Defensive, Balanced, Growth, Equity100). Includes Syfe Risk Shield as a downside-protection tool. Syfe Plan provides a holistic wealth-management overlay.',
+  editHistory: []
+}, {
+  id: 'repo-syfe-syfecash',
+  insurer: 'Syfe',
+  productName: 'Syfe Cash+',
+  productCode: 'SYFE-CASH',
+  category: 'investment',
+  subType: 'Single Premium Investment',
+  currency: 'SGD',
+  notes: 'Syfe\'s cash-management product. MMF / short-duration bond fund composition with yield-vs-bank-deposit positioning. Multiple Cash+ tiers (Flexi, Guaranteed).',
+  editHistory: []
+}, {
+  id: 'repo-syfe-syfereit',
+  insurer: 'Syfe',
+  productName: 'Syfe REIT+',
+  productCode: 'SYFE-REIT',
+  category: 'investment',
+  subType: 'Unit Trust',
+  currency: 'SGD',
+  notes: 'Syfe\'s REIT-thematic portfolio. Tracks an SGX-listed REIT index. Tax-efficient REIT exposure with dividend payout option.',
+  editHistory: []
+}, {
+  id: 'repo-ifast-ifastfsmone',
+  insurer: 'iFAST',
+  productName: 'iFAST FSMOne',
+  productCode: 'FSMONE',
+  category: 'investment',
+  subType: 'Unit Trust',
+  currency: 'SGD',
+  notes: 'Retail investment platform of iFAST Corporation (founded 2000). Offers unit trusts, stocks (SGX, US, HK), ETFs, bonds (incl. SGS and corporate), insurance products via wholesale distribution, and AutoSweep cash management. Both CDP-linked and custodian SGX accounts supported.',
+  editHistory: []
+}, {
+  id: 'repo-tiger-brokers-tigerbrokerssingapore',
+  insurer: 'Tiger Brokers',
+  productName: 'Tiger Brokers Singapore',
+  productCode: 'TIGER-SG',
+  category: 'investment',
+  subType: 'Unit Trust',
+  currency: 'SGD',
+  notes: 'Multi-market online brokerage. SGX trades from 0.03% commission + 0.03% platform fee (total ~0.06%). Access to SGX, US, HK and other markets. Tiger Vault cash-management product offered as an idle-cash sweep facility.',
+  editHistory: []
+}, {
+  id: 'repo-moomoo-moomoosingapore',
+  insurer: 'moomoo',
+  productName: 'moomoo Singapore',
+  productCode: 'MOOMOO-SG',
+  category: 'investment',
+  subType: 'Unit Trust',
+  currency: 'SGD',
+  notes: 'Multi-market online brokerage (Futu group). Zero-commission promotional offers for SGX (first year) and lifetime zero commission for US stocks. Stocks, ETFs, options, CFDs, select crypto. moomoo Cash Plus cash-management product.',
+  editHistory: []
+}, {
+  id: 'repo-saxo-saxomarketssingapore',
+  insurer: 'Saxo',
+  productName: 'Saxo Markets Singapore',
+  productCode: 'SAXO-SG',
+  category: 'investment',
+  subType: 'Unit Trust',
+  currency: 'SGD',
+  notes: 'Multi-asset trading platform with ~71,000 instruments across global markets. SGX trades from ~S$3 per trade. Bonds, ETFs, FX, futures, options, stocks, managed portfolios (SaxoSelect / Saxo Wealth Care).',
+  editHistory: []
+}, {
+  id: 'repo-interactive-brokers-interactivebrokerssingap',
+  insurer: 'Interactive Brokers',
+  productName: 'Interactive Brokers Singapore',
+  productCode: 'IBKR-SG',
+  category: 'investment',
+  subType: 'Unit Trust',
+  currency: 'SGD',
+  notes: 'Direct market access to 150+ global exchanges. Trades from ~US$1 per trade. Stocks, ETFs, options, futures, FX, bonds, mutual funds via one integrated account. Margin lending and securities lending available. Used heavily by FA-side clients for cross-border / multi-currency portfolios.',
   editHistory: []
 }];
 
