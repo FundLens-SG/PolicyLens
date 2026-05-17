@@ -86,5 +86,53 @@
   {
     "insurer": "Tokio Marine",
     "productName": "Tokio Marine"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Baby Protect Plus / AIA Baby Protect Plus (II)"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Guaranteed Protect Plus (II) / AIA Guaranteed Protect Plus"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "HS Gold Booster / AIA HealthShield Gold Max Booster"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Mortgage Reducing Term Assurance / AIA MRTA"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Retirement Saver (II) / AIA Retirement Saver"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Gift for Life Plus / Plus (II)"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Prudential PRUShield (Premier / Plus / Standard)"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUMum / PRUHospital / PRUPersonal Accident (ancillary)"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Flexi Protect Series 2 / GREAT Flexi Protect Series"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Wealth Advantage 2 / GREAT Wealth Advantage"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Living Assurance / Living Policy"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Supreme Livin' Care / Supreme Livin' Care Plus"
   }
 ]

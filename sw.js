@@ -1,4 +1,4 @@
-const SW_VERSION = 'v2.4.0-rc2.63-maternity-riders-plus-form-ux';
+const SW_VERSION = 'v2.4.0-rc2.64-bigfour-deep-dive';
 const DB_NAME = 'PolicyLensSW';
 const DB_VERSION = 1;
 const SESSION_STORE = 'sessions';

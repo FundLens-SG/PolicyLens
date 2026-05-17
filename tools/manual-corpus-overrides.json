@@ -33,13 +33,13 @@
     "insurer": "AIA",
     "productName": "AIA Baby Protect Plus",
     "category": "maternity",
-    "subType": "Maternity"
+    "subType": "Maternity Coverage"
   },
   {
     "insurer": "AIA",
     "productName": "AIA Baby Protect Plus (II)",
     "category": "maternity",
-    "subType": "Maternity"
+    "subType": "Maternity Coverage"
   },
   {
     "insurer": "AIA",
@@ -141,13 +141,13 @@
     "insurer": "AIA",
     "productName": "AIA Guaranteed Protect Plus",
     "category": "protection",
-    "subType": ""
+    "subType": "Whole Life"
   },
   {
     "insurer": "AIA",
     "productName": "AIA Guaranteed Protect Plus (II)",
     "category": "protection",
-    "subType": ""
+    "subType": "Whole Life"
   },
   {
     "insurer": "AIA",
@@ -416,14 +416,14 @@
   {
     "insurer": "AIA",
     "productName": "AIA Platinum Gift for Life Plus",
-    "category": "protection",
-    "subType": "Whole Life"
+    "category": "retirement",
+    "subType": "Annuity"
   },
   {
     "insurer": "AIA",
     "productName": "AIA Platinum Gift for Life Plus (II)",
-    "category": "protection",
-    "subType": "Whole Life"
+    "category": "retirement",
+    "subType": "Annuity"
   },
   {
     "insurer": "AIA",
@@ -578,14 +578,14 @@
   {
     "insurer": "AIA",
     "productName": "AIA Retirement Saver",
-    "category": "savings",
-    "subType": "Endowment"
+    "category": "retirement",
+    "subType": "Retirement"
   },
   {
     "insurer": "AIA",
     "productName": "AIA Retirement Saver (II)",
     "category": "retirement",
-    "subType": "Retirement Income (Par WL)"
+    "subType": "Retirement"
   },
   {
     "insurer": "AIA",
@@ -1359,7 +1359,7 @@
     "insurer": "Etiqa",
     "productName": "Maternity 360",
     "category": "maternity",
-    "subType": "Maternity"
+    "subType": "Maternity Coverage"
   },
   {
     "insurer": "Etiqa",
@@ -2055,13 +2055,13 @@
     "insurer": "Great Eastern",
     "productName": "GREAT Flexi Protect Series",
     "category": "protection",
-    "subType": ""
+    "subType": "Whole Life"
   },
   {
     "insurer": "Great Eastern",
     "productName": "GREAT Flexi Protect Series 2",
     "category": "protection",
-    "subType": ""
+    "subType": "Whole Life"
   },
   {
     "insurer": "Great Eastern",
@@ -2175,7 +2175,7 @@
     "insurer": "Great Eastern",
     "productName": "GREAT Maternity Care",
     "category": "maternity",
-    "subType": "Maternity"
+    "subType": "Maternity Coverage"
   },
   {
     "insurer": "Great Eastern",
@@ -2330,14 +2330,14 @@
   {
     "insurer": "Great Eastern",
     "productName": "GREAT Wealth Advantage",
-    "category": "protection",
-    "subType": ""
+    "category": "investment",
+    "subType": "ILP (Investment)"
   },
   {
     "insurer": "Great Eastern",
     "productName": "GREAT Wealth Advantage 2",
-    "category": "protection",
-    "subType": ""
+    "category": "investment",
+    "subType": "ILP (Investment)"
   },
   {
     "insurer": "Great Eastern",
@@ -2409,7 +2409,7 @@
     "insurer": "Great Eastern",
     "productName": "Living Assurance",
     "category": "protection",
-    "subType": ""
+    "subType": "Whole Life"
   },
   {
     "insurer": "Great Eastern",
@@ -2427,7 +2427,7 @@
     "insurer": "Great Eastern",
     "productName": "Living Policy",
     "category": "protection",
-    "subType": ""
+    "subType": "Whole Life"
   },
   {
     "insurer": "Great Eastern",
@@ -2565,7 +2565,7 @@
     "insurer": "Great Eastern",
     "productName": "Supreme Livin' Care",
     "category": "protection",
-    "subType": "Whole Life"
+    "subType": "Critical Illness"
   },
   {
     "insurer": "Great Eastern",
@@ -2577,7 +2577,7 @@
     "insurer": "Great Eastern",
     "productName": "Supreme Livin' Care Plus",
     "category": "protection",
-    "subType": "Whole Life"
+    "subType": "Critical Illness"
   },
   {
     "insurer": "Great Eastern",
@@ -3285,13 +3285,13 @@
     "insurer": "Manulife",
     "productName": "ManuHealthCare (legacy hospital cash)",
     "category": "health",
-    "subType": "Integrated Shield Plan"
+    "subType": "Hospital Income"
   },
   {
     "insurer": "Manulife",
     "productName": "ManuInvest Duo",
     "category": "protection",
-    "subType": "Critical Illness"
+    "subType": "ILP (Protection)"
   },
   {
     "insurer": "Manulife",
@@ -3320,8 +3320,8 @@
   {
     "insurer": "Manulife",
     "productName": "Manulife Goal 10",
-    "category": "protection",
-    "subType": "Endowment"
+    "category": "savings",
+    "subType": "Short-term Endowment"
   },
   {
     "insurer": "Manulife",
@@ -3332,8 +3332,8 @@
   {
     "insurer": "Manulife",
     "productName": "Manulife Goal 7",
-    "category": "protection",
-    "subType": "Endowment"
+    "category": "savings",
+    "subType": "Short-term Endowment"
   },
   {
     "insurer": "Manulife",
@@ -3375,7 +3375,7 @@
     "insurer": "Manulife",
     "productName": "Manulife Maternity Cover (rider)",
     "category": "maternity",
-    "subType": "Maternity"
+    "subType": "Maternity Coverage"
   },
   {
     "insurer": "Manulife",
@@ -3398,13 +3398,13 @@
   {
     "insurer": "Manulife",
     "productName": "Manulife SmartRetire",
-    "category": "protection",
-    "subType": "ILP (Investment)"
+    "category": "retirement",
+    "subType": "Retirement"
   },
   {
     "insurer": "Manulife",
     "productName": "Manulife SmartWealth",
-    "category": "protection",
+    "category": "investment",
     "subType": "ILP (Investment)"
   },
   {
@@ -3500,7 +3500,7 @@
   {
     "insurer": "Manulife",
     "productName": "ReadyBuilder",
-    "category": "protection",
+    "category": "savings",
     "subType": "Endowment"
   },
   {
@@ -3536,14 +3536,14 @@
   {
     "insurer": "Manulife",
     "productName": "RetireReady Plus",
-    "category": "protection",
-    "subType": "Annuity"
+    "category": "retirement",
+    "subType": "Retirement Income (Par WL)"
   },
   {
     "insurer": "Manulife",
     "productName": "RetireReady Plus (II)",
-    "category": "protection",
-    "subType": "Annuity"
+    "category": "retirement",
+    "subType": "Retirement Income (Par WL)"
   },
   {
     "insurer": "Manulife",
@@ -4076,8 +4076,8 @@
   {
     "insurer": "Prudential",
     "productName": "PRUHospital",
-    "category": "protection",
-    "subType": ""
+    "category": "health",
+    "subType": "Hospital Income"
   },
   {
     "insurer": "Prudential",
@@ -4167,7 +4167,7 @@
     "insurer": "Prudential",
     "productName": "PRUMum",
     "category": "maternity",
-    "subType": ""
+    "subType": "Maternity Coverage"
   },
   {
     "insurer": "Prudential",
@@ -4226,20 +4226,20 @@
   {
     "insurer": "Prudential",
     "productName": "PRUShield Plus",
-    "category": "protection",
-    "subType": ""
+    "category": "health",
+    "subType": "Integrated Shield Plan"
   },
   {
     "insurer": "Prudential",
     "productName": "PRUShield Premier",
-    "category": "protection",
-    "subType": ""
+    "category": "health",
+    "subType": "Integrated Shield Plan"
   },
   {
     "insurer": "Prudential",
     "productName": "PRUShield Standard",
     "category": "health",
-    "subType": ""
+    "subType": "Integrated Shield Plan"
   },
   {
     "insurer": "Prudential",
@@ -4335,7 +4335,7 @@
     "insurer": "Prudential",
     "productName": "PRUWorking Mum",
     "category": "maternity",
-    "subType": "Maternity"
+    "subType": "Maternity Coverage"
   },
   {
     "insurer": "Raffles Health",
@@ -5343,7 +5343,7 @@
     "insurer": "Singlife",
     "productName": "Singlife Maternity Care",
     "category": "maternity",
-    "subType": "Maternity"
+    "subType": "Maternity Coverage"
   },
   {
     "insurer": "Singlife",
@@ -5770,5 +5770,11 @@
     "productName": "Wealth@Future",
     "category": "investment",
     "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Signature Wealth SGD",
+    "category": "protection",
+    "subType": "Universal Life (UL)"
   }
 ]

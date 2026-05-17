@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.63-maternity-riders-plus-form-ux';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.64-bigfour-deep-dive';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -738,9 +738,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.63';
+const APP_VERSION = 'v2.4.0-rc2.64';
 const APP_VERSION_DATE = '2026-05-18';
-const APP_VERSION_NAME = 'Phase 3 maternity + riders catalogue + form UX (maturity age, rider expiry, softer delete)';
+const APP_VERSION_NAME = 'Phase 4 Big Four deep-dive — Manulife + AIA + Prudential + Great Eastern';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1214,6 +1214,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.64',
+  date: '2026-05-18',
+  name: 'Phase 4 Big Four deep-dive — Manulife + AIA + Prudential + Great Eastern',
+  sections: [{
+    heading: 'Phase 4 catalogue ingest — Big Four deep dive',
+    items: ['Assimilated 535 entries from GPT-5.5 Pro Phase 4 (5 files: 4 insurer-specific + 1 corrections file). Result: 493 NEW · 17 IDENTICAL · 14 AUTO-APPLY · 1 AUTO-REJECT · 10 REVIEW. Of the 10 reviews: 8 AI-wins applied (incl. AIA Retirement Saver/II rescued from savings/Endowment → retirement/Retirement; AIA Platinum Gift for Life Plus/II → retirement/Annuity per FC review; GE Supreme Livin Care/Plus → protection/Critical Illness), 2 kept as-is (PRUSelect/Vantage — proposed "Single Premium Investment" not in schema enum; single-premium is captured via premFrequency, not subType).', 'Corpus growth: 1,973 → 2,454 SG knowledge entries (+481 net after dedup). manual-corpus-additions.json: 1,040 → 1,557. manual-corpus-overrides.json: 962 → 963 (most corrections re-targeted existing slash-joined originals via the deletions path). manual-corpus-deletions.json: 22 → 34 (+12 slash-joined original entries that have been split into proper canonical variants).', 'Slash-joined splits applied (12 originals → 24 canonical variants): AIA Baby Protect Plus / Plus (II), AIA Guaranteed Protect Plus / Plus (II), HS Gold Booster / AIA HealthShield Gold Max Booster, AIA Mortgage Reducing Term Assurance / AIA MRTA, AIA Retirement Saver / Saver (II), AIA Platinum Gift for Life Plus / Plus (II), Prudential PRUShield Premier/Plus/Standard (3-way), PRUMum/PRUHospital/PRUPersonal Accident (3-way), GREAT Flexi Protect Series / Series 2, GREAT Wealth Advantage / 2, Living Assurance / Living Policy, Supreme Livin Care / Plus.', 'Schema standardisation: all 9 maternity entries with subType="Maternity" (incl. AIA Baby Protect, GREAT Maternity Care, Etiqa Maternity 360, Manulife Maternity Cover, PRUMum, PRUWorking Mum, Singlife Maternity Care) canonicalised to subType="Maternity Coverage" via manual-corpus-overrides. This brings them in line with the Phase 3 maternity additions which all use the canonical form.', 'Classification corrections applied to existing corpus entries (11 from corrections file): Manulife ManuInvest Duo (CI → ILP Protection), ManuHealthCare (ISP → Hospital Income — Manulife has no Singapore IP), Manulife Goal 7 + Goal 10 (protection → savings/Short-term Endowment), SmartRetire (ILP → retirement/Retirement), SmartWealth (protection → investment/ILP), RetireReady Plus + Plus (II) (protection/Annuity → retirement/Retirement Income (Par WL)), ReadyBuilder (protection/Endowment → savings/Endowment).', 'Insurer coverage now: Manulife +145, AIA +115 + 10 corrections, Prudential +120 + 6 corrections, GE +120 + 8 corrections. Big Four catalogue depth now approaches the targeted ~700 unique products across the four insurers.']
+  }]
+}, {
   version: 'v2.4.0-rc2.63',
   date: '2026-05-18',
   name: 'Phase 3 maternity + riders catalogue + form UX (maturity age, rider expiry, softer delete)',

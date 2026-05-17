@@ -9976,5 +9976,4148 @@
     "subType": "Early Critical Illness",
     "aliases": [],
     "source": "phase-3-maternity-riders-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Baby Protect Plus",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [],
+    "source": "phase-4-corrections-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Baby Protect Plus (II)",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [],
+    "source": "phase-4-corrections-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Guaranteed Protect Plus",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-corrections-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Guaranteed Protect Plus (II)",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-corrections-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA HealthShield Gold Max Booster",
+    "category": "health",
+    "subType": "Shield Rider",
+    "aliases": [
+      "HS Gold Booster"
+    ],
+    "source": "phase-4-corrections-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Mortgage Reducing Term Assurance",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "AIA MRTA",
+      "MRTA"
+    ],
+    "source": "phase-4-corrections-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Retirement Saver",
+    "category": "retirement",
+    "subType": "Retirement",
+    "aliases": [],
+    "source": "phase-4-corrections-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Retirement Saver (II)",
+    "category": "retirement",
+    "subType": "Retirement",
+    "aliases": [],
+    "source": "phase-4-corrections-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Gift for Life Plus",
+    "category": "protection",
+    "subType": "Universal Life (UL)",
+    "aliases": [],
+    "source": "phase-4-corrections-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Gift for Life Plus (II)",
+    "category": "protection",
+    "subType": "Universal Life (UL)",
+    "aliases": [],
+    "source": "phase-4-corrections-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUShield Premier",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [],
+    "source": "phase-4-corrections-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUShield Plus",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [],
+    "source": "phase-4-corrections-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUShield Standard",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [],
+    "source": "phase-4-corrections-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUMum",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [],
+    "source": "phase-4-corrections-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUHospital",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-4-corrections-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUPersonal Accident",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "phase-4-corrections-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Flexi Protect Series",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-corrections-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Flexi Protect Series 2",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-corrections-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Wealth Advantage",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-corrections-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Wealth Advantage 2",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-corrections-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Living Assurance",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-corrections-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Living Policy",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-corrections-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Supreme Livin' Care",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-corrections-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Supreme Livin' Care Plus",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-corrections-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Accident Benefit",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Accident Indemnity Rider",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Accidental Death And Dismemberment",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Accidental Death Benefit",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "ADB"
+    ],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Accidental Death Cover Rider",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Accidental Death / Accidental TPD Benefit",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Accidental Hospitalisation Benefit",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Cancer Care Premium Waiver Rider (I)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Critical Illness Benefit",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Critical Care Rider (II)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Disability Advance Payment Plus Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Disability Protector",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Early Critical Care Rider (II)",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Enhanced Total & Permanent Disability Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Payor Benefit (Owner)",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Payor Benefit (Spouse)",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Payor Benefit (Spouse) Rider",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Payor Benefit (With Critical Illness)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Payor Benefit (With Dread Disease)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Payor Benefit Plus Rider (I)",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Payor Benefit Plus Rider (I) Spouse",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Payor Benefit Plus Rider (II)",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Payor Benefit Plus Rider (II) Spouse",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Personal Accident Benefit",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Personal Accident benefit (Family Plan)",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Recovery Plus Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Retrenchment Benefit (to LifeReady Plus)",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Surgical Benefit Rider",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Terminal Cancer Benefit",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Universal Lifeline Rider",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Waiver Of Premium On Critical Illness",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Waiver Of Premium On Dread Disease",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Waiver Of Premium Benefit On Cancer",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Weekly Indemnity Benefit",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Goal 1",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Goal 2",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Goal 3",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Goal 4",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Goal 5",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Goal 6",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Goal 8",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Goal 9",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Goal 11",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Goal 12",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Goal 13",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Goal 2023 (I)",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Goal 2023 (II)",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Goal 2023 (III)",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Goal 2023 (Special)",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Goal 2024 (I)",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Goal 2024 (II)",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Goal 2024 (III)",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Goal 2024 (IV)",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Goal 2024 (V)",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Goal 2025 (I)",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Goal 2025 (II)",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "SavvyEndowment 1",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "SavvyEndowment 2",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "SavvyEndowment 3",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "SavvyEndowment 4",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "SavvyEndowment 5",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "SavvyEndowment 6",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "SavvyEndowment 7",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "SavvyEndowment 8",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "SavvyEndowment 9",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "SavvyEndowment 10",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "SavvyEndowment 11",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "SavvyEndowment 12",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "SavvyEndowment 13",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "SavvyEndowment 15",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "SavvyEndowment 16",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "SavvyEndowment 17",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "SavvyEndowment 18",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "SavvyEndowment 19",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "SavvyEndowment 20",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "SavvyEndowment 21",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "SavvyEndowment 22",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "CancerCare (II)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "CardCare Protector",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "CashCare Protector",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Children Policy",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Classic Lifeline",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Classic Lifeline Accelerator",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Classic Managed Income Protector",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Classic Protector II",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Classic Term Protector",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Classic Whole Life Protector",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Critical SelectCare Lite",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Customised Smartlife",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Double Protect",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Education Protector Plus",
+    "category": "savings",
+    "subType": "Education Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Enhanced RetireReady",
+    "category": "retirement",
+    "subType": "Retirement",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "First Choice Manucare",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "First Choice Manucare Plus",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Flexi-Link",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Global Single Premium",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Global Single Premium II",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Heirloom",
+    "category": "protection",
+    "subType": "Universal Life (UL)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Heirloom (I)",
+    "category": "protection",
+    "subType": "Universal Life (UL)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Heirloom (II)",
+    "category": "protection",
+    "subType": "Universal Life (UL)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Heirloom (III)",
+    "category": "protection",
+    "subType": "Universal Life (UL)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Heirloom (IV)",
+    "category": "protection",
+    "subType": "Universal Life (UL)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Income Booster (II)",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Income Booster (III)",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Income Booster 10-Pay SGD (III)",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Income Booster 10-Pay USD (III)",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Income Booster 5-Pay SGD (III)",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Income Booster 5-Pay USD (III)",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "InvestLife",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "InvestLife (II)",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Invest Ready (II)",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Lifeline",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Life Protector",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Life Protector (I)",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Life Protector 20 (II)",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Life Protector 65 (II)",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Life Protector Plus",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Life Protector Plus (I)",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Life Protector Plus (II)",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Life Protector Plus 20",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manu Choice",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ManuAce",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ManuAssure",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ManuAssure Life",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ManuAssure Term",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ManuCare",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ManuCare / Hospital & Surgical Plan (Deluxe)",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ManuCare / Hospital & Surgical Plan (Elite)",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ManuCare / Hospital & Surgical Plan (Standard)",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ManuCare Cash",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ManuEduFirst",
+    "category": "savings",
+    "subType": "Education Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ManuGrowth",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ManuGrowth (II)",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulink Enrich",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulink Flexi",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulink Flexi (I)",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulink Flexi Plus",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulink Flexi Plus (I)",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulink Flexi Protect",
+    "category": "protection",
+    "subType": "ILP (Protection)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulink Protect",
+    "category": "protection",
+    "subType": "ILP (Protection)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulink Protected",
+    "category": "protection",
+    "subType": "ILP (Protection)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manuterm Level And Convertible",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manuterm Reducing Term Assurance",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Accident Cash Back Plan",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Accident Shield (Classic, Premier)",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Accident Shield Plan C / Plan P",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Accidental Death and SARS Benefit Rider",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Advantage Personal Accident (PA)",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Balanced Total Premium Protector",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Cashback Protector",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Casualty Care (Standard, Executive)",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Child Critical Cover",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Critical Illness Cover",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Critical Illness Guard",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Critical Protector Waiver of Premium",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA DenguePlus Cover",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Family 360 Cover",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Family Guard (Basic, Standard, Premier, Superior)",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Family Protect Plan",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Gift Of Love",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Health CashPlus Plan",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA HealthCare Plus (Standard, Executive)",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Premier International Medical - OUTPATIENT (OTH)",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Premier International Medical - WELLNESS",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Protect 360 Cover",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Protection As One Cover",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA ProtectPlus Cover",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Solitaire Lite",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Solitaire Personal Accident (II)",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Star Lite",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Star Shield",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Star Shield Plus",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Surgicash",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Woman Of Wisdom",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA #Wealth Savvy",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA #Wealth Savvy (II)",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA #Wealth Savvy (III)",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA 2-Pay Savings Plan",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA 21 US$ Special",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA 2Pay5",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA 5 Star",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA A$ Endowment At Age 55",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA A$ Wealth Accumulator",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Achiever",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA ACHIEVER PLUS - INC SA",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Achiever Plus (Accumulator, Protector)",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Achiever Series (Accumulator, Protector)",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Balanced Life",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Balanced Life Savings",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Balanced Whole Life",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Biennial Modified Anticipated Endowment (BMAE)/Special",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Bundle of Joy",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Cash Rewards Plan 21/25",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Centennial Special",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Choice Life 10/15 (S$, US$)",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Complete Critical Cover",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Critical Protector Life (II)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Critical Protector Life (III)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Critical Protector Plus",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Decreasing Term",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Double Critical Cover",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Early Critical Protector Life (II)",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Early Critical Protector Life (III)",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Early Critical Protector Life Plus",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA EAS Series",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Educare",
+    "category": "savings",
+    "subType": "Education Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Endowment US$ Special",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Enhanced Cash Value At 88",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Enhanced Critical Life/Special",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Enhanced Whole Life Plan",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Family First Assurance",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Family Medical Protector",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Financial Guardian (Basic, Basic Special, Special)",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Financial Plus (S$, US$)",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Group Retiree Medical Insurance",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Health CashPlan",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA HealthShield Gold Max - Plan B Foreigners",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA HealthShield Gold Max - Plan A Foreigners",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Hospital Income Basic",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Income Builder",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA International Medical",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Living Protector",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Medical Protector",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Multi Income Plan",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Heritage Accumulator",
+    "category": "savings",
+    "subType": "Lifetime Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Heritage Accumulator (II) (S$)",
+    "category": "savings",
+    "subType": "Lifetime Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Heritage Accumulator (II) (US$)",
+    "category": "savings",
+    "subType": "Lifetime Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Heritage Assurance",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Heritage Assurance (II)",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Indexed Legacy",
+    "category": "protection",
+    "subType": "Indexed UL (IUL)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Legacy",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Legacy (VI)",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Legacy (VII)",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Legacy (VIII)",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Legacy Preserver",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Life Series",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Rewards",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Premier Asset Multiplier (PAM)",
+    "category": "savings",
+    "subType": "Lifetime Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Prime Life",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Prime Life Plus/Special",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Prime Secure Accumulator",
+    "category": "savings",
+    "subType": "Lifetime Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Prime Secure Assurance",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Privilegechoice Plan",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Recovery Lifeline",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Renewable And Convertible Term",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Smart Wealth Builder (II) (10-PAY)",
+    "category": "savings",
+    "subType": "Lifetime Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Smart Wealth Builder (II) (15-PAY)",
+    "category": "savings",
+    "subType": "Lifetime Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Smart Wealth Builder (II) (20-PAY)",
+    "category": "savings",
+    "subType": "Lifetime Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Smart Wealth Builder (II) (5-PAY)",
+    "category": "savings",
+    "subType": "Lifetime Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Smart Wealth Builder (II) (LIFETIME-PAY)",
+    "category": "savings",
+    "subType": "Lifetime Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Smart Wealth Builder (II) (SINGLE PREMIUM)",
+    "category": "savings",
+    "subType": "Lifetime Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Smart Wealth Builder (10-PAY)",
+    "category": "savings",
+    "subType": "Lifetime Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Smart Wealth Builder (15-PAY)",
+    "category": "savings",
+    "subType": "Lifetime Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Smart Wealth Builder (5-PAY)",
+    "category": "savings",
+    "subType": "Lifetime Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Smart Wealth Builder (SINGLE PREMIUM)",
+    "category": "savings",
+    "subType": "Lifetime Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "DIRECT - AIA Term Cover 20",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "DIRECT - AIA Term Cover 5",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Crisis Cover Advantage",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Crisis Cover Extra",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Crisis Cover Kids",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Crisis Cover Provider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Crisis Cover Provider II",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Crisis Cover Vantage",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Crisis Protect",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Crisis Waiver",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Crisis Waiver (USD)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Crisis Waiver II",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Crisis Waiver III (PruTriple Protect)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Disability Provider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Disability Provider Limited Pay",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Disability Provider Limited Pay III",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Early Crisis Protect",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Early Stage Crisis Waiver (PruTriple Protect)",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Early Stage Disability",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Hospital Cash",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Maternity Cover Plus",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Maternity Risk Cover",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Maternity Risk Cover II",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Medical Cash",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Medical Reimbursement II",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Medical Reimbursement III",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Monthly Benefit",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Payer Security",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Payer Security (USD)",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Payer Security II",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Payer Security III",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Payer Security Plus",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUExtra (Lite)",
+    "category": "health",
+    "subType": "Shield Rider",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUExtra (Lite) CoPay",
+    "category": "health",
+    "subType": "Shield Rider",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUExtra CoPay",
+    "category": "health",
+    "subType": "Shield Rider",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PruSmart Lady II",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUAdvance Saver",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUApex Legacy Index (Multipay)",
+    "category": "protection",
+    "subType": "Indexed UL (IUL)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUApex MultiGen Wealth (USD) SP",
+    "category": "protection",
+    "subType": "Universal Life (UL)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUAsset Builder",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUAssure Rewards",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUAssure IndexRewards",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUBusiness Continuity",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUCash",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUCash Max Limited Pay",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUCash Secure",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUCrisis Income",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUDecreasing Term Vantage",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUDecreasing Term Vantage - Accelerated Disability",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUEasy Rewards",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUEasy Term",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUEasy Term - Accelerated Disability",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUEduSave",
+    "category": "savings",
+    "subType": "Education Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUEduSave (USD)",
+    "category": "savings",
+    "subType": "Education Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUFirst Education",
+    "category": "savings",
+    "subType": "Education Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUFirst Gift (PRULink Enhanced Protector)",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUFirst Gift II (PRUMum)",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUFlexi Rewards",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUFlexiCash Protection Plus",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUFracture Care",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUGolden Income",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUGolden Income Premier",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUGolden Retirement",
+    "category": "retirement",
+    "subType": "Retirement",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUGolden Retirement Reward",
+    "category": "retirement",
+    "subType": "Retirement",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUGolden Retirement Reward II",
+    "category": "retirement",
+    "subType": "Retirement",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUHeadstart",
+    "category": "savings",
+    "subType": "Education Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUHeadstart Limited Pay",
+    "category": "savings",
+    "subType": "Education Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUHospital Income",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUIncome Rewards",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUIndex Income Boost",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUIndex Lifetime Income",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUIndex Lifetime Income (USD)",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUInvestor",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUInvestor Bond",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUInvestor Guaranteed Plus",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUInvestor Guaranteed Plus (USD)",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULife",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULife Limited Pay",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULife Multiplier",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULife Multiplier Flex",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULife Vantage",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULife Vantage Achiever",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULife Vantage Achiever II (SGD)",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULife Vantage Achiever III (SGD)",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULife Vantage Achiever Prime Premier",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULife Vantage Premier",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULife Vantage Elite",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULifetime Income II",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULifetime Income Premier",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULifetime Income Premier II",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULifetime Income Premier III",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULink Assurance Account",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULink Capital Account",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULink Capital Account (PruFirst)",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULink Enhanced Protector",
+    "category": "protection",
+    "subType": "ILP (Protection)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULink Exact Protector",
+    "category": "protection",
+    "subType": "ILP (Protection)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULink Golden Bond",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULink Golden Growth",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULink Investor Account",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULink Protector Account",
+    "category": "protection",
+    "subType": "ILP (Protection)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULink Super Account",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULink Super Growth Account",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULink SuperSaver Account",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUMedical Cash",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUMortgage Refund",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUMortgage Refund Premier",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUParent",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUSafe Income",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUSave",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUSave (USD)",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUSave Max 10",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUSave Provident",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUSelect Vantage (USD)",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUSelect Vantage Premier (USD)",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUTerm Ascend",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUTerm Basic",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUTerm Convertible",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUTerm Renewable",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT COMPLETE FLEXI LIVING PROTECT",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT COMPLETE FLEXI LIVING PROTECT 2",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT CRITICAL PROTECTOR",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT EASTERN CARES TERM PLAN",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT FAMILY CARE SPECIAL",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Flexi Advantage (RSP)",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Flexi Advantage (SP)",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT FLEXI GOAL (LIMITED PAY)",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT FLEXI LIVING PROTECT",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT FLEXI LIVING PROTECT 2",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT FLEXI PROTECT 2",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT GREEN SP",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT INDEX INCOME (CLASSIC)",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT INVEST ADVANTAGE (RSP)",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT INVEST ADVANTAGE 2 (RSP)",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT INVEST ADVANTAGE 2 (SP)",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT LIFE ADVANTAGE II (LIMITED PAY)",
+    "category": "protection",
+    "subType": "ILP (Protection)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT LIFE ADVANTAGE III (LIMITED PAY)",
+    "category": "protection",
+    "subType": "ILP (Protection)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT LIFE MULTIPLIER (10X)",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT LIFE MULTIPLIER (3X)",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT LIFE MULTIPLIER (5X)",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT LIFE MULTIPLIER (8X)",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT LIFETIME INCOME SPECIAL",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT LIFETIME PAYOUT 2",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT RETIRE INCOME 5",
+    "category": "retirement",
+    "subType": "Retirement",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT RETIRE INCOME 10",
+    "category": "retirement",
+    "subType": "Retirement",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT RETIRE INCOME 15",
+    "category": "retirement",
+    "subType": "Retirement",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT RETIRE INCOME 20",
+    "category": "retirement",
+    "subType": "Retirement",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT SP (24-MONTH)",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT SP EXCLUSIVE",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT SP FLEXI",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT SP SERIES 2",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT SP SERIES 3",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT SP SERIES 4",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT SP SERIES 5",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT SP SERIES 6",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT SP SERIES 7",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT SP SERIES 8",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT SP SERIES 9",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT SP SERIES 10",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT SP SERIES 11",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT SP SERIES 12",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT SP SPECIAL",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT SP USD (36-MONTH)",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT WEALTH ADVANTAGE 2 (5-YR)",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT WEALTH ADVANTAGE 3 (SGD) - CHOICE 5",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT WEALTH ADVANTAGE 3 (SGD) - CHOICE 10",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT WEALTH ADVANTAGE 3 (SGD) - CHOICE 15",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT WEALTH ADVANTAGE 4 - CHOICE 5",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT WEALTH ADVANTAGE 4 - CHOICE 10",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT WEALTH ADVANTAGE 4 - CHOICE 15",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT WEALTH MULTIPLIER 10",
+    "category": "savings",
+    "subType": "Lifetime Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT WEALTH MULTIPLIER 15",
+    "category": "savings",
+    "subType": "Lifetime Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT WEALTH MULTIPLIER 3 (10-PAY)",
+    "category": "savings",
+    "subType": "Lifetime Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT WEALTH MULTIPLIER 3 (15-PAY)",
+    "category": "savings",
+    "subType": "Lifetime Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT WEALTH MULTIPLIER 3 (5-PAY)",
+    "category": "savings",
+    "subType": "Lifetime Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT WEALTH MULTIPLIER 3 (SINGLE PREMIUM)",
+    "category": "savings",
+    "subType": "Lifetime Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT WEALTH MULTIPLIER 5",
+    "category": "savings",
+    "subType": "Lifetime Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT WEALTH MULTIPLIER II (10-PAY)",
+    "category": "savings",
+    "subType": "Lifetime Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT WEALTH MULTIPLIER II (15-PAY)",
+    "category": "savings",
+    "subType": "Lifetime Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT WEALTH MULTIPLIER II (5-PAY)",
+    "category": "savings",
+    "subType": "Lifetime Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREATLIFE ENDOWMENT INSURANCE 3 (10-PAY)",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREATLIFE ENDOWMENT INSURANCE 3 (15-PAY)",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREATLIFE ENDOWMENT INSURANCE 3 (5-PAY)",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREATLIFE ENDOWMENT INSURANCE 3 (SINGLE PREMIUM)",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREATLIFE ENDOWMENT INSURANCE II (10-PAY)",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREATLIFE ENDOWMENT INSURANCE II (15-PAY)",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREATLIFE ENDOWMENT INSURANCE II (5-PAY)",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREATLINK ACHIEVER PLAN",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREATLINK CHOICE",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREATLINK DYNAMIC SAVER",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREATLINK FLEXIPLAN",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREATLINK GROWTH PLAN",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREATLINK SUPREMELIFE",
+    "category": "protection",
+    "subType": "ILP (Protection)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "INDEX UNIVERSAL LIFE FLEXIBLE PREMIUM",
+    "category": "protection",
+    "subType": "Indexed UL (IUL)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "INDEX UNIVERSAL LIFE SINGLE PREMIUM",
+    "category": "protection",
+    "subType": "Indexed UL (IUL)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "INVESTMENT-LINKED INSURANCE PLAN",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "INVESTMENT-LINKED INSURANCE PLAN 2 - CHOICE 5",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "INVESTMENT-LINKED INSURANCE PLAN 2 - CHOICE 10",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "LIVING CARE RIDER 2",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "LIVING MULTIPLIER RIDER 3",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "MAXCARE",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "MAXCARE JUNIOR",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "MAXCARE PLUS - PREMIUM PAYING",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "MAXLIFE 10",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "MAXLIFE 15",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "MAXLIFE 99",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "MAXLIFE CARE 2",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "MAXLIFE LEGACY",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "MAXLIFE MULTIPLIER 15",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "MAXLIFE PROTECTOR 2",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "MAXRETIRE INCOME 10",
+    "category": "retirement",
+    "subType": "Retirement",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "MAXRETIRE INCOME 10 (PLUS II)",
+    "category": "retirement",
+    "subType": "Retirement",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "MAXRETIRE INCOME 15",
+    "category": "retirement",
+    "subType": "Retirement",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "MAXRETIRE INCOME 15 (PLUS II)",
+    "category": "retirement",
+    "subType": "Retirement",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "MAXRETIRE INCOME 5",
+    "category": "retirement",
+    "subType": "Retirement",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "MAXRETIRE INCOME 5 (PLUS II)",
+    "category": "retirement",
+    "subType": "Retirement",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "MAXRETIREMENT",
+    "category": "retirement",
+    "subType": "Retirement",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "MAXRETIREMENT 10 YEARS",
+    "category": "retirement",
+    "subType": "Retirement",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "MAXRETIREMENT 15 YEARS",
+    "category": "retirement",
+    "subType": "Retirement",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "MAXRETIREMENT 20 YEARS",
+    "category": "retirement",
+    "subType": "Retirement",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "MAXRETIREMENT 5 YEARS",
+    "category": "retirement",
+    "subType": "Retirement",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "PRESTIGE LIFE REWARDS 2 (SGD)",
+    "category": "protection",
+    "subType": "Universal Life (UL)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "PRESTIGE LIFE REWARDS 2 (USD)",
+    "category": "protection",
+    "subType": "Universal Life (UL)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "PRESTIGE LIFE REWARDS 3 (SGD)",
+    "category": "protection",
+    "subType": "Universal Life (UL)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "PRESTIGE LIFE REWARDS 3 (USD)",
+    "category": "protection",
+    "subType": "Universal Life (UL)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "PRESTIGE LIFE REWARDS 4 (SGD)",
+    "category": "protection",
+    "subType": "Universal Life (UL)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "PRESTIGE LIFE REWARDS 4 (USD)",
+    "category": "protection",
+    "subType": "Universal Life (UL)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "PRESTIGE LIFE REWARDS 5 (SGD)",
+    "category": "protection",
+    "subType": "Universal Life (UL)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "PRESTIGE LIFE REWARDS 5 (USD)",
+    "category": "protection",
+    "subType": "Universal Life (UL)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "PRESTIGE LIFE REWARDS 6 (SGD)",
+    "category": "protection",
+    "subType": "Universal Life (UL)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "PRESTIGE LIFE REWARDS 6 (USD)",
+    "category": "protection",
+    "subType": "Universal Life (UL)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "PRESTIGE PORTFOLIO (RP)",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "PRESTIGE PORTFOLIO (RSP)",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "PRESTIGE PORTFOLIO (SP)",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Prestige Wealth Legacy (5-Pay)",
+    "category": "savings",
+    "subType": "Lifetime Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Prestige Wealth Legacy (Single Premium)",
+    "category": "savings",
+    "subType": "Lifetime Endowment",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "PROTECT BOOSTER 2 (10-PAY)",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "PROTECT BOOSTER 2 (15-PAY)",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "PROTECT BOOSTER 2 (5-PAY)",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "phase-4-big-four-2026-05-17"
   }
 ]
