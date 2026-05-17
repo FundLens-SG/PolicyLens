@@ -54,15 +54,83 @@ const CATEGORIES = new Set(['protection','savings','health','investment','retire
 const SUB_TYPES = {
   protection: new Set(['Term Life','Whole Life','Universal Life (UL)','Indexed UL (IUL)','Variable UL (VUL)','Critical Illness','Early Critical Illness','Personal Accident','Disability Income','Long-term Care','ILP (Protection)']),
   savings: new Set(['Endowment','Lifetime Endowment','Education Plan','Short-term Endowment']),
-  health: new Set(['Integrated Shield Plan','Hospital Income','CareShield Life / Supplement','ElderShield 300','ElderShield 400','Long-term Care']),
+  health: new Set(['Integrated Shield Plan','Shield Rider','Hospital Income','CareShield Life / Supplement','ElderShield 300','ElderShield 400','Long-term Care']),
   investment: new Set(['ILP (Investment)','Unit Trust','Single Premium Investment']),
   retirement: new Set(['Retirement Income (Par WL)','Annuity','CPF Life','Income Plan','Retirement']),
   maternity: new Set(['Maternity Coverage']),
-  cash_investments: new Set(['Fixed Deposit','T-bill','Singapore Savings Bond','Corporate Bond','Money Market','Fixed Coupon Note (FCN)','Equity Linked Note (ELN)']),
-  other_assets: new Set(['Property','Stocks/Equities','Gold/Precious Metals','Fixed Coupon Note (FCN)','Equity Linked Note (ELN)','Options/Futures','Cryptocurrency','Art/Collectibles','Other']),
+  // rc2.54: kept in sync with canonical SUB_TYPES in src/index.babel.html.
+  cash_investments: new Set(['Fixed Deposit','T-bill','Singapore Savings Bond','Corporate Bond','Money Market','Cash Management','Structured Deposit','Fixed Coupon Note (FCN)','Equity Linked Note (ELN)']),
+  other_assets: new Set(['Property','Stocks/Equities','Brokerage Account','Regular Savings Plan (RSP)','Gold/Precious Metals','Fixed Coupon Note (FCN)','Equity Linked Note (ELN)','Options/Futures','Cryptocurrency','Art/Collectibles','Other']),
 };
 
-const INSURERS = new Set(['AIA','Great Eastern','Prudential','Manulife','NTUC Income','Singlife','HSBC Life','Tokio Marine','Etiqa','FWD','China Taiping','China Life','Zurich','Generali','MSIG','Transamerica','Raffles Health Insurance','CPF Board','iFAST','Tiger Brokers','moomoo','Endowus','StashAway','Syfe','Saxo','Interactive Brokers','Philip Securities']);
+// rc2.54: alias map for sub-types the AIs commonly emit but that aren't canonical.
+//   Pipeline silently rewrites the incoming subType to the canonical form during validation
+//   so the entry doesn't fail. Logged in the report so we can see how often each fires.
+const SUBTYPE_ALIASES = {
+  'bonds': 'Corporate Bond',
+  'bond': 'Corporate Bond',
+  'treasury bills': 'T-bill',
+  't-bills': 'T-bill',
+  'singapore government securities': 'Corporate Bond',
+  'sgs': 'Corporate Bond',
+  'precious metals': 'Gold/Precious Metals',
+  'gold': 'Gold/Precious Metals',
+  'regular savings plan': 'Regular Savings Plan (RSP)',
+  'rsp': 'Regular Savings Plan (RSP)',
+  'investment-linked policy (ilp)': 'ILP (Investment)',
+  'ilp': 'ILP (Investment)',
+  'integrated shield': 'Integrated Shield Plan',
+  'isp': 'Integrated Shield Plan',
+  'careshield': 'CareShield Life / Supplement',
+  // rc2.54: NOT aliasing "Shield Rider" — riders are now first-class sub-type under health.
+  //   VitalHealth, HSG Max Rider, PRUExtra, GREAT TotalCare, Singlife Health Plus, AIA Max
+  //   A Cancer Care Booster etc. → Shield Rider, distinct from the parent Integrated Shield
+  //   Plan product they attach to.
+};
+
+// rc2.54: build a reverse map subType → category so we can auto-correct the category when
+//   the AI assigned a subType that lives in a different category. E.g. "Corporate Bond" is
+//   only valid for cash_investments, so if the AI says category:other_assets + subType:
+//   Corporate Bond, we silently rewrite category to cash_investments.
+const SUBTYPE_TO_CATEGORY = (() => {
+  const m = {};
+  for (const [cat, set] of Object.entries(SUB_TYPES)) for (const st of set) m[st] = cat;
+  return m;
+})();
+
+// rc2.54: products that should NEVER be in this catalogue. These are not insurance/wealth
+//   products — they're account types or built-in scheme components handled by other parts
+//   of the app. Surface as info, drop the entry.
+const SKIP_PATTERNS = [
+  /^cpf\s+(ordinary|special|medisave|retirement)\s+account$/i,
+  /^cpf\s+(oa|sa|ma|ra)$/i,
+  /^medishield\s+life$/i,           // base scheme, built-in
+  /^careshield\s+life$/i,            // base scheme, built-in (NOT supplements — those stay)
+  /^eldershield\s+(300|400)$/i,      // base scheme, built-in
+  /^cpf\s+life\s+(standard|basic|escalating)\b/i, // built-in via CPF_LIFE infra
+  // rc2.54: CPFIS schemes and CPF Investment Accounts are investment VEHICLES, not products.
+  //   They hold underlying funds/stocks which themselves are tracked. Skip the wrapper.
+  /^cpf\s+investment\s+(scheme|account)/i,
+  /^uob\s+cpf\s+investment\s+account$/i,
+  /^cpfis(\s|$)/i,
+];
+
+const INSURERS = new Set([
+  // SG retail insurers
+  'AIA','Great Eastern','Prudential','Manulife','NTUC Income','Singlife','HSBC Life',
+  'Tokio Marine','Etiqa','FWD','China Taiping','China Life','Zurich','Generali','MSIG',
+  'Transamerica','Raffles Health Insurance',
+  // Govt
+  'CPF Board',
+  // Brokerages / robo-advisors
+  'iFAST','Tiger Brokers','moomoo','Endowus','StashAway','Syfe','Saxo','Interactive Brokers',
+  'Philip Securities',
+  // rc2.54: banks accepted as canonical insurers for their OWN cash/deposit/structured
+  //   products (DBS Multiplier, Singlife Account, UOB One Account, OCBC 360, etc.). For
+  //   bank-DISTRIBUTED insurance (Signature Life, etc.) the underwriter goes in `insurer`
+  //   and the bank goes in `distributor` — the AI brief covers this.
+  'DBS','UOB','OCBC','Citibank','HSBC','Standard Chartered','Maybank','POSB',
+]);
 
 const STATUSES = new Set(['active','legacy_in_force','discontinued']);
 const CONFIDENCES = new Set(['high','medium','low']);
@@ -72,11 +140,14 @@ const INSURER_ALIASES = {
   'aia sg': 'AIA',
   'great eastern life': 'Great Eastern',
   'great eastern life assurance': 'Great Eastern',
+  'great eastern singapore': 'Great Eastern',
   'ge': 'Great Eastern',
   'prudential assurance': 'Prudential',
   'prudential singapore': 'Prudential',
+  'prudential assurance singapore': 'Prudential',
   'pru': 'Prudential',
   'manulife singapore': 'Manulife',
+  'manulife (singapore)': 'Manulife',
   'income insurance': 'NTUC Income',
   'income insurance limited': 'NTUC Income',
   'income': 'NTUC Income',
@@ -85,20 +156,60 @@ const INSURER_ALIASES = {
   'aviva': 'Singlife',
   'aviva singapore': 'Singlife',
   'hsbc life singapore': 'HSBC Life',
+  'hsbc insurance': 'HSBC Life',
   'axa': 'HSBC Life',
   'tokio marine life': 'Tokio Marine',
+  'tokio marine life singapore': 'Tokio Marine',
   'tm': 'Tokio Marine',
   'etiqa singapore': 'Etiqa',
+  'etiqa insurance': 'Etiqa',
   'fwd singapore': 'FWD',
+  'fwd life singapore': 'FWD',
   'china taiping singapore': 'China Taiping',
+  'china taiping insurance singapore': 'China Taiping',
   'china life singapore': 'China Life',
+  'china life (singapore)': 'China Life',
   'raffles health': 'Raffles Health Insurance',
+  // rc2.54: govt-side entities. Singapore retirement / long-term-care / health schemes
+  //   are administered by various bodies but we collapse them all under "CPF Board" for
+  //   the catalogue since CPF Board is the primary administrator. AIC handles private LTC
+  //   supplements distribution; MAS regulates; MOF/IRAS handles SRS — all map to CPF Board
+  //   in the catalogue. If you need to separate, surface this via the `distributor` field
+  //   on the entry.
   'cpf board': 'CPF Board',
+  'monetary authority of singapore': 'CPF Board',
+  'mas': 'CPF Board',
+  'ministry of finance / iras': 'CPF Board',
+  'ministry of finance': 'CPF Board',
+  'iras': 'CPF Board',
+  'agency for integrated care': 'CPF Board',
+  'aic': 'CPF Board',
+  // Brokerages
   'fsmone': 'iFAST',
   'fsm': 'iFAST',
+  'ifast / fsmone': 'iFAST',
+  'ifast financial': 'iFAST',
   'poems': 'Philip Securities',
   'philip securities pte ltd': 'Philip Securities',
+  'philip securities pte. ltd.': 'Philip Securities',
   'ibkr': 'Interactive Brokers',
+  'moomoo financial singapore': 'moomoo',
+  'moomoo singapore': 'moomoo',
+  'tiger brokers (singapore)': 'Tiger Brokers',
+  // Banks — these come back as the "insurer" sometimes when the product is the bank's own
+  //   cash management / savings product (Singlife Account, DBS Multiplier, etc.). For pure-
+  //   bank products the bank IS the underwriter. For bank-distributed INSURANCE products
+  //   the AI should name the actual insurer (Manulife / AIA / etc.); we don't auto-rewrite
+  //   here because we don't know which case it is. Both forms are accepted as canonical.
+  'citi': 'Citibank',
+  'citibank singapore': 'Citibank',
+  'hsbc bank': 'HSBC',
+  'standard chartered bank': 'Standard Chartered',
+  'standard chartered bank singapore': 'Standard Chartered',
+  'uob singapore': 'UOB',
+  'dbs bank': 'DBS',
+  'ocbc bank': 'OCBC',
+  'maybank singapore': 'Maybank',
 };
 
 function canonicalInsurer(raw) {
@@ -155,13 +266,44 @@ function validateEntry(entry, idx, sourcePath) {
   must(entry && typeof entry === 'object', 'entry must be an object');
   if (!entry || typeof entry !== 'object') return errors;
 
+  // rc2.54: skip-pattern check runs first — non-products get dropped with an info-level
+  //   message rather than a fatal error so the run continues smoothly.
+  if (entry.canonicalName && SKIP_PATTERNS.some(rx => rx.test(entry.canonicalName))) {
+    errors.push({ where, msg: `entry skipped (matches SKIP_PATTERNS — built-in or non-product)`, severity: 'skip' });
+    return errors;
+  }
+
+  // rc2.54: normalise subType via aliases before strict validation.
+  if (entry.subType && typeof entry.subType === 'string') {
+    const aliased = SUBTYPE_ALIASES[entry.subType.toLowerCase()];
+    if (aliased && aliased !== entry.subType) {
+      errors.push({ where, msg: `subType "${entry.subType}" auto-rewritten to canonical "${aliased}"`, severity: 'warn' });
+      entry.subType = aliased;
+    }
+  }
+  // rc2.54: if subType is canonical but lives in a different category than the one the AI
+  //   assigned, the AI got the category wrong. Auto-correct the category.
+  if (entry.subType && SUBTYPE_TO_CATEGORY[entry.subType] && SUBTYPE_TO_CATEGORY[entry.subType] !== entry.category) {
+    errors.push({ where, msg: `category "${entry.category}" → "${SUBTYPE_TO_CATEGORY[entry.subType]}" auto-corrected (subType "${entry.subType}" belongs to that category)`, severity: 'warn' });
+    entry.category = SUBTYPE_TO_CATEGORY[entry.subType];
+  }
+
   must(entry.canonicalName && typeof entry.canonicalName === 'string', 'canonicalName required (string)');
   must(entry.insurer && typeof entry.insurer === 'string', 'insurer required (string)');
   must(CATEGORIES.has(entry.category), `category "${entry.category}" not in canonical set`);
   if (CATEGORIES.has(entry.category)) {
     must(SUB_TYPES[entry.category].has(entry.subType), `subType "${entry.subType}" not allowed for category "${entry.category}"`);
   }
+  // rc2.54: rewrite entry.insurer to the canonical form so downstream outputs (new-entries
+  //   JSON, corpus additions, SEED patch) all use the same string. Without this, AI-supplied
+  //   variants like "Tokio Marine Life Singapore" / "Citi" / "iFAST / FSMOne" / "Monetary
+  //   Authority of Singapore" survived to the report and looked like distinct insurers in
+  //   per-insurer counts even though dedup matching used the canonical form.
   const canonIns = canonicalInsurer(entry.insurer);
+  if (canonIns && canonIns !== entry.insurer) {
+    errors.push({ where, msg: `insurer "${entry.insurer}" → "${canonIns}" auto-normalised`, severity: 'warn' });
+    entry.insurer = canonIns;
+  }
   if (!INSURERS.has(canonIns)) errors.push({ where, msg: `insurer "${entry.insurer}" not in canonical list (canonicalised to "${canonIns}"). Add to INSURERS or use a known name.` , severity: 'warn' });
   must(Array.isArray(entry.aliases), 'aliases must be an array');
   must(Array.isArray(entry.sources) && entry.sources.length > 0, 'sources required (non-empty array)');
@@ -314,9 +456,11 @@ function run() {
   let allEntries = 0;
   const allErrors = [];
   const allWarnings = [];
+  const allSkips = [];
   const newEntries = [];
   const identicalEntries = [];
   const conflictEntries = [];
+  const autoResolvedConflicts = [];
 
   for (const doc of docs) {
     const phase = doc.json?.metadata?.phase || doc.json?.metadata?.groupCovered || path.basename(doc.path);
@@ -327,7 +471,9 @@ function run() {
     for (const [i, p] of products.entries()) {
       allEntries++;
       const errs = validateEntry(p, i, doc.path);
-      const fatal = errs.filter(e => e.severity !== 'warn');
+      const skip = errs.filter(e => e.severity === 'skip');
+      if (skip.length > 0) { allSkips.push(...skip); continue; }
+      const fatal = errs.filter(e => !e.severity);
       const warns = errs.filter(e => e.severity === 'warn');
       allErrors.push(...fatal);
       allWarnings.push(...warns);
@@ -345,7 +491,14 @@ function run() {
         if (conflicts.length === 0) {
           identicalEntries.push({ doc: doc.path, entry: p, existing: full });
         } else {
-          conflictEntries.push({ doc: doc.path, entry: p, existing: full, conflicts });
+          // rc2.54: auto-resolve when AI provided a verifiable source URL (per user's
+          //   conflict policy choice from the brief). AI version wins; original logged.
+          const hasSourceUrl = Array.isArray(p.sources) && p.sources.some(s => s && /^https?:\/\//.test(s.url || ''));
+          if (hasSourceUrl) {
+            autoResolvedConflicts.push({ doc: doc.path, entry: p, existing: full, conflicts, resolution: 'ai_wins_via_source_url' });
+          } else {
+            conflictEntries.push({ doc: doc.path, entry: p, existing: full, conflicts });
+          }
         }
       }
     }
@@ -354,11 +507,13 @@ function run() {
   // ─── Report ─────────────────────────────────────────────────────────
   console.log('\n' + bold('SUMMARY'));
   console.log(`  Total entries processed : ${allEntries}`);
+  console.log(`  Skipped (non-product)   : ${allSkips.length}`);
   console.log(`  Validation errors       : ${allErrors.length} (${fatal0(allErrors.length)})`);
   console.log(`  Validation warnings     : ${allWarnings.length}`);
   console.log(`  ${green('NEW')}                     : ${newEntries.length}`);
   console.log(`  ${dim('IDENTICAL (skip)')}        : ${identicalEntries.length}`);
-  console.log(`  ${yellow('CONFLICT (flagged)')}      : ${conflictEntries.length}`);
+  console.log(`  ${green('AUTO-RESOLVED')}           : ${autoResolvedConflicts.length} (AI source URL present)`);
+  console.log(`  ${yellow('CONFLICT (needs review)')}  : ${conflictEntries.length}`);
 
   if (allErrors.length > 0) {
     console.log('\n' + bold(red('Validation errors:')));
@@ -376,10 +531,24 @@ function run() {
   const seedPatchPath = path.join(OUTPUT_DIR, `seed-repository-patch-${timestamp}.js`);
 
   fs.writeFileSync(reportPath, JSON.stringify({
-    timestamp, totalEntries: allEntries, errors: allErrors, warnings: allWarnings,
-    counts: { new: newEntries.length, identical: identicalEntries.length, conflicts: conflictEntries.length },
+    timestamp, totalEntries: allEntries, errors: allErrors, warnings: allWarnings, skips: allSkips,
+    counts: { new: newEntries.length, identical: identicalEntries.length, conflicts: conflictEntries.length, autoResolved: autoResolvedConflicts.length, skipped: allSkips.length },
     sourceFiles: docs.map(d => d.path)
   }, null, 2));
+  // rc2.54: auto-resolved conflicts get their own file so we can audit which were
+  //   overridden silently. Same shape as conflicts file.
+  if (autoResolvedConflicts.length > 0) {
+    const autoPath = path.join(OUTPUT_DIR, `auto-resolved-${timestamp}.json`);
+    fs.writeFileSync(autoPath, JSON.stringify(autoResolvedConflicts.map((c, i) => ({
+      number: i + 1,
+      product: c.entry.canonicalName,
+      insurer: c.entry.insurer,
+      conflicts: c.conflicts.map(cf => ({ field: cf.field, was: cf.existing, nowIs: cf.incoming })),
+      sourceUrl: c.entry.sources?.[0]?.url || '',
+      confidence: c.entry.confidence || '',
+      resolution: c.resolution
+    })), null, 2));
+  }
 
   if (conflictEntries.length > 0) {
     fs.writeFileSync(conflictsPath, JSON.stringify(conflictEntries.map((c, i) => ({
@@ -469,8 +638,8 @@ function selftest() {
       { canonicalName: 'TestNewProduct', insurer: 'AIA', distributor: '', productCode: 'TNP1', category: 'protection', subType: 'Term Life', currency: 'SGD', aliases: ['TNP'], status: 'active', notes: 'A long enough fictional product description for self-test. Covers death + TI. Non-par level term, 30-year maximum. Not real, do not commit. SDIC protected.', sources: [{ url: 'https://example.com/tnp', checkedAt: '2026-05-17' }], confidence: 'high' },
       // Missing required field
       { canonicalName: '', insurer: 'AIA', category: 'protection', subType: 'Term Life', aliases: [], sources: [{ url: 'https://example.com' }] },
-      // Bad subType for category
-      { canonicalName: 'BadSubtype', insurer: 'AIA', category: 'investment', subType: 'Term Life', aliases: [], sources: [{ url: 'https://example.com' }] },
+      // Bad subType — not canonical in any category, can't be auto-corrected
+      { canonicalName: 'BadSubtype', insurer: 'AIA', category: 'investment', subType: 'NonsenseSubTypeNobodyHasEver', aliases: [], sources: [{ url: 'https://example.com' }] },
       // Unknown insurer
       { canonicalName: 'UnknownInsurer', insurer: 'NotAnInsurer', category: 'protection', subType: 'Term Life', aliases: [], sources: [{ url: 'https://example.com' }] },
     ]

@@ -2924,12 +2924,21 @@ const CATEGORIES = {
 const SUB_TYPES = {
   protection: ['Term Life', 'Whole Life', 'Universal Life (UL)', 'Indexed UL (IUL)', 'Variable UL (VUL)', 'Critical Illness', 'Early Critical Illness', 'Personal Accident', 'Disability Income', 'Long-term Care', 'ILP (Protection)'],
   savings: ['Endowment', 'Lifetime Endowment', 'Education Plan', 'Short-term Endowment'],
-  health: ['Integrated Shield Plan', 'Hospital Income', 'CareShield Life / Supplement', 'ElderShield 300', 'ElderShield 400', 'Long-term Care'],
+  health: ['Integrated Shield Plan', 'Shield Rider', 'Hospital Income', 'CareShield Life / Supplement', 'ElderShield 300', 'ElderShield 400', 'Long-term Care'],
   investment: ['ILP (Investment)', 'Unit Trust', 'Single Premium Investment'],
   retirement: ['Retirement Income (Par WL)', 'Annuity', 'CPF Life', 'Income Plan', 'Retirement'],
   maternity: ['Maternity Coverage'],
-  cash_investments: ['Fixed Deposit', 'T-bill', 'Singapore Savings Bond', 'Corporate Bond', 'Money Market'],
-  other_assets: ['Property', 'Stocks/Equities', 'Gold/Precious Metals', 'Fixed Coupon Note (FCN)', 'Equity Linked Note (ELN)', 'Options/Futures', 'Cryptocurrency', 'Art/Collectibles', 'Other']
+  // rc2.54: cash_investments expanded for brokerage / robo-advisor cash products surfaced
+  //   by the 2026-05-17 catalogue research run. "Cash Management" covers Endowus Cash Smart,
+  //   Singlife Account, Tiger Vault, moomoo Cash Plus, StashAway Simple, Syfe Cash+. "Structured
+  //   Deposit" covers UOB/OCBC structured deposit products (principal-protected, payout linked
+  //   to index/FX/rates).
+  cash_investments: ['Fixed Deposit', 'T-bill', 'Singapore Savings Bond', 'Corporate Bond', 'Money Market', 'Cash Management', 'Structured Deposit', 'Fixed Coupon Note (FCN)', 'Equity Linked Note (ELN)'],
+  // rc2.54: other_assets adds two new types from the research run. "Brokerage Account" is the
+  //   platform wrapper itself (FSMOne, Tiger, moomoo, Syfe, Saxo, IBKR) — distinct from the
+  //   individual stock/ETF holdings inside it. "Regular Savings Plan (RSP)" covers DCA stock
+  //   plans like DBS Invest-Saver and OCBC BCIP.
+  other_assets: ['Property', 'Stocks/Equities', 'Brokerage Account', 'Regular Savings Plan (RSP)', 'Gold/Precious Metals', 'Fixed Coupon Note (FCN)', 'Equity Linked Note (ELN)', 'Options/Futures', 'Cryptocurrency', 'Art/Collectibles', 'Other']
 };
 const UL_FAMILY = ['Universal Life (UL)', 'Indexed UL (IUL)', 'Variable UL (VUL)'];
 
