@@ -222,6 +222,9 @@ const INSURERS = new Set([
   //   bank-DISTRIBUTED insurance (Signature Life, etc.) the underwriter goes in `insurer`
   //   and the bank goes in `distributor` — the AI brief covers this.
   'DBS','UOB','OCBC','Citibank','HSBC','Standard Chartered','Maybank','POSB',
+  // rc2.59: Phase 2 deep research surfaced these — adding so validation stops flagging
+  //   them as unknown and the entries route to the right canonical name.
+  'Allianz','Liberty Insurance','Zurich International Life','SGX Central Depository','MOH','AIG',
 ]);
 
 const STATUSES = new Set(['active','legacy_in_force','discontinued']);
@@ -302,6 +305,19 @@ const INSURER_ALIASES = {
   'dbs bank': 'DBS',
   'ocbc bank': 'OCBC',
   'maybank singapore': 'Maybank',
+  // rc2.59: aliases surfaced by Phase 2 deep research — typo fixes and entity merges.
+  'phillip securities': 'Philip Securities',   // typo Phillip → Philip
+  'phillip securities pte ltd': 'Philip Securities',
+  'sgx cdp': 'SGX Central Depository',         // SGX CDP → SGX Central Depository
+  'income insurance limited': 'NTUC Income',   // Income Insurance Ltd → NTUC Income
+  'income insurance limited (income insurance)': 'NTUC Income',
+  'liberty': 'Liberty Insurance',
+  'allianz singapore': 'Allianz',
+  'allianz partners': 'Allianz',
+  'ministry of health': 'MOH',
+  'ministry of health (singapore)': 'MOH',
+  'zurich international': 'Zurich International Life',
+  'aig singapore': 'AIG',
 };
 
 function canonicalInsurer(raw) {

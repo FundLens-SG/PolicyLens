@@ -3370,5 +3370,4622 @@
       "IB"
     ],
     "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Citibank",
+    "productName": "Citi Global Wallet",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Global Wallet"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Citibank",
+    "productName": "Citi Interest Booster Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Interest Booster"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Citibank",
+    "productName": "Citi Plus Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Citi Plus"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Citibank",
+    "productName": "Citi Wealth First Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Citibank Wealth First",
+      "Wealth First Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Citibank",
+    "productName": "Citibank Foreign Currency Time Deposit",
+    "category": "cash_investments",
+    "subType": "Fixed Deposit",
+    "aliases": [
+      "Citi FCY Time Deposit",
+      "Citibank FCY FD"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "DBS",
+    "productName": "DBS Multi-Currency Autosave Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "DBS MCA",
+      "Multi-Currency Autosave"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "DBS",
+    "productName": "DBS Multi-Currency Autosave Plus Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "DBS MCA Plus",
+      "Multi-Currency Autosave Plus"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "DBS",
+    "productName": "DBS Multiplier Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "DBS Multiplier"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "DBS",
+    "productName": "DBS Supplementary Retirement Scheme Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "DBS SRS Account",
+      "DBS Supplementary Retirement Scheme"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "DBS",
+    "productName": "DBS eAutosave Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "DBS eAutosave"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "DBS",
+    "productName": "DBS eAutosave Plus Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "DBS eAutosave Plus"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "DBS",
+    "productName": "DBS eMulti-Currency Autosave Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "DBS eMCA",
+      "eMulti-Currency Autosave"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "DBS",
+    "productName": "POSB My Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "DBS My Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "DBS",
+    "productName": "POSB SAYE Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Save As You Earn",
+      "SAYE"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "DBS",
+    "productName": "DBS Foreign Currency Fixed Deposit",
+    "category": "cash_investments",
+    "subType": "Fixed Deposit",
+    "aliases": [
+      "DBS FCY Fixed Deposit",
+      "DBS Foreign Currency FD"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "DBS",
+    "productName": "DBS CPF Investment Account",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "DBS CPF IA",
+      "CPF Investment Account with DBS"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "HSBC",
+    "productName": "HSBC Everyday Global Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Everyday Global Account",
+      "EGA"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "HSBC",
+    "productName": "HSBC Personal Banking Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Personal Banking Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "HSBC",
+    "productName": "HSBC Premier Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Premier Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "HSBC",
+    "productName": "HSBC Foreign Currency Time Deposit",
+    "category": "cash_investments",
+    "subType": "Fixed Deposit",
+    "aliases": [
+      "HSBC FCY Time Deposit"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "HSBC",
+    "productName": "HSBC Unit Trust Monthly Investment Plan",
+    "category": "other_assets",
+    "subType": "Regular Savings Plan (RSP)",
+    "aliases": [
+      "HSBC Monthly Investment Plan",
+      "Unit Trust MIP"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Maybank",
+    "productName": "Maybank Passbook Savings Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Passbook Savings"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Maybank",
+    "productName": "Maybank PremierOne Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "PremierOne"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Maybank",
+    "productName": "Maybank PremierOne Account-i",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "PremierOne-i"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Maybank",
+    "productName": "Maybank Prestige Savings Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Prestige Savings"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Maybank",
+    "productName": "Maybank Privilege Plus Savings Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Privilege Plus"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Maybank",
+    "productName": "Maybank SaveUp Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "SaveUp"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Maybank",
+    "productName": "Maybank Youngstarz Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Youngstarz"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Maybank",
+    "productName": "Maybank iSAVvy Savings Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "iSAVvy"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Maybank",
+    "productName": "Maybank iSAVvy Savings Account-i",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "iSAVvy-i"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Maybank",
+    "productName": "Maybank iSAVvy Savings Plus Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "iSAVvy Savings Plus",
+      "iSAVvy Plus"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Maybank",
+    "productName": "Maybank Foreign Currency Time Deposit",
+    "category": "cash_investments",
+    "subType": "Fixed Deposit",
+    "aliases": [
+      "Maybank FCY Time Deposit"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Maybank",
+    "productName": "Maybank Term Deposit-i",
+    "category": "cash_investments",
+    "subType": "Fixed Deposit",
+    "aliases": [
+      "Term Deposit-i"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Maybank",
+    "productName": "Maybank iSAVvy Time Deposit",
+    "category": "cash_investments",
+    "subType": "Fixed Deposit",
+    "aliases": [
+      "iSAVvy TD",
+      "iSAVvy Time Deposit"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "OCBC",
+    "productName": "OCBC 360 Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "360 Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "OCBC",
+    "productName": "OCBC Bonus+ Savings Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Bonus Plus Savings Account",
+      "Bonus+ Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "OCBC",
+    "productName": "OCBC Child Development Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "OCBC CDA",
+      "Child Development Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "OCBC",
+    "productName": "OCBC Child Development Account Extra",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "OCBC CDA Extra",
+      "CDA Extra"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "OCBC",
+    "productName": "OCBC FRANK Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "FRANK Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "OCBC",
+    "productName": "OCBC Global Savings Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Global Savings"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "OCBC",
+    "productName": "OCBC Mighty Savers Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Mighty Savers"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "OCBC",
+    "productName": "OCBC Monthly Savings Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Monthly Savings Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "OCBC",
+    "productName": "OCBC MyOwn Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "MyOwn Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "OCBC",
+    "productName": "OCBC Passbook Savings Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Passbook Savings"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "OCBC",
+    "productName": "OCBC Premier Dividend+ Savings Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Premier Dividend Plus",
+      "Premier Dividend+"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "OCBC",
+    "productName": "OCBC Premier Global Savings Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Premier Global Savings"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "OCBC",
+    "productName": "OCBC Statement Savings Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Statement Savings"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "OCBC",
+    "productName": "OCBC Supplementary Retirement Scheme Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "OCBC SRS Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "OCBC",
+    "productName": "OCBC Child Development Time Deposit Account",
+    "category": "cash_investments",
+    "subType": "Fixed Deposit",
+    "aliases": [
+      "OCBC CDA Time Deposit",
+      "CDA Time Deposit"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "OCBC",
+    "productName": "OCBC Foreign Currency Time Deposit",
+    "category": "cash_investments",
+    "subType": "Fixed Deposit",
+    "aliases": [
+      "OCBC FCY Time Deposit",
+      "OCBC Foreign Currency FD"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "OCBC",
+    "productName": "OCBC Time Deposit",
+    "category": "cash_investments",
+    "subType": "Fixed Deposit",
+    "aliases": [
+      "OCBC Fixed Deposit",
+      "OCBC FD"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "OCBC",
+    "productName": "OCBC CPF Investment Account",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "OCBC CPF IA",
+      "CPF Investment Account with OCBC"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Standard Chartered",
+    "productName": "Standard Chartered Bonus$aver Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "BonusSaver",
+      "Bonus$aver"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Standard Chartered",
+    "productName": "Standard Chartered JumpStart Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "JumpStart Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Standard Chartered",
+    "productName": "Standard Chartered MyWay Savings Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "MyWay Savings"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Standard Chartered",
+    "productName": "Standard Chartered USD$aver Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "USD Saver",
+      "USD$aver"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Standard Chartered",
+    "productName": "Standard Chartered e$aver Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "eSaver",
+      "e$aver"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Standard Chartered",
+    "productName": "Standard Chartered Foreign Currency Time Deposit",
+    "category": "cash_investments",
+    "subType": "Fixed Deposit",
+    "aliases": [
+      "SC FCY Time Deposit",
+      "SC Foreign Currency TD"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "UOB",
+    "productName": "KrisFlyer UOB Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "KrisFlyer UOB"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "UOB",
+    "productName": "UOB FX+ Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "UOB FX Plus",
+      "FX+"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "UOB",
+    "productName": "UOB Junior Savers Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Junior Savers"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "UOB",
+    "productName": "UOB Lady's Savings Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Lady's Savings"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "UOB",
+    "productName": "UOB LockAway Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "LockAway"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "UOB",
+    "productName": "UOB One Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "One Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "UOB",
+    "productName": "UOB Passbook Savings Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Passbook Savings"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "UOB",
+    "productName": "UOB Privilege Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Privilege Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "UOB",
+    "productName": "UOB Stash Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Stash Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "UOB",
+    "productName": "UOB Supplementary Retirement Scheme Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "UOB SRS Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "UOB",
+    "productName": "UOB Uniplus Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Uniplus"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "UOB",
+    "productName": "UOB Wealth Premium Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Wealth Premium"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "UOB",
+    "productName": "UOB Foreign Currency Fixed Deposit",
+    "category": "cash_investments",
+    "subType": "Fixed Deposit",
+    "aliases": [
+      "UOB FCY Fixed Deposit",
+      "UOB Foreign Currency FD"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "CPF Board",
+    "productName": "SRS Structured Deposit Wrapper",
+    "category": "cash_investments",
+    "subType": "Structured Deposit",
+    "aliases": [
+      "SRS Structured Deposit"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "CPF Board",
+    "productName": "CPFIS-OA Bank Investment Account",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "CPF Investment Account",
+      "CPFIA"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "CPF Board",
+    "productName": "SRS Investment Account Wrapper",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "SRS Investment Wrapper"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "CPF Board",
+    "productName": "Dependants' Protection Scheme CPF-funded Cover",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "DPS CPF-funded Cover",
+      "DPS via CPF"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "CPF Board",
+    "productName": "Dependants' Protection Scheme Cash-funded Cover",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "DPS Cash-funded Cover"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "CPF Board",
+    "productName": "Home Protection Scheme CPF Mortgage Insurance",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "HPS Mortgage Insurance",
+      "CPF HPS"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "CPF Board",
+    "productName": "Home Protection Scheme Premium Calculator Wrapper",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "HPS Premium Calculator"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "CPF Board",
+    "productName": "SRS Insurance Product Wrapper",
+    "category": "retirement",
+    "subType": "Annuity",
+    "aliases": [
+      "SRS Insurance Wrapper",
+      "SRS Annuity Wrapper"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "SGX Central Depository",
+    "productName": "CDP Individual Securities Account",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "CDP Individual Account",
+      "CDP Securities Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "SGX Central Depository",
+    "productName": "CDP Joint Securities Account",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "CDP Joint Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "SGX Central Depository",
+    "productName": "CDP Securities Sub-Account",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "CDP Sub-Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "SGX Central Depository",
+    "productName": "SGX CDP Internet Service",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "CDP Internet",
+      "SGX CDP Online"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus Cash Smart Ultra",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Cash Smart Ultra"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus CPF 100% Equity Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "CPF 100% Equity"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus CPF 100% Fixed Income Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "CPF 100% Fixed Income"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus CPF 20% Equity 80% Fixed Income Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "CPF 20/80"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus CPF 40% Equity 60% Fixed Income Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "CPF 40/60"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus CPF 60% Equity 40% Fixed Income Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "CPF 60/40",
+      "CPF-OA Equity 60"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus CPF 80% Equity 20% Fixed Income Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "CPF 80/20",
+      "CPF-OA Equity 80"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus ESG 100% Equity Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "ESG 100% Equity"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus ESG 100% Fixed Income Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "ESG 100% Fixed Income"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus ESG 40% Equity 60% Fixed Income Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "ESG 40/60"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus ESG 60% Equity 40% Fixed Income Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "ESG 60/40"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus ESG 80% Equity 20% Fixed Income Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "ESG 80/20"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus Flagship 100% Equity Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Flagship 100% Equity"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus Flagship 100% Fixed Income Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Flagship 100% Fixed Income"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus Flagship 20% Equity 80% Fixed Income Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Flagship 20/80"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus Flagship 40% Equity 60% Fixed Income Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Flagship 40/60"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus Flagship 60% Equity 40% Fixed Income Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Flagship 60/40"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus Flagship 80% Equity 20% Fixed Income Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Flagship 80/20"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus Future Income Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Future Income"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus Higher Income Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Higher Income"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus Stable Income Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Stable Income"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus Fund Smart Multi Fund Portfolio",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "Fund Smart Multi Fund"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus Fund Smart Single Fund Portfolio",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "Fund Smart Single Fund"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Interactive Brokers",
+    "productName": "Interactive Brokers Singapore Cash Account",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "IBKR Cash Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Interactive Brokers",
+    "productName": "Interactive Brokers Singapore Margin Account",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "IBKR Margin Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Philip Securities",
+    "productName": "POEMS Cash Plus Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Cash Plus Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Philip Securities",
+    "productName": "Phillip Cash Management Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "POEMS Cash Management Account",
+      "Phillip CMA"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Philip Securities",
+    "productName": "Phillip Money Market Fund Platform Access",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "POEMS Money Market Fund"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Philip Securities",
+    "productName": "POEMS Bond Ladder Service",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "Bond Ladder"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Philip Securities",
+    "productName": "POEMS ETF Regular Savings Plan",
+    "category": "other_assets",
+    "subType": "Regular Savings Plan (RSP)",
+    "aliases": [
+      "POEMS ETF RSP"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Philip Securities",
+    "productName": "POEMS Unit Trust Regular Savings Plan",
+    "category": "other_assets",
+    "subType": "Regular Savings Plan (RSP)",
+    "aliases": [
+      "POEMS UT RSP"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Philip Securities",
+    "productName": "Phillip Share Builders Plan",
+    "category": "other_assets",
+    "subType": "Regular Savings Plan (RSP)",
+    "aliases": [
+      "SBP",
+      "Share Builders Plan"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Saxo",
+    "productName": "Saxo Cash Interest on Uninvested Cash",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Uninvested Cash Interest"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Saxo",
+    "productName": "SaxoSelect",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Saxo Select"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Saxo",
+    "productName": "Saxo CFD Account Access",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "Saxo CFDs"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Saxo",
+    "productName": "Saxo Classic Account",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "Classic Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Saxo",
+    "productName": "Saxo Joint Account",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "Joint Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Saxo",
+    "productName": "Saxo Options Account Access",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "Saxo Options"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Saxo",
+    "productName": "Saxo Platinum Account",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "Platinum Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Saxo",
+    "productName": "Saxo VIP Account",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "VIP Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway Simple Guaranteed SGD",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Simple Guaranteed SGD"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway ESG Investing Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "ESG Investing Portfolio"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing SRI 10% Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "SRI 10%",
+      "General Investing 10%"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing SRI 12% Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "SRI 12%",
+      "General Investing 12%"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing SRI 14% Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "SRI 14%",
+      "General Investing 14%"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing SRI 16% Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "SRI 16%",
+      "General Investing 16%"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing SRI 18% Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "SRI 18%",
+      "General Investing 18%"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing SRI 20% Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "SRI 20%",
+      "General Investing 20%"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing SRI 22% Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "SRI 22%",
+      "General Investing 22%"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing SRI 26% Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "SRI 26%",
+      "General Investing 26%"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing SRI 30% Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "SRI 30%",
+      "General Investing 30%"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing SRI 36% Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "SRI 36%",
+      "General Investing 36%"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing SRI 6.5% Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "SRI 6.5%",
+      "General Investing 6.5%"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing SRI 8% Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "SRI 8%",
+      "General Investing 8%"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing powered by BlackRock SRI 10% Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "BlackRock SRI 10%",
+      "General Investing BlackRock 10%"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing powered by BlackRock SRI 14% Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "BlackRock SRI 14%",
+      "General Investing BlackRock 14%"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing powered by BlackRock SRI 18% Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "BlackRock SRI 18%",
+      "General Investing BlackRock 18%"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing powered by BlackRock SRI 22% Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "BlackRock SRI 22%",
+      "General Investing BlackRock 22%"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing powered by BlackRock SRI 26% Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "BlackRock SRI 26%",
+      "General Investing BlackRock 26%"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing powered by BlackRock SRI 30% Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "BlackRock SRI 30%",
+      "General Investing BlackRock 30%"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing powered by BlackRock SRI 36% Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "BlackRock SRI 36%",
+      "General Investing BlackRock 36%"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing powered by BlackRock SRI 6.5% Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "BlackRock SRI 6.5%",
+      "General Investing BlackRock 6.5%"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway Goal-Based General Investing Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Goal-Based General Investing Portfolio"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway Income Portfolio - Monthly Distribution",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Income Portfolio - Monthly Distribution"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway Thematic Portfolio SRI 20%",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Thematic SRI 20%"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway Thematic Portfolio SRI 22%",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Thematic SRI 22%"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway Thematic Portfolio SRI 26%",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Thematic SRI 26%"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway Thematic Portfolio SRI 30%",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Thematic SRI 30%"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway Thematic Portfolio SRI 36%",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Thematic SRI 36%"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway Thematic Portfolio SRI 45%",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Thematic SRI 45%"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Syfe",
+    "productName": "Syfe Cash+ Flexi SGD",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Cash+ Flexi SGD"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Syfe",
+    "productName": "Syfe Cash+ Guaranteed SGD",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Cash+ Guaranteed SGD"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Syfe",
+    "productName": "Syfe Cash+ Guaranteed USD",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Cash+ Guaranteed USD"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Syfe",
+    "productName": "Syfe Core Balanced",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Core Balanced"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Syfe",
+    "productName": "Syfe Core Defensive",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Core Defensive"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Syfe",
+    "productName": "Syfe Core Equity100",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Core Equity100",
+      "Equity100"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Syfe",
+    "productName": "Syfe Core Growth",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Core Growth"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Syfe",
+    "productName": "Syfe Income+ Enhance",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Income+ Enhance"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Syfe",
+    "productName": "Syfe Income+ Preserve",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Income+ Preserve"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Syfe",
+    "productName": "Syfe REIT+ 100% REITs",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "REIT+ 100"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Syfe",
+    "productName": "Syfe REIT+ with Risk Management",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "REIT+ Risk Management"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Syfe",
+    "productName": "Syfe SRS Core Balanced",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "SRS Core Balanced"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Syfe",
+    "productName": "Syfe SRS Core Defensive",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "SRS Core Defensive"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Syfe",
+    "productName": "Syfe SRS Core Equity100",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "SRS Core Equity100"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Syfe",
+    "productName": "Syfe SRS Core Growth",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "SRS Core Growth"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Syfe",
+    "productName": "Syfe SRS Income+ Enhance",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "SRS Income+ Enhance"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Syfe",
+    "productName": "Syfe SRS Income+ Preserve",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "SRS Income+ Preserve"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Tiger Brokers",
+    "productName": "Tiger Vault SGD",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Tiger Vault SGD"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Tiger Brokers",
+    "productName": "Tiger Vault USD",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Tiger Vault USD"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Tiger Brokers",
+    "productName": "Tiger Brokers Cash Account",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "Tiger Cash Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Tiger Brokers",
+    "productName": "Tiger Brokers Margin Account",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "Tiger Margin Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "iFAST",
+    "productName": "FSMOne Auto-Sweep Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Auto-Sweep Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "iFAST",
+    "productName": "FSMOne CNH Auto-Sweep Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "CNH Auto-Sweep"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "iFAST",
+    "productName": "FSMOne Multi-Currency Cash Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Multi-Currency Cash"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "iFAST",
+    "productName": "FSMOne SGD Auto-Sweep Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "SGD Auto-Sweep"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "iFAST",
+    "productName": "FSMOne USD Auto-Sweep Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "USD Auto-Sweep"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "iFAST",
+    "productName": "FSMOne MAPS Aggressive Growth Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "MAPS Aggressive Growth"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "iFAST",
+    "productName": "FSMOne MAPS Aggressive Income Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "MAPS Aggressive Income"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "iFAST",
+    "productName": "FSMOne MAPS Balanced Growth Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "MAPS Balanced Growth"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "iFAST",
+    "productName": "FSMOne MAPS Balanced Income Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "MAPS Balanced Income"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "iFAST",
+    "productName": "FSMOne MAPS Conservative Growth Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "MAPS Conservative Growth"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "iFAST",
+    "productName": "FSMOne MAPS Conservative Income Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "MAPS Conservative Income"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "iFAST",
+    "productName": "FSMOne MAPS Moderate Growth Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "MAPS Moderate Growth"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "iFAST",
+    "productName": "FSMOne MAPS Moderate Income Portfolio",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "MAPS Moderate Income"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "iFAST",
+    "productName": "FSMOne Regular Savings Plan - ETFs",
+    "category": "other_assets",
+    "subType": "Regular Savings Plan (RSP)",
+    "aliases": [
+      "FSM RSP ETFs"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "iFAST",
+    "productName": "FSMOne Regular Savings Plan - Stocks",
+    "category": "other_assets",
+    "subType": "Regular Savings Plan (RSP)",
+    "aliases": [
+      "FSM RSP Stocks"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "iFAST",
+    "productName": "FSMOne Regular Savings Plan - Unit Trusts",
+    "category": "other_assets",
+    "subType": "Regular Savings Plan (RSP)",
+    "aliases": [
+      "FSM RSP Unit Trusts"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "moomoo",
+    "productName": "moomoo Cash Plus Extra Yield Version",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Extra Yield Version",
+      "Cash Plus Extra Yield"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "moomoo",
+    "productName": "moomoo Cash Plus SGD",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Cash Plus SGD"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "moomoo",
+    "productName": "moomoo Cash Plus USD",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Cash Plus USD"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "moomoo",
+    "productName": "moomoo ETF Portfolios Aggressive",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "ETF Portfolio Aggressive"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "moomoo",
+    "productName": "moomoo ETF Portfolios Balanced",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "ETF Portfolio Balanced"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "moomoo",
+    "productName": "moomoo ETF Portfolios Conservative",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "ETF Portfolio Conservative"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "moomoo",
+    "productName": "moomoo ETF Portfolios Growth",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "ETF Portfolio Growth"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "moomoo",
+    "productName": "moomoo Universal Account",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "Universal Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Mum2Baby Choices - Assisted Conception Pregnancy Coverage",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [
+      "Assisted Conception Coverage",
+      "IVF/IUI/ICI/ICSI Pregnancy Coverage"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Allianz",
+    "productName": "Allianz Hospital Income Protect",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [
+      "Hospital Income Protect"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Allianz",
+    "productName": "Allianz International Healthcare Plan",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "Allianz International Health"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Allianz",
+    "productName": "Allianz Cancer Protect",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Cancer Protect"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Allianz",
+    "productName": "Allianz Accident Protect Plus",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "Accident Protect Plus"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Allianz",
+    "productName": "SC Protector Plus",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "Standard Chartered Protector Plus"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "China Life",
+    "productName": "China Life Accident Guardian",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "Accident Guardian"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "China Life",
+    "productName": "China Life Mortgage Term",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "Mortgage Term"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "China Life",
+    "productName": "China Life Harvest Income Plan (USD)",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [
+      "Harvest Income Plan USD"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "China Life",
+    "productName": "China Life Harvest Income Supreme Plan (USD) Series 2",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [
+      "Harvest Income Supreme USD S2",
+      "Harvest Income Supreme Plan S2"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "China Taiping i-CashLife",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [
+      "i-CashLife"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "China Taiping i-Save Series",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [
+      "i-Save Series"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "China Taiping i-Saver8",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [
+      "i-Saver8"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "China Taiping i-WealthBuilder",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [
+      "i-WealthBuilder"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "China Taiping i-WealthSaver",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [
+      "i-WealthSaver"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Maternity Care 2 - Child Coverage",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [
+      "GMC2 Child Coverage"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Maternity Care 2 - Mother Coverage",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [
+      "GMC2 Mother Coverage"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Maternity Conversion Option",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life HappyMummy Baby Cover",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [
+      "HappyMummy Baby Cover"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life HappyMummy Mother Cover",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [
+      "HappyMummy Mother Cover"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Maternity 360 Mother Benefit",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [
+      "Maternity 360 Mother Benefit"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Maternity 360 Newborn Benefit",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [
+      "Maternity 360 Newborn Benefit"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Liberty Insurance",
+    "productName": "Liberty Group PASafe",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "Group PASafe"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Liberty Insurance",
+    "productName": "Liberty PACare Plus Enhanced",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "PACare Plus Enhanced"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "MSIG TravelEasy Pre-Ex",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [
+      "TravelEasy Pre-Ex"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Family Care",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "Family Care"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Tokio Marine TM Atlas Classic",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [
+      "TM Atlas Classic"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Adaptable Wealth",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Premium Waiver Benefit",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Spouse Waiver Benefit Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Total Disability Benefit Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Waiver of Premium Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Payor Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Capital Guard",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Living Care",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA SmartCare",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA SmartGen",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA SmartGuard",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA SmartLife",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA SmartProtect",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Vista Series",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Education Plus",
+    "category": "savings",
+    "subType": "Education Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Hospital Cash Rider",
+    "category": "health",
+    "subType": "Shield Rider",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Invest Advantage Rider",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Maxwealth",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Wealth Multiplier Rider",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Cancer Recovery Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Dread Disease Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Disability Income Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT TPD Benefit Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Early Stage Critical Illness Rider",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT AccidentCare Plus",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Lifetime Payout Special",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT MultiPay Critical Illness Rider",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Payor Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Personal Accident Rider",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Supreme Term Rider",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Great Eastern Dependants' Protection Scheme Administration",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "DPS administered by Great Eastern",
+      "GE DPS"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Additional Benefit",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Care Plus Benefit Rider",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Child Guaranteed Insurability Option",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Complete Care Rider",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Comprehensive Living Assurance",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Family Protection",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT FlexiChoice",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Golden Promise",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Junior Protector Plus II",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Living Assurance Rider",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT MaxCare",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT MaxSelect",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Maximizer Series",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Pinnacle Series",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Protect Advantage Rider",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Smart Care",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Smart Family",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Smart Life Advantage Rider",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Smart Living",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Supreme Living Care Rider",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Supreme Protect Rider",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Family Income Benefit Rider",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Income Advantage",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Eduplanner Rider",
+    "category": "savings",
+    "subType": "Education Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Cash Benefit Plus",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Flexi Saver Rider",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Supreme MediCash Plus",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD International Health Rider",
+    "category": "health",
+    "subType": "Shield Rider",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Invest Flexi Elite",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Invest Flexi VII",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Invest Goal X",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Wealth Gen",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Accelerated Critical Illness Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Additional Cancer Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Big 3 Critical Illness Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Cancer 100",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Cancer 2.0 Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Critical Illness Plus Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Flex CI Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Life Protection CI Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Life Protection CI Protection Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Term Life Plus Critical Illness Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Accelerated Total and Permanent Disability Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Flex Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Invest First Horizon Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Invest First Plus Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Invest Goal Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Life Protection TPD Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Term Life Plus Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Term Life Plus Total Disability Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Waiver of Premium Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Flex Early CI Rider",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Life Protection Early CI Protection Rider",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Life Protection Early CI Waiver Rider",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Term Life Plus Early Critical Illness Rider",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Klook Accident Cover",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Life Income Plus Payor Benefit Rider",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Life PA",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Payer Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Personal Accident Fracture Benefit",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Personal Accident Medical Reimbursement Benefit",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Personal Accident Weekly Income Benefit",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Accelerated Terminal Illness Rider",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Essential Life",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Heart Attack Recovery Rider",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Life Income Plus Protection Rider",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Recover First Rider",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Stroke Recovery Rider",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Enhanced IncomeShield Assist Rider",
+    "category": "health",
+    "subType": "Shield Rider",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Enhanced IncomeShield Classic Care Rider",
+    "category": "health",
+    "subType": "Shield Rider",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Enhanced IncomeShield Co-Pay Assist Rider",
+    "category": "health",
+    "subType": "Shield Rider",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Enhanced IncomeShield Deluxe Care Rider",
+    "category": "health",
+    "subType": "Shield Rider",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Hospital Cash Rider",
+    "category": "health",
+    "subType": "Shield Rider",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Medical Cash Rider",
+    "category": "health",
+    "subType": "Shield Rider",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Cancer Premium Waiver",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Cancer Protect Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Critical Illness Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Dread Disease Benefit",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Dread Disease Premium Waiver",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Disability Waiver Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Enhanced Waiver Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Enhanced Waiver of Premium Benefit",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Premium Waiver Benefit",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Total Disability Rider",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Early Critical Illness Rider",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Early Critical Secure",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Accident Benefit",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Accidental Death Benefit",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income MultiPay Critical Illness Rider",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Payor Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Mortgage Term Protect",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Renewable Term Protect",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Term Protect",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Classic Life",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Classic Secure",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Early Assure Accelerator",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income LifeSecure Plus",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Lifestyle Policy",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Living Benefit",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income RevoSecure",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Secure Life",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Assist Rider",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Capital Builder",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Cash Builder",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Cashback Endowment",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Child Plus Benefit",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Deluxe Care Rider",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Dreamsaver",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Education Benefit",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Enhanced Income Benefit",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Essential Care Rider",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Family Income Benefit Rider",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Family Insurance",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income FlexiLink",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Foundation",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Growth",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income GrowthLink",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Ideal Plan",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Income Benefit",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income LadyPlus",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Legacy Endowment",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Legacy Solitaire",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Optima Care Rider",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income RevoGain",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Saver's Benefit",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income VivoCare",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income VivoChild",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income VivoEducate",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Wealth Builder",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Citibank",
+    "productName": "Citi Plus",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Citi Plus Account",
+      "CitiPlus"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Maybank",
+    "productName": "Maybank Save Up Programme",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Save Up",
+      "Maybank SaveUp"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Maybank",
+    "productName": "Maybank iSavvy Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "iSavvy",
+      "Maybank iSavvy"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "OCBC",
+    "productName": "OCBC Premier Banking Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "OCBC Premier",
+      "OCBC Premier Banking"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "UOB",
+    "productName": "UOB Privilege Banking Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "UOB Privilege",
+      "Privilege Banking"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Maybank",
+    "productName": "Maybank Premier 1 Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Maybank Premier",
+      "Premier 1"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "DBS",
+    "productName": "DBS Multi-Currency Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "DBS MCA",
+      "Multi-Currency Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "UOB",
+    "productName": "UOB Mighty FX",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Mighty FX"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "OCBC",
+    "productName": "OCBC Fixed Deposit",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "OCBC FD",
+      "OCBC Time Deposit"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "UOB",
+    "productName": "UOB SGD Fixed Deposit Promotion",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "UOB Fixed Deposit Promo",
+      "UOB FD Promo"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "HSBC",
+    "productName": "HSBC Time Deposit Promotion",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "HSBC Time Deposit Promo"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Citibank",
+    "productName": "Citibank Fixed Deposit",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Citi FD"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "DBS",
+    "productName": "SRS Account (DBS)",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "DBS SRS Account",
+      "Supplementary Retirement Scheme (DBS)"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "OCBC",
+    "productName": "SRS Account (OCBC)",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "OCBC SRS Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "UOB",
+    "productName": "SRS Account (UOB)",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "UOB SRS Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "SGX Central Depository",
+    "productName": "CDP Securities Account",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "CDP",
+      "Central Depository Account"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus CPF OA Portfolio",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "CPF OA Portfolio (Endowus)",
+      "Endowus CPF-OA"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus CPF SA Portfolio",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "CPF SA Portfolio (Endowus)",
+      "Endowus CPF-SA"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus SRS Portfolio",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "SRS Portfolio (Endowus)",
+      "Endowus SRS"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus ESG Portfolios",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "Endowus ESG",
+      "ESG Smart"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus Income Portfolios",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "Endowus Income",
+      "Income Smart"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing - Risk Index 6.5%",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "SRI 6.5%",
+      "SRI 6.5",
+      "StashAway SRI 6.5"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing - Risk Index 14%",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "SRI 14%",
+      "SRI 14"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing - Risk Index 22%",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "SRI 22%",
+      "SRI 22"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway Higher-risk Portfolio - Risk Index 36%",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "SRI 36%",
+      "SRI 36"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway Singapore Investing Portfolio",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "Singapore Investing Portfolio",
+      "SIP"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway ESG Portfolios",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "StashAway Responsible Investing",
+      "Responsible Investing"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Syfe",
+    "productName": "Syfe Core Equity100 (SRS)",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "Equity100 SRS",
+      "Syfe E100 SRS"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "iFAST",
+    "productName": "FSMOne Auto-Sweep SGD",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Auto-Sweep SGD",
+      "FSMOne AutoSweep"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "iFAST",
+    "productName": "FSMOne Auto-Sweep USD",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "FSMOne USD Autosweep"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "iFAST",
+    "productName": "FSMOne Auto-Sweep CNH",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "FSMOne CNH Autosweep"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "iFAST",
+    "productName": "FSMOne MAPS",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "MAPS",
+      "Managed Portfolio Service"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Tiger Brokers",
+    "productName": "Tiger Bonds Programme",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Tiger Bonds",
+      "Bonds Programme"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "moomoo",
+    "productName": "moomoo ETF Portfolios",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "moomoo ETF Portfolios",
+      "ETF Portfolios (moomoo)"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Saxo",
+    "productName": "SaxoWealthCare Foundation",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "WealthCare Foundation",
+      "SaxoWealthCare F"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Saxo",
+    "productName": "SaxoWealthCare Balanced",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "WealthCare Balanced",
+      "SaxoWealthCare B"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Saxo",
+    "productName": "SaxoWealthCare Growth",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "WealthCare Growth",
+      "SaxoWealthCare G"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Saxo",
+    "productName": "Saxo Options Trading",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "Saxo Options",
+      "Options (Saxo)"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Philip Securities",
+    "productName": "Phillip Securities POEMS",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "POEMS",
+      "Phillip POEMS",
+      "PSPL"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Philip Securities",
+    "productName": "POEMS Smart Park",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Smart Park",
+      "Phillip Smart Park"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Philip Securities",
+    "productName": "POEMS Money Market Fund",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "Phillip MMF"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Interactive Brokers",
+    "productName": "IBKR SG Bond Ladder",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "IBKR Bond Ladder"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "MSIG CriticalCare Plus",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "CriticalCare Plus",
+      "MSIG CC Plus"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "MSIG TravelEasy",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "TravelEasy",
+      "MSIG TE"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "MSIG TravelEasy Flex",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "TravelEasy Flex"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Allianz",
+    "productName": "Allianz Travel Protect",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "Allianz Travel",
+      "Allianz Travel Insurance"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Allianz",
+    "productName": "Allianz Trip Protect",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "Allianz Trip Protect (SC)"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Allianz",
+    "productName": "Allianz Accident Protect - Silver",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "Accident Protect Silver",
+      "Allianz PA Silver"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "China Life",
+    "productName": "China Life SaveForward Endowment",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [
+      "China Life SaveForward",
+      "SaveForward Endowment"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "China Life",
+    "productName": "China Life Term Guardian",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "Term Guardian",
+      "China Life TG"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Zurich International Life",
+    "productName": "Zurich Vista (Singapore distribution)",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [
+      "Vista Savings Plan",
+      "Zurich Vista"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Zurich International Life",
+    "productName": "Zurich International Wealth Account (IWA)",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "IWA",
+      "Zurich IWA"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Generali",
+    "productName": "Generali Singapore Travel Insurance",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "Generali Travel"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUSelect Vantage (SGD)",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [
+      "PRUSelect Vantage SGD",
+      "PSV"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUSelect Vantage Premier (SGD)",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "PRUSelect Vantage Premier",
+      "PSV Premier"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUSelect",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [
+      "PRUSelect"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULife Vantage Achiever Prime II (SGD)",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [
+      "PRULife Vantage Achiever Prime II",
+      "PLVAP II"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Heirloom (V)",
+    "category": "protection",
+    "subType": "Universal Life (UL)",
+    "aliases": [
+      "Heirloom V",
+      "Heirloom 5"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Heirloom (VI)",
+    "category": "protection",
+    "subType": "Universal Life (UL)",
+    "aliases": [
+      "Heirloom VI",
+      "Heirloom 6"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Signature Life Series",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [
+      "Signature Life Series",
+      "MSL Series"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Standard Chartered",
+    "productName": "Standard Chartered Legacy (insurance bundle)",
+    "category": "protection",
+    "subType": "Universal Life (UL)",
+    "aliases": [
+      "SC Legacy"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "MOH",
+    "productName": "Merdeka Generation Package - MediSave Top-Up",
+    "category": "health",
+    "subType": "CareShield Life / Supplement",
+    "aliases": [
+      "MGP MediSave Top-Up",
+      "Merdeka Generation MediSave"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "MOH",
+    "productName": "Pioneer Generation Package",
+    "category": "health",
+    "subType": "CareShield Life / Supplement",
+    "aliases": [
+      "PGP",
+      "Pioneer Generation"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "MOH",
+    "productName": "Community Health Assist Scheme (CHAS)",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [
+      "CHAS",
+      "CHAS Card"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "MOH",
+    "productName": "Healthier SG",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [
+      "Healthier SG",
+      "Healthier Singapore"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "CPF Board",
+    "productName": "MediSave Account",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "CPF MediSave",
+      "MediSave"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "CPF Board",
+    "productName": "Ordinary Account (CPF OA)",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "CPF Ordinary Account",
+      "OA"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "CPF Board",
+    "productName": "Special Account (CPF SA)",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "CPF Special Account",
+      "SA"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "CPF Board",
+    "productName": "Retirement Account (CPF RA)",
+    "category": "retirement",
+    "subType": "Retirement",
+    "aliases": [
+      "CPF Retirement Account",
+      "RA"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing - Risk Index 8%",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "SRI 8%",
+      "SRI 8"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing - Risk Index 10%",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "SRI 10%",
+      "SRI 10"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing - Risk Index 12%",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "SRI 12%",
+      "SRI 12"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing - Risk Index 16%",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "SRI 16%",
+      "SRI 16"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing - Risk Index 18%",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "SRI 18%",
+      "SRI 18"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing - Risk Index 20%",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "SRI 20%",
+      "SRI 20"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway Higher-risk Portfolio - Risk Index 26%",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "SRI 26%",
+      "SRI 26"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway Higher-risk Portfolio - Risk Index 30%",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "SRI 30%",
+      "SRI 30"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Syfe",
+    "productName": "Syfe Premium",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "Syfe Premium Tier"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Syfe",
+    "productName": "Syfe Private Wealth",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "Syfe PW",
+      "Private Wealth"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "NTUC Income VivoChild",
+    "category": "savings",
+    "subType": "Education Plan",
+    "aliases": [
+      "Income VivoChild",
+      "VivoChild"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "NTUC Income FlexiLink",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [
+      "Income FlexiLink",
+      "FlexiLink"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Prudential PRULink FlexGrowth",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "PRULink FlexGrowth"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Prudential PRULink Active Invest Portfolio",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [
+      "PRULink ActiveInvest",
+      "ActiveInvest Portfolio"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Great Eastern Maxgrowth Endowment",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [
+      "GE Maxgrowth",
+      "Maxgrowth Endowment"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Singapore Register of Insured Policies (PPF Scheme list)",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "AIA SDIC PPF Register",
+      "AIA Policyholders Register"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Great Eastern Register of Insured Policies (PPF Scheme list)",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "GE SDIC PPF Register",
+      "GREATCO PPF Register"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MINDEF & MHA Group Insurance - Core Scheme (GTL)",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "MINDEF/MHA Core GTL",
+      "MINDEF Core Group Term Life"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MINDEF & MHA Group Insurance - Core Scheme (GPI)",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "MINDEF/MHA Core GPI",
+      "MINDEF Group Personal Injury"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MINDEF & MHA Group Insurance - Voluntary Scheme",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "MINDEF Voluntary",
+      "MINDEF/MHA Voluntary Scheme"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Group Hospitalisation & Surgical",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [
+      "AIA Group H&S",
+      "AIA GHS"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Group Personal Accident",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "AIA Group PA"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Group Specialist Outpatient",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [
+      "AIA Group SO",
+      "Group Specialist Outpatient"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Group Critical Illness",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "AIA Group CI"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Group Early Critical Illness",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [
+      "AIA Group ECI"
+    ],
+    "source": "deep-research-2026-05-17-phase2"
   }
 ]
