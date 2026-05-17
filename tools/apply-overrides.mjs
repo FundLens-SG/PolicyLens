@@ -64,16 +64,28 @@ if (seedStart < 0 || seedEnd < 0) { console.error('SEED_REPOSITORY block not fou
 // Each SEED entry is a single-line object literal. Find by insurer+productName.
 function findSeedEntry(insurer, productName) {
   const ins = normIns(insurer);
+  const targetC = compact(productName);
+  if (!targetC) return null;
+  const insC = compact(ins);
   const re = new RegExp(`\\{id:'[^']+',insurer:'([^']+)',productName:'([^']*)'[^}]*\\}`, 'g');
-  let m;
+  let m, fallback = null;
   const seedBlock = html.slice(seedStart, seedEnd);
   while ((m = re.exec(seedBlock)) !== null) {
-    const eIns = normIns(m[1]);
-    if (eIns === ins && compact(m[2]) === compact(productName)) {
-      return { fullMatch: m[0], offset: seedStart + m.index, length: m[0].length };
+    if (normIns(m[1]) !== ins) continue;
+    const eC = compact(m[2]);
+    if (eC === targetC) return { fullMatch: m[0], offset: seedStart + m.index, length: m[0].length, matchType: 'exact' };
+    // rc2.56: same stricter fuzzy as findCorpusEntry — skip insurer-name placeholder, cap
+    //   the length diff at 30% of the longer side.
+    if (eC.length < 6 || targetC.length < 6) continue;
+    if (eC === insC || targetC === insC) continue;
+    if (!(eC.includes(targetC) || targetC.includes(eC))) continue;
+    const maxLen = Math.max(eC.length, targetC.length);
+    if (Math.abs(eC.length - targetC.length) > maxLen * 0.30) continue;
+    if (!fallback || Math.abs(eC.length - targetC.length) < Math.abs(compact(fallback.fullMatch.match(/productName:'([^']*)'/)[1]).length - targetC.length)) {
+      fallback = { fullMatch: m[0], offset: seedStart + m.index, length: m[0].length, matchType: 'fuzzy' };
     }
   }
-  return null;
+  return fallback;
 }
 
 function applySeedOverride(loc, override) {
@@ -98,17 +110,45 @@ function applySeedOverride(loc, override) {
 
 // The 962-corpus PRODUCTS array uses tuple form: ["Insurer","Name","category","subType",[aliases],"source"]
 // Find by insurer+name and rewrite category/subType slots.
+//
+// rc2.56: two-pass match. First exact-compact (case-insensitive, punctuation-stripped).
+//   If that misses, fall back to substring match — either the incoming name CONTAINS the
+//   existing or the existing CONTAINS the incoming. This catches the "AIA Early Critical
+//   Cover Extra" (existing) vs "Early Critical Cover Extra" (incoming) class of mismatches
+//   where the AI dropped or added an insurer-name prefix.
 function findCorpusEntry(insurer, productName) {
   const ins = normIns(insurer);
-  // Match: ["Insurer","Product Name","category","subType",[...],...]
+  const targetC = compact(productName);
+  if (!targetC) return null;
+  const insC = compact(ins);
   const re = /\["([^"]+)","([^"]*)","([^"]*)","([^"]*)"(?=,\[)/g;
-  let m;
+  // Pass 1: exact-compact match.
+  let m, fallback = null;
   while ((m = re.exec(sgJs)) !== null) {
-    if (normIns(m[1]) === ins && compact(m[2]) === compact(productName)) {
-      return { offset: m.index, length: m[0].length, insurer: m[1], name: m[2], category: m[3], subType: m[4] };
+    if (normIns(m[1]) !== ins) continue;
+    const eName = m[2];
+    const eC = compact(eName);
+    if (eC === targetC) {
+      return { offset: m.index, length: m[0].length, insurer: m[1], name: eName, category: m[3], subType: m[4], matchType: 'exact' };
+    }
+    // rc2.56: stricter fuzzy match.
+    //   • Both names ≥ 6 chars compacted
+    //   • One must fully contain the other
+    //   • Skip if either side is just the insurer name (avoids matching the generic
+    //     insurer-as-product placeholder like ["Tokio Marine","Tokio Marine","protection","",[...]])
+    //   • Length diff ≤ 30% of the longer side (catches "PRUShield" vs "PRUShield Plus"
+    //     as too distant — different tiers)
+    if (eC.length < 6 || targetC.length < 6) continue;
+    if (eC === insC || targetC === insC) continue;
+    if (!(eC.includes(targetC) || targetC.includes(eC))) continue;
+    const maxLen = Math.max(eC.length, targetC.length);
+    const diff = Math.abs(eC.length - targetC.length);
+    if (diff > maxLen * 0.30) continue;
+    if (!fallback || Math.abs(eC.length - targetC.length) < Math.abs(compact(fallback.name).length - targetC.length)) {
+      fallback = { offset: m.index, length: m[0].length, insurer: m[1], name: eName, category: m[3], subType: m[4], matchType: 'fuzzy' };
     }
   }
-  return null;
+  return fallback;
 }
 
 function applyCorpusOverride(loc, override) {
@@ -126,19 +166,52 @@ function applyCorpusOverride(loc, override) {
   sgJs = sgJs.slice(0, loc.offset) + newPrefix + sgJs.slice(loc.offset + loc.length);
 }
 
+// rc2.56: if the AI prefixed the product name with the insurer's own name AND that
+//   prefixed name doesn't match any corpus entry, strip the prefix and retry. Handles
+//   "Tokio Marine Tokio Marine #goClassic" → "#goClassic" style mismatches where the
+//   corpus stores the short form.
+function stripInsurerPrefix(insurer, name) {
+  const ins = normIns(insurer);
+  if (!ins || !name) return name;
+  const insL = ins.toLowerCase();
+  const nL = name.toLowerCase();
+  if (nL.startsWith(insL + ' ') && name.length > ins.length + 1) {
+    return name.slice(ins.length + 1).trim();
+  }
+  return name;
+}
+
 // ─── Apply ──────────────────────────────────────────────────────────
-let appliedSeed = 0, appliedCorpus = 0, missed = 0;
+let appliedSeed = 0, appliedCorpus = 0, missed = 0, fuzzyMatches = 0;
 const missedList = [];
+const fuzzyList = [];
 
 for (const ov of overrides) {
-  const seedLoc = findSeedEntry(ov.insurer, ov.product);
+  let seedLoc = findSeedEntry(ov.insurer, ov.product);
+  if (!seedLoc) {
+    const stripped = stripInsurerPrefix(ov.insurer, ov.product);
+    if (stripped !== ov.product) seedLoc = findSeedEntry(ov.insurer, stripped);
+  }
   if (seedLoc) {
+    if (seedLoc.matchType === 'fuzzy') {
+      const eName = seedLoc.fullMatch.match(/productName:'([^']*)'/)[1];
+      fuzzyMatches++;
+      fuzzyList.push(`SEED  | "${ov.product}" → "${eName}"`);
+    }
     applySeedOverride(seedLoc, ov);
     appliedSeed++;
     continue;
   }
-  const corpLoc = findCorpusEntry(ov.insurer, ov.product);
+  let corpLoc = findCorpusEntry(ov.insurer, ov.product);
+  if (!corpLoc) {
+    const stripped = stripInsurerPrefix(ov.insurer, ov.product);
+    if (stripped !== ov.product) corpLoc = findCorpusEntry(ov.insurer, stripped);
+  }
   if (corpLoc) {
+    if (corpLoc.matchType === 'fuzzy') {
+      fuzzyMatches++;
+      fuzzyList.push(`SG    | "${ov.product}" → "${corpLoc.name}"`);
+    }
     applyCorpusOverride(corpLoc, ov);
     appliedCorpus++;
     continue;
@@ -161,7 +234,12 @@ console.log('\nSummary:');
 console.log(`  Total overrides:  ${overrides.length}`);
 console.log(`  Applied to SEED:  ${appliedSeed}`);
 console.log(`  Applied to SG:    ${appliedCorpus}`);
+console.log(`  Fuzzy matches:    ${fuzzyMatches}`);
 console.log(`  Missed:           ${missed}`);
+if (fuzzyMatches > 0) {
+  console.log('\nFuzzy matches (review for false positives):');
+  for (const f of fuzzyList) console.log('  ' + f);
+}
 if (missed > 0) {
   console.log('\nMissed entries (no matching record in SEED or SG corpus):');
   for (const m of missedList.slice(0, 30)) console.log('  - ' + m);

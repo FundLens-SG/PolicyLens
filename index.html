@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.56-override-merge';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.57-override-durability';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -738,9 +738,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.56';
+const APP_VERSION = 'v2.4.0-rc2.57';
 const APP_VERSION_DATE = '2026-05-17';
-const APP_VERSION_NAME = 'Smart override merge — 109 classification corrections';
+const APP_VERSION_NAME = 'Override durability + fuzzy-match recovery';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1214,6 +1214,17 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.57',
+  date: '2026-05-17',
+  name: 'Override durability + fuzzy-match recovery',
+  sections: [{
+    heading: 'Catalogue durability',
+    items: ['tools/build-singapore-product-knowledge.mjs now reads tools/manual-corpus-overrides.json after generating the PRODUCTS array from the corpus text files, and re-applies the category / sub-type corrections from past deep-research runs. Without this, every rebuild would silently revert manual fixes (e.g. AIA Pro Lifetime Protector back to Whole Life) because the script\'s inferCategory heuristics don\'t know about them.', 'manual-corpus-overrides.json captures the 74-but-meaningful subset of corrections (962 entries scanned; 74 had category/subType that differed from the default heuristics). Re-running the build keeps them.', 'Embedded toRepoEntries() in the build-script output now matches the rc2.51 fix: the noisy "Singapore product reference (sg-ref-…). Source: 01_flat_policy_name_corpus.txt" notes line is permanently dropped. Source tracking lives on hidden _knowledgeVersion / _corpusSource fields. Without this, every build re-introduced the noisy notes into policy forms.', 'Build script paths now auto-detect — tried hardcoded "C:\\\\Creations\\\\…" path first, falls back to "C:\\\\CKG Creations\\\\…" (the current workspace), then to repoRoot/../. Same for the CRMLens mirror output path. The hardcoded paths were a pre-existing bug that would have surfaced the next time anyone ran the build script.']
+  }, {
+    heading: 'Override applier fuzzy-match',
+    items: ['tools/apply-overrides.mjs gains fuzzy-match recovery for the 7 missed-override class (AI submitted "Early Critical Cover Extra" but corpus has "AIA Early Critical Cover Extra" — insurer-prefix mismatch). Three-tier match: (1) exact compact match → (2) substring match with length-diff ≤ 30% of longer name, skipping the insurer-name-as-product placeholder → (3) strip-insurer-prefix retry on both passes.', 'Stricter than rc2.56 first-pass: now correctly REJECTS the dangerous cases (PRUShield ↔ PRUShield Plus tier mismatch, Tokio Marine #goClassic ↔ Tokio Marine generic placeholder, AIA Smart Wealth Builder ↔ Builder II generation gap was reviewed and accepted as same family) while still recovering legitimate prefix-only mismatches.', 'All 116 overrides applied this round (21 SEED + 95 SG-knowledge), 0 missed.']
+  }]
+}, {
   version: 'v2.4.0-rc2.56',
   date: '2026-05-17',
   name: 'Smart override merge — 109 classification corrections',
@@ -5887,7 +5898,7 @@ async function pdfToImages(pdfDoc, maxPages = 12) {
 // cache could return a stale 2-policy spreadsheet result before the fixed
 // local XLSX parser ran, so the parser now bypasses extraction/OCR cache
 // for spreadsheets and this version makes existing stale entries unreachable.
-const EXTRACT_PIPELINE_VERSION = 'v15.57-2026-05-17-override-merge-rc2.56';
+const EXTRACT_PIPELINE_VERSION = 'v15.58-2026-05-17-override-durability-rc2.57';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -15893,7 +15904,7 @@ const SEED_REPOSITORY = [
   productName: 'Early CompleteCare (Deluxe)',
   productCode: 'CCC2B',
   category: 'protection',
-  subType: 'Critical Illness',
+  subType: 'Early Critical Illness',
   currency: 'SGD',
   notes: 'Non-par term CI multi-payout. 126 conditions. Comprehensive ×1 + Cover Me Again ×4 + Recurring/Relapse ×2. Up to $700k lump-sum + $240k cancer income on $100k SI. Continuous Cancer Income 4% SI/mth up to 60mth. +33% premium vs Classic. Death = higher of premiums less claims or 8× annual premium.',
   editHistory: []
@@ -16029,7 +16040,7 @@ const SEED_REPOSITORY = [
   productName: 'Absolute Critical Cover',
   productCode: 'ACC',
   category: 'protection',
-  subType: 'Critical Illness',
+  subType: 'Early Critical Illness',
   currency: 'SGD',
   notes: 'Par whole life CI. Covers critical illnesses + chronic diseases + future unknown diseases. Pre-early benefit for chronic conditions. Multi-stage CI payouts. Potential cash value accumulation. AIA Vitality compatible. SDIC protected.',
   editHistory: []
@@ -16049,7 +16060,7 @@ const SEED_REPOSITORY = [
   productName: 'Pro Lifetime Protector (II)',
   productCode: 'PLP2',
   category: 'investment',
-  subType: 'Investment-Linked Policy (ILP)',
+  subType: 'ILP (Investment)',
   currency: 'SGD',
   notes: 'ILP with protection. Death + accidental disability + multi-stage CI (150 conditions via Lifetime Critical Cover rider with power reset up to 300% SA). Optional Relapse Benefit rider. Guided portfolios: Pro Adventurous/Balanced/Cautious (Mercer). 100%/102% premiums invested from Yr5/Yr10. No-lapse guarantee first 10 years. Cash access from Yr2 no charges. AIA Vitality +10% coverage +10% rider discount Yr1.',
   editHistory: []
@@ -16120,7 +16131,7 @@ const SEED_REPOSITORY = [
   insurer: 'Prudential',
   productName: 'PRUVantage Assure Series',
   productCode: 'PVAS',
-  category: 'savings',
+  category: 'investment',
   subType: 'Investment-Linked Policy (ILP)',
   currency: 'SGD',
   notes: 'ILP with Wealth Assure feature — locks in coverage at peak policy value for death + accidental disability. Dual Accounts: Growth Account + Flex Account (regular income from Day 1). Low charges from 0.8% p.a. for limited years. Welcome Bonus + Loyalty Bonus. Wealth Share feature for legacy transfer during lifetime. Premium waiver on 35 CI. Available as Single Premium (PRUVantage Assure SP) or Regular Premium (PRUVantage Assure II). Max S$20M or 3× lifetime premium.',

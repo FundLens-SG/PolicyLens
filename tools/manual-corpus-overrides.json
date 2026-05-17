@@ -1,0 +1,5774 @@
+[
+  {
+    "insurer": "AIA",
+    "productName": "AIA",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Absolute Critical Cover",
+    "category": "protection",
+    "subType": "Early Critical Illness"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Adaptable Income",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Asset Builder",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Asset Growth",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Baby Protect Plus",
+    "category": "maternity",
+    "subType": "Maternity"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Baby Protect Plus (II)",
+    "category": "maternity",
+    "subType": "Maternity"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Baby Protect Plus (III)",
+    "category": "maternity",
+    "subType": "Maternity Coverage"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Baby Protect Plus / AIA Baby Protect Plus (II)",
+    "category": "maternity",
+    "subType": "Maternity"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Beyond Critical Care",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Centurion PA",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA CI Starter Cover",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Cigna and AIA International Wealth (AIA IW) branches",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Diabetes Care",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Early Critical Cover Extra",
+    "category": "protection",
+    "subType": "Early Critical Illness"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Early Critical Protector (rider)",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Early Critical Protector Life (IV)",
+    "category": "protection",
+    "subType": "Early Critical Illness"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Early Critical Protector Waiver of Premium (II)",
+    "category": "protection",
+    "subType": "Early Critical Illness"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Elite Funds",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Enhanced Cancer Protect",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Glow of Life",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Group Term Life",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Group Term Life / Group H&S / Group PA / Group ECI",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Guaranteed Protect Plus",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Guaranteed Protect Plus (II)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Guaranteed Protect Plus (II) / AIA Guaranteed Protect Plus",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Guaranteed Protect Plus (III)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Guaranteed Protect Plus (IV)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA HealthShield Gold Max",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA HealthShield Gold Max A",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA HealthShield Gold Max B",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA HealthShield Gold Max B Lite",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA HealthShield Gold Max Booster",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA HealthShield Gold Max Special A",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA HealthShield Gold Max Special B",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA HealthShield Gold Max Standard",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA HealthShield Gold Max Standard Plan",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Hospital Income",
+    "category": "health",
+    "subType": "Hospital Income"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA HS Gold Booster",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA HSG Booster",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA International Wealth (AIA IW)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Invest Easy",
+    "category": "investment",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Life Dividends",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Max A Cancer Care Booster",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Max Cancer Care Pro",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Max Emergency and Outpatient Care Booster",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Max Essential A",
+    "category": "protection",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Max Essential A Saver",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Max Essential B",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Max Essential B Lite",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Max Essential C",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Max Healthcare",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Max Plus",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Max VitalCare",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Max VitalCare (closed)",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Max VitalHealth A",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Max VitalHealth A Value",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Max VitalHealth B",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Max VitalHealth B Lite",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Max VitalHealth Pro",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Mortgage Reducing Term Assurance",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Mortgage Reducing Term Assurance / AIA MRTA",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA MRTA",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA MultiStage Cancer Cover",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA MultiStage Critical Protector",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Mum2Baby Choices",
+    "category": "maternity",
+    "subType": "Maternity Coverage"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Pay Protector",
+    "category": "protection",
+    "subType": "Disability Income"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Pink of Health",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Generations (II)",
+    "category": "retirement",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Gift for Life Plus",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Gift for Life Plus (II)",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Gift for Life Plus / Plus (II)",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Gift for Life Series",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Heritage Wealth (II)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Indexed Legacy (II)",
+    "category": "protection",
+    "subType": "Indexed UL (IUL)"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Infinite Wealth (II)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Legacy (IX)",
+    "category": "protection",
+    "subType": "Universal Life (UL)"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Pro Secure",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Retirement Elite",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Wealth Elite",
+    "category": "investment",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Wealth Elite 2.0",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Wealth Legacy",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Wealth Venture",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Wealth Venture 2.0",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Power Critical Cover",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Premier Disability Cover",
+    "category": "protection",
+    "subType": "Disability Income"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Premier Disability Cover (II)",
+    "category": "protection",
+    "subType": "Disability Income"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Premier Life",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Prime Critical Cover",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Pro Achiever",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Pro Achiever 2.0",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Pro Achiever 3.0",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Pro Lifetime Protector",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Pro Lifetime Protector (II)",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Pro Lifetime Reward",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Retire Easy",
+    "category": "retirement",
+    "subType": "Retirement Income"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Retirement Saver",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Retirement Saver (II)",
+    "category": "retirement",
+    "subType": "Retirement Income (Par WL)"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Retirement Saver (II) / AIA Retirement Saver",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Retirement Saver (III)",
+    "category": "retirement",
+    "subType": "Retirement Income (Par WL)"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Retirement Saver (IV)",
+    "category": "retirement",
+    "subType": "Retirement Income (Par WL)"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Secure Flexi Term",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Secure Flexi Term (R&C)",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Secure Wealth",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Smart Flexi Growth",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Smart Flexi Rewards",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Smart Flexi Rewards (II)",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Smart Growth",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Smart Growth (II)",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Smart Lifetime Rewards",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Smart Rewards",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Smart Wealth Builder",
+    "category": "savings",
+    "subType": "Lifetime Endowment"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Smart Wealth Builder Series",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Solitaire PA",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Solitaire PA (II)",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Solitaire Personal Accident",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Term Plus",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Triple Critical Cover",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Triple Critical Cover Life",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Ultimate Critical Cover",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Vitality",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Vivolife",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Wealth Builder",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Wealth Pro Advantage",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Wealth Pro Advantage Growth",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AON HappyTails",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Direct - AIA Term Cover",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Direct - AIA Whole Life Cover",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Direct - AIA Whole Life Cover (II)",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Early Critical Protector Payor Benefit",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Format: (Name)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Group ECI",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Group H&S",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Group PA",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "HealthShield Gold Max A",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "HealthShield Gold Max B",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "HealthShield Gold Max B Lite",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "HealthShield Gold Max Special A",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "HealthShield Gold Max Special A/B",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "HealthShield Gold Max Special B",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "HealthShield Gold Max Standard",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "HS Gold Booster",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "HS Gold Booster / AIA HealthShield Gold Max Booster",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Payor Benefit Rider (Death",
+    "category": "protection",
+    "subType": "Rider"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Payor Benefit Rider (Death/CI/TPD)",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Premium Waiver Benefit (Self)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Spouse Waiver Benefit",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "TPD)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Wealth Pro Advantage Enhancer",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "China Life",
+    "productName": "China Life Critical Care Rider",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "China Life",
+    "productName": "China Life Critical Trio",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "China Life",
+    "productName": "China Life Early Critical Care Rider",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "China Life",
+    "productName": "China Life Eternal Wealth",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "China Life",
+    "productName": "China Life Eternal Wealth (USD)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "China Life",
+    "productName": "China Life Lifetime Income Plan",
+    "category": "retirement",
+    "subType": "Retirement Income"
+  },
+  {
+    "insurer": "China Life",
+    "productName": "China Life Lifetime Income Plan (RMB)",
+    "category": "retirement",
+    "subType": "Retirement Income"
+  },
+  {
+    "insurer": "China Life",
+    "productName": "China Life Lifetime Income Supreme Plan",
+    "category": "retirement",
+    "subType": "Retirement Income"
+  },
+  {
+    "insurer": "China Life",
+    "productName": "China Life Multiplier Guardian Plus",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "China Life",
+    "productName": "China Life Multiplier Guardian Series",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "China Life",
+    "productName": "China Life Multiplier Guardian Supreme",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "China Life",
+    "productName": "China Life Prosperous Retirement",
+    "category": "retirement",
+    "subType": "Retirement Income"
+  },
+  {
+    "insurer": "China Life",
+    "productName": "China Life Term Guardian Plus",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "China Life",
+    "productName": "China Life Whole Life Guardian",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "China Life",
+    "productName": "DIRECT-China Life Critical Care Rider",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "DIRECT-Term",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "DIRECT-Whole Life",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "HNW:",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "i-Assure99",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "i-Cash Plus (III)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "i-Protect",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "i-Save",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "i-Secure II",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "i-Secure Legacy",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "i-Secure Legacy (II)",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "i-Secure Premier",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "Infinite Harvest (III)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "Infinite Indexed Legacy (USD)",
+    "category": "protection",
+    "subType": "Indexed Universal Life"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "Infinite Indexed Wealth (USD)",
+    "category": "protection",
+    "subType": "Indexed Universal Life"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "Infinite Legacy (II)",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "Infinite Universal",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "Taiping Smartcare",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "CPF Board",
+    "productName": "ElderShield 300",
+    "category": "health",
+    "subType": "National Scheme"
+  },
+  {
+    "insurer": "CPF Board",
+    "productName": "ElderShield 300/400 policies of those who upgraded to CareShield Life",
+    "category": "health",
+    "subType": "National Scheme"
+  },
+  {
+    "insurer": "CPF Board",
+    "productName": "ElderShield Value Plus",
+    "category": "health",
+    "subType": "National Scheme"
+  },
+  {
+    "insurer": "CPF Board",
+    "productName": "MediShield Life",
+    "category": "health",
+    "subType": "National Scheme"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Business Owners Super Suite (Tiq)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "CANCER (Etiqa branded)",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "CANCER (Tiq by Etiqa digital)",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "CIMB (bank-branded)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Commercial Vehicle (Tiq)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "DBS",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Digital arm:",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "DIRECT-Etiqa Whole Life",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Enrich assure",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Enrich flex plus",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Enrich goal",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Enrich income",
+    "category": "retirement",
+    "subType": ""
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Enrich retirement",
+    "category": "retirement",
+    "subType": "Retirement Income"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Enrich rewards",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Enrich saver",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "ePROTECT home",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "ePROTECT home / home pro",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "ePROTECT maid",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "ePROTECT mortgage",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "ePROTECT motorcycle",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "ePROTECT personal mobility",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "ePROTECT savings",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "ePROTECT term life",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Essential whole life cover",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Etiqa",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Etiqa / Tiq",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Etiqa ILP:",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Etiqa retail:",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Etiqa savings:",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Gold",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "HL Assurance",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "home pro",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Invest flex wealth II",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Invest plus SP",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Invest smart flex II",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Invest Smart Vista",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Invest vista",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Invest Wealth Purpose",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "LIFE",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "LIFE / CI / CANCER (Etiqa branded)",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "LIFE / CI / CANCER (Tiq by Etiqa digital)",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Maternity 360",
+    "category": "maternity",
+    "subType": "Maternity"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Maybank (distributor)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Personal Cyber Insurance (Tiq)",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Platinum)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Premier Wholelife (Premier Solutions)",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Private Car",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Singapore-specific",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Sompo",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Standard Chartered",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Tiq",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Tiq 3 Plus Critical Illness",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Tiq by Etiqa",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Tiq Cancer Insurance",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Tiq Car Insurance",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Tiq Car Insurance / Private Car",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Tiq CashSaver",
+    "category": "savings",
+    "subType": ""
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Tiq Critical Illness",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Tiq general)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Tiq Home Insurance",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Tiq Invest",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Tiq Maid",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Tiq Personal Accident",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Tiq Pet Insurance",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Tiq Term Life Insurance",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Tiq Travel Insurance",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Tiq Whole Life Insurance",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "TripCare 360 (Silver",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "TripCare 360 (Silver/Gold/Platinum)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "FWD",
+    "productName": "Automobile Association",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "FWD",
+    "productName": "Business",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "FWD",
+    "productName": "Executive",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "FWD",
+    "productName": "First)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "FWD",
+    "productName": "Format per line: Exact Marketed Name",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Big 3 Critical Illness",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Cancer 2.0",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Cancer Insurance (legacy v1)",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Car Insurance (Classic",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Car Insurance (Classic / Executive / Prestige)",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Critical Illness",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Critical Illness Plus",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Direct Purchase Term Life",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Flex (CI)",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Future First",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD HDB Fire Insurance",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Heart Attack",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Home Insurance",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD International Health",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Invest First",
+    "category": "protection",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Invest First Horizon",
+    "category": "protection",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Invest First Plus",
+    "category": "protection",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Invest Flexi",
+    "category": "protection",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Invest Goal",
+    "category": "protection",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Invest Goal 1",
+    "category": "protection",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Life Income",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Life Income Plus",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Life Protection",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Maid Insurance Essential",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Maid Insurance Exclusive",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Motorcycle Insurance",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Personal Accident",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Stroke",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Term Life Plus",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Travel Insurance (Premium",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Travel Insurance (Premium/Business/First)",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "MSIG",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "FWD",
+    "productName": "Prestige)",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "(Legacy: GREAT SupremeHealth B, A, P)",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "(Severe Disability) Income Replacement Riders",
+    "category": "protection",
+    "subType": "Disability Income"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Advantage",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Allianz",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Annual Cashback Endowment",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Bank-branded",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Care Plus Programme",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Care Plus Rider",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "CI on life insured)",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Complete Living Care Rider",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Complete Living Care Rider 2",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Complete MultiPay CI Plus Advantage Rider",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Critical Care Advantage",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Critical Protector Advantage",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "DBS",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "DBS / OCBC / UOB",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "death waives child premium)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "DIRECT - GREAT Life (I) 70",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "DIRECT - GREAT Life (I) 70 / 85",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "DIRECT - GREAT Life II 70",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "DIRECT - GREAT Life II 85",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "DIRECT - GREAT Term",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "ElderShield Comprehensive",
+    "category": "health",
+    "subType": "National Scheme"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "ElderShield Value Plus",
+    "category": "health",
+    "subType": "National Scheme"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Executive",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Flexi Term",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "FlexiLife",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "FlexiLife Multiplier Series",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GENERAL INSURANCE (Etiqa",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GENERAL INSURANCE (Etiqa / Tiq general)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GoGreat Term Life",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Cancer Guard",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT CareShield",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT CareShield (Great Eastern)",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Complete Flexi Living Protect 3",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Critical Cover Series",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Critical Cover: Complete",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Critical Cover: Top 3 CIs",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT EASTERN",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT EASTERN (GE) + AIA SINGAPORE - LIFE & HEALTH",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Great Eastern General",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Great Eastern Supreme Health",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Great Eastern Supreme Health / GREAT SupremeHealth",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Eduplanner",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Family Care",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Flexi Cashback",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Flexi Goal",
+    "category": "protection",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Flexi Living Protect 3",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Flexi Protect 3",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Flexi Protect Series",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Flexi Protect Series 2",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Flexi Protect Series 2 / GREAT Flexi Protect Series",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Flexi Protect Series 3",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Flexi Saver",
+    "category": "protection",
+    "subType": "Universal Life (UL)"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Golden Protector",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Hospital Cash",
+    "category": "health",
+    "subType": "Hospital Income"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Index Income",
+    "category": "investment",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Invest Advantage",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Invest Advantage (SP)",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Junior Income Advantage Series",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Junior Protector",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Life Advantage",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Life Advantage 4",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Life Advantage II",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Life Advantage III",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Life Multiplier (MLA)",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Lifetime Payout",
+    "category": "retirement",
+    "subType": "Retirement Income"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Lifetime Payout 2 Special",
+    "category": "retirement",
+    "subType": "Retirement Income (Par WL)"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Lifetime Payout 3",
+    "category": "retirement",
+    "subType": "Retirement Income (Par WL)"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Maternity Care",
+    "category": "maternity",
+    "subType": "Maternity"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Maternity Care 2",
+    "category": "maternity",
+    "subType": "Maternity Coverage"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Prime Rewards 3",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Prime Rewards III",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Protector Active",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Retire Income",
+    "category": "retirement",
+    "subType": "Retirement Income (Par WL)"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT SP",
+    "category": "savings",
+    "subType": "Short-term Endowment"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT SP Series (multiple tranches: Aug 2025, etc.)",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT SP USD",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT SupremeHealth",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT SupremeHealth A Plus",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT SupremeHealth B PLUS",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT SupremeHealth P PLUS",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT SupremeHealth P Prime",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT SupremeHealth Standard",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT SupremeHealth Standard Plan",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Term",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Term 2",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT TotalCare",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT TotalCare (CLASSIC)",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT TotalCare (ELITE)",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT TotalCare 2",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT TotalCare P Prime",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT TotalCare Plus",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT TotalCare Plus 2",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT TravelCare",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Wealth Advantage",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Wealth Advantage 2",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Wealth Advantage 2 / GREAT Wealth Advantage",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Wealth Advantage 4",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Wealth Multiplier 3",
+    "category": "protection",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Wealth Multiplier II",
+    "category": "protection",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREATLife Endowment Insurance 3",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Home Protection Scheme",
+    "category": "health",
+    "subType": "National Scheme"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Junior Protector Plus",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Legacy GSH (pre-rebrand)",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Liberty",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Liberty Insurance",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "LifeSecure",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Living Assurance",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Living Assurance / Living Policy",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Living Care Rider",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Living Policy",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "MSIG",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "OCBC",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Payor Premium Waiver Rider (parent's CI",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Payor Premium Waiver Rider (parent's CI/death waives child premium)",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Premium Waiver Benefit (TPD",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Premium Waiver Benefit (TPD/CI on life insured)",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Prestige Legacy Advantage",
+    "category": "protection",
+    "subType": "Universal Life (UL)"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Prestige Legacy Index",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Prestige Life Gold (SGD)",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Prestige Life Gold USD",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Prestige Life Rewards Series",
+    "category": "retirement",
+    "subType": "Income Plan"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Prestige Portfolio",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Prestige Series",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Prestige Wealth Legacy",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Prestige)",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Protect Me Again Rider",
+    "category": "protection",
+    "subType": "Rider"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "ReadyCare Term and All Stages CI Rider",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Smart Early Critical Care",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Smart Life Advantage",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Smart Life Advantage (ILP)",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Smart Protect",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Supreme Life",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Supreme Livin' Care",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Supreme Livin' Care / Supreme Livin' Care Plus",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Supreme Livin' Care Plus",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Supreme Living",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Supreme Living Term",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Supreme MediCash",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Supreme Protect",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Supreme Term-Life",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "SupremeCare (Group Managed Care)",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "UOB",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Wealth Pro Advantage Enhancer",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "HL Assurance",
+    "productName": "HL Assurance",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "\"AXA\"",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "AXA Basic Care Rider (legacy)",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "AXA Comprehensive Critical Illness",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "AXA Direct Term",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "AXA Disability Care",
+    "category": "protection",
+    "subType": "Disability Income"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "AXA Early Critical Illness",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "AXA Enhanced Care (legacy)",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "AXA General Care Rider Plan A (legacy)",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "AXA Life Treasure",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "AXA Shield Plan A (legacy)",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "AXA Shield Plan B (legacy)",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "AXA Shield Plus Option A (legacy)",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "AXA Shield Plus Option B (legacy)",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "AXA Shield Plus Option C (legacy)",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "AXA Shield Standard Plan (legacy)",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "AXA SmartCare PA",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "AXA Standard Care Rider (legacy)",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "AXA Term Protector",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "AXA Wealth Accelerate",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Bank-branded",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "DIRECT HSBC Life Lite",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "DIRECT HSBC Life Term Lite",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Disability Income",
+    "category": "protection",
+    "subType": "Disability Income"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Early Critical Illness Benefit III (rider)",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Early Critical Illness Payout II",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Advance",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life - Life Treasure",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life - Life Treasure (II)",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life - Life Treasure III",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Band Aid",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Basic Care Rider",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Cancer ReCover",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Critical Care",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life CritiCare For Her",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life CritiCare For Him",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life current : ^HSBC\\s+Life\\s+[A-Z][A-Za-z ]+(\\s+(II",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Diamond Prestige IUL II",
+    "category": "protection",
+    "subType": "Indexed UL (IUL)"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Emerald Legacy Life III",
+    "category": "protection",
+    "subType": "Universal Life (UL)"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life EmpoweredMum",
+    "category": "protection",
+    "subType": "Maternity"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Enhanced Care",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Enhanced Care (I)",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Enhanced Care II",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Flexi Protector",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Goal Builder",
+    "category": "protection",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Goal Builder II",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Goal Protector",
+    "category": "protection",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life HappyFamily",
+    "category": "protection",
+    "subType": "Maternity"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life HappyMummy",
+    "category": "protection",
+    "subType": "Maternity"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Hospital Cash (rider)",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Income Protector",
+    "category": "protection",
+    "subType": "Disability Income"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Income Protector / Disability Income",
+    "category": "protection",
+    "subType": "Disability Income"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Indexed Flexi Income",
+    "category": "retirement",
+    "subType": "Retirement Income (Par WL)"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Retirement Income",
+    "category": "retirement",
+    "subType": "Retirement Income"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Retirement Income II",
+    "category": "retirement",
+    "subType": "Retirement Income"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Sapphire Prestige Income",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Savings Protector",
+    "category": "savings",
+    "subType": "Short-term Endowment"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Savings Protector II",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Shield (formerly AXA Shield)",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Shield Plan A",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Shield Plan B",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Shield Plus (rider)",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Shield Standard Plan",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life short",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life SmartPA Protect+",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Standard Care Rider",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Super CritiCare",
+    "category": "protection",
+    "subType": "Early Critical Illness"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Term Protect Advantage",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Term Protector",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Term Protector Prime",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Variable Annuity",
+    "category": "retirement",
+    "subType": "Annuity"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Wealth Abundance",
+    "category": "protection",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Wealth Accelerate",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Wealth Builder",
+    "category": "protection",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Wealth Goal",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Wealth Goal II",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Wealth Harvest",
+    "category": "protection",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Wealth Invest",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Wealth Voyage",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Payor Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Rider"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Premium Waiver Benefit (HSBC Life rider)",
+    "category": "protection",
+    "subType": "Rider"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Wealth Treasure (AXA legacy)",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Liberty",
+    "productName": "Car",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Liberty",
+    "productName": "Liberty",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Liberty",
+    "productName": "Liberty BeautyCare",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Liberty",
+    "productName": "Liberty CafeCare",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Liberty",
+    "productName": "Liberty GolfCare",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Liberty",
+    "productName": "Liberty Home (HomeCare)",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Liberty",
+    "productName": "Liberty Insurance",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Liberty",
+    "productName": "Liberty MaidCare",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Liberty",
+    "productName": "Liberty Motor",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Liberty",
+    "productName": "Liberty Motor / Car",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Liberty",
+    "productName": "Liberty OfficeCare",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Liberty",
+    "productName": "Liberty Personal Accident",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Liberty",
+    "productName": "Liberty PetCare",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Liberty",
+    "productName": "Liberty ShopCare",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Liberty",
+    "productName": "Liberty Travel",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ALSO: ^(LifeReady",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Critical SelectCare",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "InvestReady",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "InvestReady Wealth (II)",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Life Ready",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "LifeReady Plus",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "LifeReady Plus (II)",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manu Multi-Care",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manu Multi-Care 3 (legacy)",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manu Multi-Care II",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ManuCancerCover",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ManuHealthCare (legacy hospital cash)",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ManuInvest Duo",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife : ^(Manu",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife / Singlife",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Early CompleteCare",
+    "category": "protection",
+    "subType": "Early Critical Illness"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Goal 10",
+    "category": "protection",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Goal 2025",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Goal 7",
+    "category": "protection",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife IncomeReady",
+    "category": "protection",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife IncomeSecure",
+    "category": "retirement",
+    "subType": "Income Plan"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife InvestReady",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife InvestReady (III)",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife InvestReady (III) Plus",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife InvestReady Growth",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Maternity Cover (rider)",
+    "category": "maternity",
+    "subType": "Maternity"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Premium Waiver (Disability)",
+    "category": "protection",
+    "subType": "Disability Income"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Ready CompleteCare",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife ReadyProtect",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife SmartRetire",
+    "category": "protection",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife SmartWealth",
+    "category": "protection",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ManuLifeStyle",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ManuProtect Decreasing",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ManuProtect Decreasing (II)",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ManuProtect Term",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ManuProtect Term (II)",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ManuRegal",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ManuRetire Secure",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ManuTerm",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ManuWealth Secure",
+    "category": "protection",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "None. Manulife Singapore does NOT offer an Integrated Shield Plan.",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Payor Benefit Rider",
+    "category": "protection",
+    "subType": "Rider"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Premium Waiver Rider (LifeReady Plus II)",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Ready LifeIncome",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Ready LifeIncome (II)",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Ready LifeIncome (III)",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ReadyBuilder",
+    "category": "protection",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ReadyBuilder (II)",
+    "category": "savings",
+    "subType": "Lifetime Endowment"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ReadyCare All-in-One Rider",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ReadyCare Term and All Stages CI Rider",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ReadyCare Term and Hospitalisation Rider",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ReadyCare Term Rider",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "RetireReady Plus",
+    "category": "protection",
+    "subType": "Annuity"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "RetireReady Plus (II)",
+    "category": "protection",
+    "subType": "Annuity"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "RetireReady Plus (III)",
+    "category": "retirement",
+    "subType": "Retirement Income (Par WL)"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Spouse Waiver Rider",
+    "category": "protection",
+    "subType": "Rider"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Allianz",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Enhanced IncomeShield Advantage",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Enhanced IncomeShield Advantage Care",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Enhanced IncomeShield Basic",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Enhanced IncomeShield Preferred",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Gro Capital Ease",
+    "category": "savings",
+    "subType": "Short-term Endowment"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Gro Capital Plus",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Gro Cash Flex Pro",
+    "category": "savings",
+    "subType": ""
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Gro Cash Plus",
+    "category": "savings",
+    "subType": ""
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Gro Cash Sure",
+    "category": "savings",
+    "subType": ""
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Gro Flex Saver",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Gro Gen Saver",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Gro Power Saver Pro",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Gro Retire Ease",
+    "category": "retirement",
+    "subType": "Retirement Income"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Gro Retire Flex",
+    "category": "retirement",
+    "subType": "Retirement Income"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Gro Retire Flex Pro",
+    "category": "retirement",
+    "subType": "Retirement Income"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Gro Retire Flex Pro II",
+    "category": "retirement",
+    "subType": "Retirement Income"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Gro Saver Flex Pro",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "HL Assurance",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "INCOME (Enhanced IncomeShield riders) --",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Care Secure (NTUC Income",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Care Secure (NTUC Income / Income Insurance)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Disability Income",
+    "category": "protection",
+    "subType": "Disability Income"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Enhanced IncomeShield",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Enhanced IncomeShield / Enhanced IncomeShield Preferred / Advantage",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Insurance (formerly NTUC Income)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Insurance)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Plus)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "IncomeShield A",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "IncomeShield B",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "IncomeShield C",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "IncomeShield Plan P",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "IncomeShield Plan P / A / B / C",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "IncomeShield Standard Plan",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Liberty",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Liberty Insurance",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "MSIG",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "RevoSave",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Sompo",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Star Assure",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Star Recovery",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Star Secure Pro",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Star Term",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Star Term Protect",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "\"STAR$\"",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Income:",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "NRIC pattern:",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUActive",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUActive Cash",
+    "category": "savings",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUActive Crisis Guard",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUActive Life",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUActive Life II",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUActive Life III",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUActive Life V",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUActive Retirement",
+    "category": "retirement",
+    "subType": "Retirement Income"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUActive Retirement II",
+    "category": "retirement",
+    "subType": "Retirement Income (Par WL)"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUActive Saver III",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUActive Term",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUAssure Growth",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUCancer (CI)",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUCancer 360",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUCrisis",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUCrisis Cover Premier",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUDENTIAL (PRUExtra series) --",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Prudential Plus",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Prudential PRUShield (Premier",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Prudential PRUShield (Premier / Plus / Standard)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Prudential Standard)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUEarly",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUEarly / PRUCrisis / PRUMulti / PRUCancer (CI)",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUEarly Stage Crisis Cover",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUExtra",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUExtra Plus",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUExtra Plus Care",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUExtra Plus CoPay",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUExtra Plus Lite CoPay",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUExtra Preferred",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUExtra Preferred Care",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUExtra Preferred CoPay",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUExtra Premier",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUExtra Premier Care",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUExtra Premier CoPay",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUExtra Premier CoPay. Disambiguate by neighbouring",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUExtra Premier Lite",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUExtra Premier Lite CoPay",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUHospital",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUHospital Care360",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULady",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULife Vantage Achiever Prime",
+    "category": "protection",
+    "subType": "Variable UL (VUL)"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULifetime (lifetime income)",
+    "category": "retirement",
+    "subType": "Retirement Income"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULifetime Income",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULifetime Income Plus",
+    "category": "retirement",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULink",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRULink InvestGrowth",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUMan",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUMortgage",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUMortgage (mortgage decreasing term)",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUMulti",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUMulti-CI Plus",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUmultiple Crisis Cover",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUMum",
+    "category": "maternity",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUMum / PRUHospital / PRUPersonal Accident (ancillary)",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUPersonal Accident",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUPersonal Accident (ancillary)",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRURetirement Income",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUShield",
+    "category": "health",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUShield A Plus",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUShield B Lite",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUShield B Plus",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUShield Extra",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUShield Plus",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUShield Premier",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUShield Standard",
+    "category": "health",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUTerm",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUTerm Lite",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUTerm Total Refund",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUTerm Vantage",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUTermPlus Advantage",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUVantage Achiever Prime",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUVantage Asia",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUVantage Assure (series)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUVantage Heritage",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUVantage Prosper",
+    "category": "investment",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUVantage Wealth",
+    "category": "investment",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUVantage Wealth II",
+    "category": "investment",
+    "subType": ""
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUWealth",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUWealth Income",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUWealth Plus (SGD)",
+    "category": "savings",
+    "subType": "Lifetime Endowment"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUWorking Mum",
+    "category": "maternity",
+    "subType": "Maternity"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Aviation",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Boat",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "CAR",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Credit & Collateral",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "EAR",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Energy (Onshore",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Energy (Onshore/Offshore)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Engineering",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Engineering / CAR / EAR",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Fire & Property",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "High",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Hull & Machinery",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "individual)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "IPs:",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Liberty BeautyCare",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Liberty CafeCare",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Liberty GolfCare",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Liberty Home (HomeCare)",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Liberty MaidCare",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Liberty Motor",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Liberty Motor / Car",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Liberty OfficeCare",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Liberty Personal Accident",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Liberty PetCare",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Liberty ShopCare",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Liberty Travel",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Marine Cargo (corporate)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Offshore)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Protection & Indemnity (P&I)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles A",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles B)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Cancer Guard Rider",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Choice Rider",
+    "category": "protection",
+    "subType": "Rider"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Choice Rider (from 1 Apr 2026)",
+    "category": "protection",
+    "subType": "Rider"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Corporate Care",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Elite Care (Gold",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Elite Care (Gold / Silver)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Elite Care Outpatient Rider",
+    "category": "protection",
+    "subType": "Rider"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Group Personal Accident",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Hospital Cash Rider",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Key Rider",
+    "category": "protection",
+    "subType": "Rider"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Key Rider (CEASED 1 Apr 2026 new sales)",
+    "category": "protection",
+    "subType": "Rider"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Key Rider Option B",
+    "category": "protection",
+    "subType": "Rider"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Premier Rider",
+    "category": "protection",
+    "subType": "Rider"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Shield (Private",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Shield (Private / High / Standard / A / B)",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Shield A",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Shield B",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Shield High Deductible (option, not on Std)",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Shield Standard",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Standard",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Sharia-based insurance",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Silver)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Sompo Domestic Helper Insurance",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Sompo Health Insurance (group",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Sompo Health Insurance (group / individual)",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Sompo HomeBliss",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Sompo Overseas Travel PLUS",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Sompo PA Ease",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Sompo Private Car Insurance",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Sompo:",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Accident Reimbursement Cover II",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Accidental Fracture Cover III",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "APPENDIX",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Aviva legacy : ^My[A-Z][A-Za-z]+(\\s+(Plan",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Aviva MyLongTermCare",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Aviva MyLongTermCare / Aviva MyLongTermCare Plus",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Aviva MyLongTermCare Plus",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Aviva MyShield Plan 1",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Aviva MyShield Plan 1 / Plan 2 / Plan 3 / Plan A / Standard",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Aviva MyShield Plan 2",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Aviva MyShield Plan 3",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Aviva MyShield Plan A",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Aviva MyShield Standard",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Aviva)",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Bank-branded (under-",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Cancer Care Rider",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "CareShield Life",
+    "category": "health",
+    "subType": "National Scheme"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Critical Care Rider",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Dependants' Protection Scheme",
+    "category": "health",
+    "subType": "National Scheme"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "DIRECT - Singlife Term Life",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "ECICS",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "ElderShield",
+    "category": "health",
+    "subType": "National Scheme"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "EXACT NAME",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Flexi Cashback",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Manulife",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Manulife / Singlife",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "My Multipay CI Plan III (Aviva legacy)",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "My Multipay Critical Illness Plan (Aviva legacy)",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyCancerCare (Aviva legacy)",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyCoreCI",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyCoreCI / MyCoreCI II (Aviva legacy)",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyCoreCI II (Aviva legacy)",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyEarly Critical Illness Plan II (Aviva legacy)",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyEndowment (Aviva legacy)",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyEndowmentPlan",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyEndowmentPlan / MyEndowment (Aviva legacy)",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyHealthPlus B",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyHealthPlus C (original)",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyHealthPlus Option A",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyHealthPlus Option A / B / C (original)",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyHealthPlus Option A-II",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyHealthPlus Option A-II (Aviva legacy)",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyHealthPlus Option B",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyHealthPlus Option B-II (Aviva legacy)",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyHealthPlus Option C",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyHealthPlus Option C-II",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyHealthPlus Option C-II (Aviva legacy)",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyLifeChoice (Singlife with Aviva)",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyProtector Decreasing",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyProtector Legacy",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyProtector Level",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyProtector Level Plus",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyProtector Mortgage",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyProtector Mortgage Lite",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyProtector Simplified",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyProtector-Term Plan (II) (Singlife w",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyProtector-Term Plan (II) (Singlife w/ Aviva)",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyRetirementChoice",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyRetirementChoice (Aviva legacy)",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyRetirementChoice / MyRetirementSavings",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyRetirementSavings",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MySavingsPlan (Aviva legacy)",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyShield Plan 1 (Aviva legacy)",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyShield Plan 2 (Aviva legacy)",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyShield Plan 3 (Aviva legacy)",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyShield Plan A (Aviva legacy)",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyWealthPlan (Aviva legacy)",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyWholeLifePlan (Singlife with Aviva)",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Payor Premium Waiver",
+    "category": "protection",
+    "subType": "Rider"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Premium Waiver Benefit (rider)",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "QBE",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Recovery Support Benefit (Apr 2026 add-on)",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Accident Care",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Account",
+    "category": "cash_investments",
+    "subType": ""
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Cancer Cover Plus",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Cancer Cover Plus II",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Choice Saver",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Comprehensive Critical Illness",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Comprehensive Critical Illness II",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife current : ^Singlife\\s+[A-Z][A-Za-z ]+(\\s+(II",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Disability Income",
+    "category": "protection",
+    "subType": "Disability Income"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Elite Term",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Elite Term II",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Essential Critical Illness",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Family Accident Care",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Financial Adviser",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Flexi Life Income II",
+    "category": "retirement",
+    "subType": "Retirement Income (Par WL)"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Flexi Retirement",
+    "category": "retirement",
+    "subType": "Retirement Income"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Flexi Retirement II",
+    "category": "retirement",
+    "subType": "Retirement Income"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife GI",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife GROW",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Health Plus Plan 1",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Health Plus Plan 2",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Health Plus Plan 3",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Health Plus Private",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Health Plus Private (from 1 Apr 2026)",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Health Plus Private Lite",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Health Plus Private Prime",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Health Plus Public",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Health Plus Public (from 1 Apr 2026)",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Health Plus Public Lite",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Health Plus Public Prime",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Health Plus Starter",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Hospital Cash (legacy MyHospitalCash)",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Legacy Indexed Income",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Legacy Invest",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Maternity Care",
+    "category": "maternity",
+    "subType": "Maternity"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Multipay Critical Illness",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Multipay Critical Illness II",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Multipay Critical Illness Premier",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife MyDashboard",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife MyHospitalIncome",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Personal Accident",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Retirement Income",
+    "category": "retirement",
+    "subType": "Retirement Income"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Savvy Endowment IV",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Savvy Endowment IV / V / VI etc.",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Savvy Endowment Series",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Savvy Invest",
+    "category": "protection",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Savvy Invest II",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Secure Saver Series",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Shield Plan 1",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Shield Plan 2",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Shield Plan 3",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Shield Standard Plan",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Shield Starter",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Simple Term Life",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Steady Saver",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Sure Invest",
+    "category": "protection",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Whole Life",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Whole Life Choice",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "VI etc.",
+    "category": "protection",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Weekly Income Cover II",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "written by GI insurers)",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "Sompo",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "Sompo Domestic Helper Insurance",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "Sompo HomeBliss",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "Sompo Overseas Travel PLUS",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "Sompo PA Ease",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "Sompo Private Car Insurance",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "#go TotalProtect Cancer",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "#goAffluence",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "#goAssure",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "#goClassic",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "#goClassic Secure",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "#goElite",
+    "category": "protection",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "#goElite Secure",
+    "category": "protection",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "#goInvest",
+    "category": "protection",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "#goTreasures",
+    "category": "protection",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "#goUltra",
+    "category": "protection",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "#goWealthEnrich",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Chubb",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "HL Assurance",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "QBE",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "standalone)",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "TM Atlas Wealth",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "TM Early Cover (rider",
+    "category": "protection",
+    "subType": "Rider"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "TM Early Cover (rider/standalone)",
+    "category": "protection",
+    "subType": "Rider"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "TM Legacy LifeFlex",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "TM Legacy Lifetime",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "TM Legacy Plus",
+    "category": "protection",
+    "subType": "Universal Life"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "TM MultiCare",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "TM Nest Egg (GIO Cashback)",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "TM Protect Cancer",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "TM Retirement GIO",
+    "category": "retirement",
+    "subType": "Retirement Income"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "TM Retirement GIO Plus (II)",
+    "category": "retirement",
+    "subType": "Retirement Income"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "TM Retirement PaycheckLife",
+    "category": "retirement",
+    "subType": "Retirement Income"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "TM Term Assure (II)",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "TM Wealth Enhancement (Cashback)",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Tokio Marine",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Tokio Marine Home Insurance",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Tokio Marine Life",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Tokio Marine Maid Insurance",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Tokio Marine Personal Accident",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Tokio Marine Private Car Insurance",
+    "category": "protection",
+    "subType": ""
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Tokio Marine TA Travel Insurance",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Tokio Marine TA Travel Insurance / Travel Explorer",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Travel Explorer",
+    "category": "protection",
+    "subType": "General Insurance"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Wealth@Future",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  }
+]

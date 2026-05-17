@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.56-override-merge';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.57-override-durability';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -728,9 +728,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.56';
+const APP_VERSION = 'v2.4.0-rc2.57';
 const APP_VERSION_DATE = '2026-05-17';
-const APP_VERSION_NAME = 'Smart override merge — 109 classification corrections';
+const APP_VERSION_NAME = 'Override durability + fuzzy-match recovery';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -987,6 +987,30 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.4.0-rc2.57',
+    date: '2026-05-17',
+    name: 'Override durability + fuzzy-match recovery',
+    sections: [
+      {
+        heading: 'Catalogue durability',
+        items: [
+          'tools/build-singapore-product-knowledge.mjs now reads tools/manual-corpus-overrides.json after generating the PRODUCTS array from the corpus text files, and re-applies the category / sub-type corrections from past deep-research runs. Without this, every rebuild would silently revert manual fixes (e.g. AIA Pro Lifetime Protector back to Whole Life) because the script\'s inferCategory heuristics don\'t know about them.',
+          'manual-corpus-overrides.json captures the 74-but-meaningful subset of corrections (962 entries scanned; 74 had category/subType that differed from the default heuristics). Re-running the build keeps them.',
+          'Embedded toRepoEntries() in the build-script output now matches the rc2.51 fix: the noisy "Singapore product reference (sg-ref-…). Source: 01_flat_policy_name_corpus.txt" notes line is permanently dropped. Source tracking lives on hidden _knowledgeVersion / _corpusSource fields. Without this, every build re-introduced the noisy notes into policy forms.',
+          'Build script paths now auto-detect — tried hardcoded "C:\\\\Creations\\\\…" path first, falls back to "C:\\\\CKG Creations\\\\…" (the current workspace), then to repoRoot/../. Same for the CRMLens mirror output path. The hardcoded paths were a pre-existing bug that would have surfaced the next time anyone ran the build script.'
+        ]
+      },
+      {
+        heading: 'Override applier fuzzy-match',
+        items: [
+          'tools/apply-overrides.mjs gains fuzzy-match recovery for the 7 missed-override class (AI submitted "Early Critical Cover Extra" but corpus has "AIA Early Critical Cover Extra" — insurer-prefix mismatch). Three-tier match: (1) exact compact match → (2) substring match with length-diff ≤ 30% of longer name, skipping the insurer-name-as-product placeholder → (3) strip-insurer-prefix retry on both passes.',
+          'Stricter than rc2.56 first-pass: now correctly REJECTS the dangerous cases (PRUShield ↔ PRUShield Plus tier mismatch, Tokio Marine #goClassic ↔ Tokio Marine generic placeholder, AIA Smart Wealth Builder ↔ Builder II generation gap was reviewed and accepted as same family) while still recovering legitimate prefix-only mismatches.',
+          'All 116 overrides applied this round (21 SEED + 95 SG-knowledge), 0 missed.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.4.0-rc2.56',
     date: '2026-05-17',
@@ -6677,7 +6701,7 @@ async function pdfToImages(pdfDoc, maxPages=12) {
 // cache could return a stale 2-policy spreadsheet result before the fixed
 // local XLSX parser ran, so the parser now bypasses extraction/OCR cache
 // for spreadsheets and this version makes existing stale entries unreachable.
-const EXTRACT_PIPELINE_VERSION = 'v15.57-2026-05-17-override-merge-rc2.56';
+const EXTRACT_PIPELINE_VERSION = 'v15.58-2026-05-17-override-durability-rc2.57';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -15221,7 +15245,7 @@ const SEED_REPOSITORY = [
   {id:'repo-ml-manuinvest-duo',insurer:'Manulife',productName:'ManuInvest Duo',productCode:'RMH15',category:'investment',subType:'ILP (Investment)',currency:'SGD',notes:'Protection ILP. MIP 10/15/20yr. Death = higher of SI or AV. TI to age 99, TPD to age 70. Admin charge 5% AV Yr1-5, 1% Yr6+. Surrender 100% Yr1-2, scaling to 8% at MIP end. Welcome bonus 45-52% of Yr1 premiums. Loyalty 0.20% AV Yr7-MIP, 0.80% after MIP. Premium flexibility from Yr6. Auto fund rebalancing Yr2+.',editHistory:[]},
   {id:'repo-ml-investready-growth',insurer:'Manulife',productName:'InvestReady Growth',productCode:'',category:'investment',subType:'Investment-Linked Policy (ILP)',currency:'SGD',notes:'Investment ILP. MIP 15yr, Flexi Start Yr11. Death = higher of 101% premiums or AV. Admin 2.18% during MIP, 0.95% after. Top-up charge 5%. Welcome bonus 45%. Annual premium bonus 3%. Booster 35% at MIP end. Loyalty 0.3% after MIP. SV breakeven ~Yr17 at 4%.',editHistory:[]},
   {id:'repo-ml-ecc-classic',insurer:'Manulife',productName:'Early CompleteCare (Classic)',productCode:'CCC2A',category:'protection',subType:'Critical Illness',currency:'SGD',notes:'Non-par term CI. 126 conditions across early/intermediate/advanced/extended. Single comprehensive payout 100% SI. Special CI 20% SI max $25k ×6. Recovery Care Plus ICU 4 days 20% SI ×1. Child illness $10k ×2. Death = higher of total premiums or 8× annual premium. 90-day waiting cancer/heart/coronary. Premiums NOT guaranteed.',editHistory:[]},
-  {id:'repo-ml-ecc-deluxe',insurer:'Manulife',productName:'Early CompleteCare (Deluxe)',productCode:'CCC2B',category:'protection',subType:'Critical Illness',currency:'SGD',notes:'Non-par term CI multi-payout. 126 conditions. Comprehensive ×1 + Cover Me Again ×4 + Recurring/Relapse ×2. Up to $700k lump-sum + $240k cancer income on $100k SI. Continuous Cancer Income 4% SI/mth up to 60mth. +33% premium vs Classic. Death = higher of premiums less claims or 8× annual premium.',editHistory:[]},
+  {id:'repo-ml-ecc-deluxe',insurer:'Manulife',productName:'Early CompleteCare (Deluxe)',productCode:'CCC2B',category:'protection',subType:'Early Critical Illness',currency:'SGD',notes:'Non-par term CI multi-payout. 126 conditions. Comprehensive ×1 + Cover Me Again ×4 + Recurring/Relapse ×2. Up to $700k lump-sum + $240k cancer income on $100k SI. Continuous Cancer Income 4% SI/mth up to 60mth. +33% premium vs Classic. Death = higher of premiums less claims or 8× annual premium.',editHistory:[]},
   {id:'repo-ml-readyprotect',insurer:'Manulife',productName:'ReadyProtect Advantage',productCode:'',category:'protection',subType:'Personal Accident',currency:'SGD',notes:'Non-par yearly renewable PA. ADD $200k face (max 150% = $300k). Double payout public transport/school. AMR up to $3k ($6k overseas). TCM $750. Ambulance+mobility aids $1,200. Medical end age 75, ADD end age 99. Premium not guaranteed. Family discount available. Premium steps up at age 56.',editHistory:[]},
   {id:'repo-ml-readymummy',insurer:'Manulife',productName:'ReadyMummy',productCode:'MHPS1',category:'maternity',subType:'Maternity Coverage',currency:'SGD',notes:'Non-par 3yr single premium maternity. Dual insured mother + child (up to 2 children). Mother: death + 14 pregnancy complications + hospital $50-200/day max 30 days + psychotherapy 10% SI (MDD/GAD). Child: death + 24 congenital conditions + hospital + phototherapy. Guaranteed Issuance: LifeReady Plus (II) + ECC/CC riders for child within 90 days, no underwriting (max $200k death/TPD, $100k CI). IVF/IUI/ICI covered with loading. SDIC protected.',editHistory:[]},
 
@@ -15240,9 +15264,9 @@ const SEED_REPOSITORY = [
   // ═══ AIA SINGAPORE ═══
   {id:'repo-aia-gpp4',insurer:'AIA',productName:'Guaranteed Protect Plus (IV)',productCode:'GPP4',category:'protection',subType:'Whole Life',currency:'SGD',notes:'Par whole life. Limited pay options. Death+TI to age 100, TPD to age 70. Non-guaranteed annual bonuses + terminal bonus. Premium Pass Option (1×, after 3rd yr, involuntary retrenchment). Optional riders: Early Critical Protector Life (IV) covers 150 multi-stage CI + 15 special conditions, Critical Protector Life (IV) covers 73 major CI. AIA Vitality discount up to 15%. SDIC protected.',editHistory:[]},
   {id:'repo-aia-ucc',insurer:'AIA',productName:'Ultimate Critical Cover',productCode:'UCC',category:'protection',subType:'Critical Illness',currency:'SGD',notes:'Non-par term CI. 150 medical conditions incl 73 CI across stages. Market-first unlimited reset benefit — coverage resets to 100% after 12 months of being claim-free. Max 500% SA for early/intermediate stages. Cap $350k/life for early/intermediate combined. Accidental death benefit 100% SA. 1-year waiting period. AIA Vitality 10% first-year discount. Premiums NOT guaranteed.',editHistory:[]},
-  {id:'repo-aia-acc',insurer:'AIA',productName:'Absolute Critical Cover',productCode:'ACC',category:'protection',subType:'Critical Illness',currency:'SGD',notes:'Par whole life CI. Covers critical illnesses + chronic diseases + future unknown diseases. Pre-early benefit for chronic conditions. Multi-stage CI payouts. Potential cash value accumulation. AIA Vitality compatible. SDIC protected.',editHistory:[]},
+  {id:'repo-aia-acc',insurer:'AIA',productName:'Absolute Critical Cover',productCode:'ACC',category:'protection',subType:'Early Critical Illness',currency:'SGD',notes:'Par whole life CI. Covers critical illnesses + chronic diseases + future unknown diseases. Pre-early benefit for chronic conditions. Multi-stage CI payouts. Potential cash value accumulation. AIA Vitality compatible. SDIC protected.',editHistory:[]},
   {id:'repo-aia-sft',insurer:'AIA',productName:'Secure Flexi Term',productCode:'SFT',category:'protection',subType:'Term Life',currency:'SGD',notes:'Non-par regular premium term life. Death + TI + terminal cancer. Flexible coverage duration. Renewable at end of term (premium not guaranteed). Conversion privilege to WL/endowment/ILP before age 65 without medical underwriting. Optional add-ons: Critical Cover (43 CI), Early Critical Cover (32 early + 29 intermediate CI + 5 special conditions), TPD, premium waivers. AIA Vitality discount up to 15%.',editHistory:[]},
-  {id:'repo-aia-plp2',insurer:'AIA',productName:'Pro Lifetime Protector (II)',productCode:'PLP2',category:'investment',subType:'Investment-Linked Policy (ILP)',currency:'SGD',notes:'ILP with protection. Death + accidental disability + multi-stage CI (150 conditions via Lifetime Critical Cover rider with power reset up to 300% SA). Optional Relapse Benefit rider. Guided portfolios: Pro Adventurous/Balanced/Cautious (Mercer). 100%/102% premiums invested from Yr5/Yr10. No-lapse guarantee first 10 years. Cash access from Yr2 no charges. AIA Vitality +10% coverage +10% rider discount Yr1.',editHistory:[]},
+  {id:'repo-aia-plp2',insurer:'AIA',productName:'Pro Lifetime Protector (II)',productCode:'PLP2',category:'investment',subType:'ILP (Investment)',currency:'SGD',notes:'ILP with protection. Death + accidental disability + multi-stage CI (150 conditions via Lifetime Critical Cover rider with power reset up to 300% SA). Optional Relapse Benefit rider. Guided portfolios: Pro Adventurous/Balanced/Cautious (Mercer). 100%/102% premiums invested from Yr5/Yr10. No-lapse guarantee first 10 years. Cash access from Yr2 no charges. AIA Vitality +10% coverage +10% rider discount Yr1.',editHistory:[]},
   {id:'repo-aia-gen3',insurer:'AIA',productName:'AIA Gen3',productCode:'GEN3',category:'retirement',subType:'Retirement Income (Par WL)',currency:'SGD',notes:'LIMITED-PAY PARTICIPATING WHOLE LIFE with guaranteed coupon income — NOT an ILP, no fund allocation, no investment component. 10-year premium payment term. Guaranteed coupon 2.25% p.a. of insured amount from end of year 10. Non-guaranteed cash dividends (~0.8% typical) — total illustrated payout ~3.05% p.a. Dividends may be retained with AIA at 3.25% (non-guaranteed). Guaranteed cash values accumulate from policy year 3. Lump sum TPD benefit to age 65. Designed for 3-generation legacy: policy assignable to child at age 21 (child receives payouts for life), death benefit to grandchild. Typical illustration: $7,980/yr for $100k SA. Participating whole life — lifetime coverage with regular income from year 10. CLASSIFY AS retirement/Retirement Income (Par WL), NEVER as investment/ILP. No fundAllocations, no ilpGrowth, no management fee. Use annuityPayout for the guaranteed + dividend income.',editHistory:[]},
   {id:'repo-aia-gen2',insurer:'AIA',productName:'AIA Gen2',productCode:'GEN2',category:'retirement',subType:'Retirement Income (Par WL)',currency:'SGD',notes:'Predecessor to AIA Gen3. Limited-pay participating whole life with guaranteed coupons, similar 10-year premium term and 2-generation legacy structure. NOT an ILP. Classify as retirement → Retirement Income (Par WL).',editHistory:[]},
   {id:'repo-aia-wlc2',insurer:'AIA',productName:'Whole Life Cover (II)',productCode:'WLC2',category:'protection',subType:'Whole Life',currency:'SGD',notes:'Direct Purchase Insurance (DPI). Par whole life. Death+TI to age 100, TPD to age 65. Up to 5× boosted coverage. Annual bonuses + terminal bonus. Stable cash value accumulation. Low-cost, no-advice channel. Optional CI add-on to age 100. Available online at aia.com.sg.',editHistory:[]},
@@ -15251,7 +15275,7 @@ const SEED_REPOSITORY = [
   {id:'repo-pru-pat',insurer:'Prudential',productName:'PRUActive Term',productCode:'PAT',category:'protection',subType:'Term Life',currency:'SGD',notes:'Non-par protection term. Death+TI+TPD (to age 70). Customisable policy term 10-82 yrs, premium term 5-82 yrs. Annual SA increase option 1-10% without medical exam. Optional supplementary: Crisis Care III (multi-stage CI, premiums NOT guaranteed), premium waivers. Conversion privilege available.',editHistory:[]},
   {id:'repo-pru-shield-premier',insurer:'Prudential',productName:'PRUShield Premier',productCode:'PRUSHP',category:'health',subType:'Integrated Shield Plan',currency:'SGD',notes:'ISP — Private hospital ward. MediSave-approved. Enhanced cancer drug treatment. Mobile Inpatient Care @ Home. Congenital abnormalities benefit. Premium adjustments apply. PRUExtra Preferred CoPay rider available (claims-based pricing, PRUPanel Connect discount).',editHistory:[]},
   {id:'repo-pru-shield-plus',insurer:'Prudential',productName:'PRUShield Plus',productCode:'PRUSHPL',category:'health',subType:'Integrated Shield Plan',currency:'SGD',notes:'ISP — Class A restructured hospital. MediSave-approved. Cancer Drug List coverage. Mobile Inpatient Care @ Home. Congenital abnormalities benefit. PRUExtra rider for co-pay reduction. PRUPanel Connect programme for claims-based pricing discounts. No premium increase from Oct 2024.',editHistory:[]},
-  {id:'repo-pru-vas',insurer:'Prudential',productName:'PRUVantage Assure Series',productCode:'PVAS',category:'savings',subType:'Investment-Linked Policy (ILP)',currency:'SGD',notes:'ILP with Wealth Assure feature — locks in coverage at peak policy value for death + accidental disability. Dual Accounts: Growth Account + Flex Account (regular income from Day 1). Low charges from 0.8% p.a. for limited years. Welcome Bonus + Loyalty Bonus. Wealth Share feature for legacy transfer during lifetime. Premium waiver on 35 CI. Available as Single Premium (PRUVantage Assure SP) or Regular Premium (PRUVantage Assure II). Max S$20M or 3× lifetime premium.',editHistory:[]},
+  {id:'repo-pru-vas',insurer:'Prudential',productName:'PRUVantage Assure Series',productCode:'PVAS',category:'investment',subType:'Investment-Linked Policy (ILP)',currency:'SGD',notes:'ILP with Wealth Assure feature — locks in coverage at peak policy value for death + accidental disability. Dual Accounts: Growth Account + Flex Account (regular income from Day 1). Low charges from 0.8% p.a. for limited years. Welcome Bonus + Loyalty Bonus. Wealth Share feature for legacy transfer during lifetime. Premium waiver on 35 CI. Available as Single Premium (PRUVantage Assure SP) or Regular Premium (PRUVantage Assure II). Max S$20M or 3× lifetime premium.',editHistory:[]},
   {id:'repo-pru-cancer360',insurer:'Prudential',productName:'PRUCancer 360',productCode:'PC360',category:'protection',subType:'Critical Illness',currency:'SGD',notes:'Non-par standalone cancer plan. Coverage age 1-100 (max renewal 95). SA $10k-$300k (increments of $10k, max $100k for age 1-16). Early + intermediate + major cancer stages. Only 1 health question to apply. 90-day waiting period for cancer/heart/coronary. Survival period 7 days. Premiums NOT guaranteed. No savings/CV component. SDIC protected.',editHistory:[]},
   {id:'repo-pru-lady',insurer:'Prudential',productName:'PRULady',productCode:'PLADY',category:'protection',subType:'Critical Illness',currency:'SGD',notes:'Non-par female-specific CI plan. Covers female cancers (breast, cervical, ovarian, uterine, fallopian) + pregnancy complications. Standalone or supplementary. Premiums NOT guaranteed. No savings/CV.',editHistory:[]},
   {id:'repo-pru-pa',insurer:'Prudential',productName:'PRUPersonal Accident',productCode:'PPA',category:'protection',subType:'Personal Accident',currency:'SGD',notes:'Personal accident plan. Accidental death + disability. Hospital income benefit. Available as PRUPersonal Accident (full) or PRUPersonal Accident Compact (simplified). Yearly renewable.',editHistory:[]},
