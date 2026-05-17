@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.61-strip-classification-directives';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.62-corpus-trash-deletion';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -738,9 +738,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.61';
+const APP_VERSION = 'v2.4.0-rc2.62';
 const APP_VERSION_DATE = '2026-05-17';
-const APP_VERSION_NAME = 'Strip AI classification directives from notes';
+const APP_VERSION_NAME = 'Corpus trash deletion + build-script deletions hook';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1214,6 +1214,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.62',
+  date: '2026-05-17',
+  name: 'Corpus trash deletion + build-script deletions hook',
+  sections: [{
+    heading: 'Corpus cleanup',
+    items: ['Identified 22 obvious trash entries in singapore-product-knowledge.js that came from the corpus-text parser mis-extracting non-product lines: 15 insurer-name-as-product placeholders ("AIA / AIA", "Manulife / Manulife", "Singlife / Manulife", "Tokio Marine / Tokio Marine"), 4 disambiguation-headers ("Manulife / Singlife", "DBS / OCBC / UOB", "Etiqa / Tiq"), 2 regex-header artifacts ("Manulife / ALSO: ^(LifeReady", "Manulife / Manulife : ^(Manu"), 1 narrative sentence ("None. Manulife Singapore does NOT offer an Integrated Shield Plan.").', 'New tools/manual-corpus-deletions.json file lists entries to drop. tools/build-singapore-product-knowledge.mjs reads it after the corpus-text generation stage (before overrides + additions). Match by (canonicalInsurer + normalizeText productName). Idempotent across re-runs.', 'Corpus: 1,758 → 1,736 entries (-22 trash). No legitimate products lost (verified: i-Save, i-Protect, ePROTECT term life, Tiq Mum and Baby etc. all retained).', 'The 76 slash-joined product names ("AIA Baby Protect Plus / AIA Baby Protect Plus (II)") were NOT touched in this pass — they will be audited in the Phase 4 Big Four deep dive where the AI proposes splits into proper canonical names with aliases.']
+  }]
+}, {
   version: 'v2.4.0-rc2.61',
   date: '2026-05-17',
   name: 'Strip AI classification directives from notes',
@@ -5936,7 +5944,7 @@ async function pdfToImages(pdfDoc, maxPages = 12) {
 // cache could return a stale 2-policy spreadsheet result before the fixed
 // local XLSX parser ran, so the parser now bypasses extraction/OCR cache
 // for spreadsheets and this version makes existing stale entries unreachable.
-const EXTRACT_PIPELINE_VERSION = 'v15.62-2026-05-17-strip-directives-rc2.61';
+const EXTRACT_PIPELINE_VERSION = 'v15.63-2026-05-17-corpus-trash-rc2.62';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';

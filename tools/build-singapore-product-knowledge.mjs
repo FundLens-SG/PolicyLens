@@ -463,6 +463,34 @@ try {
   console.warn('[manual-overrides] skipped:', err.message);
 }
 
+// rc2.62: remove obvious trash entries listed in tools/manual-corpus-deletions.json.
+//   These are entries the corpus-text parser mistakenly extracted as products —
+//   regex header artifacts ("ALSO: ^(LifeReady"), insurer-name-as-product
+//   ("Manulife / Manulife"), narrative text ("None. Manulife Singapore does NOT
+//   offer an Integrated Shield Plan."), or slash-joined disambiguation headers
+//   ("DBS / OCBC / UOB"). Run BEFORE additions so we don't accidentally drop
+//   newly-added entries.
+try {
+  const deletionsPath = path.join(repoRoot, 'tools/manual-corpus-deletions.json');
+  if (fs.existsSync(deletionsPath)) {
+    const deletions = JSON.parse(fs.readFileSync(deletionsPath, 'utf8'));
+    const delKeys = new Set();
+    for (const d of deletions) {
+      const key = canonicalInsurer(d.insurer || '') + '|' + normalizeText(d.productName || '');
+      delKeys.add(key);
+    }
+    const before = productRows.length;
+    productRows = productRows.filter(row => {
+      const key = canonicalInsurer(row[0]) + '|' + normalizeText(row[1]);
+      return !delKeys.has(key);
+    });
+    const removed = before - productRows.length;
+    console.log('[manual-deletions] removed ' + removed + ' trash entries from manual-corpus-deletions.json');
+  }
+} catch (err) {
+  console.warn('[manual-deletions] skipped:', err.message);
+}
+
 // rc2.58: append additional entries from tools/manual-corpus-additions.json.
 //   These are products surfaced by deep-research runs that don't exist in the corpus
 //   text files (yet). Each entry follows the same tuple shape as the generated rows.

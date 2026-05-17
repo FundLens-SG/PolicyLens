@@ -1,0 +1,90 @@
+[
+  {
+    "insurer": "AIA",
+    "productName": "AIA"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Etiqa"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Etiqa / Tiq"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "MSIG"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Allianz"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "DBS / OCBC / UOB"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Liberty"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "MSIG"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life"
+  },
+  {
+    "insurer": "Liberty",
+    "productName": "Liberty"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ALSO: ^(LifeReady"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife : ^(Manu"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife / Singlife"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "None. Manulife Singapore does NOT offer an Integrated Shield Plan."
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Allianz"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Liberty"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "MSIG"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Manulife"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Manulife / Singlife"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Tokio Marine"
+  }
+]
