@@ -40124,7 +40124,23 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
                           <div style={{color:'var(--text3)',marginTop:2,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:180}}>{it.sourcePage || it.sourceImage || fp.sourceEvidence?.[0] || '-'}</div>
                         </td>
                         <td style={{padding:'7px 8px',minWidth:180}}>
-                          <div style={{fontWeight:800,color:'var(--text2)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:230}}>{it.productName || it.policyName || 'Untitled policy'}</div>
+                          <div style={{fontWeight:800,color:'var(--text2)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:230,display:'flex',alignItems:'center',gap:5}}>
+                            <span style={{minWidth:0,overflow:'hidden',textOverflow:'ellipsis'}}>{it.productName || it.policyName || 'Untitled policy'}</span>
+                            {/* rc2.44: surface auto-coalesced rider/plan-option count so the FC sees the
+                                rider stayed embedded under the parent rather than being silently dropped. */}
+                            {(() => {
+                              const riderCount = Array.isArray(it.riders) ? it.riders.length : 0;
+                              const planOpt = it._xlsxIspPlanOption;
+                              if (!riderCount && !planOpt) return null;
+                              const chipLabel = riderCount && planOpt
+                                ? '🛡 +' + riderCount + ' rider · ' + planOpt
+                                : riderCount
+                                  ? '🛡 +' + riderCount + ' rider' + (riderCount > 1 ? 's' : '')
+                                  : '🛡 ' + planOpt;
+                              return <span title={(it.riderList || (it.riders || []).map(r => r.riderName || r.name).filter(Boolean).join(', ')) + (planOpt ? ' (plan: ' + planOpt + ')' : '')}
+                                style={{fontSize:9,color:'var(--teal)',background:'rgba(91,168,160,.12)',border:'1px solid rgba(91,168,160,.3)',borderRadius:5,padding:'1px 5px',fontWeight:700,whiteSpace:'nowrap',flexShrink:0}}>{chipLabel}</span>;
+                            })()}
+                          </div>
                           <div style={{color:'var(--text3)',marginTop:2}}>{it.insurer || 'Unknown insurer'}{it.subType ? ' - ' + it.subType : ''}</div>
                         </td>
                         <td style={{padding:'7px 8px',minWidth:240}}>
@@ -46058,9 +46074,34 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
             <div>
               <div style={{fontSize:13,fontWeight:600,color:'var(--green2)'}}>✅ Extracted Policy</div>
-              <div style={{fontSize:15,fontWeight:600,marginTop:4,display:'flex',alignItems:'center',gap:6}}>{scanResult.insurer && <InsurerBadge name={scanResult.insurer} />} <span>{scanResult.productName}</span></div>
+              <div style={{fontSize:15,fontWeight:600,marginTop:4,display:'flex',alignItems:'center',gap:6,flexWrap:'wrap'}}>{scanResult.insurer && <InsurerBadge name={scanResult.insurer} />} <span>{scanResult.productName}</span>
+                {/* rc2.44: rider/plan-option chip so the FC immediately sees that auto-coalesced
+                    components stayed attached. Without this, FCs reading a card with no visible
+                    rider could worry that PRUShield Extra / HSG Max Rider / Singlife Health Plus
+                    silently disappeared, when they're actually embedded in scanResult.riders[]. */}
+                {(() => {
+                  const riders = Array.isArray(scanResult.riders) ? scanResult.riders : [];
+                  const planOpt = scanResult._xlsxIspPlanOption;
+                  if (!riders.length && !planOpt) return null;
+                  const names = riders.map(r => r.riderName || r.name).filter(Boolean);
+                  const chipLabel = riders.length && planOpt
+                    ? '🛡 +' + riders.length + ' rider · plan: ' + planOpt
+                    : riders.length
+                      ? '🛡 +' + riders.length + ' rider' + (riders.length > 1 ? 's' : '') + (names.length ? ': ' + names.join(', ') : '')
+                      : '🛡 plan: ' + planOpt;
+                  return <span style={{fontSize:10,color:'var(--teal)',background:'rgba(91,168,160,.12)',border:'1px solid rgba(91,168,160,.3)',borderRadius:6,padding:'2px 7px',fontWeight:700}}>{chipLabel}</span>;
+                })()}
+              </div>
               <div style={{fontSize:12,color:'var(--text3)'}}>
                 {scanResult.subType} • {scanResult.currency} {(scanResult.sumAssured||0).toLocaleString()} • Premium: {scanResult.currency} {(scanResult.annualPremium||0).toLocaleString()}
+                {/* rc2.44: when the parent has a riderPremium, show the combined total so the FC
+                    sees the full annual outlay at a glance without having to open the form. */}
+                {(scanResult.riderPremium > 0 || (scanResult.riders||[]).some(r => parseFloat(r.premium) > 0)) && (() => {
+                  const riderTotal = (scanResult.riders||[]).reduce((s,r) => s + (parseFloat(r.premium)||0), 0) || parseFloat(scanResult.riderPremium) || 0;
+                  if (riderTotal <= 0) return null;
+                  const grand = (parseFloat(scanResult.annualPremium)||0) + riderTotal;
+                  return <span> + Rider: {scanResult.currency} {riderTotal.toLocaleString()} <span style={{color:'var(--teal)'}}>(Total: {scanResult.currency} {grand.toLocaleString()}/yr)</span></span>;
+                })()}
               </div>
               {scanResult.notes && <div style={{fontSize:11,color:'var(--text2)',marginTop:4,fontStyle:'italic'}}>{typeof scanResult.notes==='string'?scanResult.notes:JSON.stringify(scanResult.notes)}</div>}
               {scanResult.userRemarks && <div style={{fontSize:11,color:'var(--gold)',marginTop:4,padding:'4px 8px',background:'color-mix(in oklch, var(--gold) 12%, transparent)',borderRadius:6}}>Remark: "{scanResult.userRemarks}"</div>}
@@ -49110,10 +49151,30 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
               <div>
                 <h4 style={{fontSize:13,fontWeight:600,color:'var(--blue2)',margin:0}}>Coverage & Riders</h4>
-                <div style={{fontSize:10,color:'var(--text3)',marginTop:2}}>
-                  Total premium: {fmt(form.annualPremium,form.currency||'SGD')}/yr
-                  {(form.riders||[]).filter(r=>parseFloat(r.premium)>0).length>0 && ` — Riders: ${fmt((form.riders||[]).reduce((s,r)=>s+(parseFloat(r.premium)||0),0),form.currency||'SGD')}`}
-                </div>
+                {/* rc2.44: rider total now lists count + per-rider breakdown in the tooltip so the
+                    FC can audit which rows contributed to the sum. Previously a single "$26,743"
+                    figure with no breakdown left users guessing when one row's premium was
+                    accidentally typed with an extra digit. */}
+                {(() => {
+                  const payRiders = (form.riders || []).filter(r => parseFloat(r.premium) > 0);
+                  const riderTotal = payRiders.reduce((s, r) => s + (parseFloat(r.premium) || 0), 0);
+                  const basePrem = parseFloat(form.annualPremium) || 0;
+                  const grandTotal = basePrem + riderTotal;
+                  const breakdown = payRiders.length
+                    ? 'Rider premiums:\n' + payRiders.map(r => `  • ${r.riderName || r.type || '(unnamed)'}: ${fmt(parseFloat(r.premium), form.currency || 'SGD')}`).join('\n')
+                    : '';
+                  return (
+                    <div style={{fontSize:10,color:'var(--text3)',marginTop:2}}>
+                      Total premium: {fmt(form.annualPremium,form.currency||'SGD')}/yr
+                      {payRiders.length > 0 && (
+                        <span title={breakdown} style={{cursor:'help'}}>
+                          {' — '}Riders ({payRiders.length}): {fmt(riderTotal, form.currency || 'SGD')}
+                          {grandTotal > 0 && <span style={{color:'var(--teal)'}}>  · Grand total: {fmt(grandTotal, form.currency || 'SGD')}/yr</span>}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
               <button className="btn-secondary btn-sm" onClick={()=>{
                 const riders=[...(form.riders||[])];
@@ -49158,7 +49219,11 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
                 <th style={{textAlign:'left'}}>Benefit / Rider</th>
                 <th style={{width:100}}>Sum Assured</th>
                 <th style={{width:75,textAlign:'center'}}>Part of Plan</th>
-                <th style={{width:90}}>Rider Prem</th>
+                {/* rc2.44: widened from 90 → 120 so 5–6 digit premiums (e.g. $26,743) don't visually
+                    truncate inside the input. Previously a user typing "23333" would see only the
+                    leading "2333" in the narrow box and assume the math was wrong when the riders
+                    summary used the full parsed value. */}
+                <th style={{width:120}}>Rider Prem</th>
                 <th style={{width:65}}>Expiry</th>
                 <th style={{width:80,textAlign:'center'}}>Options</th>
                 <th style={{width:30}}></th>
@@ -49196,7 +49261,20 @@ function PolicyFormModal({policy,onSave,onClose,repo,onSaveRepo,onDraftChange,on
                       )}
                     </div>:<span style={{color:'var(--text3)',fontSize:10}}>N/A</span>}</td>
                     <td style={{textAlign:'center'}}><input type="checkbox" checked={rd.bundled!==false} onChange={e=>{const riders=[...(form.riders||[])];riders[ri]={...riders[ri],bundled:e.target.checked,premium:e.target.checked?'':riders[ri].premium};set('riders',riders);}} /></td>
-                    <td>{rd.bundled!==false?<span style={{color:'var(--text3)',fontSize:10}}>incl.</span>:<input type="number" value={rd.premium||''} onChange={e=>{const riders=[...(form.riders||[])];riders[ri]={...riders[ri],premium:e.target.value};set('riders',riders);}} style={{width:'100%',fontSize:11}} placeholder="$/yr" />}</td>
+                    <td>{rd.bundled!==false?<span style={{color:'var(--text3)',fontSize:10}}>incl.</span>:(
+                      <div>
+                        <input type="number" value={rd.premium||''} onChange={e=>{const riders=[...(form.riders||[])];riders[ri]={...riders[ri],premium:e.target.value};set('riders',riders);}} style={{width:'100%',fontSize:11}} placeholder="$/yr" />
+                        {/* rc2.44: parsed-value echo — confirms what was actually typed so the FC
+                            can spot accidental extra digits (23333 vs 2333) regardless of how narrow
+                            the input renders. Hidden when the field is empty or matches the typed
+                            value exactly (no need for redundant noise). */}
+                        {parseFloat(rd.premium) > 0 && (
+                          <div style={{fontSize:9,color:'var(--text3)',marginTop:2,textAlign:'right'}}>
+                            = {fmt(parseFloat(rd.premium), form.currency || 'SGD')}/yr
+                          </div>
+                        )}
+                      </div>
+                    )}</td>
                     <td><input type="number" value={rd.expiryAge||''} onChange={e=>{const riders=[...(form.riders||[])];riders[ri]={...riders[ri],expiryAge:e.target.value};set('riders',riders);}} style={{width:'100%',fontSize:11}} /></td>
                     <td style={{textAlign:'center'}}>
                       {(rd.type==='ci'||rd.type==='eci') && (

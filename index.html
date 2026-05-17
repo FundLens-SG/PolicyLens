@@ -53655,9 +53655,37 @@ function BulkVerifyModal({
         whiteSpace: 'nowrap',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
-        maxWidth: 230
+        maxWidth: 230,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 5
       }
-    }, it.productName || it.policyName || 'Untitled policy'), /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        minWidth: 0,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
+      }
+    }, it.productName || it.policyName || 'Untitled policy'), (() => {
+      const riderCount = Array.isArray(it.riders) ? it.riders.length : 0;
+      const planOpt = it._xlsxIspPlanOption;
+      if (!riderCount && !planOpt) return null;
+      const chipLabel = riderCount && planOpt ? '🛡 +' + riderCount + ' rider · ' + planOpt : riderCount ? '🛡 +' + riderCount + ' rider' + (riderCount > 1 ? 's' : '') : '🛡 ' + planOpt;
+      return /*#__PURE__*/React.createElement("span", {
+        title: (it.riderList || (it.riders || []).map(r => r.riderName || r.name).filter(Boolean).join(', ')) + (planOpt ? ' (plan: ' + planOpt + ')' : ''),
+        style: {
+          fontSize: 9,
+          color: 'var(--teal)',
+          background: 'rgba(91,168,160,.12)',
+          border: '1px solid rgba(91,168,160,.3)',
+          borderRadius: 5,
+          padding: '1px 5px',
+          fontWeight: 700,
+          whiteSpace: 'nowrap',
+          flexShrink: 0
+        }
+      }, chipLabel);
+    })()), /*#__PURE__*/React.createElement("div", {
       style: {
         color: 'var(--text3)',
         marginTop: 2
@@ -61504,16 +61532,43 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       marginTop: 4,
       display: 'flex',
       alignItems: 'center',
-      gap: 6
+      gap: 6,
+      flexWrap: 'wrap'
     }
   }, scanResult.insurer && /*#__PURE__*/React.createElement(InsurerBadge, {
     name: scanResult.insurer
-  }), " ", /*#__PURE__*/React.createElement("span", null, scanResult.productName)), /*#__PURE__*/React.createElement("div", {
+  }), " ", /*#__PURE__*/React.createElement("span", null, scanResult.productName), (() => {
+    const riders = Array.isArray(scanResult.riders) ? scanResult.riders : [];
+    const planOpt = scanResult._xlsxIspPlanOption;
+    if (!riders.length && !planOpt) return null;
+    const names = riders.map(r => r.riderName || r.name).filter(Boolean);
+    const chipLabel = riders.length && planOpt ? '🛡 +' + riders.length + ' rider · plan: ' + planOpt : riders.length ? '🛡 +' + riders.length + ' rider' + (riders.length > 1 ? 's' : '') + (names.length ? ': ' + names.join(', ') : '') : '🛡 plan: ' + planOpt;
+    return /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 10,
+        color: 'var(--teal)',
+        background: 'rgba(91,168,160,.12)',
+        border: '1px solid rgba(91,168,160,.3)',
+        borderRadius: 6,
+        padding: '2px 7px',
+        fontWeight: 700
+      }
+    }, chipLabel);
+  })()), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 12,
       color: 'var(--text3)'
     }
-  }, scanResult.subType, " \u2022 ", scanResult.currency, " ", (scanResult.sumAssured || 0).toLocaleString(), " \u2022 Premium: ", scanResult.currency, " ", (scanResult.annualPremium || 0).toLocaleString()), scanResult.notes && /*#__PURE__*/React.createElement("div", {
+  }, scanResult.subType, " \u2022 ", scanResult.currency, " ", (scanResult.sumAssured || 0).toLocaleString(), " \u2022 Premium: ", scanResult.currency, " ", (scanResult.annualPremium || 0).toLocaleString(), (scanResult.riderPremium > 0 || (scanResult.riders || []).some(r => parseFloat(r.premium) > 0)) && (() => {
+    const riderTotal = (scanResult.riders || []).reduce((s, r) => s + (parseFloat(r.premium) || 0), 0) || parseFloat(scanResult.riderPremium) || 0;
+    if (riderTotal <= 0) return null;
+    const grand = (parseFloat(scanResult.annualPremium) || 0) + riderTotal;
+    return /*#__PURE__*/React.createElement("span", null, " + Rider: ", scanResult.currency, " ", riderTotal.toLocaleString(), " ", /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: 'var(--teal)'
+      }
+    }, "(Total: ", scanResult.currency, " ", grand.toLocaleString(), "/yr)"));
+  })()), scanResult.notes && /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 11,
       color: 'var(--text2)',
@@ -67556,13 +67611,29 @@ function PolicyFormModal({
       color: 'var(--blue2)',
       margin: 0
     }
-  }, "Coverage & Riders"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 10,
-      color: 'var(--text3)',
-      marginTop: 2
-    }
-  }, "Total premium: ", fmt(form.annualPremium, form.currency || 'SGD'), "/yr", (form.riders || []).filter(r => parseFloat(r.premium) > 0).length > 0 && ` — Riders: ${fmt((form.riders || []).reduce((s, r) => s + (parseFloat(r.premium) || 0), 0), form.currency || 'SGD')}`)), /*#__PURE__*/React.createElement("button", {
+  }, "Coverage & Riders"), (() => {
+    const payRiders = (form.riders || []).filter(r => parseFloat(r.premium) > 0);
+    const riderTotal = payRiders.reduce((s, r) => s + (parseFloat(r.premium) || 0), 0);
+    const basePrem = parseFloat(form.annualPremium) || 0;
+    const grandTotal = basePrem + riderTotal;
+    const breakdown = payRiders.length ? 'Rider premiums:\n' + payRiders.map(r => `  • ${r.riderName || r.type || '(unnamed)'}: ${fmt(parseFloat(r.premium), form.currency || 'SGD')}`).join('\n') : '';
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10,
+        color: 'var(--text3)',
+        marginTop: 2
+      }
+    }, "Total premium: ", fmt(form.annualPremium, form.currency || 'SGD'), "/yr", payRiders.length > 0 && /*#__PURE__*/React.createElement("span", {
+      title: breakdown,
+      style: {
+        cursor: 'help'
+      }
+    }, ' — ', "Riders (", payRiders.length, "): ", fmt(riderTotal, form.currency || 'SGD'), grandTotal > 0 && /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: 'var(--teal)'
+      }
+    }, "  \xB7 Grand total: ", fmt(grandTotal, form.currency || 'SGD'), "/yr")));
+  })()), /*#__PURE__*/React.createElement("button", {
     className: "btn-secondary btn-sm",
     onClick: () => {
       const riders = [...(form.riders || [])];
@@ -67671,7 +67742,7 @@ function PolicyFormModal({
     }
   }, "Part of Plan"), /*#__PURE__*/React.createElement("th", {
     style: {
-      width: 90
+      width: 120
     }
   }, "Rider Prem"), /*#__PURE__*/React.createElement("th", {
     style: {
@@ -67852,7 +67923,7 @@ function PolicyFormModal({
       color: 'var(--text3)',
       fontSize: 10
     }
-  }, "incl.") : /*#__PURE__*/React.createElement("input", {
+  }, "incl.") : /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("input", {
     type: "number",
     value: rd.premium || '',
     onChange: e => {
@@ -67868,7 +67939,14 @@ function PolicyFormModal({
       fontSize: 11
     },
     placeholder: "$/yr"
-  })), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("input", {
+  }), parseFloat(rd.premium) > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9,
+      color: 'var(--text3)',
+      marginTop: 2,
+      textAlign: 'right'
+    }
+  }, "= ", fmt(parseFloat(rd.premium), form.currency || 'SGD'), "/yr"))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("input", {
     type: "number",
     value: rd.expiryAge || '',
     onChange: e => {
