@@ -53,6 +53,7 @@
           "section": "Legacy Planning",
           "productName": "SIGNATURE LIFE",
           "insurer": "Manulife",
+          "subType": "Universal Life (UL)",
           "policyNo": "1499191470",
           "lifeInsured": "Self",
           "premiumAmount": 1064796.83,
@@ -63,7 +64,8 @@
         {
           "section": "Legacy Planning",
           "productName": "SIGNATURE INDEXED UNIVERSAL LIFE",
-          "insurer": "Manulife"
+          "insurer": "Manulife",
+          "subType": "Indexed UL (IUL)"
         }
       ]
     },
@@ -104,6 +106,7 @@
           "section": "Life Protection",
           "productName": "LIFE PERKS 15",
           "insurer": "Great Eastern",
+          "subType": "Whole Life",
           "policyNo": "0024445585",
           "lifeInsured": "JE",
           "premiumAmount": 725,
@@ -158,6 +161,7 @@
           "section": "Legacy Planning",
           "productName": "UOB SIGNATURE LIFE",
           "insurer": "Manulife",
+          "subType": "Universal Life (UL)",
           "policyNo": "1499191512",
           "premiumAmount": 607626.5,
           "inceptionDate": "05 Mar 2021",
@@ -167,6 +171,7 @@
           "section": "Legacy Planning",
           "productName": "DBS SIGNATURE INCOME",
           "insurer": "Manulife",
+          "subType": "Annuity",
           "policyNo": "1498006992",
           "lifeInsured": "Self",
           "premiumAmount": 301843.5,
@@ -176,6 +181,7 @@
           "section": "Legacy Planning",
           "productName": "DBS SIGNATURE WEALTH",
           "insurer": "Manulife",
+          "subType": "Variable UL (VUL)",
           "lifeInsured": "Self",
           "inceptionDate": "29 Oct 2020"
         }

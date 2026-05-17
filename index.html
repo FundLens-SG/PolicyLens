@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.51-sg-knowledge-override';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.52-signature-family-subtypes';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -738,9 +738,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.51';
+const APP_VERSION = 'v2.4.0-rc2.52';
 const APP_VERSION_DATE = '2026-05-17';
-const APP_VERSION_NAME = 'SG knowledge override + notes cleanup';
+const APP_VERSION_NAME = 'Signature family + sub-type corrections';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1214,6 +1214,20 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.52',
+  date: '2026-05-17',
+  name: 'Signature family + sub-type corrections',
+  sections: [{
+    heading: 'Sub-type accuracy',
+    items: ['The Manulife Signature family is sold through UOB/DBS Treasures and was previously mapped by a single rule that tagged every variant as "Indexed UL (IUL)". That was wrong for three of the four sub-products. The rule is now split per variant:', '  • Signature Indexed Universal Life (Select) / SIULS → Indexed UL (IUL) — unchanged', '  • Signature Life / Signature Life SGD / UOB Signature Life → Universal Life (UL) (was IUL)', '  • Signature Wealth / Signature Wealth SGD → Variable UL (VUL) (was IUL)', '  • Signature Income / Signature Income SGD → Annuity / retirement category (was IUL!)', 'Added rules for Great Eastern Life Perks (and Life Perks 15/25 variants) → Whole Life, AIA Platinum Gift for Life Series → Whole Life, and GE Living Assurance → Whole Life. All three had insurer resolved via the rc2.45 prefix detection but sub-type was left empty.']
+  }, {
+    heading: 'Re-normalize now overrides stale sub-types',
+    items: ['Previously Re-normalize only filled missing fields. A policy saved under the old buggy Signature rule as "Indexed UL (IUL)" stayed wrong even after clicking Re-normalize. Now Re-normalize trusts the curated XLSX_KNOWN_PRODUCT_RULES as source of truth — when the rule\'s sub-type, category, or insurer disagrees with the saved value AND the field is not flagged as user-edited, the rule wins.', 'Override is preserved for audit on _subTypeOverride / _categoryOverride / _insurerOverride hidden fields so the FC can see what changed and why.', 'Same applies to category mappings — Signature Income now correctly moves from "protection" to "retirement".']
+  }, {
+    heading: 'Regression coverage',
+    items: ['Soh family truth now asserts sub-types on all 5 Manulife Signature variants in MM and DD sheets (Universal Life, Variable UL, Annuity, Indexed UL). Plus Life Perks 15 → Whole Life. Diff harness catches future Signature rule regressions.']
+  }]
+}, {
   version: 'v2.4.0-rc2.51',
   date: '2026-05-17',
   name: 'SG knowledge override + notes cleanup',
@@ -5826,7 +5840,7 @@ async function pdfToImages(pdfDoc, maxPages = 12) {
 // cache could return a stale 2-policy spreadsheet result before the fixed
 // local XLSX parser ran, so the parser now bypasses extraction/OCR cache
 // for spreadsheets and this version makes existing stale entries unreachable.
-const EXTRACT_PIPELINE_VERSION = 'v15.54-2026-05-17-sg-knowledge-override-rc2.51';
+const EXTRACT_PIPELINE_VERSION = 'v15.55-2026-05-17-signature-family-subtypes-rc2.52';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';
@@ -10939,14 +10953,36 @@ const XLSX_KNOWN_PRODUCT_RULES = [
   subType: 'Personal Accident',
   insurer: 'Manulife'
 },
-// rc2.42: extended to Signature Income / Signature Wealth variants. The Manulife
-//   Signature family is sold through UOB/DBS Treasures programs — UOB Signature Life,
-//   DBS Signature Income, DBS Signature Wealth, etc. — all underwritten by Manulife. The
-//   bank prefix is part of the marketing label, not the insurer.
+// rc2.52: split the Manulife Signature family by variant. The Signature family is sold
+//   through bank wealth programs (UOB/DBS Treasures) — the bank prefix is marketing, the
+//   underwriter is always Manulife. But each variant is a DIFFERENT product type and the
+//   old single-rule that mapped all variants to "Indexed UL (IUL)" was wrong for three of
+//   the four sub-products:
+//     • Signature Indexed Universal Life (Select) / SIULS → Indexed UL (IUL)  ✓ correct
+//     • Signature Life / Signature Life SGD              → Universal Life (UL)  (was IUL)
+//     • Signature Wealth / Signature Wealth SGD          → Variable UL (VUL)    (was IUL)
+//     • Signature Income / Signature Income SGD          → Annuity / retirement (was IUL!)
+//   Order matters: the more specific "indexed universal life" / "wealth" / "income"
+//   patterns are checked BEFORE the bare "signature life" fallback so they win.
 {
-  re: /\bsignature\s+(?:indexed\s+universal\s+life(?:\s+select)?|life|income|wealth)(?:[-\s]*sgd)?\b|\bsiuls\b/i,
+  re: /\bsignature\s+indexed\s+universal\s+life(?:\s+select)?(?:[-\s]*sgd)?\b|\bsiuls(?:\s+(?:ii|iii|iv|v))?\b/i,
   category: 'protection',
   subType: 'Indexed UL (IUL)',
+  insurer: 'Manulife'
+}, {
+  re: /\bsignature\s+wealth(?:[-\s]*sgd)?\b/i,
+  category: 'protection',
+  subType: 'Variable UL (VUL)',
+  insurer: 'Manulife'
+}, {
+  re: /\bsignature\s+income(?:[-\s]*sgd)?\b/i,
+  category: 'retirement',
+  subType: 'Annuity',
+  insurer: 'Manulife'
+}, {
+  re: /\bsignature\s+life(?:[-\s]*sgd)?\b/i,
+  category: 'protection',
+  subType: 'Universal Life (UL)',
   insurer: 'Manulife'
 },
 // Retirement (lifetime / income endowments + annuities)
@@ -11044,7 +11080,31 @@ const XLSX_KNOWN_PRODUCT_RULES = [
   re: /vivolife|vivo\s*life/i,
   category: 'protection',
   subType: 'Whole Life'
-}, {
+},
+// rc2.52: Great Eastern legacy whole-life family (Life Perks / Life Perks 15 / Life Perks
+//   25). FCs commonly carry these from the early 2000s GE product line. Without an explicit
+//   rule the subType stayed empty (only insurer resolved via the rc2.45 "life perks" prefix).
+{
+  re: /\blife\s+perks(?:\s+\d{1,2})?\b/i,
+  category: 'protection',
+  subType: 'Whole Life',
+  insurer: 'Great Eastern'
+},
+// rc2.52: AIA Platinum Gift for Life / Platinum Gift Series — AIA's premium-tier par WL.
+{
+  re: /\b(?:aia\s+)?platinum\s+gift(?:\s+for\s+life)?(?:\s+series)?\b/i,
+  category: 'protection',
+  subType: 'Whole Life',
+  insurer: 'AIA'
+},
+// rc2.52: NO rule for "Living Assurance" / "Living Assurance Benefit" — in real FC summaries
+//   it almost always appears as a RIDER continuation row beneath an ILP parent (e.g. GREATLINK
+//   FLEXIPLAN row 38). Adding a productRule for it would set insurer on the continuation row,
+//   which blocks coalesceContinuationRiders from merging it into the parent. The legacy GE
+//   "Living Assurance / Living Policy" standalone whole-life product (pre-1990s) is rare
+//   enough that we'd rather under-classify and let the FC label it manually than break the
+//   common rider-coalescing case.
+{
   re: /\bterm\s+(life|cover|protect)/i,
   category: 'protection',
   subType: 'Term Life'
@@ -56596,6 +56656,46 @@ function Policies() {
     if (isMissingXlsxInsurer(next.insurer)) {
       const inferred = inferInsurerFromProductName(next.productName || next.policyName);
       if (inferred) next.insurer = inferred;
+    }
+    // rc2.52: also apply curated product rules to OVERRIDE stale wrong subType / category.
+    //   `inferXlsxProductRule` consults XLSX_KNOWN_PRODUCT_RULES (now split per Signature
+    //   variant: Life→UL, Wealth→VUL, Income→Annuity, Indexed→IUL). When a saved policy's
+    //   subType disagrees with the curated rule, Re-normalize trusts the rule — the rule is
+    //   the source of truth for SG products. Without this override, a Signature Income saved
+    //   under the buggy old rule as "Indexed UL (IUL)" would stay broken even after the
+    //   user clicks Re-normalize. Manual user edits are preserved via _userEditedFields if
+    //   the form has marked them; absent that flag, the curated rule wins.
+    const productRuleForOverride = inferXlsxProductRule(next.productName || next.policyName || '');
+    if (productRuleForOverride) {
+      const userEdited = field => Array.isArray(next._userEditedFields) && next._userEditedFields.includes(field);
+      if (productRuleForOverride.subType && next.subType !== productRuleForOverride.subType && !userEdited('subType')) {
+        next._subTypeOverride = {
+          from: next.subType || '',
+          to: productRuleForOverride.subType,
+          source: 'xlsx-product-rule'
+        };
+        next.subType = productRuleForOverride.subType;
+      }
+      if (productRuleForOverride.category && next.category !== productRuleForOverride.category && !userEdited('category')) {
+        next._categoryOverride = {
+          from: next.category || '',
+          to: productRuleForOverride.category,
+          source: 'xlsx-product-rule'
+        };
+        next.category = productRuleForOverride.category;
+      }
+      if (productRuleForOverride.insurer && !userEdited('insurer')) {
+        const curIns = normalizeInsurerName(next.insurer || '');
+        const ruleIns = normalizeInsurerName(productRuleForOverride.insurer);
+        if (curIns.toLowerCase() !== ruleIns.toLowerCase()) {
+          next._insurerOverride = next._insurerOverride || {
+            from: curIns,
+            to: ruleIns,
+            source: 'xlsx-product-rule'
+          };
+          next.insurer = productRuleForOverride.insurer;
+        }
+      }
     }
     const sourceName = next.sourceFile || next.documentTitle || '';
     const looksSpreadsheet = !!next._rawSpreadsheetRow || /\.(xlsx|xls|csv)$/i.test(sourceName);
