@@ -13832,9 +13832,16 @@ async function extractSpreadsheetFilesLocally(files, opts = {}) {
 }
 
 // v2.3.0-rc2d.1: Column map cache helpers
+// rc2.45: keys are now prefixed with EXTRACT_PIPELINE_VERSION so a pipeline bump (e.g. when
+//   new column patterns are added — "Amount" → premiumAmount, "Policy Start" → inceptionDate)
+//   automatically orphans the old column-map snapshot. Otherwise a previous version's
+//   column-map could pin the parser to the old field mapping even after the regex broadened.
+function _columnMapCacheKey(sig) {
+  return EXTRACT_PIPELINE_VERSION + ':' + String(sig || '');
+}
 async function getCachedColumnMap(sig) {
   try {
-    return await dbGet('column_map_cache', sig);
+    return await dbGet('column_map_cache', _columnMapCacheKey(sig));
   } catch (_) {
     return null;
   }
@@ -13842,7 +13849,9 @@ async function getCachedColumnMap(sig) {
 async function cacheColumnMap(sig, headers, columnMap, categoryColumn) {
   try {
     await dbPut('column_map_cache', {
-      signature: sig,
+      signature: _columnMapCacheKey(sig),
+      originalSignature: sig,
+      pipelineVersion: EXTRACT_PIPELINE_VERSION,
       headers,
       columnMap,
       categoryColumn,
@@ -25789,6 +25798,31 @@ function App() {
       } catch (err) {
         // Never surface cleanup errors — stale entries will be retried next load
         console.warn('[ExtractCache] Cleanup skipped:', err?.message || err);
+      }
+      // rc2.45: same sweep for column_map_cache. Keys are now also prefixed with
+      //   EXTRACT_PIPELINE_VERSION (rc2.45 change) — any entry whose key lacks the current
+      //   prefix is from a previous pipeline version and would never be looked up again.
+      try {
+        const all = await dbGetAll('column_map_cache').catch(() => []);
+        if (!Array.isArray(all) || all.length === 0) return;
+        const stale = all.filter(e => {
+          const k = e && e.signature;
+          if (typeof k !== 'string') return true;
+          return !k.startsWith(EXTRACT_PIPELINE_VERSION + ':');
+        });
+        if (stale.length === 0) return;
+        console.log('[ColumnMapCache] Purging', stale.length, 'stale entries from old pipeline versions');
+        const db = await openDB();
+        const tx = db.transaction('column_map_cache', 'readwrite');
+        const store = tx.objectStore('column_map_cache');
+        for (const entry of stale) {
+          try {
+            store.delete(entry.signature);
+          } catch (e) {}
+        }
+        tx.oncomplete = () => console.log('[ColumnMapCache] ✓ Purged', stale.length, 'stale entries');
+      } catch (err) {
+        console.warn('[ColumnMapCache] Cleanup skipped:', err?.message || err);
       }
     })();
   }, []);
@@ -60815,6 +60849,8 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
   }, "Discard")))), !showForm && !scanning && (() => {
     const stale = policies.filter(p => p._pipelineVersion && p._pipelineVersion !== EXTRACT_PIPELINE_VERSION);
     if (stale.length === 0) return null;
+    const fromSpreadsheet = stale.filter(p => p.sourceFile && /\.(xlsx|xls|csv)$/i.test(p.sourceFile));
+    const oldestVersion = stale[0]._pipelineVersion || 'unknown';
     return React.createElement('div', {
       className: 'card',
       style: {
@@ -60826,22 +60862,58 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       style: {
         display: 'flex',
         justifyContent: 'space-between',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         flexWrap: 'wrap',
-        gap: 8
+        gap: 10
       }
-    }, React.createElement('div', null, React.createElement('div', {
+    }, React.createElement('div', {
+      style: {
+        minWidth: 0,
+        flex: '1 1 320px'
+      }
+    }, React.createElement('div', {
       style: {
         fontSize: 13,
         fontWeight: 600,
         color: 'var(--orange)'
       }
-    }, '🔄 Pipeline Updated'), React.createElement('div', {
+    }, '🔄 Pipeline updated — ' + stale.length + ' polic' + (stale.length === 1 ? 'y' : 'ies') + ' on older rules'), React.createElement('div', {
       style: {
         fontSize: 12,
-        color: 'var(--text3)'
+        color: 'var(--text3)',
+        marginTop: 3,
+        lineHeight: 1.45
       }
-    }, stale.length + ' polic' + (stale.length === 1 ? 'y' : 'ies') + ' saved under older parser rules (' + (stale[0]._pipelineVersion || 'unknown') + '). Re-normalizing applies current naming, insurer and spreadsheet cleanup rules.')), React.createElement('button', {
+    }, 'Saved under ', React.createElement('code', {
+      style: {
+        fontSize: 11,
+        padding: '1px 4px',
+        background: 'var(--bg3)',
+        borderRadius: 4
+      }
+    }, oldestVersion), '. Current: ', React.createElement('code', {
+      style: {
+        fontSize: 11,
+        padding: '1px 4px',
+        background: 'var(--bg3)',
+        borderRadius: 4
+      }
+    }, EXTRACT_PIPELINE_VERSION), '.'), React.createElement('div', {
+      style: {
+        fontSize: 11,
+        color: 'var(--text3)',
+        marginTop: 6,
+        lineHeight: 1.5
+      }
+    }, React.createElement('strong', {
+      style: {
+        color: 'var(--text2)'
+      }
+    }, 'Re-normalize'), ' updates insurer, product name casing, sub-type, and category in place — fast, no AI calls. ', fromSpreadsheet.length > 0 ? React.createElement('span', null, React.createElement('strong', {
+      style: {
+        color: 'var(--text2)'
+      }
+    }, 'Re-upload'), ' the source workbook to also pick up newly-detected riders, plan options, and section assignments (e.g. PRUShield Extra coalescing under PRUShield Premier, Living Assurance under Greatlink). ' + fromSpreadsheet.length + ' of these came from a spreadsheet.') : null)), React.createElement('button', {
       className: 'btn-secondary btn-sm',
       onClick: () => runRenormalizeStalePolicies(stale)
     }, 'Re-normalize ' + stale.length)));
