@@ -33609,6 +33609,29 @@ function ProfileTab() {
 
   return (
     <div className="fade-in">
+      {/* rc2.46: stale-pipeline pill on Profile too. The full banner lives on the Policies tab,
+          but FCs who land on Profile first wouldn't know their saved policies needed re-extracting.
+          Filter matches the Policies-tab banner: explicit _pipelineVersion mismatch OR pre-versioning
+          policies with extraction markers. Clicking jumps to Policies where the full banner with
+          actions is rendered. */}
+      {(() => {
+        const hasExtractionMarker = (pol) => !!(pol?.sourceFile || pol?._xlsxProfile || pol?.sourceDocument || pol?._extractConfidence || pol?._rawSpreadsheetRow);
+        const stale = (policies || []).filter(pol => {
+          if (!pol) return false;
+          if (pol._pipelineVersion && pol._pipelineVersion !== EXTRACT_PIPELINE_VERSION) return true;
+          if (!pol._pipelineVersion && hasExtractionMarker(pol)) return true;
+          return false;
+        });
+        if (stale.length === 0) return null;
+        return (
+          <div style={{marginBottom:14,padding:'10px 14px',background:'color-mix(in oklch, var(--orange) 10%, var(--bg2))',border:'1px solid color-mix(in oklch, var(--orange) 35%, transparent)',borderRadius:10,display:'flex',justifyContent:'space-between',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+            <div style={{fontSize:12,color:'var(--text2)',lineHeight:1.5}}>
+              <span style={{fontWeight:700,color:'var(--orange)'}}>🔄 {stale.length} polic{stale.length===1?'y':'ies'} need re-extraction</span> · saved under an older parser. Open Policies to re-normalize or re-upload the source workbook for full re-parse (latest rider coalescing, insurer prefixes, plan options).
+            </div>
+            <button className="btn-secondary btn-sm" style={{whiteSpace:'nowrap'}} onClick={() => setTab && setTab('policies')}>Go to Policies →</button>
+          </div>
+        );
+      })()}
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:T_V2.sectionGap||28,flexWrap:'wrap',gap:14}}>
         <div style={{minWidth:0,flex:'1 1 auto'}}>
           {/* v2.4.0-rc1.7: Page title in Fraunces 32, subtitle below.
@@ -45695,12 +45718,23 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       {/* rc2.45: split the action into "Re-normalize" (touch-up) and "Re-upload to re-extract"
           (full re-parse) so the FC knows which one to pick. Re-normalize fixes insurer / casing /
           category, but only re-uploading the source workbook can pick up new rider relationships,
-          section boundaries, or coalescing logic from the latest pipeline. */}
+          section boundaries, or coalescing logic from the latest pipeline.
+          rc2.46: also catch policies that have NO _pipelineVersion at all but came from
+          extraction (have a sourceFile or _xlsxProfile marker). These pre-date the version field
+          and were previously invisible to this banner. */}
       {!showForm && !scanning && (() => {
-        const stale = policies.filter(p => p._pipelineVersion && p._pipelineVersion !== EXTRACT_PIPELINE_VERSION);
+        const hasExtractionMarker = (p) => !!(p?.sourceFile || p?._xlsxProfile || p?.sourceDocument || p?._extractConfidence || p?._rawSpreadsheetRow);
+        const stale = policies.filter(p => {
+          if (!p) return false;
+          if (p._pipelineVersion && p._pipelineVersion !== EXTRACT_PIPELINE_VERSION) return true;
+          // No _pipelineVersion field at all, but evidence this came from extraction →
+          // treat as stale (pre-versioning era).
+          if (!p._pipelineVersion && hasExtractionMarker(p)) return true;
+          return false;
+        });
         if (stale.length === 0) return null;
         const fromSpreadsheet = stale.filter(p => p.sourceFile && /\.(xlsx|xls|csv)$/i.test(p.sourceFile));
-        const oldestVersion = stale[0]._pipelineVersion || 'unknown';
+        const oldestVersion = stale.map(p => p._pipelineVersion).filter(Boolean)[0] || 'pre-versioning (before pipeline tracking existed)';
         return React.createElement('div', {className:'card', style:{marginBottom:12,padding:14,borderLeft:'3px solid var(--orange)'}},
           React.createElement('div', {style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:10}},
             React.createElement('div', {style:{minWidth:0,flex:'1 1 320px'}},

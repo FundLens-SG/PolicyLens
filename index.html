@@ -40410,7 +40410,47 @@ function ProfileTab() {
   }, [ageSource]);
   return /*#__PURE__*/React.createElement("div", {
     className: "fade-in"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, (() => {
+    const hasExtractionMarker = pol => !!(pol?.sourceFile || pol?._xlsxProfile || pol?.sourceDocument || pol?._extractConfidence || pol?._rawSpreadsheetRow);
+    const stale = (policies || []).filter(pol => {
+      if (!pol) return false;
+      if (pol._pipelineVersion && pol._pipelineVersion !== EXTRACT_PIPELINE_VERSION) return true;
+      if (!pol._pipelineVersion && hasExtractionMarker(pol)) return true;
+      return false;
+    });
+    if (stale.length === 0) return null;
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginBottom: 14,
+        padding: '10px 14px',
+        background: 'color-mix(in oklch, var(--orange) 10%, var(--bg2))',
+        border: '1px solid color-mix(in oklch, var(--orange) 35%, transparent)',
+        borderRadius: 10,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: 10,
+        flexWrap: 'wrap'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 12,
+        color: 'var(--text2)',
+        lineHeight: 1.5
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontWeight: 700,
+        color: 'var(--orange)'
+      }
+    }, "\uD83D\uDD04 ", stale.length, " polic", stale.length === 1 ? 'y' : 'ies', " need re-extraction"), " \xB7 saved under an older parser. Open Policies to re-normalize or re-upload the source workbook for full re-parse (latest rider coalescing, insurer prefixes, plan options)."), /*#__PURE__*/React.createElement("button", {
+      className: "btn-secondary btn-sm",
+      style: {
+        whiteSpace: 'nowrap'
+      },
+      onClick: () => setTab && setTab('policies')
+    }, "Go to Policies \u2192"));
+  })(), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
@@ -60847,10 +60887,18 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       setUnsentCaptures([]);
     }
   }, "Discard")))), !showForm && !scanning && (() => {
-    const stale = policies.filter(p => p._pipelineVersion && p._pipelineVersion !== EXTRACT_PIPELINE_VERSION);
+    const hasExtractionMarker = p => !!(p?.sourceFile || p?._xlsxProfile || p?.sourceDocument || p?._extractConfidence || p?._rawSpreadsheetRow);
+    const stale = policies.filter(p => {
+      if (!p) return false;
+      if (p._pipelineVersion && p._pipelineVersion !== EXTRACT_PIPELINE_VERSION) return true;
+      // No _pipelineVersion field at all, but evidence this came from extraction →
+      // treat as stale (pre-versioning era).
+      if (!p._pipelineVersion && hasExtractionMarker(p)) return true;
+      return false;
+    });
     if (stale.length === 0) return null;
     const fromSpreadsheet = stale.filter(p => p.sourceFile && /\.(xlsx|xls|csv)$/i.test(p.sourceFile));
-    const oldestVersion = stale[0]._pipelineVersion || 'unknown';
+    const oldestVersion = stale.map(p => p._pipelineVersion).filter(Boolean)[0] || 'pre-versioning (before pipeline tracking existed)';
     return React.createElement('div', {
       className: 'card',
       style: {
