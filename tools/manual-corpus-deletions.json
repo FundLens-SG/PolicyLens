@@ -134,5 +134,213 @@
   {
     "insurer": "Great Eastern",
     "productName": "Supreme Livin' Care / Supreme Livin' Care Plus"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "Format per line: Exact Marketed Name"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Format: (Name)"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "APPENDIX"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "EXACT NAME"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Digital arm:"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Singapore-specific"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GENERAL INSURANCE (Etiqa / Tiq general)"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Dependants\\"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life current : ^HSBC\\s+Life\\s+[A-Z][A-Za-z ]+(\\s+(II"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Payor Benefit Rider (Death"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "TPD)"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Platinum)"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "First)"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "Prestige)"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Offshore)"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Silver)"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "individual)"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Gold"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "LIFE"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "High"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "DBS"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Maybank (distributor)"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "OCBC"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "UOB"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Chubb"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "QBE"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "HL Assurance"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Sompo"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Aviation"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Boat"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "CAR"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Fire & Property"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Marine Cargo (corporate)"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Energy (Onshore/Offshore)"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Tiq Car Insurance / Private Car"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "TripCare 360 (Silver/Gold/Platinum)"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Car Insurance (Classic / Executive / Prestige)"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Travel Insurance (Premium/Business/First)"
+  },
+  {
+    "insurer": "Liberty",
+    "productName": "Liberty Motor / Car"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Aviva MyShield Plan 1 / Plan 2 / Plan 3 / Plan A / Standard"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyHealthPlus Option A / B / C (original)"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Aviva MyLongTermCare / Aviva MyLongTermCare Plus"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyRetirementChoice / MyRetirementSavings"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyEndowmentPlan / MyEndowment (Aviva legacy)"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Savvy Endowment IV / V / VI etc."
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Group Term Life / Group H&S / Group PA / Group ECI"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Income Protector / Disability Income"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Enhanced IncomeShield / Enhanced IncomeShield Preferred / Advantage"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Care Secure (NTUC Income / Income Insurance)"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Shield (Private / High / Standard / A / B)"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Elite Care (Gold / Silver)"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "Sompo Health Insurance (group / individual)"
   }
 ]

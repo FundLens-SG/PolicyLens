@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.64-bigfour-deep-dive';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.65-smaller-insurers-hnw';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -728,9 +728,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.64';
+const APP_VERSION = 'v2.4.0-rc2.65';
 const APP_VERSION_DATE = '2026-05-18';
-const APP_VERSION_NAME = 'Phase 4 Big Four deep-dive — Manulife + AIA + Prudential + Great Eastern';
+const APP_VERSION_NAME = 'Phase 5 smaller insurers + HNW offshore — 6 new insurer entries, 3,315 total products';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -987,6 +987,26 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.4.0-rc2.65',
+    date: '2026-05-18',
+    name: 'Phase 5 smaller insurers + HNW offshore (Singlife / Income / HSBC / Tokio / Etiqa / FWD / China + 6 HNW carriers)',
+    sections: [
+      {
+        heading: 'Phase 5 catalogue ingest — smaller SG insurers + HNW offshore',
+        items: [
+          'Assimilated 910 entries from GPT-5.5 Pro Phase 5 (15 insurer files + corrections). Result after schema-alias normalisation: 898 NEW · 7 IDENTICAL · 5 REVIEW (all kept-existing — AI proposed sibling subType swaps with weak evidence) · 0 errors · 250 advisory warnings (96 subType aliases + 154 new-insurer canonicalisations, both expected).',
+          'Corpus growth: 2,454 → 3,315 SG knowledge entries (+861 net). manual-corpus-additions.json: 1,557 → 2,487. manual-corpus-overrides.json: 963 → 980. manual-corpus-deletions.json: 34 → 86 (+52 — 39 trash entries + 13 new slash-joined originals).',
+          'SIX new insurer entries added to the catalogue (HNW offshore): Manulife (International) Bermuda (20 products — Indexed UL, Heirloom, Signature IUL), Sun Life Hong Kong (10 — SunPLUS, Sun Bright, Victoria Plus, Stellar), Friends Provident International (13 — Reserve Single/Regular, Premier Account, International Investment Bond), Old Mutual International / Quilter International (14 — Executive Bond, Collective Investment Bond, Executive Redemption Bond), Transamerica Life Bermuda (20 — Aspire IUL family), Hansard International (10 — Vantage, Aspire HNW unit-linked).',
+          'Mid-size SG carrier depth increases: NTUC Income 176 → 292 (+116) · Singlife 181 → 279 (+98) · HSBC Life 113 → 224 (+111) · Tokio Marine 55 → 196 (+141) · FWD 96 → 156 (+60) · Etiqa 75 → 124 (+49) · China Taiping 39 → 89 (+50) · China Life 24 → 68 (+44). Tier B niche carriers: MSIG 7 → 45 · Sompo 6 → 34 · HL Assurance 1 → 8.',
+          'SubType alias map extended for Phase 5 normalisation: Single Premium ILP / Regular Premium ILP → ILP (Investment) (56 occurrences); Mortgage Reducing Term + MRTA → Term Life (16); Specialist Outpatient / International Health / Pre-Post Hospitalisation → Hospital Income (19); Education Endowment → Education Plan (4); Universal Endowment → Endowment (2); Variable/Deferred Annuity → Annuity; Group Term/Life → Term Life. Recorded in tools/assimilate-catalogue.mjs SUBTYPE_ALIASES with deferred-add notes for any future schema expansion.',
+          'Corpus trash cleanup (39 entries): regex/instructional fragments (Format: (Name), APPENDIX, EXACT NAME, Digital arm:, HSBC Life current : ^HSBC\\\\s+Life regex stub), truncated parentheticals (TPD), Platinum), First), Prestige), Silver), Offshore), individual)), distributor-only names (DBS, OCBC, UOB, Maybank, Chubb, QBE, MSIG, HL Assurance, Sompo, Allianz — all mis-attributed to wrong insurer), commercial GI line headings under Raffles Health (Aviation, Boat, CAR, Fire & Property, Marine Cargo, Energy), and 5 GI-out-of-scope motor/travel products (Tiq Car Insurance, TripCare 360, FWD Car Insurance, FWD Travel Insurance, Liberty Motor/Car).',
+          'Slash-joined splits (13 new originals → 32 canonical variants): Aviva MyShield Plan 1/2/3/A/Standard, MyHealthPlus Option A/B/C, Aviva MyLongTermCare + Plus, MyRetirementChoice + MyRetirementSavings, MyEndowmentPlan + MyEndowment (Aviva legacy), Singlife Savvy Endowment IV/V/VI, AIA Group Term Life + H&S + PA + ECI (4-way split by benefit type), HSBC Life Income Protector (with Disability Income as alias), Income Enhanced IncomeShield + Preferred + Advantage, Raffles Shield Private/Standard/A/B, Raffles Elite Care Gold/Silver, Sompo Health Insurance Group/Individual. (5 additional slash entries were idempotent — Phase 4 already handled GREAT Flexi Protect, Wealth Advantage, Supreme Livin Care, Living Assurance/Policy, PRUShield.)',
+          '5 REVIEW conflicts all kept-existing (AI proposed weak sibling subType swaps): #1 Singlife Health Plus (kept ISP, not Hospital Income — Health Plus is a Singlife Shield rider/plan); #2 TM Atlas Classic (kept investment/ILP, not protection/Term Life — TM Atlas is an ILP family); #3 TM EarlyCover (kept Critical Illness, not Term Life — EarlyCover is a CI rider); #4 China Taiping i-Wealth Builder (kept savings/Endowment, not protection/Term Life — Wealth Builder series is savings); #5 China Life Enhanced PayerBenefit Rider (kept Disability Income, not Whole Life — payer benefit waives premium on disability/CI events).',
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.4.0-rc2.64',
     date: '2026-05-18',

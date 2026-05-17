@@ -86,6 +86,33 @@ const SUBTYPE_ALIASES = {
   //   VitalHealth, HSG Max Rider, PRUExtra, GREAT TotalCare, Singlife Health Plus, AIA Max
   //   A Cancer Care Booster etc. → Shield Rider, distinct from the parent Integrated Shield
   //   Plan product they attach to.
+  // rc2.65: Phase 5 aliases — sub-types the smaller-insurer brief introduced that aren't
+  //   in the canonical enum. Maps to closest existing equivalent so validation passes.
+  //   Single/Regular Premium ILP: payment frequency is captured separately on the policy
+  //   (form.premFrequency = 'single'|'regular'), not as a subType.
+  'single premium ilp': 'ILP (Investment)',
+  'regular premium ilp': 'ILP (Investment)',
+  // Mortgage Reducing Term Assurance is a decreasing-amount term life policy.
+  'mortgage reducing term': 'Term Life',
+  'mortgage reducing term assurance': 'Term Life',
+  'mrta': 'Term Life',
+  'decreasing term': 'Term Life',
+  // Specialist Outpatient / International Health / Pre-Post Hospitalisation: non-IP health
+  //   coverage. Hospital Income is the closest existing fit — these aren't ISPs and aren't
+  //   pure inpatient. Tag suggestion: add proper subType in a later schema-expansion pass.
+  'specialist outpatient': 'Hospital Income',
+  'pre/post hospitalisation': 'Hospital Income',
+  'pre/post hospitalization': 'Hospital Income',
+  'international health': 'Hospital Income',
+  // Education Endowment / Universal Endowment: existing canonical equivalents exist.
+  'education endowment': 'Education Plan',
+  'universal endowment': 'Endowment',
+  // Variable / Deferred Annuity: both are still Annuity at the schema level.
+  'variable annuity': 'Annuity',
+  'deferred annuity': 'Annuity',
+  // Group Term / Group Life: corporate group cover is still term-life at the schema level.
+  'group term': 'Term Life',
+  'group life': 'Term Life',
 };
 
 // rc2.54: build a reverse map subType → category so we can auto-correct the category when

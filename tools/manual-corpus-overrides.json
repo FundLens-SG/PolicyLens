@@ -4730,8 +4730,8 @@
   {
     "insurer": "Singlife",
     "productName": "Aviva MyLongTermCare",
-    "category": "protection",
-    "subType": ""
+    "category": "health",
+    "subType": "Long-term Care"
   },
   {
     "insurer": "Singlife",
@@ -4742,8 +4742,8 @@
   {
     "insurer": "Singlife",
     "productName": "Aviva MyLongTermCare Plus",
-    "category": "protection",
-    "subType": ""
+    "category": "health",
+    "subType": "Long-term Care"
   },
   {
     "insurer": "Singlife",
@@ -4910,8 +4910,8 @@
   {
     "insurer": "Singlife",
     "productName": "MyEndowmentPlan",
-    "category": "protection",
-    "subType": "Universal Life"
+    "category": "savings",
+    "subType": "Endowment"
   },
   {
     "insurer": "Singlife",
@@ -4934,8 +4934,8 @@
   {
     "insurer": "Singlife",
     "productName": "MyHealthPlus Option A",
-    "category": "protection",
-    "subType": "Universal Life"
+    "category": "health",
+    "subType": "Shield Rider"
   },
   {
     "insurer": "Singlife",
@@ -4958,8 +4958,8 @@
   {
     "insurer": "Singlife",
     "productName": "MyHealthPlus Option B",
-    "category": "protection",
-    "subType": ""
+    "category": "health",
+    "subType": "Shield Rider"
   },
   {
     "insurer": "Singlife",
@@ -4970,8 +4970,8 @@
   {
     "insurer": "Singlife",
     "productName": "MyHealthPlus Option C",
-    "category": "protection",
-    "subType": ""
+    "category": "health",
+    "subType": "Shield Rider"
   },
   {
     "insurer": "Singlife",
@@ -5048,8 +5048,8 @@
   {
     "insurer": "Singlife",
     "productName": "MyRetirementChoice",
-    "category": "protection",
-    "subType": "Universal Life"
+    "category": "retirement",
+    "subType": "Annuity"
   },
   {
     "insurer": "Singlife",
@@ -5066,8 +5066,8 @@
   {
     "insurer": "Singlife",
     "productName": "MyRetirementSavings",
-    "category": "protection",
-    "subType": "Universal Life"
+    "category": "retirement",
+    "subType": "Annuity"
   },
   {
     "insurer": "Singlife",
@@ -5391,7 +5391,7 @@
     "insurer": "Singlife",
     "productName": "Singlife Savvy Endowment IV",
     "category": "savings",
-    "subType": "Endowment"
+    "subType": "Short-term Endowment"
   },
   {
     "insurer": "Singlife",
@@ -5776,5 +5776,107 @@
     "productName": "Signature Wealth SGD",
     "category": "protection",
     "subType": "Universal Life (UL)"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyEndowment",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Savvy Endowment V",
+    "category": "savings",
+    "subType": "Short-term Endowment"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Savvy Endowment VI",
+    "category": "savings",
+    "subType": "Short-term Endowment"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Group H&S",
+    "category": "health",
+    "subType": "Hospital Income"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Group Personal Accident",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Group Early Critical Illness",
+    "category": "protection",
+    "subType": "Early Critical Illness"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Enhanced IncomeShield Preferred",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Enhanced IncomeShield Advantage",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Care Secure",
+    "category": "health",
+    "subType": "Long-term Care"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Shield Private",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Shield Standard Plan",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Shield Plan A",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Shield Plan B",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Elite Care Gold",
+    "category": "health",
+    "subType": "Hospital Income"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Elite Care Silver",
+    "category": "health",
+    "subType": "Hospital Income"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "Sompo Health Insurance (Group)",
+    "category": "health",
+    "subType": "Hospital Income"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "Sompo Health Insurance (Individual)",
+    "category": "health",
+    "subType": "Hospital Income"
   }
 ]
