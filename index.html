@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.49-client-context';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.50-soh-family-extraction';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -738,9 +738,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.49';
-const APP_VERSION_DATE = '2026-05-16';
-const APP_VERSION_NAME = 'Client context header';
+const APP_VERSION = 'v2.4.0-rc2.50';
+const APP_VERSION_DATE = '2026-05-17';
+const APP_VERSION_NAME = 'Soh-family extraction overhaul';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1214,6 +1214,32 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.50',
+  date: '2026-05-17',
+  name: 'Soh-family extraction overhaul',
+  sections: [{
+    heading: 'XLSX extraction accuracy',
+    items: ['Soh family workbook benchmark rose from 78% to 100% field accuracy across all 5 sheets (DD, MM, JL, JY, JE) — 184/184 fields, 0 missing policies.', 'Section banner length cap raised 40 → 60 so multi-category banners like "Personal Accident Protection / Travel Insurance" (47 chars) are detected instead of silently merging into the previous section.', 'AIA Shield ward suffix recognition extended from "SPECIAL A/B" only to also include bare "A", "B", and "STANDARD" — JY\'s AIA HSG MAX B now coalesces under AIA HEALTHSHIELD GOLD MAX as a plan option instead of becoming an empty standalone policy.', 'ISP umbrella product name is preserved on the parent when a plan option is attached (was being overwritten by the plan option name; the umbrella identity was lost in the UI).', 'Continuation rows with no ordinal but a real product name (e.g. "TPD ADVANCE COVER III" under SINGLIFE ELITE TERM) are now recognised as rider continuation rather than mis-detected as a phantom section banner that truncated the parent section.', 'Coverage-column continuation rows (column "Coverage", e.g. "TPD $220k SA" under GE Financier\'s "Death $170k SA") now append to the parent policy\'s coverage field instead of being mis-classified as new riders. Rider-column continuation (column "Coverage End (Riders)") still merges as a rider as expected.', 'Phantom-section dedup: when two policy headers share the same banner row (caused by a high-scoring data row being mis-classified as a header), only the first is kept. MM\'s Legacy Planning section now extracts its 3 policies instead of 0.', 'Policy-header scorer ignores rows whose first cell is a numeric ordinal ("1.", "2.", "a)"). Prevents UOB SIGNATURE LIFE\'s data row from masquerading as a Legacy Planning header.']
+  }, {
+    heading: 'Column header recognition',
+    items: ['Bare "Policy Start" / "Policy End" / "Maturity" / "Inception" headers (no "date" suffix) now map to inceptionDate / maturityDate. SG FC summary templates routinely omit the suffix — previously every inception/end date was null.', 'Bare "Amount" header now maps to premiumAmount when the section context is protection / CI / accident — covers JL\'s CI and PA sections where "Amount" was used in place of "Premium".']
+  }, {
+    heading: 'Rider coalescing',
+    items: ['PRUShield Premier and PRUShield Extra Premier (the as-charged co-pay rider) now coalesce into a single policy with hasRider:true. Same pattern as AIA HealthShield + AIA HSG Max Rider and Singlife Shield + Singlife Health Plus. Prudential\'s rebrand from "PRUExtra" → "PRUShield Extra" was not recognised by the old rider regex.', 'Manulife Signature family rule extended to cover Signature Income and Signature Wealth (sold through DBS Treasures) in addition to Signature Life and Signature Indexed UL. All variants now resolve to insurer: Manulife.']
+  }, {
+    heading: 'Insurer detection',
+    items: ['Prudential prefix: any PRU* product name (PRUSHIELD, PRUVANTAGE, PRUCASH, PRULIFE, PRUWEALTH, PRUACTIVE, PRUSAVER, PRUGEN, etc.) now resolves to insurer: Prudential. Previously the regex required PRU to be a standalone word, so PRU-prefixed product names returned null.', 'Great Eastern prefix: any Great* product name (GREATLINK, GREATPRO, GREATCARE, GREAT TRAVELCARE, GREAT FINANCIER, GREAT TOTALCARE, GREAT SUPREMEHEALTH, etc.) plus LIFE PERKS now resolves to insurer: Great Eastern.', 'PRUVantage and GREATLink are added as explicit product rules so they also pick up subType: ILP (Investment) in addition to insurer.']
+  }, {
+    heading: 'Extraction review UX',
+    items: ['BulkVerifyModal policy rows now show a "🛡 +N rider" chip when riders are auto-coalesced. Tooltip lists rider names. ISP plan options (e.g. HSG MAX B) get their own chip too.', 'Single-document scan preview card shows the same chip plus an extended premium line: "Premium: $X + Rider: $Y (Total: $Z/yr)".', 'Rider Prem input column widened 90px → 120px, with a formatted "= $X/yr" echo below each numeric input — confirms what was actually parsed regardless of column width.', 'Riders summary header shows count + total with a hover tooltip listing each rider\'s premium individually + grand total combining base premium with rider premiums.']
+  }, {
+    heading: 'Pipeline freshness guarantees',
+    items: ['EXTRACT_PIPELINE_VERSION bumped to v15.53; old extract cache entries auto-purged on app mount.', 'column_map_cache is now pipeline-version-aware (was keyed by signature only); pre-bump entries no longer pin the parser to old field mappings.', 'Service worker SW_VERSION bumped so open tabs auto-refresh to pick up the new bundle.', '"🔄 Pipeline updated" banner now appears on Profile (was Policies-tab only) and catches pre-versioning policies that have no _pipelineVersion field but came from extraction.', 'Banner copy split actions: Re-normalize (fast in-place fill of insurer/casing/category) vs Re-upload (full re-parse, needed for newly-detected riders and section assignments).']
+  }, {
+    heading: 'Regression coverage',
+    items: ['New tools/diff-extraction-against-source.mjs harness diffs any xlsx against a hand-curated truth JSON and reports per-field mismatches. Wired as npm run diff:extraction.', 'New tools/test-soh-family-xlsx-extraction.mjs locks in all 5 Soh family sheets at 100% — 184 field assertions covering insurer, premium, inception, maturity, rider lists, plan options.', 'test-isp-rider-coalescing assertion updated to verify the umbrella product name stays on the parent and the plan tier moves to _xlsxIspPlanOption.']
+  }]
+}, {
   version: 'v2.4.0-rc2.49',
   date: '2026-05-16',
   name: 'Client context header',
