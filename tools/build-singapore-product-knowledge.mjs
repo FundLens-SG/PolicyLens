@@ -463,6 +463,41 @@ try {
   console.warn('[manual-overrides] skipped:', err.message);
 }
 
+// rc2.58: append additional entries from tools/manual-corpus-additions.json.
+//   These are products surfaced by deep-research runs that don't exist in the corpus
+//   text files (yet). Each entry follows the same tuple shape as the generated rows.
+//   Skipped if already present in productRows (by canonical insurer + name) to keep
+//   the operation idempotent across re-runs.
+try {
+  const additionsPath = path.join(repoRoot, 'tools/manual-corpus-additions.json');
+  if (fs.existsSync(additionsPath)) {
+    const additions = JSON.parse(fs.readFileSync(additionsPath, 'utf8'));
+    const existing = new Set(productRows.map(r => canonicalInsurer(r[0]) + '|' + normalizeText(r[1])));
+    let added = 0;
+    for (const a of additions) {
+      const key = canonicalInsurer(a.insurer || '') + '|' + normalizeText(a.productName || '');
+      if (existing.has(key)) continue;
+      existing.add(key);
+      productRows.push([
+        a.insurer || '',
+        a.productName || '',
+        a.category || '',
+        a.subType || '',
+        Array.isArray(a.aliases) ? a.aliases.slice(0, 8) : [],
+        a.source || 'manual-corpus-additions.json'
+      ]);
+      added++;
+    }
+    if (added > 0) {
+      // Re-sort to keep the (insurer, name) order stable.
+      productRows.sort((a, b) => (a[0] + a[1]).localeCompare(b[0] + b[1]));
+    }
+    console.log('[manual-additions] added ' + added + ' new entries from manual-corpus-additions.json');
+  }
+} catch (err) {
+  console.warn('[manual-additions] skipped:', err.message);
+}
+
 const falsePositives = [
   'AIA Vitality',
   'Live Great',

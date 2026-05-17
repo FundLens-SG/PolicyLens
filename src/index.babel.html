@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.57-override-durability';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.58-corpus-expansion';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -728,9 +728,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.57';
+const APP_VERSION = 'v2.4.0-rc2.58';
 const APP_VERSION_DATE = '2026-05-17';
-const APP_VERSION_NAME = 'Override durability + fuzzy-match recovery';
+const APP_VERSION_NAME = 'SG knowledge corpus 962 → 1,273 entries';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -987,6 +987,22 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.4.0-rc2.58',
+    date: '2026-05-17',
+    name: 'SG knowledge corpus 962 → 1,273 entries',
+    sections: [
+      {
+        heading: 'Corpus expansion',
+        items: [
+          'Singapore product knowledge corpus grew from 962 → 1,273 entries (+311). The 318 new products surfaced by the 2026-05-17 deep-research run were previously only in SEED_REPOSITORY (UI-side product picker). They are now also in the fuzzy-match corpus consulted during document/spreadsheet extraction — so the parser recognises them when an FC uploads a policy schedule.',
+          'New tools/manual-corpus-additions.json captures the 318 entries with (insurer, productName, category, subType, aliases, source). Build script tools/build-singapore-product-knowledge.mjs reads this file after applying corpus overrides and appends any entry not already present (dedup by canonicalInsurer + normalizeText match). Idempotent across re-runs.',
+          'Coverage: AIA +92, NTUC Income +49, Manulife +17, Singlife +16, Prudential +12, HSBC Life +10, Syfe +9, Great Eastern +7, FWD +7, DBS +7, UOB +7, Endowus +7. Plus smaller insurers, more banks and brokerages.',
+          'Lookup quality verified: AIA Pro Lifetime Protector II → exact match 1.00; Tiger Vault Smart → Tiger Vault score 0.94; Endowus Cash Smart Ultra → Endowus Cash Smart score 0.94.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.4.0-rc2.57',
     date: '2026-05-17',
@@ -6701,7 +6717,7 @@ async function pdfToImages(pdfDoc, maxPages=12) {
 // cache could return a stale 2-policy spreadsheet result before the fixed
 // local XLSX parser ran, so the parser now bypasses extraction/OCR cache
 // for spreadsheets and this version makes existing stale entries unreachable.
-const EXTRACT_PIPELINE_VERSION = 'v15.58-2026-05-17-override-durability-rc2.57';
+const EXTRACT_PIPELINE_VERSION = 'v15.59-2026-05-17-corpus-expansion-rc2.58';
 
 // ── v15: PROMPT VERSIONING ──
 const EXTRACT_PROMPT_VERSION = 'v14.9-2026-05-02-calmer-inference';

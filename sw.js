@@ -1,4 +1,4 @@
-const SW_VERSION = 'v2.4.0-rc2.57-override-durability';
+const SW_VERSION = 'v2.4.0-rc2.58-corpus-expansion';
 const DB_NAME = 'PolicyLensSW';
 const DB_VERSION = 1;
 const SESSION_STORE = 'sessions';

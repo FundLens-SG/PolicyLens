@@ -1,0 +1,3374 @@
+[
+  {
+    "insurer": "AIA",
+    "productName": "UCC Enhancer",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Ultimate Critical Cover Enhancer",
+      "UCC Enhancer Rider"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "ASCC Booster",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [
+      "AIA Absolute Critical Cover Booster",
+      "ASCC Booster Rider"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Enhanced Cancer Protect Plus",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "AIA Enhanced Cancer Protect Plus",
+      "ECP Plus"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Early Critical Cover Extra",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [
+      "AIA Early Critical Cover Extra"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Star Protector Plus",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "Star Protector Plus"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Prime Assured",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "Prime Assured"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum AccidentCare",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "Platinum AccidentCare",
+      "Platinum Accident Care"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA #GenFit PA",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "#GenFit PA",
+      "GenFit PA",
+      "AIA GenFit PA"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA HealthShield Gold Max C",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "HSG Max C",
+      "HealthShield Gold Max C"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Max VitalHealth Pro A",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "Max VitalHealth Pro A",
+      "MVH Pro A"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Max VitalHealth Pro B",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "Max VitalHealth Pro B",
+      "MVH Pro B"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Max VitalHealth Pro B Lite",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "Max VitalHealth Pro B Lite",
+      "MVH Pro B Lite"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Cancer Care Pro",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "AIA Cancer Care Pro"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Emergency Care Pro",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "AIA Emergency Care Pro"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Long Term Care",
+    "category": "health",
+    "subType": "Long-term Care",
+    "aliases": [
+      "Long Term Care"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Elderguard",
+    "category": "health",
+    "subType": "CareShield Life / Supplement",
+    "aliases": [
+      "Elderguard",
+      "AIA ElderGuard"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Baby Protector (III)",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [
+      "Baby Protector III"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Fertility Treatment",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [
+      "AIA Fertility Treatment"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Smart Goal 10",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [
+      "Smart Goal 10"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA #Wealth Savvy (IV)",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [
+      "#Wealth Savvy IV",
+      "Wealth Savvy IV"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA SmartRewards Saver",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [
+      "SmartRewards Saver",
+      "Smart Rewards Saver"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Smart Wealth Builder (II)",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [
+      "Smart Wealth Builder II"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Guaranteed Yield Plan",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [
+      "Guaranteed Yield Plan"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Guaranteed Cash Endowment",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [
+      "Guaranteed Cash Endowment"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Endowment Select",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [
+      "Endowment Select"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Endowment Series",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [
+      "Endowment Series"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Flexisaver",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [
+      "Flexisaver",
+      "Flexi Saver"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA EduSaver Series",
+    "category": "savings",
+    "subType": "Education Plan",
+    "aliases": [
+      "EduSaver Series",
+      "Edu Saver Series"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Gen3",
+    "category": "retirement",
+    "subType": "Retirement Income (Par WL)",
+    "aliases": [
+      "Gen3",
+      "AIA Generation 3"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Gen3 (II)",
+    "category": "retirement",
+    "subType": "Retirement Income (Par WL)",
+    "aliases": [
+      "Gen3 II",
+      "AIA Generation 3 II"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Flexi Retirement Plan",
+    "category": "retirement",
+    "subType": "Retirement",
+    "aliases": [
+      "Flexi Retirement Plan"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA 10/15 Year Guaranteed Annuity",
+    "category": "retirement",
+    "subType": "Annuity",
+    "aliases": [
+      "10/15 Year Guaranteed Annuity"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Dollars For Life",
+    "category": "retirement",
+    "subType": "Annuity",
+    "aliases": [
+      "Dollars For Life"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Par Annuity Plan with 12 Year Guaranteed Benefit",
+    "category": "retirement",
+    "subType": "Annuity",
+    "aliases": [
+      "Par Annuity Plan",
+      "Par Annuity Plan 12 Year Guaranteed Benefit"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Elite Secure Income",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [
+      "Elite Secure Income"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Wealth Venture",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [
+      "Wealth Venture"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Asset Evolution",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [
+      "Asset Evolution"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Investment Growth Plan",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [
+      "Investment Growth Plan"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Investment Growth Plan Plus",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [
+      "Investment Growth Plan Plus",
+      "IGP Plus"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Family First Invest",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [
+      "Family First Invest"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum Term",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "Platinum Term"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Secure Term Plus (II)",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "Secure Term Plus II"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Secure Term Plus",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "Secure Term Plus"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Secure Term",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "Secure Term"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA 5k Critical Cover",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "5k Critical Cover",
+      "AIA 5K Critical Cover"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Cancer Guard",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Cancer Guard"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Cancer Cover",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Cancer Cover"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Early Critical Protector Life (IV)",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [
+      "ECPL (IV)",
+      "Early Critical Protector Life IV"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Critical Protector Life (IV)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "CPL (IV)",
+      "Critical Protector Life IV"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Early Critical Protector Waiver of Premium (II)",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [
+      "ECPWP (II)",
+      "ECPWP II",
+      "Early Critical Protector WOP II"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Critical Protector Waiver of Premium (II)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "CPWP (II)",
+      "CPWP II",
+      "Critical Protector WOP II"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Early Critical Protector Payor Benefit (II)",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [
+      "ECPPB (II)",
+      "ECPPB II"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Payor Benefit",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "PB Rider",
+      "Payor Benefit Rider"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Payor Benefit Comprehensive Special (II)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "PBCS (II)",
+      "Payor Benefit Comprehensive Special II"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Critical Cover Accelerator",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Critical Cover Accelerator Rider"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Early Critical Cover Accelerator",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [
+      "Early Critical Cover Accelerator Rider"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Total Disability Accelerator (II)",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [
+      "Total Disability Accelerator II"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Total Critical Accelerator (II)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Total Critical Accelerator II"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Lifetime Critical Cover Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Lifetime Critical Cover",
+      "LCC Rider"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Relapse Benefit",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "AIA Relapse Benefit",
+      "Relapse Benefit Rider"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Option to Purchase Additional Insurance (OPAI) Rider",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "OPAI",
+      "AIA OPAI Rider"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Direct - CI for Term Cover 5",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Direct CI Term 5",
+      "DPI CI Term 5"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Direct - CI for Term Cover 20",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Direct CI Term 20",
+      "DPI CI Term 20"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Direct - CI for Term Cover 65",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Direct CI Term 65",
+      "DPI CI Term 65"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Direct - CI for Whole Life Cover (II)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Direct CI Whole Life Cover II",
+      "DPI CI WLC II"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Life Multiplier",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [
+      "GLM",
+      "Great Life Multiplier"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Dependants' Protection Scheme",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "DPS",
+      "CPF DPS"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Critical Cover",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "GCC",
+      "Great Critical Cover Series"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Early Critical Cover",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [
+      "GECC",
+      "Early Critical Cover"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Relapse Cover",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Relapse Cover"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Cancer Guard",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "GREAT Cancer Guard"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Flexi Advantage",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [
+      "GFA",
+      "Great Flexi Advantage"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUActive LinkGuard",
+    "category": "protection",
+    "subType": "ILP (Protection)",
+    "aliases": [
+      "PRU Active LinkGuard",
+      "PALG"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUExtra Standard",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "PRU Extra Standard"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRU Active Protect",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "PRUActive Protect",
+      "PAP"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUCare Secure",
+    "category": "health",
+    "subType": "CareShield Life / Supplement",
+    "aliases": [
+      "PRU Care Secure",
+      "PruCare Secure"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRU Apex Legacy Index",
+    "category": "protection",
+    "subType": "Indexed UL (IUL)",
+    "aliases": [
+      "PRUApex Legacy Index",
+      "Apex Legacy Index"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRU Life Vantage Achiever Prime Series",
+    "category": "protection",
+    "subType": "Variable UL (VUL)",
+    "aliases": [
+      "PRULife Vantage Achiever Prime",
+      "Life Vantage Achiever Prime Series"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRU First Promise",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [
+      "PRUFirst Promise",
+      "First Promise"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRU First Gift II",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [
+      "PRUFirst Gift II",
+      "First Gift II"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife WealthGen",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [
+      "WealthGen"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Goal 2025 (III)",
+    "category": "savings",
+    "subType": "Short-term Endowment",
+    "aliases": [
+      "Goal 2025 III",
+      "Manulife Goal 2025 III"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife IncomeGen (II)",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [
+      "IncomeGen II",
+      "Manulife IncomeGen II"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife GrowSecure",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [
+      "GrowSecure"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "InvestReady III",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [
+      "Manulife InvestReady III",
+      "IR3"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "InvestReady III Plus",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [
+      "Manulife InvestReady III Plus",
+      "IR3 Plus"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulink Investor",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [
+      "ManuLink Investor"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulink Investor (II)",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [
+      "ManuLink Investor II"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife SmartRetire (V)",
+    "category": "retirement",
+    "subType": "Retirement",
+    "aliases": [
+      "SmartRetire V",
+      "Manulife SmartRetire V"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ReadyCompleteCare",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Manulife ReadyCompleteCare"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Critical Illness Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "CI Rider"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Payer Benefit Rider",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "Payer Benefit"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Complete Life Secure",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [
+      "Income Complete Life Secure"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "DIRECT Star Protect Pro",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [
+      "Direct Star Protect Pro"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "DIRECT Star Term",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "Direct Star Term"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "DIRECT Star Term — Renewable",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "Direct Star Term Renewable",
+      "DIRECT Star Term Renewable"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Mortgage Term",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "Income Mortgage Term"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Family Protect",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "Income Family Protect"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "TermLife Solitaire",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "Term Life Solitaire"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Provenance Solitaire",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [
+      "Income Provenance Solitaire"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Legacy Flex Solitaire",
+    "category": "protection",
+    "subType": "Universal Life (UL)",
+    "aliases": [
+      "Income Legacy Flex Solitaire"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Complete Critical Protect",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Income Complete Critical Protect"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Complete Cancer Care",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Income Complete Cancer Care"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Lady 360",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Income Lady 360"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "LUV",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Income LUV"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "SAFRA Essential Term",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "SAFRA Essential Term Life"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "SAFRA Living Care",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "SAFRA Living Care"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "HomeTeamNS Insurance Scheme",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "HomeTeamNS Insurance"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "HomeTeamNS Living Policy",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "HomeTeamNS Living"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Corporatised Entities Group Insurance Scheme",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "CEGIS"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "OCBC Protect",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "Income OCBC Protect"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Care Secure",
+    "category": "health",
+    "subType": "CareShield Life / Supplement",
+    "aliases": [
+      "Income Care Secure"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Care Secure Pro",
+    "category": "health",
+    "subType": "CareShield Life / Supplement",
+    "aliases": [
+      "Income Care Secure Pro"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Enhanced IncomeShield",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "Enhanced Income Shield",
+      "EIS"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "IncomeShield",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "Income Shield"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Integrated Shield Plans for Public Officers",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "Public Officers Integrated Shield"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Co-Pay Assist Plan",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "CoPay Assist",
+      "CPA"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Hospital Care Insurance",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [
+      "Income Hospital Care"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "PrimeShield",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "Income PrimeShield"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "PA Assurance",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "Income PA Assurance"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "PA Secure",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "Income PA Secure"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "PA Fitness Protect",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "Income PA Fitness Protect"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "SilverCare",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "Income SilverCare"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "SpecialCare (Autism)",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "Income SpecialCare Autism"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "SpecialCare (Down Syndrome)",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "Income SpecialCare Down Syndrome"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Maternity 360",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [
+      "Income Maternity 360"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Gro Annuity Pro",
+    "category": "retirement",
+    "subType": "Annuity",
+    "aliases": [
+      "Income Gro Annuity Pro"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Luxe Plus Solitaire II",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [
+      "Income Luxe Plus Solitaire II"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Wealth Plus Solitaire",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [
+      "Income Wealth Plus Solitaire"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "AstraLink",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [
+      "Income AstraLink"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Invest Flex",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [
+      "Income Invest Flex"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Invest Flex TriVantage",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [
+      "Income Invest Flex TriVantage"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Invest Flex Vantage",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [
+      "Income Invest Flex Vantage"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "WealthLink",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [
+      "Income WealthLink"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Simple Term",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "Simple Term"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "DIRECT – Singlife Whole Life",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [
+      "DIRECT Singlife Whole Life",
+      "DPI Singlife Whole Life"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Shield",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "Singlife IP",
+      "Singlife Integrated Shield"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Health Plus",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "Health Plus"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife CareShield Standard",
+    "category": "health",
+    "subType": "CareShield Life / Supplement",
+    "aliases": [
+      "CareShield Standard"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife CareShield Plus",
+    "category": "health",
+    "subType": "CareShield Life / Supplement",
+    "aliases": [
+      "CareShield Plus"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Care Income Plus Cover",
+    "category": "health",
+    "subType": "Long-term Care",
+    "aliases": [
+      "Care Income Plus Cover"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MINDEF/MHA Group Term Life",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "MINDEF Group Term",
+      "MHA Group Term",
+      "Group Term Life"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MINDEF/MHA Group Personal Accident",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "MINDEF PA",
+      "MHA PA",
+      "Group Personal Accident"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MINDEF/MHA Living Care",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Living Care",
+      "MINDEF Living Care",
+      "MHA Living Care"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Public Officers Group Insurance Scheme",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "POGIS"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life – Shield",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "HSBC Life Shield",
+      "AXA Shield legacy"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Enhanced Care Rider",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "Enhanced Care Rider",
+      "HSBC Enhanced Care"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life – Care Secure",
+    "category": "health",
+    "subType": "CareShield Life / Supplement",
+    "aliases": [
+      "HSBC Care Secure",
+      "AXA Care Secure legacy"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Accident Protection Plan",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "Accident Protection Plan"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life RetireHappy",
+    "category": "retirement",
+    "subType": "Retirement",
+    "aliases": [
+      "RetireHappy"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Harvest Saver",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [
+      "Harvest Saver"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "DIRECT-TM Basic Term",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "Direct TM Basic Term",
+      "DPI TM Basic Term"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Wealth Builder@Future",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [
+      "Wealth Builder Future",
+      "TM Wealth Builder@Future"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Invest Future Takaful",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [
+      "Etiqa Invest Future Takaful"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Etiqa Personal Accident Insurance",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "Etiqa PA"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Heart Attack Insurance",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Heart Attack"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Stroke Insurance",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Stroke"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Recover First",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "Recover First"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Flex",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "Flex"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD International Health Insurance",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "International Health"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "ProtectionPlus",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "MSIG Protection Plus"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "PA RecoveryPlus",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "MSIG PA Recovery Plus"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "PA PrimePlus (Series II)",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "MSIG PA PrimePlus II",
+      "PA Prime Plus Series II"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "DBS",
+    "productName": "DBS digiPortfolio",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "digiPortfolio"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "DBS",
+    "productName": "DBS Retire digiPortfolio",
+    "category": "retirement",
+    "subType": "Retirement",
+    "aliases": [
+      "Retire digiPortfolio"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "DBS",
+    "productName": "DBS Invest-Saver",
+    "category": "other_assets",
+    "subType": "Regular Savings Plan",
+    "aliases": [
+      "Invest Saver",
+      "DBS RSP"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "DBS",
+    "productName": "DBS Unit Trusts",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "DBS UT"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "DBS",
+    "productName": "DBS Singapore Dollar Fixed Deposit",
+    "category": "cash_investments",
+    "subType": "Fixed Deposit",
+    "aliases": [
+      "DBS SGD FD",
+      "DBS Fixed Deposit"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "UOB",
+    "productName": "UOB SGD Fixed Deposit",
+    "category": "cash_investments",
+    "subType": "Fixed Deposit",
+    "aliases": [
+      "UOB Fixed Deposit",
+      "UOB Singapore Dollar Fixed Deposit"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "UOB",
+    "productName": "UOB Structured Deposits",
+    "category": "cash_investments",
+    "subType": "Structured Deposit",
+    "aliases": [
+      "UOB Structured Deposit"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "UOB",
+    "productName": "UOB Unit Trusts",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "UOB UT"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "UOB",
+    "productName": "Wealth on UOB TMRW",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "UOB TMRW Wealth"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "UOB",
+    "productName": "UOB Gold Solution",
+    "category": "other_assets",
+    "subType": "Precious Metals",
+    "aliases": [
+      "UOB Gold",
+      "Gold Solution"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "OCBC",
+    "productName": "OCBC Blue Chip Investment Plan",
+    "category": "other_assets",
+    "subType": "Regular Savings Plan",
+    "aliases": [
+      "BCIP",
+      "Blue Chip Investment Plan"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "OCBC",
+    "productName": "OCBC RoboInvest",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "RoboInvest"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "OCBC",
+    "productName": "OCBC Unit Trusts",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "OCBC UT"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "OCBC",
+    "productName": "OCBC Structured Deposits",
+    "category": "cash_investments",
+    "subType": "Structured Deposit",
+    "aliases": [
+      "OCBC Structured Deposit"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "OCBC",
+    "productName": "OCBC Precious Metals Account",
+    "category": "other_assets",
+    "subType": "Precious Metals",
+    "aliases": [
+      "OCBC PMA",
+      "OCBC Gold Account"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Citibank",
+    "productName": "Citi Unit Trusts",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "Citibank Unit Trusts",
+      "Citi UT"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Citibank",
+    "productName": "Citi Time Deposit",
+    "category": "cash_investments",
+    "subType": "Fixed Deposit",
+    "aliases": [
+      "Citibank Time Deposit",
+      "Citi Fixed Deposit"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "HSBC",
+    "productName": "HSBC Unit Trusts",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "HSBC UT"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "HSBC",
+    "productName": "HSBC Time Deposit",
+    "category": "cash_investments",
+    "subType": "Fixed Deposit",
+    "aliases": [
+      "HSBC Fixed Deposit"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Standard Chartered",
+    "productName": "Standard Chartered Unit Trusts",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "SC Unit Trusts",
+      "SC UT"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Standard Chartered",
+    "productName": "Standard Chartered Online Trading",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "SC Online Trading"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Standard Chartered",
+    "productName": "Standard Chartered Time Deposit",
+    "category": "cash_investments",
+    "subType": "Fixed Deposit",
+    "aliases": [
+      "SC Fixed Deposit"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Maybank",
+    "productName": "Maybank Unit Trusts",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "Maybank UT"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Maybank",
+    "productName": "Maybank Singapore Dollar Time Deposit",
+    "category": "cash_investments",
+    "subType": "Fixed Deposit",
+    "aliases": [
+      "Maybank SGD Time Deposit",
+      "Maybank Fixed Deposit"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "iFAST",
+    "productName": "FSMOne Unit Trusts",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "FSM Unit Trusts",
+      "Fundsupermart Unit Trusts"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "iFAST",
+    "productName": "FSMOne Stocks and ETFs",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "FSMOne Securities",
+      "FSM Stocks ETFs"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "iFAST",
+    "productName": "FSMOne Bonds",
+    "category": "other_assets",
+    "subType": "Bonds",
+    "aliases": [
+      "FSM Bonds"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "iFAST",
+    "productName": "FSMOne Managed Portfolios",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "FSM Managed Portfolio"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "iFAST",
+    "productName": "FSMOne Regular Savings Plan",
+    "category": "other_assets",
+    "subType": "Regular Savings Plan",
+    "aliases": [
+      "FSM RSP"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Tiger Brokers",
+    "productName": "Tiger Brokers Brokerage Account",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "Tiger Account",
+      "Tiger Trade"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Tiger Brokers",
+    "productName": "Tiger Brokers Fund Mall",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "Tiger Fund Mall",
+      "Tiger Funds"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Tiger Brokers",
+    "productName": "Tiger Vault",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Tiger Cash",
+      "Tiger Money Market"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "moomoo",
+    "productName": "moomoo Brokerage Account",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "Moomoo Account",
+      "Futu SG brokerage"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "moomoo",
+    "productName": "moomoo Cash Plus",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Cash Plus",
+      "Moomoo Cash Plus"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "moomoo",
+    "productName": "moomoo Fund Hub",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "Moomoo Funds",
+      "Fund Hub"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus Core Portfolios",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "Endowus Core"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus Satellite Portfolios",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "Endowus Satellite"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus Cash Smart Secure",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Cash Smart Secure"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus Cash Smart Enhanced",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Cash Smart Enhanced"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus Fund Smart",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "Fund Smart"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway General Investing",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "General Investing"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway Income Portfolio",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "Income Portfolio"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway Flexible Portfolio",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "Flexible Portfolio"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway Simple Guaranteed",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Simple Guaranteed"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway Simple Plus",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Simple Plus"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Syfe",
+    "productName": "Syfe Core",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "Syfe Core Portfolio"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Syfe",
+    "productName": "Syfe Select Themes",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "Select Themes"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Syfe",
+    "productName": "Syfe Income+",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "Income Plus"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Syfe",
+    "productName": "Syfe Cash+ Guaranteed",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Cash Plus Guaranteed",
+      "Cash+ Guaranteed"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Syfe",
+    "productName": "Syfe Cash+ Flexi",
+    "category": "cash_investments",
+    "subType": "Cash Management",
+    "aliases": [
+      "Cash Plus Flexi",
+      "Cash+ Flexi"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Syfe",
+    "productName": "Syfe Brokerage",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "Syfe Trade"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Saxo",
+    "productName": "SaxoTraderGO Account",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "Saxo Account",
+      "SaxoTraderGO"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Saxo",
+    "productName": "Saxo Managed Portfolios",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "SaxoWealthCare",
+      "Saxo Managed Portfolio"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Saxo",
+    "productName": "Saxo Mutual Funds",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "Saxo Funds",
+      "Saxo Mutual Fund"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Saxo",
+    "productName": "Saxo Bonds",
+    "category": "other_assets",
+    "subType": "Bonds",
+    "aliases": [
+      "Saxo Bond Trading"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Interactive Brokers",
+    "productName": "Interactive Brokers Individual Account",
+    "category": "other_assets",
+    "subType": "Brokerage Account",
+    "aliases": [
+      "IBKR Individual Account",
+      "IBKR Account"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Interactive Brokers",
+    "productName": "Interactive Brokers Mutual Funds",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "IBKR Mutual Funds"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Interactive Brokers",
+    "productName": "Interactive Brokers Bonds",
+    "category": "other_assets",
+    "subType": "Bonds",
+    "aliases": [
+      "IBKR Bonds"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "CPF Board",
+    "productName": "Retirement Sum Scheme",
+    "category": "retirement",
+    "subType": "Retirement",
+    "aliases": [
+      "CPF RSS",
+      "RSS"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "CPF Board",
+    "productName": "Supplementary Retirement Scheme",
+    "category": "retirement",
+    "subType": "Retirement",
+    "aliases": [
+      "SRS"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "CPF Board",
+    "productName": "Singapore Savings Bonds",
+    "category": "other_assets",
+    "subType": "Bonds",
+    "aliases": [
+      "SSB",
+      "Singapore Savings Bond"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "CPF Board",
+    "productName": "Singapore Treasury Bills",
+    "category": "other_assets",
+    "subType": "Treasury Bills",
+    "aliases": [
+      "T-bills",
+      "SG T-bills",
+      "Treasury Bills"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "CPF Board",
+    "productName": "Singapore Government Securities Bonds",
+    "category": "other_assets",
+    "subType": "Bonds",
+    "aliases": [
+      "SGS Bonds",
+      "Singapore Government Bonds"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "CPF Board",
+    "productName": "Home Protection Scheme",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "CPF HPS",
+      "HPS"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "CPF Board",
+    "productName": "ElderFund",
+    "category": "health",
+    "subType": "Long-term Care",
+    "aliases": [
+      "ElderFund"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA HealthShield Gold Max - Plan A",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "HSG Max A",
+      "HSGM A",
+      "AIA Shield A",
+      "AIA HSGM-A"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA HealthShield Gold Max - Plan B",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "HSG Max B",
+      "HSGM B",
+      "AIA Shield B",
+      "AIA HSGM-B"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA HealthShield Gold Max - Plan B Lite",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "HSG Max B Lite",
+      "HSGM B Lite",
+      "AIA Shield B Lite"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA HealthShield Gold Max A (For Foreigners)",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "HSG Max A Foreigner",
+      "AIA Shield A Foreigner",
+      "AIA HSGM-A (Foreign)"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA HealthShield Gold Max B (For Foreigners)",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "HSG Max B Foreigner",
+      "AIA Shield B Foreigner"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Cancer Care Pro",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "Cancer Care Pro",
+      "AIA CCP"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Emergency Care Pro",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "Emergency Care Pro",
+      "AIA ECP (Shield)"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum International Health",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "Platinum International Health",
+      "AIA PIH",
+      "AIA International Health"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Critical Protector Life (IV)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Critical Protector Life IV",
+      "CPL IV"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Critical Protector Waiver of Premium (II)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Critical Protector Waiver of Premium II",
+      "CCW II",
+      "CPWoP(II)"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Lifetime Critical Cover Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Lifetime Critical Cover",
+      "AIA LCC"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Relapse Benefit Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Relapse Benefit",
+      "AIA Relapse"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Total Disability Accelerator (II)",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [
+      "Total Disability Accelerator II",
+      "TDA II"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA UCC Enhancer",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "UCC Enhancer",
+      "AIA UCC Enhancer Rider"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA ASCC Booster",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "ASCC Booster",
+      "ACC Booster"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Critical Cover Accelerator",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Critical Cover Accelerator",
+      "CCA"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Early Critical Cover Accelerator",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [
+      "Early Critical Cover Accelerator",
+      "ECCA"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Critical Cover Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Critical Cover Rider",
+      "CCR (SFT)"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Early Critical Cover Rider",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [
+      "Early Critical Cover Rider",
+      "ECC (SFT)"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Enhanced Cancer Protect Plus",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Enhanced Cancer Protect Plus",
+      "ECP Plus"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Diabetes Care - Cancer Cover (add-on)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Cancer Cover (Diabetes Care)",
+      "AIA Diabetes Care Cancer Cover"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Star Protector Plus - Child Critical Illness Benefit",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Child Critical Illness Benefit (Star Protector Plus)",
+      "SPP CCI"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Centurion PA - Dementia Benefit",
+    "category": "protection",
+    "subType": "Long-term Care",
+    "aliases": [
+      "Dementia Benefit (Centurion PA)",
+      "CPA Dementia"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum AccidentCare - Weekly Income Benefit",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [
+      "Weekly Income Benefit (Platinum AccidentCare)",
+      "PAC WIB"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum AccidentCare - Monthly Support Benefit",
+    "category": "protection",
+    "subType": "Disability Income",
+    "aliases": [
+      "Monthly Support Benefit (Platinum AccidentCare)",
+      "PAC MSB"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Early Critical Protector (legacy)",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [
+      "AIA Early Critical Protector",
+      "ECP (CI rider)",
+      "ECP (legacy)"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Family First Protect",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [
+      "Family First Protect",
+      "AIA FFP"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUWealth (USD)",
+    "category": "savings",
+    "subType": "Lifetime Endowment",
+    "aliases": [
+      "PRUWealth USD"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUVantage Assure",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [
+      "PRUVantage Assure Series",
+      "PVA Series"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUVantage Legacy Index",
+    "category": "protection",
+    "subType": "Indexed UL (IUL)",
+    "aliases": [
+      "PRUVantage Legacy Index",
+      "PVLI"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Accident Assist",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "PRU Accident Assist"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Signature Legacy Harvest",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [
+      "Signature Legacy Harvest",
+      "MSLH"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Signature Legacy Growth",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [
+      "Signature Legacy Growth",
+      "MSLG"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Signature Wealth",
+    "category": "protection",
+    "subType": "Variable UL (VUL)",
+    "aliases": [
+      "Signature Wealth",
+      "MSW"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Signature Income",
+    "category": "retirement",
+    "subType": "Retirement Income (Par WL)",
+    "aliases": [
+      "Signature Income",
+      "MSI"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "ManuRetire",
+    "category": "retirement",
+    "subType": "Retirement Income (Par WL)",
+    "aliases": [
+      "ManuRetire (DBS)",
+      "Manulife ManuRetire"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "VivoLife 125",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [
+      "VivoLife 125",
+      "VL 125"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "VivoLife 180",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [
+      "VivoLife 180",
+      "VL 180"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "VivoLife 350",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [
+      "VivoLife 350",
+      "VL 350"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Optima Care rider",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "Optima Care",
+      "EIS Optima"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Essential Care rider",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "Essential Care",
+      "EIS Essential"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Deluxe Care rider",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "Deluxe Care (legacy)",
+      "EIS Deluxe"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Classic Care rider",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "Classic Care (legacy)",
+      "EIS Classic"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Smart Saver",
+    "category": "savings",
+    "subType": "Endowment",
+    "aliases": [
+      "Smart Saver"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Aviva MyShield",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "MyShield (Aviva legacy)"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Aviva MyLifeIncome",
+    "category": "retirement",
+    "subType": "Retirement Income (Par WL)",
+    "aliases": [
+      "MyLifeIncome (Aviva)",
+      "Aviva MyLifeIncome II"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Aviva MyWholeLifePlan",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [
+      "MyWholeLifePlan (Aviva)",
+      "MyWholeLifePlan II",
+      "MyWholeLifePlan III"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Aviva MyLifeChoice",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [
+      "MyLifeChoice (Aviva)"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Treasure II",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [
+      "Life Treasure II",
+      "HSBC Life Treasure 2"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Term Protect Advantage",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "Term Protect Advantage"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Shield - Standard",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "HSBC Life Shield Standard",
+      "AXA Standard (legacy)"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Enhanced Care II rider",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "Enhanced Care II",
+      "HLEC II"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Tokio Marine #goClassic",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [
+      "#goClassic",
+      "goClassic",
+      "TM goClassic"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Tokio Marine #goClassic Secure",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [
+      "#goClassic Secure",
+      "TM goClassic Secure"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Tokio Marine TM Atlas Wealth",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [
+      "TM Atlas Wealth",
+      "Atlas Wealth"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Tokio Marine #goLuxe",
+    "category": "investment",
+    "subType": "ILP (Investment)",
+    "aliases": [
+      "#goLuxe",
+      "goLuxe"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Tiq ePROTECT Term Life",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "ePROTECT term life",
+      "Tiq Term Life"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "DIRECT - Etiqa Term Life II",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "Direct Etiqa Term Life II",
+      "DPI Etiqa Term"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "DIRECT - FWD Term Life",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "Direct FWD Term Life",
+      "DPI FWD Term"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "DIRECT - FWD Whole Life",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [
+      "Direct FWD Whole Life",
+      "DPI FWD WL"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "China Taiping i-Secure",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "i-Secure",
+      "CT i-Secure"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "China Taiping i-Assure 99",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [
+      "i-Assure 99",
+      "CT i-Assure 99"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "China Life (Singapore)",
+    "productName": "China Life (Singapore) Wholelife Plans",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [
+      "China Life Whole Life",
+      "China Life (S'pore) WL"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Raffles Health Insurance",
+    "productName": "Raffles Shield - Private",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "Raffles Shield Private",
+      "RS Private"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Raffles Health Insurance",
+    "productName": "Raffles Shield - A",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "Raffles Shield A"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Raffles Health Insurance",
+    "productName": "Raffles Shield - B",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "Raffles Shield B"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Raffles Health Insurance",
+    "productName": "Raffles Shield - Standard",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "Raffles Shield Standard"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Raffles Health Insurance",
+    "productName": "Raffles Choice Rider",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "Choice Rider"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Raffles Health Insurance",
+    "productName": "Raffles Premier Rider",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "Premier Rider"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Raffles Health Insurance",
+    "productName": "Raffles Cancer Guard Rider",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "Cancer Guard Rider"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "UOB",
+    "productName": "UOB Principal Guaranteed Structured Deposit",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "UOB PG Structured Deposit",
+      "UOB SD"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "DBS",
+    "productName": "DBS Structured Deposit",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "DBS Structured Deposit",
+      "DBS SD"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "OCBC",
+    "productName": "OCBC Structured Deposit",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "OCBC Structured Deposit",
+      "OCBC SD"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Maybank",
+    "productName": "Maybank Structured Deposit",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Maybank SD",
+      "SG Saver Series"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "HSBC",
+    "productName": "HSBC Wealth Portfolio Lending",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "HSBC WPL",
+      "Wealth Portfolio Lending"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Standard Chartered",
+    "productName": "Standard Chartered Wealth $aver",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Wealth Saver",
+      "SC Wealth $aver"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Citibank",
+    "productName": "Citi Wealth Management Account",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Citi Priority Account",
+      "Citigold Account"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "DBS",
+    "productName": "DBS Wealth Management Account",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "DBS Treasures Account",
+      "DBS Private Bank Account"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "UOB",
+    "productName": "UOB SimpleInvest",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "UOB SimpleInvest"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus Cash Smart",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Endowus Cash Smart",
+      "Cash Smart"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Endowus",
+    "productName": "Endowus Core / Globally Diversified Portfolios",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "Endowus Core",
+      "Endowus Flagship",
+      "Endowus GlobalEquity"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "StashAway",
+    "productName": "StashAway Simple",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "StashAway Simple",
+      "Simple Cash"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Syfe",
+    "productName": "Syfe Core Portfolios",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "Syfe Core",
+      "Core Defensive / Balanced / Growth / Equity100"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Syfe",
+    "productName": "Syfe Cash+",
+    "category": "investment",
+    "subType": "Single Premium Investment",
+    "aliases": [
+      "Syfe Cash Plus",
+      "Cash+"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Syfe",
+    "productName": "Syfe REIT+",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "Syfe REIT+",
+      "REIT+"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "iFAST",
+    "productName": "iFAST FSMOne",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "FSMOne",
+      "iFAST FSMOne",
+      "Fundsupermart"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Tiger Brokers",
+    "productName": "Tiger Brokers Singapore",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "Tiger Brokers",
+      "Tiger SG"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "moomoo",
+    "productName": "moomoo Singapore",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "moomoo",
+      "Moomoo SG"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Saxo",
+    "productName": "Saxo Markets Singapore",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "Saxo",
+      "SaxoTraderGO",
+      "SaxoTraderPRO"
+    ],
+    "source": "deep-research-2026-05-17"
+  },
+  {
+    "insurer": "Interactive Brokers",
+    "productName": "Interactive Brokers Singapore",
+    "category": "investment",
+    "subType": "Unit Trust",
+    "aliases": [
+      "IBKR",
+      "Interactive Brokers",
+      "IB"
+    ],
+    "source": "deep-research-2026-05-17"
+  }
+]
