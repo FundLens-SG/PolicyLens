@@ -1,4 +1,4 @@
-const SW_VERSION = 'v2.4.0-rc2.50-soh-family-extraction';
+const SW_VERSION = 'v2.4.0-rc2.51-sg-knowledge-override';
 const DB_NAME = 'PolicyLensSW';
 const DB_VERSION = 1;
 const SESSION_STORE = 'sessions';

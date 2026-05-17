@@ -111,6 +111,13 @@
     return hit && hit.score >= 0.86 ? hit : null;
   }
   function toRepoEntries(){
+    // rc2.51: don't populate `notes` from the knowledge-base source filename. That field used
+    //   to read "Singapore product reference (sg-ref-…). Source: 01_flat_policy_name_corpus.txt"
+    //   which is metadata about WHERE the entry came from in our corpus — useless to the FC
+    //   and noisy in the policy form's Notes pane. The notes-enrichment cascade
+    //   (`applyHighConfidenceRepoMatchToPolicy` → `geminiGroundedNoteFetch`) now lets the web-
+    //   fetched 🌐 summary populate notes instead. Source tracking is preserved in _source /
+    //   _knowledgeVersion for telemetry.
     return PRODUCTS.map(row => ({
       insurer: row[0],
       productName: row[1],
@@ -118,9 +125,9 @@
       subType: row[3],
       productAliases: row[4],
       currency: 'SGD',
-      notes: 'Singapore product reference (' + VERSION + '). Source: ' + row[5],
       _source: 'singapore-product-reference',
-      _knowledgeVersion: VERSION
+      _knowledgeVersion: VERSION,
+      _corpusSource: row[5]
     }));
   }
   const api = { VERSION, products: PRODUCTS, falsePositives: FALSE_POSITIVES, normalizeText, canonicalInsurer, isFalsePositiveName, findProduct, classifyProductName, toRepoEntries };
