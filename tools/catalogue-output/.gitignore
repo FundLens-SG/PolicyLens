@@ -1,0 +1,5 @@
+# All auto-generated assimilation outputs — review then archive externally; don't commit.
+*.json
+*.txt
+*.js
+!.gitignore

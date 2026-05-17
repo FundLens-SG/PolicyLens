@@ -1,0 +1,3 @@
+# Researcher JSON drops — staged here for assimilation. Keep out of git.
+*.json
+!.gitignore
