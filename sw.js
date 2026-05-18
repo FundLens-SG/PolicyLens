@@ -1,4 +1,4 @@
-const SW_VERSION = 'v2.4.0-rc2.67-rider-verification-infrastructure';
+const SW_VERSION = 'v2.4.0-rc2.68-full-corpus-verification-batch1';
 const DB_NAME = 'PolicyLensSW';
 const DB_VERSION = 1;
 const SESSION_STORE = 'sessions';

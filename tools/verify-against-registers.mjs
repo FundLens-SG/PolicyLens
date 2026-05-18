@@ -188,6 +188,37 @@ function tryMatch(productName, insurer, lines) {
     }
   }
 
+  // Strategy 4.7: compact-form matching. Some corpus entries use CamelCase /
+  // no-space forms ("ManuEduFirst") while the register uses spaced form
+  // ("ManuEdu First"). Strip all non-alphanum and match.
+  const compactProduct = compact(full);
+  const compactStripped = compact(stripped);
+  if (compactProduct.length >= 6) {
+    for (const line of lines) {
+      const c = compact(line);
+      if (c.includes(compactProduct)) {
+        return { strategy: 'compact-full', line, query: full };
+      }
+      if (compactStripped !== compactProduct && c.includes(compactStripped)) {
+        return { strategy: 'compact-no-prefix', line, query: stripped };
+      }
+    }
+  }
+
+  // Strategy 4.8: progressive prefix reduction in COMPACT form. Combines 4.5+4.7.
+  if (words.length >= 3) {
+    for (let lop = 1; lop < words.length - 1; lop++) {
+      const sub = words.slice(lop).join(' ');
+      const cq = compact(sub);
+      if (cq.length < 5) break;
+      for (const line of lines) {
+        if (compact(line).includes(cq)) {
+          return { strategy: 'compact-progressive-' + lop, line, query: sub };
+        }
+      }
+    }
+  }
+
   // Strategy 5: token-set overlap (≥80% of significant tokens in same line)
   const productTokens = tokens(stripped);
   if (productTokens.length >= 2) {

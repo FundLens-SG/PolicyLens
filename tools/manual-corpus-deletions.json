@@ -374,5 +374,57 @@
   {
     "insurer": "Tokio Marine",
     "productName": "TM Early Cover (rider/standalone)"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Car Insurance (Classic"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Travel Insurance (Premium"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GENERAL INSURANCE (Etiqa"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "Prudential PRUShield (Premier"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Aviva legacy : ^My[A-Z][A-Za-z]+(\\s+(Plan"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Bank-branded (under-"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife current : ^Singlife\\s+[A-Z][A-Za-z ]+(\\s+(II"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Payor Benefit Rider (Death/CI/TPD)"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "DIRECT - GREAT Life (I) 70 / 85"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "IncomeShield Plan P / A / B / C"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUEarly / PRUCrisis / PRUMulti / PRUCancer (CI)"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyCoreCI / MyCoreCI II (Aviva legacy)"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Tokio Marine TA Travel Insurance / Travel Explorer"
   }
 ]

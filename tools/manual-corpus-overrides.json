@@ -1863,7 +1863,7 @@
     "insurer": "Great Eastern",
     "productName": "DIRECT - GREAT Life (I) 70",
     "category": "protection",
-    "subType": ""
+    "subType": "Term Life"
   },
   {
     "insurer": "Great Eastern",
@@ -3933,7 +3933,7 @@
     "insurer": "Prudential",
     "productName": "PRUCrisis",
     "category": "protection",
-    "subType": ""
+    "subType": "Critical Illness"
   },
   {
     "insurer": "Prudential",
@@ -3975,7 +3975,7 @@
     "insurer": "Prudential",
     "productName": "PRUEarly",
     "category": "protection",
-    "subType": ""
+    "subType": "Early Critical Illness"
   },
   {
     "insurer": "Prudential",
@@ -4149,7 +4149,7 @@
     "insurer": "Prudential",
     "productName": "PRUMulti",
     "category": "protection",
-    "subType": ""
+    "subType": "Critical Illness"
   },
   {
     "insurer": "Prudential",
@@ -6604,5 +6604,47 @@
     "productName": "Waiver of Premium Rider (for Protect 1 Lite)",
     "category": "protection",
     "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Payor Benefit Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "DIRECT - GREAT Life (I) 85",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "IncomeShield Plan A",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "IncomeShield Plan B",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "IncomeShield Plan C",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUCancer",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyCoreCI II",
+    "category": "protection",
+    "subType": "Critical Illness"
   }
 ]

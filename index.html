@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.67-rider-verification-infrastructure';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.68-full-corpus-verification-batch1';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -738,9 +738,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.67';
+const APP_VERSION = 'v2.4.0-rc2.68';
 const APP_VERSION_DATE = '2026-05-19';
-const APP_VERSION_NAME = 'Register verification infrastructure + 7 corpus cleanups from cross-referenced PPF data';
+const APP_VERSION_NAME = 'Full corpus verification batch 1 — Manulife register + truncation/slash-joined cleanups';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1214,6 +1214,17 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.68',
+  date: '2026-05-19',
+  name: 'Full corpus verification batch 1 — Manulife register + truncation/slash-joined cleanups',
+  sections: [{
+    heading: 'Manulife PPF register added — all 44 Manulife riders verified',
+    items: ['User manually downloaded the Manulife Singapore PPF register (programmatic fetch was blocked) and dropped it in tools/ppf-registers/manulife.pdf. Extracted to manulife.txt (863 lines). Re-running rider verification confirms ALL 44 Manulife rider entries match the official register exactly — Phase 4 Manulife ingest was clean. 5 insurers now at 100% rider match: FWD, Tokio Marine, Manulife, NTUC Income, Singlife.', 'Rider verification status improved to: 319 verified · 10 not-found · 51 no-register (down from 248 / 17 / 119 before Manulife was added).']
+  }, {
+    heading: 'Full corpus verification: improved matcher + batch 1 cleanups',
+    items: ['Added compact-form matching (strategies compact-full + compact-no-prefix + compact-progressive) to the verification tool. Catches entries like "ManuEduFirst" (corpus) vs "ManuEdu First" (register) where spacing/punctuation differs. Recovered 17 false-negatives.', 'Full corpus check across all 3,303 entries: 2,113 verified (64%) · 324 not-found (10%) · 866 no-register (26%). Not-found includes legacy products no longer in PPF registers, real-but-renamed variants, and a long tail of fabrications from earlier deep-research runs.', 'CLEANED (batch 1): 7 truncation/regex artifacts deleted — "FWD Car Insurance (Classic" (no closing paren), "FWD Travel Insurance (Premium", "GENERAL INSURANCE (Etiqa", "Prudential PRUShield (Premier", and 3 regex-fragment entries in Singlife ("Aviva legacy : ^My[A-Z]...", "Bank-branded (under-", "Singlife current : ^Singlife..."). All clearly text-parser artifacts where the entry name contained truncated parenthetical or regex syntax.', 'SLASH-JOINED splits (6 originals → 13 canonical variants + 1 rename + 1 GI drop): "AIA Payor Benefit Rider (Death/CI/TPD)" renamed to "AIA Payor Benefit Rider" (slash was descriptive); "DIRECT - GREAT Life (I) 70 / 85" split into 70 + 85 variants; "IncomeShield Plan P / A / B / C" split into 4 plan tiers; "PRUEarly / PRUCrisis / PRUMulti / PRUCancer (CI)" split into 4 CI riders; "MyCoreCI / MyCoreCI II (Aviva legacy)" split; "Tokio Marine TA Travel Insurance / Travel Explorer" dropped (GI, out of scope).', 'Corpus: 3,309 → 3,303 (-6 net). The remaining 319 not-found entries are deferred to a future Phase 6 audit-with-evidence handoff — too many to verify one-by-one in a single session, and the matcher caveats (legacy products no longer in register, name variations) make automated decisions risky for the long tail.']
+  }]
+}, {
   version: 'v2.4.0-rc2.67',
   date: '2026-05-19',
   name: 'Register verification infrastructure + 7 corpus cleanups from cross-referenced PPF data',

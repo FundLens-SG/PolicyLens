@@ -21550,5 +21550,112 @@
       "TM EarlyCover"
     ],
     "source": "rc2.67-rider-cleanup-2026-05-19"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Payor Benefit Rider",
+    "category": "protection",
+    "subType": "Premium Waiver",
+    "aliases": [
+      "Payor Benefit Rider (Death/CI/TPD)",
+      "AIA Payor Benefit Rider (Death/CI/TPD)"
+    ],
+    "source": "rc2.68-slash-cleanup-2026-05-19"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "DIRECT - GREAT Life (I) 70",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "rc2.68-slash-cleanup-2026-05-19"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "DIRECT - GREAT Life (I) 85",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [],
+    "source": "rc2.68-slash-cleanup-2026-05-19"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "IncomeShield Plan P",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [],
+    "source": "rc2.68-slash-cleanup-2026-05-19"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "IncomeShield Plan A",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [],
+    "source": "rc2.68-slash-cleanup-2026-05-19"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "IncomeShield Plan B",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [],
+    "source": "rc2.68-slash-cleanup-2026-05-19"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "IncomeShield Plan C",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [],
+    "source": "rc2.68-slash-cleanup-2026-05-19"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUEarly",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [],
+    "source": "rc2.68-slash-cleanup-2026-05-19"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUCrisis",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "rc2.68-slash-cleanup-2026-05-19"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUMulti",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "rc2.68-slash-cleanup-2026-05-19"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUCancer",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "rc2.68-slash-cleanup-2026-05-19"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyCoreCI",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "rc2.68-slash-cleanup-2026-05-19"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyCoreCI II",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [],
+    "source": "rc2.68-slash-cleanup-2026-05-19"
   }
 ]
