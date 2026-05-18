@@ -6125,14 +6125,6 @@
   },
   {
     "insurer": "Great Eastern",
-    "productName": "GREAT Eduplanner Rider",
-    "category": "savings",
-    "subType": "Education Plan",
-    "aliases": [],
-    "source": "deep-research-2026-05-17-phase2"
-  },
-  {
-    "insurer": "Great Eastern",
     "productName": "GREAT Cash Benefit Plus",
     "category": "savings",
     "subType": "Endowment",
@@ -6317,14 +6309,6 @@
   },
   {
     "insurer": "FWD",
-    "productName": "FWD Life Protection TPD Rider",
-    "category": "protection",
-    "subType": "Disability Income",
-    "aliases": [],
-    "source": "deep-research-2026-05-17-phase2"
-  },
-  {
-    "insurer": "FWD",
     "productName": "FWD Term Life Plus Premium Waiver Rider",
     "category": "protection",
     "subType": "Disability Income",
@@ -6470,14 +6454,6 @@
   {
     "insurer": "FWD",
     "productName": "FWD Recover First Rider",
-    "category": "protection",
-    "subType": "Whole Life",
-    "aliases": [],
-    "source": "deep-research-2026-05-17-phase2"
-  },
-  {
-    "insurer": "FWD",
-    "productName": "FWD Stroke Recovery Rider",
     "category": "protection",
     "subType": "Whole Life",
     "aliases": [],
@@ -21563,5 +21539,16 @@
     "subType": "ILP (Investment)",
     "aliases": [],
     "source": "phase-5-smaller-insurers-2026-05-18"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "TM Early Cover",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [
+      "Early Cover",
+      "TM EarlyCover"
+    ],
+    "source": "rc2.67-rider-cleanup-2026-05-19"
   }
 ]

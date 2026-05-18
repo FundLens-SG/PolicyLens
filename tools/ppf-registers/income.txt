@@ -1,0 +1,226 @@
+REGISTER OF INSURED POLICIES                                                                       Category 2                                           Category 3                                         Category 4
+                                                           1 Advanced Assure Accelerator                        1 Classic Annuity                                   1 Enhanced Welfare Insurance Scheme (EWISE)
+Updated as of 07 May 2026                                  2 Advanced Critical Secure                           2 Classic Level Annuity                             2 Group Term Life
+                                                           3 Advanced Life Accelerator                          3 CPF Annuity                                       3 Group Term Life (for Migrant Workers - 'C4M')
+Name of Life Insurance Product under each Category         4 Advanced Secure Accelerator                        4 Gro Annuity                                       4 Group Term Life Employees Flexcare
+                                                           5 Anticipation (LP)                                  5 Gro Annuity II
+                                           Category 1      6 AstraLink                                          6 Gro Annuity Pro
+   1 Accident Benefit                                      7 Cancer Protect                                     7 Group Deferred Annuity
+   2 Accidental Death Benefit                              8 Career                                             8 Guaranteed Annuity
+   3 Assist Rider                                          9 Complete Cancer Care                               9 Guaranteed Life Annuity
+   4 Cancer Premium Waiver (GIO)                          10 Complete Critical Protect                         10 Special Annuity
+   5 Care Secure                                          11 Complete Life Secure                              11 Spouse Annuity
+   6 Care Secure Pro                                      12 Complete Life Secure - Protection Benefit         12 Spouse Annuity Without Refund
+   7 Child Illness Rider                                  13 Convertible Term
+   8 Child Plus                                           14 Corporatised Entities Group Insurance Scheme
+   9 Child Plus Benefit                                   15 Critical Protect (ILP)
+  10 Child Plus Rider                                     16 Decreasing Term
+  11 Classic Care Rider                                   17 Decreasing Term Assurance
+  12 Compre Accident                                      18 Decreasing Term Benefit
+  13 Comprehensive Income Benefit                         19 Decreasing Term Policy
+  14 Co-Pay Assist Plan                                   20 DIRECT - Dread Disease Rider for Term
+  15 Daily Cash Rider                                     21 DIRECT - Term (non-renewable)
+  16 Daily Hospital Benefit                               22 DIRECT - Term (renewable)
+  17 Deluxe Care Rider                                    23 DIRECT - Whole Life
+  18 Dread Disease Premium Waiver                         24 DIRECT Dread Disease for Whole Life
+  19 Early Cancer Waiver                                  25 DIRECT Dread Disease Protect Pro
+  20 ElderShield Care                                     26 DIRECT Dread Disease Rider for Term
+  21 ElderShield Lifetime Care 300                        27 DIRECT Dread Disease Rider for Whole Life
+  22 ElderShield Lifetime Care 400                        28 DIRECT Dread Disease Term
+  23 Enhanced Family Income                               29 DIRECT Star Classic Protect
+  24 Enhanced Family Income Benefit                       30 DIRECT Star Protect
+  25 Enhanced Income Benefit                              31 DIRECT Star Protect Pro
+  26 Enhanced IncomeShield                                32 DIRECT Star Term (non-renewable)
+  27 Enhanced Payor Premium Waiver                        33 DIRECT Star Term (renewable)
+  28 Enhanced Waiver of Premium                           34 DIRECT Term (non-renewable)
+  29 Enhanced Waiver of Premium Benefit                   35 DIRECT Term (renewable)
+  30 Enhanced Waiver Rider                                36 Disability Accelerator
+  31 Essential Care Rider                                 37 Disability Cover Accelerator
+  32 Extended Total and Permanent Disability              38 Disability Protection Accelerator
+  33 Family Income Benefit                                39 Dread Disease Accelerator
+  34 Group Disability Income (Rider)                      40 Dread Disease Cover (ILP)
+  35 Group Hospital & Surgical policy                     41 Dread Disease Premium Waiver (ILP)
+  36 Group Hospital & Surgical policy Employees Flexcare  42 DreamSaver
+  37 Group Outpatient policy                              43 Early Assure Accelerator
+  38 Group Personal Accident for MOE Personnel            44 Early Critical Secure
+  39 Group Personal Accident policy                       45 Early Life Accelerator
+  40 Group Personal Accident policy Employees Flexcare    46 Early Protect Accelerator
+  41 Hospital & Surgery Benefit                           47 Early Secure Accelerator
+  42 Hospital & Surgical Benefit                          48 Education (LP)
+  43 Hospital & Surgical Rider                            49 Endowment
+  44 Hospital Benefit                                     50 Endowment Savings
+  45 Hospital CashAid                                     51 Essential Protect
+  46 Hospitalisation                                      52 e-Term
+  47 Income Benefit                                       53 Family Insurance
+  48 IncomeShield                                         54 Family Protect
+  49 IncomeShield Standard Plan                           55 FlexiCash
+  50 Junior Protection Plan                               56 FlexiLink
+  51 Lady Plus                                            57 Flexi-Link Policy
+  52 Lady Plus Benefit                                    58 FlexRetire
+  53 Lady Plus Rider                                      59 Foundation
+  54 Managed Healthcare System - Outpatient               60 Foundation (LP)
+  55 Managed Healthcare System (MHS)                      61 Gift Plan
+  56 Optima Care Rider                                    62 Grandeur Solitaire (US$)
+  57 Payor Premium Waiver
+  58 Personal Accident
+  59 Personal Accident (death)
+  60 Personal Accident Benefit
+  61 Plus Rider
+  62 PrimeShield
+
+                                                                                                               Page 1 of 4
+                                         Category 1                                            Category 2               Category 3  Category 4
+63 Short-Term Group Personal Accident policy          63 Gro Capital Ease
+64 Special Child Benefit                              64 Gro Cash Flex
+65 Special Family Income Benefit                      65 Gro Cash Flex Pro
+66 Special Income Benefit                             66 Gro Cash Harvest
+67 Special Waiver of Premium                          67 Gro Cash Plus
+68 Special Waiver of Premium Benefit                  68 Gro Cash Sure
+69 Total Protect                                      69 Gro Flex Saver
+70 VivoCare 100 - Waiver Basic                        70 Gro Gen Saver
+71 VivoCare 100 - Waiver Plus                         71 Gro Goal Saver
+72 VivoLife Early Cancer Waiver                       72 Gro Junior Saver
+73 Waiver of Premium                                  73 Gro Power Saver
+74 Waiver of Premium Benefit                          74 Gro Power Saver Pro
+75 WorkMedic policy                                   75 Gro Prime Saver
+                                                      76 Gro Retire Ease
+                                                      77 Gro Retire Flex
+                                                      78 Gro Retire Flex - Protection Benefit
+                                                      79 Gro Retire Flex Pro
+                                                      80 Gro Retire Flex Pro - Protection Benefit
+                                                      81 Gro Retire Flex Pro II
+                                                      82 Gro Retire Flex Pro II - Protection Benefit
+                                                      83 Gro Retire Wise
+                                                      84 Gro Saver
+                                                      85 Gro Saver Flex
+                                                      86 Gro Saver Flex Pro
+                                                      87 Gro Secure Saver
+                                                      88 Gro Steady Saver
+                                                      89 Gro Sure Saver
+                                                      90 Growth
+                                                      91 Growth CPFIS (LP)
+                                                      92 GrowthLink
+                                                      93 Harvest
+                                                      94 Harvest (GIO)
+                                                      95 Harvest (LP)
+                                                      96 Heritage Solitaire
+                                                      97 Heritage Solitaire - Protection Benefit
+                                                      98 HomeTeamNS Insurance Scheme
+                                                      99 HomeTeamNS Living Policy
+                                                     100 Ideal Plan
+                                                     101 Ideal Plan(SP)
+                                                     102 Invest Flex
+                                                     103 Invest Flex TriVantage
+                                                     104 Invest Flex Vantage
+                                                     105 iTerm
+                                                     106 i-Term
+                                                     107 I-Young
+                                                     108 Lady 360
+                                                     109 Legacy Flex Solitaire
+                                                     110 Legacy Solitaire
+                                                     111 Lifestyle
+                                                     112 Lifestyle Policy
+                                                     113 Limited Pay Protection
+                                                     114 Limited Pay RevoSave
+                                                     115 Limited Pay Revosave (3-Pay-10)
+                                                     116 Limited Pay Revosave (5-Pay-10)
+                                                     117 Limited Premium Living(EV)
+                                                     118 Limited Premium Protection
+                                                     119 Living
+                                                     120 Living (LP)
+                                                     121 Living Benefit
+                                                     122 Living Benefit - Whole Life Rider
+                                                     123 Living Benefit(Whole Life)
+                                                     124 Living Benefits
+                                                     125 Living Benefits (Whole Life Rider)
+                                                     126 Living Endowment
+                                                     127 LUV Plan
+                                                     128 Luxe Plus Solitaire
+
+                                                                                                           Page 2 of 4
+Category 1                                            Category 2               Category 3  Category 4
+            129 Luxe Plus Solitaire II
+            130 Luxe Solitaire
+            131 Maternity 360
+            132 Mortgage Protection
+            133 Mortgage Protection 2004
+            134 Mortgage Term
+            135 OCBC Protect Classic
+            136 OCBC Protect Prime
+            137 OCBC Term Life Insurance
+            138 PAYMYUNI
+            139 Pioneer
+            140 Protection
+            141 Protection (LP)
+            142 Protection 10 (AD Series)
+            143 Protection 15 (AD Series)
+            144 Protection Limited
+            145 Provenance Disability Accelerator
+            146 Provenance Solitaire
+            147 Provenance Solitaire - Protection Benefit
+            148 Retrenchment Benefit
+            149 RevoEase
+            150 RevoGift
+            151 RevoRetire
+            152 RevoSave
+            153 RevoSave (limited premium)
+            154 RevoSave ILP
+            155 RevoSecure
+            156 SAFRA Essential Term
+            157 SAFRA Insurance Scheme
+            158 SAFRA Insurance Scheme (Term Life)
+            159 SAFRA Living Care
+            160 SAFRA Living Policy
+            161 SAIL (regular premium)
+            162 SAIL (single premium)
+            163 Savings Protector
+            164 Savings Protector Pro
+            165 Schooling Policy with Schooling Living Benefit
+            166 Senior Plan
+            167 Silver Protect
+            168 Silver Secure
+            169 SNACK - Life
+            170 SNACK-Investment
+            171 Special Endowment
+            172 Star Assure
+            173 Star Prime Life
+            174 Star Secure
+            175 Star Secure - Protection Benefit
+            176 Star Secure Pro
+            177 Star Secure Pro - Protection Benefit
+            178 Star Term Protect
+            179 Term
+            180 Term Assurance
+            181 Term Benefit
+            182 Term Rider
+            183 TermLife Solitaire
+            184 TRIBE - Term Life
+            185 Umbrella
+            186 VivaLink
+            187 VivoAssure
+            188 VivoCare
+            189 VivoCare 100
+            190 VivoCare 100 - Dread Disease Benefit
+            191 VivoCare 100 - Protection Benefit
+            192 VivoCash
+            193 VivoCash Prime
+            194 VivoChild
+            195 VivoLegacy Solitaire
+
+                                                                  Page 3 of 4
+Category 1                             Category 2               Category 3  Category 4
+
+            196 VivoLife
+            197 VivoLife 125
+            198 VivoLife 180
+            199 VivoLife 350
+            200 VivoLink
+            201 VivoSave
+            202 VivoWealth Solitaire
+            203 Wealth Plus Solitaire
+            204 Wealth Solitaire
+            205 WealthLink
+            206 Young Family
+
+                                                   Page 4 of 4
+

@@ -1,0 +1,143 @@
+PPFL_FWD
+
+LIST OF INSURED POLICIES
+
+Policies which are eligible for Policy Owners' Protection Scheme protection under the Deposit Insurance and
+Policies Owners' Protection Schemes Act 2011.
+(Refer to 2nd schedule of the Act for the types of policies under each category)
+
+Category         Product Name
+              1  International Health
+              1  Klook Accident Cover
+              1  Life PA
+              2  Accelerated Critical Illness Rider to Direct - Term Life (20 Year Non-Renewable)
+              2  Accelerated Critical Illness Rider to Direct - Term Life (5 Year Renewable)
+              2  Accelerated Critical Illness Rider to Direct - Term Life (To Age 65)
+              2  Accelerated Critical Illness Rider to Future First (10 Year Renewable)
+              2  Accelerated Critical Illness Rider to Future First (Level Term)
+              2  Accelerated Critical Illness Rider to Term Life (Level Term)
+              2  Accelerated Critical Illness Rider to Term Life (Renewable)
+              2  Accelerated Critical Illness Rider to Term Life Plus (Level Term)
+              2  Accelerated Critical Illness Rider to Term Life Plus (Renewable)
+              2  Accelerated Heart and Neurological Disorders Benefit Rider to Big 3 Critical Illness Insurance
+              2  Accelerated Heart Disorders Benefit Rider to Heart Attack Insurance
+              2  Accelerated Neurological Disorders Benefit Rider to Stroke Insurance
+              2  Accelerated Total Permanent Disability Rider to Future First (10 Year Renewable)
+              2  Accelerated Total Permanent Disability Rider to Future First (Level Term)
+              2  Accelerated Total Permanent Disability Rider to Term Life (Level Term)
+              2  Accelerated Total Permanent Disability Rider to Term Life (Renewable)
+              2  Accelerated Total Permanent Disability Rider to Term Life Plus (Level Term)
+              2  Accelerated Total Permanent Disability Rider to Term Life Plus (Renewable)
+              2  Additional Cancer Rider
+              2  Big 3 Critical Illness Insurance
+              2  Cancer 100
+              2  Cancer 2.0
+              2  Cancer Insurance
+              2  CI Premium Waiver Rider
+              2  Critical Illness Plus
+              2  DIRECT - FWD Whole Life
+              2  Direct - Term Life (20 Year Non-Renewable)
+              2  Direct - Term Life (5 Year Renewable)
+              2  Direct - Term Life (To Age 65)
+              2  Early-stage Reload Benefit Rider
+              2  ECI Rider for Future First (10 Year Renewable)
+              2  ECI Rider for Future First (Level Term)
+              2  Essential Life
+              2  Future First (10 Year Renewable)
+              2  Future First (Level Term)
+              2  FWD Flex
+              2  FWD Invest First Horizon
+              2  FWD Invest Flexi Elite
+              2  FWD Invest Flexi VII
+              2  FWD Invest Goal 1
+              2  FWD Invest Goal X
+              2  FWD Life Protection
+              2  FWD Life Protection - CI Premium Waiver Rider
+              2  FWD Life Protection - CI Protection Rider
+              2  FWD Life Protection - Early CI Protection Rider
+              2  FWD Life Protection - Early CI WOP
+              2  FWD Life Protection - Payer Premium Waiver Rider
+              2  FWD Wealth Gen
+2               Heart Attack Insurance
+
+2               ICU Benefit Rider
+
+2               Invest First
+
+2               Invest First Max
+
+2               Invest First Plus
+
+2               Invest First Summit
+
+2               Invest Goal Flexi
+
+2               Life Income (Regular Premium) - WOP Rider (CI Waiver)
+
+2               Life Income (Regular Premium) - WOP Rider (Payer Waiver)
+
+2               Life Income (Regular Premium) Par
+
+2               Life Income (Single Premium) Par
+
+2               Life Income Plus (Regular Premium)
+
+2               Life Income Plus (Regular Premium) - CI Premium Waiver
+
+2               Life Income Plus (Single Premium)
+
+2               Payer Premium Waiver Rider
+
+2               Preeminent Legacy - 10 Year Renewable
+
+2               Preeminent Legacy - Single Premium
+
+2               Premium Waiver Benefit Rider
+
+2               Recover First
+
+2               Save First
+
+2               Save First Series 2
+
+2               Save First Series 3
+
+2               Save First Series 4
+
+2               Save Smart Series 1
+
+2               Save Smart Series 2
+
+2               Save Smart Series 3
+
+2               Save Smart Series 4
+
+2               Save Smart Series 5
+
+2               Save Smart Series 6
+
+2               Save Smart Series 7
+
+2               Save Smart Series 8
+
+2               Save Smart Series 9
+
+2               Stroke Insurance
+
+2               Term Life (Level Term)
+
+2               Term Life (Renewable)
+
+2               Term Life Plus (Level Term)
+
+2               Term Life Plus (Renewable)
+
+2               Total CI Rider
+
+2               Waiver of Premium Rider to Term Life (Level Term)
+
+2               Waiver of Premium Rider to Term Life Plus (Level Term)
+
+Generated Date
+10 Feb 2026
+

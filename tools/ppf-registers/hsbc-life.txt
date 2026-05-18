@@ -1,0 +1,1555 @@
+Register of Insured Policies as at 30 Apr 2026 ­ HSBC LIFE (SINGAPORE) PTE. LTD.            PPF Product Master Code  Type of insured policy
+                                                                                                        ADB7                  CAT 1
+    S/N Product Name                                                                                    ADBL                  CAT 1
+     1 Accidental Death Benefit                                                                         ADBT                  CAT 1
+     2 Accidental Death Benefit                                                                         PAA9                  CAT 1
+     3 Accidental Death Benefit                                                                         CAB7                  CAT 1
+     4 Advanced CI Waiver                                                                               CABL                  CAT 1
+     5 Comprehensive Accident Benefit                                                                   CABT                  CAT 1
+     6 Comprehensive Accident Benefit                                                                   CB26                  CAT 1
+     7 Comprehensive Accident Benefit                                                                   CB2L                  CAT 1
+     8 Comprehensive Payor Benefit                                                                      CB2T                  CAT 1
+     9 Comprehensive Payor Benefit                                                                      CB36                  CAT 1
+    10 Comprehensive Payor Benefit                                                                      CB3L                  CAT 1
+    11 Comprehensive Payor Benefit                                                                      CB3T                  CAT 1
+    12 Comprehensive Payor Benefit                                                                      CPB6                  CAT 1
+    13 Comprehensive Payor Benefit                                                                      CPBL                  CAT 1
+    14 Comprehensive Payor Benefit                                                                      CPBT                  CAT 1
+    15 Comprehensive Payor Benefit                                                                       CI2L                 CAT 1
+    16 Comprehensive Payor Benefit                                                                      CI2T                  CAT 1
+    17 Critical Illness Link Benefit                                                                     CI3L                 CAT 1
+    18 Critical Illness Link Benefit                                                                    CI3T                  CAT 1
+    19 Critical Illness Link Benefit                                                                    CIBL                  CAT 1
+    20 Critical Illness Link Benefit                                                                    CIBT1                 CAT 1
+    21 Critical Illness Link Benefit                                                                    WP1T                  CAT 1
+    22 Critical Illness Link Benefit                                                                   WP1A                   CAT 1
+    23 Critical Illness PremiumEraser                                                                   WE29                  CAT 1
+    24 Critical Illness PremiumEraser                                                                   WE39                  CAT 1
+    25 Critical Illness Premium Waiver - END                                                           WEN9                   CAT 1
+    26 Critical Illness Premium Waiver - END                                                            WT39                  CAT 1
+    27 Critical Illness Premium Waiver - END                                                            WF29                  CAT 1
+    28 Critical Illness Premium Waiver - PF21                                                          WW29                   CAT 1
+    29 Critical Illness Premium Waiver - SmartMortgage                                                 WW39                   CAT 1
+    30 Critical Illness Premium Waiver - WL                                                            WWL9                   CAT 1
+    31 Critical Illness Premium Waiver - WL                                                             CIWL                  CAT 1
+    32 Critical Illness Premium Waiver - WL                                                             CIWT                  CAT 1
+    33 Critical Illness Waiver                                                                          CW2L                  CAT 1
+    34 Critical Illness Waiver                                                                         CW2T                   CAT 1
+    35 Critical Illness Waiver                                                                          CW3L                  CAT 1
+    36 Critical Illness Waiver                                                                         CW3T                   CAT 1
+    37 Critical Illness Waiver                                                                          WPZ9                  CAT 1
+    38 Critical Illness Waiver                                                                         WQZ9                   CAT 1
+    39 Critical Waiver Protect Advantage                                                                TPEL                  CAT 1
+    40 Critical Waiver Protect Advantage II                                                             TPET                  CAT 1
+    41 Disability Extended Benefit                                                                      TDRT                  CAT 1
+    42 Disability Extended Benefit                                                                      TPDL                  CAT 1
+    43 Disability Link Benefit                                                                          TPDT                  CAT 1
+    44 Disability Link Benefit                                                                          DIBT                  CAT 1
+    45 Disability Link Benefit                                                                          FP24                  CAT 1
+    46 Double Indemnity Benefit                                                                         FPR4                  CAT 1
+    47 FlexiPay                                                                                         HCBL                  CAT 1
+    48 FlexiPay                                                                                         HCBT                  CAT 1
+    49 Hospital Cash Benefit                                                                            HIB8                  CAT 1
+    50 Hospital Cash Benefit                                                                            EC39                  CAT 1
+    51 Hospital Income Benefit                                                                          JC29                  CAT 1
+    52 Junior FirstCare                                                                                 JC2L                  CAT 1
+    53 Junior FirstCare                                                                                 JC2T                  CAT 1
+    54 Junior FirstCare                                                                                 JC39                  CAT 1
+    55 Junior FirstCare                                                                                 JFC9                  CAT 1
+    56 Junior FirstCare
+    57 Junior FirstCare
+
+                                                                                  # PUBLIC
+S/N Product Name                                          PPF Product Master Code  Type of insured policy
+58 Junior FirstCare                                                   JFCL                  CAT 1
+59 Junior FirstCare                                                   JFCT                  CAT 1
+60 Junior FirstCare Plus                                              EP29                  CAT 1
+61 Junior FirstCare Plus                                              EP39                  CAT 1
+62 Junior FirstCare Plus                                              JFP9                  CAT 1
+63 Junior FirstCare Plus                                              JFPL                  CAT 1
+64 Junior FirstCare Plus                                              JFPT                  CAT 1
+65 Junior FirstCare Plus                                              JP29                  CAT 1
+66 Junior FirstCare Plus                                              JP2L                  CAT 1
+67 Junior FirstCare Plus                                              JP2T                  CAT 1
+68 Junior FirstCare Plus                                              JP39                  CAT 1
+69 Lady FirstCare                                                      ILFC                 CAT 1
+70 Lady FirstCare                                                     LC29                  CAT 1
+71 Lady FirstCare                                                     LC2L                  CAT 1
+72 Lady FirstCare                                                     LC2T                  CAT 1
+73 Lady FirstCare                                                     LFC9                  CAT 1
+74 Lady FirstCare                                                     LFCL                  CAT 1
+75 Lady FirstCare                                                     LFCT                  CAT 1
+76 Level Term Disability                                              LTDL                  CAT 1
+77 Level Term Disability                                              LTDT                  CAT 1
+78 Limited Pay Accidental Death                                       LAB7                  CAT 1
+79 Limited Pay Comprehensive Payor Benefit                            LH26                  CAT 1
+80 Limited Pay Comprehensive Payor Benefit                            LH36                  CAT 1
+81 Limited Pay Critical Illness Premium Waiver                        LF29                  CAT 1
+82 Limited Pay Critical Illness Premium Waiver                        LF39                  CAT 1
+83 Major Cancer Premium Waiver                                        CWS9                  CAT 1
+84 Major Cancer Premium Waiver                                       CWT9                   CAT 1
+85 Major Cancer Premium Waiver                                       CWU9                   CAT 1
+86 Major Cancer Premium Waiver                                        CVV9                  CAT 1
+87 Major Cancer Premium Waiver                                        CVX9                  CAT 1
+88 Major Cancer Premium Waiver                                        CVY9                  CAT 1
+89 Major Cancer Premium Waiver                                       CWV9                   CAT 1
+90 Major Cancer Premium Waiver                                       CWX9                   CAT 1
+91 Major Cancer Premium Waiver                                       CWY9                   CAT 1
+92 Major Cancer Premium Waiver                                        CVS9                  CAT 1
+93 Major Cancer Premium Waiver                                        CVT9                  CAT 1
+94 Major Cancer Premium Waiver                                        CVU9                  CAT 1
+95 Payor Benefit                                                      PBN6                  CAT 1
+96 Payor Benefit                                                      PLBL                  CAT 1
+97 Payor Benefit                                                      PLBT                  CAT 1
+98 Reducing Critical Illness Benefit                                  RC2L                  CAT 1
+99 Reducing Critical Illness Benefit                                  RC2T                  CAT 1
+100 Reducing Critical Illness Benefit                                 RC3L                  CAT 1
+101 Reducing Critical Illness Benefit                                 RC3T                  CAT 1
+102 Reducing Critical Illness Benefit                                 RCIL                  CAT 1
+103 Reducing Critical Illness Benefit                                 RCIT                  CAT 1
+104 Reducing Term Disability                                          RTDL                  CAT 1
+105 Reducing Term Disability                                          RTDT                  CAT 1
+106 TPD Premium Waiver                                                TWP7                  CAT 1
+107 TPD Premium Waiver (Free)                                        DWF7                   CAT 1
+108 TPD Premium Waiver (Free)                                         TWF7                  CAT 1
+109 Tri-ennial Endowment Coupon                                       CPN2                  CAT 1
+110 Vital Care 5-Year YRT                                             CI13                  CAT 1
+111 VitalCare - Policy Term to age 65                                 CI23                  CAT 1
+112 VitalCare - Policy Term to age 99                                 CI33                  CAT 1
+113 Waiver of Contribution Benefit                                    WCBL                  CAT 1
+114 Waiver of Contribution Benefit                                   WCBT                   CAT 1
+115 Waiver of Premium on Disability                                  WVV7                   CAT 1
+116 Waiver of Premium on Disability                                  WVX7                   CAT 1
+117 Waiver of Premium on Disability                                  WVY7                   CAT 1
+
+                                                # PUBLIC
+S/N Product Name                                                                     PPF Product Master Code  Type of insured policy
+118 Waiver of Premium on Disability                                                             WWV7                   CAT 1
+119 Waiver of Premium on Disability                                                             WWX7                   CAT 1
+120 Waiver of Premium on Disability                                                             WWY7                   CAT 1
+121 Waiver of Premium on Disability                                                             WVS7                   CAT 1
+122 Waiver of Premium on Disability                                                             WVT7                   CAT 1
+123 Waiver of Premium on Disability                                                             WVU7                   CAT 1
+124 Asian Wealth Prestige / Asian Wealth Prestige Plus (Terminal Illness)                        A3TI                  CAT 2
+125 Accumulation Manager                                                                         AAAL                  CAT 2
+126 Advanced CI Cover                                                                            CCA9                  CAT 2
+127 Asian Wealth Prestige / Asian Wealth Prestige Plus                                           AW3L                  CAT 2
+128 Asian Wealth Universal Life                                                                  AW1L                  CAT 2
+129 Asian Wealth Universal Life (Terminal Illness)                                               AWTI                  CAT 2
+130 Asset Manager                                                                                KAML                  CAT 2
+131 Asset Manager                                                                                KANL                  CAT 2
+132 Asset Manager                                                                                KEML                  CAT 2
+133 Asset Manager                                                                                KIML                  CAT 2
+134 Asset Manager (KGP)                                                                          KAGL                  CAT 2
+135 Asset Manager (KGP)                                                                          KEGL                  CAT 2
+136 Asset Manager I                                                                              AM1L                  CAT 2
+137 Asset Manager I                                                                              AM2L                  CAT 2
+138 Asset Manager I                                                                              AM3L                  CAT 2
+139 Asset Manager II                                                                             AM4L                  CAT 2
+140 Asset Protector                                                                              APR3                  CAT 2
+141 Asset Protector                                                                              APS3                  CAT 2
+142 Asset Protector                                                                              ASR3                  CAT 2
+143 Cash Booster Benefit (SGD)                                                                   CBS1                  CAT 2
+144 Cash Booster Benefit (USD)                                                                   CBU1                  CAT 2
+145 ChildEnrich I                                                                                CR11                  CAT 2
+146 ChildEnrich I                                                                                CR21                  CAT 2
+147 ChildEnrich payout at age 18                                                                 CF11                  CAT 2
+148 ChildEnrich payout at age 18                                                                 CL11                  CAT 2
+149 ChildEnrich payout at age 21                                                                 CF21                  CAT 2
+150 ChildEnrich payout at age 21                                                                 CL21                  CAT 2
+151 Comprehensive Family Income Benefit                                                          CF26                  CAT 2
+152 Comprehensive Family Income Benefit                                                          CFI6                  CAT 2
+153 Critical Advantage Multiplier                                                               WCB9                   CAT 2
+154 Critical Advantage Multiplier                                                               WCC9                   CAT 2
+155 Critical Advantage Multiplier                                                               WCD9                   CAT 2
+156 Critical Advantage Multiplier                                                               WCE9                   CAT 2
+157 Critical Advantage Multiplier II                                                             WCF9                  CAT 2
+158 Critical Advantage Multiplier II                                                            WCG9                   CAT 2
+159 Critical Advantage Multiplier II                                                            WCH9                   CAT 2
+160 Critical Advantage Multiplier II                                                             WCI9                  CAT 2
+161 Critical Care                                                                                CAR3                  CAT 2
+162 Critical Illness Benefit                                                                     CD59                  CAT 2
+163 Critical Illness Benefit - ASR                                                               ACR9                  CAT 2
+164 Critical Illness Benefit - ChildEnrich                                                       LM29                  CAT 2
+165 Critical Illness Benefit - ChildEnrich                                                       LM39                  CAT 2
+166 Critical Illness Benefit - ChildEnrich                                                       LN29                  CAT 2
+167 Critical Illness Benefit - ChildEnrich                                                       LN39                  CAT 2
+168 Critical Illness Benefit - ChildEnrich                                                       LO29                  CAT 2
+169 Critical Illness Benefit - ChildEnrich                                                       LO39                  CAT 2
+170 Critical Illness Benefit - ChildEnrich                                                       LP29                  CAT 2
+171 Critical Illness Benefit - ChildEnrich                                                       LP39                  CAT 2
+172 Critical Illness Benefit - END                                                               CEN9                  CAT 2
+173 Critical Illness Benefit - END                                                               CS29                  CAT 2
+174 Critical Illness Benefit - END                                                               CS39                  CAT 2
+175 Critical Illness Benefit - END                                                               CSM9                  CAT 2
+176 Critical Illness Benefit - Endowment Executive                                               XCI9                  CAT 2
+177 Critical Illness Benefit - LifeEnrich                                                         LI29                 CAT 2
+
+                                                                           # PUBLIC
+S/N Product Name                                                   PPF Product Master Code  Type of insured policy
+178 Critical Illness Benefit - LifeEnrich                                       LI39                 CAT 2
+179 Critical Illness Benefit - LifeEnrich                                      LJ29                  CAT 2
+180 Critical Illness Benefit - LifeEnrich                                      LJ39                  CAT 2
+181 Critical Illness Benefit - LifeEnrich                                      LK29                  CAT 2
+182 Critical Illness Benefit - LifeEnrich                                      LK39                  CAT 2
+183 Critical Illness Benefit - LifeEnrich                                      LL29                  CAT 2
+184 Critical Illness Benefit - LifeEnrich                                      LL39                  CAT 2
+185 Critical Illness Benefit - ValueTerm                                       VT19                  CAT 2
+186 Critical Illness Benefit - Whole Life Par                                  CPS9                  CAT 2
+187 Critical Illness Benefit Plus                                              CA29                  CAT 2
+188 Critical Illness Benefit Plus                                              CA39                  CAT 2
+189 Critical Illness Benefit Plus                                              CIA9                  CAT 2
+190 Critical Illness Benefit Plus                                              CIP9                  CAT 2
+191 Critical Illness Benefit Plus                                               ICIA                 CAT 2
+192 Critical Illness Benefit Plus - Endowment Executive                        XCP9                  CAT 2
+193 Critical Protect Advantage                                                WC29                   CAT 2
+194 Critical Protect Advantage                                                WC39                   CAT 2
+195 Critical Protect Advantage                                                WC49                   CAT 2
+196 Critical Protect Advantage                                                WC59                   CAT 2
+197 Critical Protect Advantage II                                             WD29                   CAT 2
+198 Critical Protect Advantage II                                             WD39                   CAT 2
+199 Critical Protect Advantage II                                             WD49                   CAT 2
+200 Critical Protect Advantage II                                             WD59                   CAT 2
+201 Critical Waiver Protect Advantage II                                       WPY9                  CAT 2
+202 DCIP: Value Term 20 Years                                                  VT83                  CAT 2
+203 DCIP: Value Term 5 Years YRT                                               VT73                  CAT 2
+204 DIRECT - Critical Illness                                                  CD39                  CAT 2
+205 DIRECT - Critical Illness                                                  CD69                  CAT 2
+206 DIRECT - Critical Illness                                                  CD79                  CAT 2
+207 DIRECT - Critical Illness Benefit II                                       CC39                  CAT 2
+208 DIRECT - Critical Illness Benefit II                                       CC49                  CAT 2
+209 DIRECT - HSBC Life Protector II (to age 70)                                PL61                  CAT 2
+210 DIRECT - HSBC Life Protector II (to age 85)                                PL71                  CAT 2
+211 DIRECT - Total Perm Disability                                             TDF7                  CAT 2
+212 DIRECT - ValueTerm                                                         VT93                  CAT 2
+213 Direct LifeProtector to age 70                                             PL41                  CAT 2
+214 Direct ValueTerm to age 65                                                 VT53                  CAT 2
+215 Disability Cover                                                           DAA7                  CAT 2
+216 Early Critical Advantage Multiplier                                        WIB9                  CAT 2
+217 Early Critical Advantage Multiplier                                        WIC9                  CAT 2
+218 Early Critical Advantage Multiplier                                        WID9                  CAT 2
+219 Early Critical Advantage Multiplier                                        WIE9                  CAT 2
+220 Early Critical Advantage Multiplier II                                     WIF9                  CAT 2
+221 Early Critical Advantage Multiplier II                                     WIG9                  CAT 2
+222 Early Critical Advantage Multiplier II                                     WIH9                  CAT 2
+223 Early Critical Advantage Multiplier II                                     WII9                  CAT 2
+224 Early Critical Care Term to 65                                             EC13                  CAT 2
+225 Early Critical Care Term to 85                                             EC23                  CAT 2
+226 Early Critical Protect Advantage                                           WI29                  CAT 2
+227 Early Critical Protect Advantage                                           WI39                  CAT 2
+228 Early Critical Protect Advantage                                           WI49                  CAT 2
+229 Early Critical Protect Advantage                                           WI59                  CAT 2
+230 Early Critical Protect Advantage II                                        WJ29                  CAT 2
+
+                                                         # PUBLIC
+S/N Product Name                                               PPF Product Master Code  Type of insured policy
+231 Early Critical Protect Advantage II                                    WJ39                  CAT 2
+232 Early Critical Protect Advantage II                                    WJ49                  CAT 2
+233 Early Critical Protect Advantage II                                    WJ59                  CAT 2
+234 Emerald Legacy Life Plan                                               WLS1                  CAT 2
+235 Emerald Legacy Life Plan (USD)                                        WLU1                   CAT 2
+236 Endowment Executive Plan                                               EXC2                  CAT 2
+237 Endowment Insurance with Bonus Participation                           END2                  CAT 2
+238 Enhanced Death Benefit                                                 RSAL                  CAT 2
+239 Enhanced Death Benefit                                                 RUAL                  CAT 2
+240 Goal Protector Insurance Plan                                          RS1L                  CAT 2
+241 Goal Protector Insurance Plan (USD)                                    RU1L                  CAT 2
+242 GoalSaver                                                              GSN2                  CAT 2
+243 GoalSaver (with Coupon)                                                GSC2                  CAT 2
+244 Growth Cultivator                                                      SPCL                  CAT 2
+245 Growth Manager                                                        GM1L                   CAT 2
+246 Growth Manager Plus                                                   GM2L                   CAT 2
+247 GrowthInvest Insurance Plan                                            GIPL                  CAT 2
+248 GrowthInvest Insurance Plan (USD)                                      GIUL                  CAT 2
+249 Guaranteed Assurance                                                   KGA1                  CAT 2
+250 Guaranteed Assurance I                                                 GA11                  CAT 2
+251 Guaranteed Saver Plus (SGD)                                            GS52                  CAT 2
+252 Guaranteed Saver Plus v2                                               GS92                  CAT 2
+253 Guaranteed SmartSaver                                                  GSS2                  CAT 2
+254 HSBC Insurance Online Critical Illness Rider                           OT19                  CAT 2
+255 HSBC Insurance OnlineProtector                                         OT13                  CAT 2
+256 HSBC Life Diamond Prestige IUL (MP)                                    I1UR                  CAT 2
+257 HSBC Life Diamond Prestige IUL (SP)                                    I1UL                  CAT 2
+258 HSBC Life Diamond Prestige IUL II (MP)                                 I2UR                  CAT 2
+259 HSBC Life Diamond Prestige IUL II (SP)                                 I2UL                  CAT 2
+260 HSBC Life Emerald Legacy Life II                                       W1S1                  CAT 2
+261 HSBC Life Emerald Legacy Life II                                       W2S1                  CAT 2
+262 HSBC Life Emerald Legacy Life III (limited pay)                       WBU1                   CAT 2
+263 HSBC Life Emerald Legacy Life III (limited pay)                       WEU1                   CAT 2
+264 HSBC Life Emerald Legacy Life III (limited pay)                       WHU1                   CAT 2
+265 HSBC Life Emerald Legacy Life III SGD                                  W4S1                  CAT 2
+266 HSBC Life Emerald Legacy Life III SGD                                  W5S1                  CAT 2
+267 HSBC Life Emerald Legacy Life III USD                                 W4U1                   CAT 2
+268 HSBC Life Goal Builder (SGD)                                           RS2L                  CAT 2
+269 HSBC Life Goal Builder (SGD)                                           RS3L                  CAT 2
+270 HSBC Life Goal Builder (SGD)                                           RS4L                  CAT 2
+271 HSBC Life Goal Builder (USD)                                           RU2L                  CAT 2
+272 HSBC Life Goal Builder (USD)                                           RU3L                  CAT 2
+273 HSBC Life Goal Builder (USD)                                           RU4L                  CAT 2
+274 HSBC Life Goal Builder II (SGD)                                        RS5L                  CAT 2
+275 HSBC Life Goal Builder II (SGD)                                        RS6L                  CAT 2
+276 HSBC Life Goal Builder II (SGD)                                        RS7L                  CAT 2
+277 HSBC Life Goal Builder II (USD)                                        RU5L                  CAT 2
+278 HSBC Life Goal Builder II (USD)                                        RU6L                  CAT 2
+279 HSBC Life Goal Builder II (USD)                                        RU7L                  CAT 2
+280 HSBC Life Indexed Flexi Income (MP)                                    F1AR                  CAT 2
+281 HSBC Life Indexed Flexi Income (SP)                                    F1AL                  CAT 2
+282 HSBC Life Protect Advantage II                                        WK21                   CAT 2
+283 HSBC Life Protect Advantage II                                        WK31                   CAT 2
+284 HSBC Life Protect Advantage II                                        WK41                   CAT 2
+285 HSBC Life Protect Advantage II                                        WK51                   CAT 2
+286 HSBC Life Retirement Income                                            RA1A                  CAT 2
+
+                                                     # PUBLIC
+S/N Product Name                                                                                                        PPF Product Master Code  Type of insured policy
+287 HSBC Life Retirement Income                                                                                                     RA2A                  CAT 2
+288 HSBC Life Retirement Income                                                                                                     RA3A                  CAT 2
+289 HSBC Life Retirement Income                                                                                                     RB1A                  CAT 2
+290 HSBC Life Retirement Income                                                                                                     RB2A                  CAT 2
+291 HSBC Life Retirement Income                                                                                                     RB3A                  CAT 2
+292 HSBC Life Retirement Income                                                                                                     RC1A                  CAT 2
+293 HSBC Life Retirement Income                                                                                                     RC2A                  CAT 2
+294 HSBC Life Retirement Income                                                                                                     RC3A                  CAT 2
+295 HSBC Life Retirement Income II                                                                                                  RA4A                  CAT 2
+296 HSBC Life Retirement Income II                                                                                                  RA5A                  CAT 2
+297 HSBC Life Retirement Income II                                                                                                  RA6A                  CAT 2
+298 HSBC Life Retirement Income II                                                                                                  RB4A                  CAT 2
+299 HSBC Life Retirement Income II                                                                                                  RB5A                  CAT 2
+300 HSBC Life Retirement Income II                                                                                                  RB6A                  CAT 2
+301 HSBC Life Retirement Income II                                                                                                  RC4A                  CAT 2
+302 HSBC Life Retirement Income II                                                                                                  RC5A                  CAT 2
+303 HSBC Life Retirement Income II                                                                                                  RC6A                  CAT 2
+304 HSBC Life Retirement Income II                                                                                                  RD4A                  CAT 2
+305 HSBC Life Retirement Income II                                                                                                  RD5A                  CAT 2
+306 HSBC Life Retirement Income II                                                                                                  RD6A                  CAT 2
+307 HSBC Life Sapphire Prestige Income (SGD)                                                                                        WLI1                  CAT 2
+308 HSBC Life Sapphire Prestige Income (USD)                                                                                        WLK1                  CAT 2
+309 HSBC Life Sapphire Prestige Income II (SGD)                                                                                    WLO1                   CAT 2
+310 HSBC Life Sapphire Prestige Income II (SGD)                                                                                     WLJ1                  CAT 2
+311 HSBC Life Sapphire Prestige Income II (USD)                                                                                     WLF1                  CAT 2
+312 HSBC Life Sapphire Prestige Income II (USD)                                                                                    WLM1                   CAT 2
+313 HSBC Life Savings Protector II                                                                                                  SA32                  CAT 2
+314 HSBC Life Savings Protector II                                                                                                  SA42                  CAT 2
+315 HSBC Life Variable Annuity                                                                                                      SPAL                  CAT 2
+316 HSBC Life Variable Annuity                                                                                                      SPHL                  CAT 2
+317 HSBC Life Wealth Builder                                                                                                        ESA2                  CAT 2
+318 HSBC Life Wealth Builder                                                                                                        ESC2                  CAT 2
+319 HSBC Life Wealth Builder                                                                                                        ESD2                  CAT 2
+320 HSBC Life Wealth Builder                                                                                                        ESE2                  CAT 2
+321 Income Manager                                                                                                                   KFIL                 CAT 2
+322 Jade Global Generations Universal Life (RP) / Jade Ultra Global Generations Universal Life (RP)                                 J3UR                  CAT 2
+323 Jade Global Generations Universal Life / Jade Ultra Global Generations Universal Life                                           J3UL                  CAT 2
+324 Jade Global Generations Universal Life / Jade Ultra Global Generations Universal Life (Terminal Illness)                         J3TI                 CAT 2
+325 Jade Global Select Universal Life                                                                                               J2UL                  CAT 2
+326 Jade Global Select Universal Life                                                                                               J2UR                  CAT 2
+327 Jade Global Select Universal Life (Terminal Illness)                                                                             J2TI                 CAT 2
+328 Jade Global Universal Life                                                                                                      JGUL                  CAT 2
+329 Jade Global Universal Life                                                                                                      JGUR                  CAT 2
+330 Jade Global Universal Life (Terminal Illness)                                                                                    JGTI                 CAT 2
+331 Jade Legacy Universal Life (RP)/ Jade Ultra Legacy Universal Life (RP)                                                          J4UR                  CAT 2
+332 Jade Legacy Universal Life (SP)/ Jade Ultra Legacy Universal Life (SP)                                                          J4UL                  CAT 2
+333 Jade Legacy Universal Life / Jade Ultra Legacy Universal Life (Terminal Illness)                                                 J4TI                 CAT 2
+334 LEAP+                                                                                                                           LPP2                  CAT 2
+335 Level Temporary Insurance                                                                                                       LTE3                  CAT 2
+336 Level Temporary Insurance                                                                                                       TCR3                  CAT 2
+337 Level Temporary Insurance                                                                                                       TEL3                  CAT 2
+338 Level Term Benefit                                                                                                              LTRL                  CAT 2
+339 Level Term Benefit                                                                                                              LTRT                  CAT 2
+340 Level Term Rider                                                                                                                LTR6                  CAT 2
+341 Level Term Rider                                                                                                                TRL6                  CAT 2
+
+                                                                                                              # PUBLIC
+S/N Product Name                                                                                          PPF Product Master Code  Type of insured policy
+342 Level Term Rider - Endowment Executive                                                                            XLT6                  CAT 2
+343 Life Advantage Booster (for HSBC Life Emerald Legacy Life III (limited pay))                                     MBU6                   CAT 2
+344 Life Advantage Booster (for HSBC Life Emerald Legacy Life III (limited pay))                                     MEU6                   CAT 2
+345 Life Advantage Booster (for HSBC Life Emerald Legacy Life III (limited pay))                                     MHU6                   CAT 2
+346 Life Advantage Booster (for HSBC Life Emerald Legacy Life III SGD)                                                M4S6                  CAT 2
+347 Life Advantage Booster (for HSBC Life Emerald Legacy Life III SGD)                                                M5S6                  CAT 2
+348 Life Advantage Booster (for HSBC Life Emerald Legacy Life III USD)                                               M4U6                   CAT 2
+349 Life Advantage Multiplier (for Emerald Legacy Life Plan USD)                                                     MPU6                   CAT 2
+350 Life Advantage Multiplier (for Emerald Legacy Life Plan)                                                          MPS6                  CAT 2
+351 Life Advantage Multiplier (for Life Protect Advantage)                                                            WLB6                  CAT 2
+352 Life Advantage Multiplier (for Life Protect Advantage)                                                            WLC6                  CAT 2
+353 Life Advantage Multiplier (for Life Protect Advantage)                                                           WLD6                   CAT 2
+354 Life Advantage Multiplier (for Life Protect Advantage)                                                            WLE6                  CAT 2
+355 Life Advantage Multiplier II (for HSBC Life Emerald Legacy Life II)                                               M1S6                  CAT 2
+356 Life Advantage Multiplier II (for HSBC Life Emerald Legacy Life II)                                               M2S6                  CAT 2
+357 Life Advantage Multiplier II (for HSBC Life Protect Advantage II)                                                WKB6                   CAT 2
+358 Life Advantage Multiplier II (for HSBC Life Protect Advantage II)                                                WKC6                   CAT 2
+359 Life Advantage Multiplier II (for HSBC Life Protect Advantage II)                                                WKD6                   CAT 2
+360 Life Advantage Multiplier II (for HSBC Life Protect Advantage II)                                                 WKE6                  CAT 2
+361 Life Extender Booster (for HSBC Life Emerald Legacy Life III SGD)                                                 MS36                  CAT 2
+362 Life Extender Booster (for HSBC Life Emerald Legacy Life III SGD)                                                 MS46                  CAT 2
+363 Life Extender Booster (for HSBC Life Emerald Legacy Life III USD)                                                MU36                   CAT 2
+364 Life Extender Booster (for HSBC Life Emerald Legacy Life III USD)                                                MU46                   CAT 2
+365 Life Extender Booster II (for HSBC Life Emerald Legacy Life III (limited pay))                                   MU76                   CAT 2
+366 Life Extender Booster II (for HSBC Life Emerald Legacy Life III (limited pay))                                   MU86                   CAT 2
+367 Life Extender Booster II (for HSBC Life Emerald Legacy Life III (limited pay))                                   MU96                   CAT 2
+368 Life Extender Booster II (for HSBC Life Emerald Legacy Life III (limited pay))                                   MUA6                   CAT 2
+369 Life Extender Booster II (for HSBC Life Emerald Legacy Life III (limited pay))                                   MUB6                   CAT 2
+370 Life Extender Booster II (for HSBC Life Emerald Legacy Life III (limited pay))                                   MUC6                   CAT 2
+371 Life Extender Multiplier (for Emerald Legacy Life Plan / HSBC Life Emerald Legacy Life II)                        MS16                  CAT 2
+372 Life Extender Multiplier (for Emerald Legacy Life Plan / HSBC Life Emerald Legacy Life II)                        MS26                  CAT 2
+373 Life Extender Multiplier (for Emerald Legacy Life Plan USD)                                                      MU16                   CAT 2
+374 Life Extender Multiplier (for Emerald Legacy Life Plan USD)                                                      MU26                   CAT 2
+375 Life Extender Multiplier (for Life Protect Advantage)                                                            MPV6                   CAT 2
+376 Life Manager                                                                                                      KLML                  CAT 2
+377 Life Manager Plus                                                                                                 LM1L                  CAT 2
+378 Life Protect Advantage                                                                                           WM21                   CAT 2
+379 Life Protect Advantage                                                                                           WM31                   CAT 2
+380 Life Protect Advantage                                                                                           WM41                   CAT 2
+381 Life Protect Advantage                                                                                           WM51                   CAT 2
+382 Life Protect Advantage                                                                                            WL21                  CAT 2
+383 Life Protect Advantage                                                                                            WL31                  CAT 2
+384 Life Protect Advantage                                                                                            WL41                  CAT 2
+385 Life Protect Advantage                                                                                            WL51                  CAT 2
+386 LifeEnrich Age 55                                                                                                 EF51                  CAT 2
+387 LifeEnrich Age 55                                                                                                 RF51                  CAT 2
+388 LifeEnrich Age 55 (5 year pay)                                                                                    EL51                  CAT 2
+389 LifeEnrich Age 55 (5 year pay)                                                                                    RL51                  CAT 2
+390 LifeEnrich Age 62                                                                                                 EF61                  CAT 2
+391 LifeEnrich Age 62                                                                                                 RF61                  CAT 2
+392 LifeEnrich Age 62 (5 year pay)                                                                                    EL61                  CAT 2
+393 LifeEnrich Age 62 (5 year pay)                                                                                    RL61                  CAT 2
+394 LifeEnrich I                                                                                                      ER51                  CAT 2
+395 LifeEnrich I                                                                                                      ER61                  CAT 2
+396 LifeProtector                                                                                                     LP11                  CAT 2
+397 LifeProtector 20                                                                                                  PL31                  CAT 2
+398 Limited Pay Critical Illness Benefit                                                                              LQ29                  CAT 2
+
+                                                                                                # PUBLIC
+S/N Product Name                                            PPF Product Master Code  Type of insured policy
+399 Limited Pay Critical Illness Benefit                                LQ39                  CAT 2
+400 Limited Pay TPD                                                     LDA7                  CAT 2
+401 Limited Pay TPD Plus - ChildEnrich                                  CF17                  CAT 2
+402 Limited Pay TPD Plus - ChildEnrich                                  CF27                  CAT 2
+403 Limited Pay TPD Plus - ChildEnrich                                  CL17                  CAT 2
+404 Limited Pay TPD Plus - ChildEnrich                                  CL27                  CAT 2
+405 Limited Pay TPD Plus with ETPD - ChildEnrich                        CF37                  CAT 2
+406 Limited Pay TPD Plus with ETPD - ChildEnrich                        CF47                  CAT 2
+407 Limited Pay TPD+                                                    LDG7                  CAT 2
+408 Limited Pay TPD+                                                    LDH7                  CAT 2
+409 Limited Pay TPD+ with ETPD                                          LDE7                  CAT 2
+410 Limited Pay TPD+ with ETPD                                          LDF7                  CAT 2
+411 MortgageProtector                                                   MJ13                  CAT 2
+412 MortgageProtector                                                  MR13                   CAT 2
+413 Pengurus Simpanan Takaful                                           TESL                  CAT 2
+414 Pengurus Simpanan Takaful                                           TSML                  CAT 2
+415 Reducing Term Benefit                                               RTRL                  CAT 2
+416 Reducing Term Benefit                                               RTRT                  CAT 2
+417 Reducing Term Rider                                                 RTR6                  CAT 2
+418 Reducing Term Rider                                                 TRR6                  CAT 2
+419 Reducing Term Rider (for Savings Protector)                         RT16                  CAT 2
+420 Savings Accumulator                                                 IS12                  CAT 2
+421 Savings Accumulator                                                 IS22                  CAT 2
+422 Savings Accumulator Plus (GIO)                                      SA12                  CAT 2
+423 Savings Manager                                                     KESL                  CAT 2
+424 Savings Manager                                                     KSML                  CAT 2
+425 Savings Protector                                                   SA22                  CAT 2
+426 SecureIncome (Income Term)                                          RI32                  CAT 2
+427 SecureIncome @55                                                    RI22                  CAT 2
+428 SecureIncome 10                                                     RI12                  CAT 2
+429 SmartMortgage Protector                                            MPR3                   CAT 2
+430 SmartSaver                                                          SAV2                  CAT 2
+431 SmartSaver                                                          SMS2                  CAT 2
+432 Takaful Anugerah                                                    TAAL                  CAT 2
+433 Takaful Asset Manager                                               TAML                  CAT 2
+434 Takaful Asset Manager                                               TANL                  CAT 2
+435 Takaful Asset Manager                                               TEML                  CAT 2
+436 Takaful Asset Manager I                                             TA1L                  CAT 2
+437 Takaful Asset Manager I                                             TA2L                  CAT 2
+438 Takaful Asset Manager I                                             TA3L                  CAT 2
+439 Takaful Asset Manager II                                            TA4L                  CAT 2
+440 Takaful Life Manager                                                TLML                  CAT 2
+441 Takaful Warisan                                                    TWML                   CAT 2
+442 TargetProtector                                                     TPF1                  CAT 2
+443 TargetProtector 1                                                   PF11                  CAT 2
+444 TargetProtector 1 v2                                                PF21                  CAT 2
+445 TargetProtector20                                                   TPL1                  CAT 2
+446 TargetProtector20 v2                                                PL21                  CAT 2
+447 TargetSaver (2.5% coupon)                                           SCF2                  CAT 2
+448 TargetSaver (without coupon)                                        SAF2                  CAT 2
+449 TargetSaver5 (2.5% coupon)                                          SCL2                  CAT 2
+450 TargetSaver5 (50% coupon)                                           SBL2                  CAT 2
+451 TargetSaver5 (without coupon)                                       SAL2                  CAT 2
+452 Term Protect Advantage                                             NPB3A                  CAT 2
+453 TPD (Free)                                                          DBF7                  CAT 2
+454 TPD (Free)                                                          SAF7                  CAT 2
+455 TPD (Free)                                                          TBF7                  CAT 2
+
+                                                  # PUBLIC
+S/N Product Name                                                PPF Product Master Code  Type of insured policy
+456 TPD (Free) Lump Sum                                                     DJF7                  CAT 2
+457 TPD (Free) Lump Sum                                                     DJL7                  CAT 2
+458 TPD (Free) Lump Sum                                                     DLF7                  CAT 2
+459 TPD (Free) Lump Sum                                                    DMF7                   CAT 2
+460 TPD (Free) Lump Sum                                                     IDLF                  CAT 2
+461 TPD Plus                                                                CDP7                  CAT 2
+462 TPD Plus                                                                DPP7                  CAT 2
+463 TPD Plus with ETPD                                                      CEP7                  CAT 2
+464 TPD Plus with ETPD                                                      DEP7                  CAT 2
+465 TPD with ETPD                                                           DET7                  CAT 2
+466 TPD with ETPD                                                           TET7                  CAT 2
+467 TPD with ETPD (Free)                                                    DEF7                  CAT 2
+468 TPD with ETPD (Free)                                                    SEF7                  CAT 2
+469 TPD with ETPD (Free)                                                    TEF7                  CAT 2
+470 Value Long Term                                                         T9N3                  CAT 2
+471 Value Long Term Plus                                                     I9CL                 CAT 2
+472 Value Long Term Plus                                                    T923                  CAT 2
+473 Value Long Term Plus                                                    T933                  CAT 2
+474 Value Long Term Plus                                                    T9C3                  CAT 2
+475 Value Mortgage Assurance                                                JRT3                  CAT 2
+476 ValueLife65 - Reduced Sum Insured At Age 65                             VP11                  CAT 2
+477 ValueLIfe80 - Reduced Sum Insured At Age 80                             VP21                  CAT 2
+478 ValueTerm                                                               VT13                  CAT 2
+479 ValueTerm                                                               VT23                  CAT 2
+480 ValueTerm                                                               VT63                  CAT 2
+481 VitalVantage (Term to age 65)                                           CV29                  CAT 2
+482 VitalVantage (Term to age 99)                                           CV39                  CAT 2
+483 Wealth Protector                                                       WPR3                   CAT 2
+484 Wealth Protector                                                        WPS3                  CAT 2
+485 Whole Life Insurance with Bonus Participation                           WLP1                  CAT 2
+486 Whole Life Insurance without Bonus Participation                       WLN1                   CAT 2
+487 Whole LifeMax                                                           KMX1                  CAT 2
+488 Whole LifeMax                                                           LMX1                  CAT 2
+489 WL Critical Illness Benefit                                             CM29                  CAT 2
+490 WL Critical Illness Benefit                                             CQ29                  CAT 2
+491 WL Critical Illness Benefit                                             CQ39                  CAT 2
+492 WL Critical Illness Benefit - Whole Life Non Par                       CNW9                   CAT 2
+493 WL Critical Illness Benefit - Whole Life Non Par                       CW29                   CAT 2
+494 WL Critical Illness Benefit - Whole Life Non Par                       CW39                   CAT 2
+495 WL Critical Illness Benefit - Whole Life Par                           CPW9                   CAT 2
+496 WL Critical Illness Benefit - Whole LifeMax                             CLM9                  CAT 2
+497 WL Critical Illness Benefit - Whole LifeMax                             CMX9                  CAT 2
+498 HSBC Life Online Endowment                                              SPE4                  CAT 2
+499 PowerSaver                                                              SP12                  CAT 2
+500 Step-up Saver                                                           SU12                  CAT 2
+501 Guaranteed Saver IV                                                     GS42                  CAT 2
+502 Guaranteed MoneyBuilder                                                MBN2                   CAT 2
+503 Endowment Plan                                                          KEE2                  CAT 2
+504 Golden 55 Plus                                                           NA                   CAT 3
+505 Golden 55                                                                G55                  CAT 3
+506 Deferred Guaranteed Annuity                                             DGA5                  CAT 3
+507 Immediate Guaranteed Annuity                                            IGA5                  CAT 3
+508 Golden 55 Participating                                                 MSSP                  CAT 3
+509 Accidental Death Benefit                                                ADBB                  CAT 1
+510 1% Schooling Income                                                     NPB1                  CAT 1
+511 1% Schooling Income Plus                                                NPP1                  CAT 1
+512 3% Schooling Income                                                     NPB3                  CAT 1
+513 3% Schooling Income Plus                                                NPP3                  CAT 1
+514 Accident Medical Reimbursement                                         MRRA                   CAT 1
+515 Accidental Death Benefit                                               ADBB3                  CAT 1
+516 Accidental Death Benefit                                               ADBXA                  CAT 1
+517 Accidental Death Benefit                                               ADBXB                  CAT 1
+518 Accidental Death Benefit                                               ADBXC                  CAT 1
+
+                                                      # PUBLIC
+S/N Product Name                                                     PPF Product Master Code  Type of insured policy
+519 Accidental Death Benefit                                                     AENA                  CAT 1
+520 Accidental Death Benefit                                                    ADB65                  CAT 1
+521 Accidental Death Benefit                                                    ADBR1                  CAT 1
+522 Accidental Death Benefit                                                    ADBR2                  CAT 1
+523 Accidental Death Benefit                                                    ADBR3                  CAT 1
+524 Accidental Death Benefit                                                    ADBR4                  CAT 1
+525 Accidental Death Benefit                                                    NKADB                  CAT 1
+526 Accidental Death Benefit                                                    PLT5A                  CAT 1
+527 Accidental Death Benefit                                                     PREA                  CAT 1
+528 Accidental Death Benefit                                                     PROA                  CAT 1
+529 Accident Medical Reimbursement                                               MRA                   CAT 1
+530 Accidental Insurance                                                          AI1                  CAT 1
+531 Accidental Insurance                                                          AI2                  CAT 1
+532 Accidental Insurance                                                          AI3                  CAT 1
+533 Accidental Insurance                                                          AI4                  CAT 1
+534 Additional Critical Illness rider                                           ADCIR                  CAT 1
+535 Broken Bones Benefit                                                          BBA                  CAT 1
+536 Broken Bones Benefit                                                         BBRA                  CAT 1
+537 CI Additional Rider                                                         CAB99                  CAT 1
+538 CI Payer Premium Waiver Benefit                                               CPP                  CAT 1
+539 CI Premium Waiver Benefit                                                    CPW                   CAT 1
+540 Critical Illness Plus                                                        CIPT                  CAT 1
+541 Critical Illness Plus                                                        CIP8                  CAT 1
+542 Critical Illness Plus                                                        CIPA                  CAT 1
+543 Critical Illness PremiumEraser                                               WP2                   CAT 1
+544 Critical Illness PremiumEraser                                              WPRA                   CAT 1
+545 Critical Illness PremiumEraser                                              WPNR                   CAT 1
+546 Critical Illness PremiumEraser                                              WPRT                   CAT 1
+547 Daily Accident Hospitalisation Income                                         HIA                  CAT 1
+548 Daily Accident Hospitalization Income and ICU Benefit                        HIRA                  CAT 1
+549 Deferred Disability Income                                                    DDI                  CAT 1
+550 Disability Cash Benefit                                                       DSB                  CAT 1
+551 Disability Cash Benefit                                                      DCBA                  CAT 1
+552 Disability Cash Benefit                                                     DCB70                  CAT 1
+553 Disability Cash Benefit                                                      DCBT                  CAT 1
+554 ECI Additional Benefit                                                      EAB99                  CAT 1
+555 ECI Payer Premium Waiver Benefit                                              ECP                  CAT 1
+556 ECI Premium Waiver Benefit                                                   EPW                   CAT 1
+557 Extended Total and Permanent Disability Benefit                              EPBA                  CAT 1
+558 Extended Total and Permanent Disability Benefit                             EPBAC                  CAT 1
+559 Extended Total and Permanent Disability Benefit                              EPBB                  CAT 1
+560 GlobalCare Health Plan                                                      MF4B1                  CAT 1
+561 GlobalCare Health Plan                                                      MG4B2                  CAT 1
+562 GlobalCare Health Plan                                                      MA1B1                  CAT 1
+563 GlobalCare Health Plan                                                      MA2B1                  CAT 1
+564 GlobalCare Health Plan                                                      MA3B1                  CAT 1
+565 GlobalCare Health Plan                                                      MA4B1                  CAT 1
+566 GlobalCare Health Plan                                                      MA4B2                  CAT 1
+567 GlobalCare Health Plan                                                      MA5B1                  CAT 1
+568 GlobalCare Health Plan                                                      MA5B2                  CAT 1
+569 GlobalCare Health Plan                                                      MA6B1                  CAT 1
+570 GlobalCare Health Plan                                                      MA6B2                  CAT 1
+571 GlobalCare Health Plan                                                      MA7B1                  CAT 1
+572 GlobalCare Health Plan                                                      MA7B2                  CAT 1
+573 GlobalCare Health Plan                                                      MC5B1                  CAT 1
+574 GlobalCare Health Plan                                                      MC6B1                  CAT 1
+575 GlobalCare Health Plan                                                      MC6B2                  CAT 1
+576 GlobalCare Health Plan                                                      MC7B1                  CAT 1
+577 GlobalCare Health Plan                                                      MC7B2                  CAT 1
+578 GlobalCare Health Plan                                                      ME1B1                  CAT 1
+579 GlobalCare Health Plan                                                      ME2B1                  CAT 1
+580 GlobalCare Health Plan                                                      ME4B1                  CAT 1
+581 GlobalCare Health Plan                                                      ME4B2                  CAT 1
+582 GlobalCare Health Plan                                                      ME5B1                  CAT 1
+583 GlobalCare Health Plan                                                      ME5B2                  CAT 1
+584 GlobalCare Health Plan                                                      ME6B1                  CAT 1
+585 GlobalCare Health Plan                                                      ME6B2                  CAT 1
+
+                                                           # PUBLIC
+S/N Product Name                                       PPF Product Master Code  Type of insured policy
+586 GlobalCare Health Plan                                        ME7B1                  CAT 1
+587 GlobalCare Health Plan                                        ME7B2                  CAT 1
+588 GlobalCare Health Plan                                        MF5B1                  CAT 1
+589 GlobalCare Health Plan                                        MF5B2                  CAT 1
+590 GlobalCare Health Plan                                        MF6B1                  CAT 1
+591 GlobalCare Health Plan                                        MF6B2                  CAT 1
+592 GlobalCare Health Plan                                        MF7B1                  CAT 1
+593 GlobalCare Health Plan                                        MF7B2                  CAT 1
+594 GlobalCare Health Plan                                        MG5B1                  CAT 1
+595 GlobalCare Health Plan                                        MG5B2                  CAT 1
+596 GlobalCare Health Plan                                        MG6B1                  CAT 1
+597 GlobalCare Health Plan                                        MG6B2                  CAT 1
+598 GlobalCare Health Plan                                        MG7B1                  CAT 1
+599 GlobalCare Health Plan                                        MG7B2                  CAT 1
+600 GlobalCare Health Plan                                        MH2B1                  CAT 1
+601 GlobalCare Health Plan                                        MH4B1                  CAT 1
+602 GlobalCare Health Plan                                        MH5B1                  CAT 1
+603 GlobalCare Health Plan                                        MH6B1                  CAT 1
+604 GlobalCare Health Plan                                        MH6B2                  CAT 1
+605 GlobalCare Health Plan                                        MH7B1                  CAT 1
+606 GlobalCare Health Plan                                        MH7B2                  CAT 1
+607 Guaranteed Survival Payout                                       SV                  CAT 1
+608 Guaranteed Survival Payout                                     SV99                  CAT 1
+609 Home Modification Reimbursement Benefit                       HMRA                   CAT 1
+610 Hospitalisation Benefit                                        HPB1                  CAT 1
+611 Hospitalisation Benefit                                        HPB2                  CAT 1
+612 Hospitalisation Benefit                                        HPB3                  CAT 1
+613 Hospitalisation Benefit                                        HPB4                  CAT 1
+614 Hospitalisation Benefit                                        HPB6                  CAT 1
+615 Hospitalisation Benefit                                        HPB7                  CAT 1
+616 Hospitalisation Benefit                                        HPB8                  CAT 1
+617 Hospitalisation Benefit                                        HPB9                  CAT 1
+618 Hospitalisation Pac                                           MEB4F                  CAT 1
+619 Hospitalisation Pac                                            MEB4                  CAT 1
+620 Hospitalisation Pac                                            MEB5                  CAT 1
+621 Hospitalisation Pac                                            MEB6                  CAT 1
+622 HSBC Life Band Aid                                             PARA                  CAT 1
+623 HSBC Life Enhanced Care                                       ASCPA                  CAT 1
+624 HSBC Life Enhanced Care                                       ASCPB                  CAT 1
+625 HSBC Life Enhanced Care                                       ASCPC                  CAT 1
+626 HSBC Life Enhanced Care II                                    ASCA2                  CAT 1
+627 HSBC Life Enhanced Care II                                    ASCB2                  CAT 1
+628 HSBC Life Enhanced Care II                                    ASCC2                  CAT 1
+629 HSBC Life Shield                                              ASIMA                  CAT 1
+630 HSBC Life Shield                                              ASIMB                  CAT 1
+631 HSBC Life Shield                                              ASIMC                  CAT 1
+632 LivingEnhancer (Renewable Term)                                ALET                  CAT 1
+633 LivingEnhancer (To Age)                                        ALEA                  CAT 1
+634 Medical Expenses                                              MERA                   CAT 1
+635 Payer Premium Waiver Benefit                                   PPW                   CAT 1
+636 Payer Premium Waiver Benefit                                   PPWT                  CAT 1
+637 Payer PremiumEraser                                              PB                  CAT 1
+638 Payer PremiumEraser                                            PPEA                  CAT 1
+639 Payer PremiumEraser                                           PPU50                  CAT 1
+640 Payer PremiumEraser                                           PUR50                  CAT 1
+641 Payer PremiumEraser                                           PUN50                  CAT 1
+642 Payer PremiumEraser                                            PPET                  CAT 1
+643 Payer PremiumEraser (DTPD)                                     PERA                  CAT 1
+644 Payer PremiumEraser (DTPDCI)                                  PPERT                  CAT 1
+645 Payer PremiumEraser (DTPDCI)                                  PPENR                  CAT 1
+646 Payer PremiumEraser (DTPDCI)                                  PPERA                  CAT 1
+647 Payer PremiumEraser (DTPDCI)                                   PENR                  CAT 1
+648 Payer PremiumEraser (DTPDCI)                                   PERT                  CAT 1
+649 Payer PremiumEraser (DTPDCIUN)                                 PPUA                  CAT 1
+650 Payer PremiumEraser (DTPDCIUN)                                 PPUT                  CAT 1
+
+                                             # PUBLIC
+S/N Product Name                                          PPF Product Master Code  Type of insured policy
+651 Payer PremiumEraser (DTPDECIUN)                                  EPPUN                  CAT 1
+652 Payer PremiumEraser (DTPDECIUN)                                  EPPUA                  CAT 1
+653 Payer PremiumEraser (DTPDECIUN)                                  EPPUT                  CAT 1
+654 Payer PremiumEraser (DTPDUN)                                      PURT                  CAT 1
+655 Payer PremiumEraser (DTPDUN)                                      PURA                  CAT 1
+656 Payer PremiumEraser (UN)                                         PUNBT                  CAT 1
+657 Payer PremiumEraser Plus                                         PPEPT                  CAT 1
+658 Payer PremiumEraser Plus                                           PBC                  CAT 1
+659 Payer PremiumEraser Plus                                         PPEPA                  CAT 1
+660 Personal Accident Benefit                                          AP                   CAT 1
+661 Premier Care                                                     MEA1F                  CAT 1
+662 Premier Care                                                     MEA2F                  CAT 1
+663 Premier Care                                                     MEA3F                  CAT 1
+664 Premier Care                                                     MEA4F                  CAT 1
+665 Premier Care                                                     MEA1                   CAT 1
+666 Premier Care                                                     MEA2                   CAT 1
+667 Premier Care                                                     MEA3                   CAT 1
+668 Premier Care                                                     MEA4                   CAT 1
+669 Premium Waiver                                                  WUR50                   CAT 1
+670 Premium Waiver (CIUN)                                            WURA                   CAT 1
+671 Premium Waiver (CIUN)                                            WURT                   CAT 1
+672 Premium Waiver (ECIUN)                                           EWUN                   CAT 1
+673 Premium Waiver (ECIUN)                                           EWUT                   CAT 1
+674 Premium Waiver (ECIUN)                                           EWUA                   CAT 1
+675 Premium Waiver (UN)                                               UNBA                  CAT 1
+676 Premium Waiver (UN)                                               UNBT                  CAT 1
+677 Premium Waiver (UN)                                              UNB50                  CAT 1
+678 PremiumEraser Total                                               WOP                   CAT 1
+679 Prime Care                                                       MEB1F                  CAT 1
+680 Prime Care                                                       MEB2F                  CAT 1
+681 Prime Care                                                       MEB3F                  CAT 1
+682 Prime Care                                                        MEB1                  CAT 1
+683 Prime Care                                                        MEB2                  CAT 1
+684 Prime Care                                                        MEB3                  CAT 1
+685 Smart PA                                                           PAA                  CAT 1
+686 Smart Payer PremiumEraser                                           PE                  CAT 1
+687 Smart Payer PremiumEraser Plus                                     PEC                  CAT 1
+688 Supplementary Waiver Benefit                                     WPAC                   CAT 1
+689 Waiver of Premium                                                WPTN                   CAT 1
+690 Waiver of Premium                                                 WPTT                  CAT 1
+691 Waiver of Premium Plus                                           WPPAC                  CAT 1
+692 Waiver of Premium Plus                                            WPPZ                  CAT 1
+693 Waiver of Premium Plus                                            WPPT                  CAT 1
+694 Waiver of Premium Plus                                           WPPN                   CAT 1
+695 Waiver of Premium Plus with Income Benefit                         WIP                  CAT 1
+696 Waiver of Premium Special                                        WPSR                   CAT 1
+697 Waiver of Premium Special                                        WPS85                  CAT 1
+698 Waiver of Premium Special                                         WPSZ                  CAT 1
+699 Waiver of Premium with Income Benefit                              WIS                  CAT 1
+700 Waiver of Premium with Income Benefit                              WI                   CAT 1
+701 Waiver of Premium with Income Benefit                            WPSAC                  CAT 1
+702 Weekly Indemnity                                                  WINA                  CAT 1
+703 Weekly Indemnity                                                  WIRA                  CAT 1
+704 Accelerated Critical Illness Benefit                             CIMDA                  CAT 2
+705 Accelerating Critical Illness rider                              ACCIR                  CAT 2
+706 Advance Critical Illness Payout                                   CRIA                  CAT 2
+707 Advance Critical Illness Payout                                   CRIT                  CAT 2
+708 Advance Critical Illness Payout                                   CRLT                  CAT 2
+709 Advance Critical Illness Payout                                   CRILT                 CAT 2
+710 Advance Critical Illness Payout                                   CRILA                 CAT 2
+711 Advance Critical Illness Payout                                  CRLLA                  CAT 2
+712 Advance Critical Illness Payout                                   CRLA                  CAT 2
+
+                                                # PUBLIC
+S/N Product Name                                                                            PPF Product Master Code  Type of insured policy
+713 Advance Total and Permanent Disability Payout                                                       DISLA                 CAT 2
+714 Advance Total and Permanent Disability Payout                                                       DIST                  CAT 2
+715 Advance Total and Permanent Disability Payout                                                       DISLT                 CAT 2
+716 Advance Total and Permanent Disability Payout                                                       DISA                  CAT 2
+717 Advance Total and Permanent Disability Payout II                                                    DS2A                  CAT 2
+718 Advance Total and Permanent Disability Payout II                                                    DS2T                  CAT 2
+719 Alpha                                                                                                ALP                  CAT 2
+720 Cashback (Renewable- Term)                                                                          ACBT                  CAT 2
+721 Cashback (Non Renewable-To Age)                                                                     ACBA                  CAT 2
+722 ChampionSaver                                                                                        CSR                  CAT 2
+723 ChampionSaver                                                                                        NKS                  CAT 2
+724 ChampionSaver                                                                                        NKI                  CAT 2
+725 Choice Accelerator Benefit                                                                          CARB                  CAT 2
+726 Choice Harvest                                                                                       CH                   CAT 2
+727 Choice Term                                                                                          CRT                  CAT 2
+728 CI Choice Accelerator Benefit                                                                      CCA99                  CAT 2
+729 CI Max Accelerator Benefit                                                                         CMA99                  CAT 2
+730 Critical Illness Benefit                                                                           CIBBA                  CAT 2
+731 Critical Illness Benefit                                                                           TPDBT                  CAT 2
+732 Critical Illness Benefit                                                                             CIL                  CAT 2
+733 Critical Illness Benefit                                                                            CIBT                  CAT 2
+734 Critical Illness Benefit                                                                            CIBAT                 CAT 2
+735 Critical Illness Benefit                                                                            CIBBT                 CAT 2
+736 Critical Illness Benefit                                                                           CCIBA                  CAT 2
+737 Critical Illness Benefit                                                                            CCIBT                 CAT 2
+738 Critical Illness Benefit                                                                           WLHC                   CAT 2
+739 Critical Illness Benefit                                                                            CIBA                  CAT 2
+740 Critical Illness Benefit                                                                           CIBAA                  CAT 2
+741 Critical Illness Benefit                                                                            WLSC                  CAT 2
+742 Critical Illness Benefit (II)                                                                       ACIB                  CAT 2
+743 Critical Illness Benefit (attachable to HSBC Life - Life MultiProtect)                              CIBXB                 CAT 2
+744 Critical Illness Benefit (attachable to HSBC Life - Life MultiProtect)                              CIBXC                 CAT 2
+745 Critical Illness Benefit (attachable to HSBC Life - Life MultiProtect)                              CIBXA                 CAT 2
+746 Critical Illness Benefit III                                                                        ACIB3                 CAT 2
+747 Critical Illness Plus Benefit                                                                       CRBP                  CAT 2
+748 Decreasing Term Assurance                                                                           DTSD                  CAT 2
+749 Decreasing Term Assurance                                                                           DTRD                  CAT 2
+750 Decreasing Term Rider                                                                               PSDT                  CAT 2
+751 Decreasing Term Rider                                                                                DTR                  CAT 2
+752 DIRECT - HSBC Life - Termcare                                                                       BI1CR                 CAT 2
+753 DIRECT - HSBC Life - Termcare                                                                       BI1CA                 CAT 2
+754 DIRECT - HSBC Life - Life Lite                                                                       BICI                 CAT 2
+755 DIRECT - HSBC Life - Life Lite                                                                       BILE                 CAT 2
+756 DIRECT - HSBC Life - Life Lite                                                                      BTPD                  CAT 2
+757 DIRECT - HSBC Life - Term Lite                                                                     B1TPR                  CAT 2
+758 DIRECT - HSBC Life - Term Lite                                                                     B1TDR                  CAT 2
+759 DIRECT - HSBC Life - Term Lite                                                                      BIPCR                 CAT 2
+760 DIRECT - HSBC Life - Term Lite                                                                      BTPR                  CAT 2
+761 DIRECT - HSBC Life - Term Lite                                                                     B1TPN                  CAT 2
+762 DIRECT - HSBC Life - Term Lite                                                                     B1TDN                  CAT 2
+763 DIRECT - HSBC Life - Term Lite                                                                     BI1CN                  CAT 2
+764 DIRECT - HSBC Life - Term Lite                                                                     BIPCN                  CAT 2
+765 DIRECT - HSBC Life - Term Lite                                                                     BITDR                  CAT 2
+766 DIRECT - HSBC Life - Term Lite                                                                      BTPN                  CAT 2
+767 DIRECT - HSBC Life - Term Lite                                                                     B1TPA                  CAT 2
+768 DIRECT - HSBC Life - Term Lite                                                                     B1TDA                  CAT 2
+769 DIRECT - HSBC Life - Term Lite                                                                      BIPCA                 CAT 2
+770 DIRECT - HSBC Life - Term Lite                                                                     BITDA                  CAT 2
+771 DIRECT - HSBC Life - Term Lite                                                                      BTPA                  CAT 2
+772 Early Critical Illness Benefit                                                                       ECIL                 CAT 2
+773 Early Critical Illness Benefit (attachable to HSBC Life - Life MultiProtect)                        ECIXC                 CAT 2
+
+                                                                                  # PUBLIC
+S/N Product Name                                                                            PPF Product Master Code  Type of insured policy
+774 Early Critical Illness Benefit (attachable to HSBC Life - Life MultiProtect)                        ECIXA                 CAT 2
+775 Early Critical Illness Benefit (attachable to HSBC Life - Life MultiProtect)                        ECIXB                 CAT 2
+776 Early Critical Illness Benefit II                                                                   ECIB                  CAT 2
+777 Early Critical Illness Benefit III                                                                  ECIB3                 CAT 2
+778 Early Critical Illness Payout                                                                       ECIPT                 CAT 2
+779 Early Critical Illness Payout                                                                       ECIPA                 CAT 2
+780 Early Critical Illness Payout II                                                                    ECI2T                 CAT 2
+781 Early Critical Illness Payout II                                                                    ECI2A                 CAT 2
+782 Early Stage CritiCare                                                                               ESCI                  CAT 2
+783 Early Stage CritiCare                                                                              EP2BT                  CAT 2
+784 Early Stage CritiCare                                                                              EP2BA                  CAT 2
+785 Early-Payout LivingEnhancer                                                                         CIDT                  CAT 2
+786 Early-Payout LivingEnhancer                                                                         CIDA                  CAT 2
+787 ECI Choice Accelerator Benefit                                                                     ECA99                  CAT 2
+788 ECI Max Accelerator Benefit                                                                        EMA99                  CAT 2
+789 Elite Term                                                                                          ETTT                  CAT 2
+790 Endowment                                                                                            EPA                  CAT 2
+791 Excel Achiever                                                                                        EA                  CAT 2
+792 Excel Performax Special                                                                              EPS                  CAT 2
+793 Excel Performax Special                                                                             EPS3                  CAT 2
+794 Excel Performax Special                                                                             EPS2                  CAT 2
+795 Excel Savings                                                                                        ESP                  CAT 2
+796 Excel Savings Special                                                                                ESS                  CAT 2
+797 Excel2001                                                                                             BP                  CAT 2
+798 Excel2001                                                                                            ECR                  CAT 2
+799 Excel2001                                                                                            ECL                  CAT 2
+800 Family Advantage Plus                                                                               6PN2                  CAT 2
+801 Future Protector                                                                                    FP99                  CAT 2
+802 Future Protector                                                                                    FPTT                  CAT 2
+803 Future Protector                                                                                    FPTA                  CAT 2
+804 GIO Rider (To Age 70)                                                                              GIO70                  CAT 2
+805 GoldenSaver                                                                                         ADGS                  CAT 2
+806 GoldenSaver                                                                                         ADGT                  CAT 2
+807 HealthPro Growth                                                                                    HPG                   CAT 2
+808 HealthPro Growth                                                                                    WLS                   CAT 2
+809 HealthPro Growth                                                                                    WLSI                  CAT 2
+810 HealthPro Living                                                                                     HPL                  CAT 2
+811 HealthPro Living                                                                                    WLH                   CAT 2
+812 HealthPro Living                                                                                    WLHI                  CAT 2
+813 HealthPro Multiple Benefit                                                                         MCI85                  CAT 2
+814 HSBC Life - Life MultiProtect                                                                      LEPXA                  CAT 2
+815 HSBC Life - Life MultiProtect                                                                      LEPXB                  CAT 2
+816 HSBC Life - Life MultiProtect                                                                      LEPXC                  CAT 2
+817 HSBC Life - Life Treasure                                                                            LITE                 CAT 2
+818 HSBC Life - Life Treasure (II)                                                                       ALT                  CAT 2
+819 HSBC Life - Life Treasure III                                                                       ALT3                  CAT 2
+820 HSBC Life - Life Treasure III                                                                       MCC                   CAT 2
+821 HSBC Life - Life Treasure III                                                                       MCD                   CAT 2
+822 HSBC Life - Life Treasure III                                                                       MCE                   CAT 2
+823 HSBC Life 360 Cancer Care                                                                           CANA                  CAT 2
+824 HSBC Life 360 Cancer Care                                                                           CANT                  CAT 2
+825 HSBC Life 3Care                                                                                    2JAPA                  CAT 2
+826 HSBC Life Cancer ReCover                                                                            CSPT                  CAT 2
+827 HSBC Life CritiCare for Her                                                                         HERT                  CAT 2
+828 HSBC Life CritiCare for Her                                                                         HERA                  CAT 2
+829 HSBC Life CritiCare for Him                                                                         HIMT                  CAT 2
+830 HSBC Life CritiCare for Him                                                                         HIMA                  CAT 2
+831 HSBC Life Early Saver                                                                               HSN                   CAT 2
+832 HSBC Life Early Saver                                                                              TPDES                  CAT 2
+833 HSBC Life Early Saver Plus                                                                           AES                  CAT 2
+834 HSBC Life EmpoweredMum                                                                              PP1N                  CAT 2
+835 HSBC Life EmpoweredMum                                                                              PP1Y                  CAT 2
+836 HSBC Life EmpoweredMum                                                                              PP2N                  CAT 2
+837 HSBC Life EmpoweredMum                                                                              PP2Y                  CAT 2
+
+                                                                                  # PUBLIC
+S/N Product Name                              PPF Product Master Code  Type of insured policy
+838 HSBC Life Flexi Protector                            FXC99                  CAT 2
+839 HSBC Life Flexi Protector                            FXM99                  CAT 2
+840 HSBC Life Private Wealth VUL                                                CAT 2
+841 HSBC Life Privilege Wealth VUL                     PWVULR1                  CAT 2
+842 HSBC Life Retire Happy Plus                        PWVULR2                  CAT 2
+843 HSBC Life Retire Happy Plus                                                 CAT 2
+844 HSBC Life Retire Happy Plus                           SLL8C                 CAT 2
+845 HSBC Life Retire Happy Plus                           SIL3B                 CAT 2
+846 HSBC Life Retire Happy Plus                           SIL8B                 CAT 2
+847 HSBC Life Retire Happy Plus                           SLL2C                 CAT 2
+848 HSBC Life Retire Happy Plus                           SLL3C                 CAT 2
+849 HSBC Life Retire Happy Plus                           SLL6B                 CAT 2
+850 HSBC Life Retire Happy Plus                           SIL4A                 CAT 2
+851 HSBC Life Retire Happy Plus                           SIL5A                 CAT 2
+852 HSBC Life Retire Happy Plus                           SIL6A                 CAT 2
+853 HSBC Life Retire Happy Plus                           SIL8A                 CAT 2
+854 HSBC Life Retire Happy Plus                           SLL1A                 CAT 2
+855 HSBC Life Retire Happy Plus                           SLL1B                 CAT 2
+856 HSBC Life Retire Happy Plus                           SLL5A                 CAT 2
+857 HSBC Life Retire Happy Plus                           SLL7A                 CAT 2
+858 HSBC Life Retire Happy Plus                           SLL9A                 CAT 2
+859 HSBC Life Retire Happy Plus                           SIS1A                 CAT 2
+860 HSBC Life Retire Happy Plus                           SIS2A                 CAT 2
+861 HSBC Life Retire Happy Plus                           SIS3A                 CAT 2
+862 HSBC Life Retire Happy Plus                           SIS3B                 CAT 2
+863 HSBC Life Retire Happy Plus                           SIS3C                 CAT 2
+864 HSBC Life Retire Happy Plus                           SIS4A                 CAT 2
+865 HSBC Life Retire Happy Plus                           SIS5A                 CAT 2
+866 HSBC Life Retire Happy Plus                           SIS8A                 CAT 2
+867 HSBC Life Retire Happy Plus                           SIS8B                 CAT 2
+868 HSBC Life Retire Happy Plus                           SIS9A                 CAT 2
+869 HSBC Life Retire Happy Plus                           SIS9B                 CAT 2
+870 HSBC Life Retire Happy Plus                           SIS9C                 CAT 2
+871 HSBC Life Retire Happy Plus                          SLS1A                  CAT 2
+872 HSBC Life Retire Happy Plus                          SLS1B                  CAT 2
+873 HSBC Life Retire Happy Plus                          SLS2A                  CAT 2
+874 HSBC Life Retire Happy Plus                          SLS2B                  CAT 2
+875 HSBC Life Retire Happy Plus                          SLS3A                  CAT 2
+876 HSBC Life Retire Happy Plus                          SLS3B                  CAT 2
+877 HSBC Life Retire Happy Plus                          SLS4A                  CAT 2
+878 HSBC Life Retire Happy Plus                          SLS5A                  CAT 2
+879 HSBC Life Retire Happy Plus                          SLS6A                  CAT 2
+880 HSBC Life Retire Happy Plus                          SLS6B                  CAT 2
+881 HSBC Life Retire Happy Plus                          SLS7A                  CAT 2
+882 HSBC Life Retire Happy Plus                           SLS7C                 CAT 2
+883 HSBC Life Retire Happy Plus                          SLS8A                  CAT 2
+884 HSBC Life Retire Happy Plus                          SLS8B                  CAT 2
+885 HSBC Life Retire Happy Plus                           SLS8C                 CAT 2
+886 HSBC Life Retire Happy Plus                          SLS9A                  CAT 2
+887 HSBC Life Retire Happy Plus                          SLS9B                  CAT 2
+888 HSBC Life Retire Happy Plus                           SLS9C                 CAT 2
+889 HSBC Life Retire Happy Plus                           SIL9C                 CAT 2
+890 HSBC Life Retire Happy Plus                           SIL3A                 CAT 2
+891 HSBC Life Retire Happy Plus                           SLL2A                 CAT 2
+892 HSBC Life Retire Happy Plus                           SIL1A                 CAT 2
+893 HSBC Life Retire Happy Plus                           SIL2B                 CAT 2
+894 HSBC Life Retire Happy Plus                           SIL9A                 CAT 2
+895 HSBC Life Retire Happy Plus                           SLL5B                 CAT 2
+896 HSBC Life Retire Happy Plus                           SLL9C                 CAT 2
+                                                          SIL2A
+                                                          SLL4B
+
+                                    # PUBLIC
+S/N Product Name                                PPF Product Master Code  Type of insured policy
+897 HSBC Life Retire Happy Plus                             SLL7B                 CAT 2
+898 HSBC Life Retire Happy Plus                             SLL9B                 CAT 2
+899 HSBC Life Retire Happy Plus                             SLL2B                 CAT 2
+900 HSBC Life Retire Happy Plus                             SLL3A                 CAT 2
+901 HSBC Life Retire Happy Plus                             SLL3B                 CAT 2
+902 HSBC Life Retire Happy Plus                             SLL4A                 CAT 2
+903 HSBC Life Retire Happy Plus                             SLL6A                 CAT 2
+904 HSBC Life Retire Happy Plus                             SLL8A                 CAT 2
+905 HSBC Life Retire Happy Plus                             SLL8B                 CAT 2
+906 HSBC Life Retire Happy Plus (II)                        PLL8C                 CAT 2
+907 HSBC Life Retire Happy Plus (II)                       PLL9B                  CAT 2
+908 HSBC Life Retire Happy Plus (II)                        PIL8B                 CAT 2
+909 HSBC Life Retire Happy Plus (II)                       PLL7A                  CAT 2
+910 HSBC Life Retire Happy Plus (II)                        PIS8A                 CAT 2
+911 HSBC Life Retire Happy Plus (II)                       PLS1A                  CAT 2
+912 HSBC Life Retire Happy Plus (II)                       PLS2A                  CAT 2
+913 HSBC Life Retire Happy Plus (II)                       PLS2B                  CAT 2
+914 HSBC Life Retire Happy Plus (II)                       PLS3A                  CAT 2
+915 HSBC Life Retire Happy Plus (II)                       PLS3B                  CAT 2
+916 HSBC Life Retire Happy Plus (II)                       PLS4A                  CAT 2
+917 HSBC Life Retire Happy Plus (II)                       PLS5A                  CAT 2
+918 HSBC Life Retire Happy Plus (II)                       PLS6A                  CAT 2
+919 HSBC Life Retire Happy Plus (II)                       PLS7A                  CAT 2
+920 HSBC Life Retire Happy Plus (II)                       PLS8A                  CAT 2
+921 HSBC Life Retire Happy Plus (II)                       PLS8B                  CAT 2
+922 HSBC Life Retire Happy Plus (II)                       PLS8C                  CAT 2
+923 HSBC Life Retire Happy Plus (II)                       PLS9A                  CAT 2
+924 HSBC Life Retire Happy Plus (II)                       PLS9B                  CAT 2
+925 HSBC Life Retire Happy Plus (II)                       PLS9C                  CAT 2
+926 HSBC Life Retire Happy Plus (II)                        PIL8A                 CAT 2
+927 HSBC Life Retire Happy Plus (II)                        PIL9B                 CAT 2
+928 HSBC Life Retire Happy Plus (II)                       PLL1A                  CAT 2
+929 HSBC Life Retire Happy Plus (II)                       PLL9A                  CAT 2
+930 HSBC Life Retire Happy Plus (II)                       PLL2A                  CAT 2
+931 HSBC Life Retire Happy Plus (II)                       PLL3A                  CAT 2
+932 HSBC Life Retire Happy Plus (II)                       PLL3B                  CAT 2
+933 HSBC Life Retire Happy Plus (II)                       PLL8A                  CAT 2
+934 HSBC Life Retire Happy Plus (II)                       PLL4A                  CAT 2
+935 HSBC Life Retire Happy Plus (II)                       PLL6B                  CAT 2
+936 HSBC Life Retire Happy Plus (II)                       PLL2B                  CAT 2
+937 HSBC Life Retire Happy Plus (II)                       PLL5B                  CAT 2
+938 HSBC Life Retire Happy Plus (II)                       PLL5A                  CAT 2
+939 HSBC Life Retire Happy Plus (II)                        PLL9C                 CAT 2
+940 HSBC Life Retire Happy Plus (II)                       PLL1B                  CAT 2
+941 HSBC Life Retire Happy Plus (II)                       PLL6A                  CAT 2
+942 HSBC Life Retire Happy Plus (II)                       PLL8B                  CAT 2
+943 HSBC Life Retire Treasure                              FELPA                  CAT 2
+944 HSBC Life Retire Treasure                              FELPB                  CAT 2
+945 HSBC Life Retire Treasure                               FELPE                 CAT 2
+946 HSBC Life Retire Treasure                              FELPD                  CAT 2
+947 HSBC Life Retire Treasure                              FESPA                  CAT 2
+948 HSBC Life Retire Treasure                              FESPB                  CAT 2
+949 HSBC Life Retire Treasure                              FESPC                  CAT 2
+950 HSBC Life Retire Treasure                              FESPD                  CAT 2
+951 HSBC Life Retire Treasure                              FESPE                  CAT 2
+952 HSBC Life Retire Treasure                              FELPC                  CAT 2
+953 HSBC Life Retire Treasure (II)                          FFLPE                 CAT 2
+954 HSBC Life Retire Treasure (II)                         FFLPB                  CAT 2
+955 HSBC Life Retire Treasure (II)                         FFLPD                  CAT 2
+956 HSBC Life Retire Treasure (II)                         FFLPA                  CAT 2
+957 HSBC Life Retire Treasure (II)                         FFSPA                  CAT 2
+958 HSBC Life Retire Treasure (II)                         FFSPB                  CAT 2
+959 HSBC Life Retire Treasure (II)                         FFSPC                  CAT 2
+960 HSBC Life Retire Treasure (II)                         FFSPD                  CAT 2
+961 HSBC Life Retire Treasure (II)                          FFSPE                 CAT 2
+962 HSBC Life Retire Treasure (II)                          FFLPC                 CAT 2
+963 HSBC Life SavvySaver (II)                                SS2                  CAT 2
+964 HSBC Life SavvySaver (II)                                SS3                  CAT 2
+965 HSBC Life SavvySaver (II)                                SS4                  CAT 2
+966 HSBC Life SavvySaver (II)                                SS5                  CAT 2
+
+                                      # PUBLIC
+S/N   Product Name                                  PPF Product Master Code  Type of insured policy
+967   HSBC Life Super CritiCare                                MPCA                   CAT 2
+968   HSBC Life Super CritiCare                                 MPCT                  CAT 2
+969   HSBC Life Wealth Abundance                                 ASA                  CAT 2
+970   HSBC Life Wealth Accelerate                              AWTR                   CAT 2
+971   HSBC Life Wealth Focus                                  WF107                   CAT 2
+972   HSBC Life Wealth Focus                                   WF110                  CAT 2
+973   HSBC Life Wealth Focus                                   WF310                  CAT 2
+974   HSBC Life Wealth Focus                                   WF510                  CAT 2
+975   HSBC Life Wealth Harvest                                 FSA99                  CAT 2
+976   HSBC Life Wealth Invest (Cash/SRS)                       INCAR                  CAT 2
+977   HSBC Life Wealth Invest (Cash/SRS)                       INSRR                  CAT 2
+978   HSBC Life Wealth Invest (CPF)                            INOAC                  CAT 2
+979   HSBC Life Wealth Invest (CPF)                            INOAR                  CAT 2
+980   HSBC Life Wealth Invest (CPF)                            INSAC                  CAT 2
+981   HSBC Life Wealth Invest (CPF)                            INSAR                  CAT 2
+982   HSBC Life Wealth Treasure                                 AWT                   CAT 2
+983   HSBC Life Wealth Voyage                                   LNKF                  CAT 2
+984   Increasing Whole Life                                      IWL                  CAT 2
+985   INSPIRE                                                   INSC1                 CAT 2
+986   INSPIRE                                                   INSC2                 CAT 2
+987   INSPIRE                                                   INSO                  CAT 2
+988   INSPIRE                                                  INSO1                  CAT 2
+989   INSPIRE                                                   INSR                  CAT 2
+990   INSPIRE                                                   INSS                  CAT 2
+991   INSPIRE                                                   INSS1                 CAT 2
+992   INSPIRE Flexi                                             IFXN                  CAT 2
+993   INSPIRE Flexi                                              IFXT                 CAT 2
+994   INSPIRE Flexi 2                                           I2CN                  CAT 2
+995   INSPIRE Flexi 2                                           I2CT                  CAT 2
+996   INSPIRE Flexi 2                                          I2MNY                  CAT 2
+997   INSPIRE Flexi 2                                          I2MNL                  CAT 2
+998   INSPIRE Flexi 2                                          I2MTY                  CAT 2
+999   INSPIRE Flexi 2                                           IF2NY                 CAT 2
+1000  INSPIRE Flexi 2                                           IF2NL                 CAT 2
+1001  INSPIRE Flexi 2                                           IF2TY                 CAT 2
+                                                                                      CAT 2
+1002  INSPIRE Flexi 2                                          I2MTL
+1003  INSPIRE Flexi 2                                           IF2TL                 CAT 2
+1004  INSPIRE FlexiProtector                                    FPCN                  CAT 2
+1005  INSPIRE FlexiProtector                                    FPCT                  CAT 2
+1006  INSPIRE FlexiProtector                                   FPMN                   CAT 2
+1007  INSPIRE FlexiProtector                                    FPMT                  CAT 2
+1008  INSPIRE FlexiProtector                                   FPMTL                  CAT 2
+1009  INSPIRE FlexiSaver                                        FSCN                  CAT 2
+1010  INSPIRE FlexiSaver                                        FSCT                  CAT 2
+1011  INSPIRE FlexiSaver                                       FSMN                   CAT 2
+1012  INSPIRE FlexiSaver                                        FSMT                  CAT 2
+1013  INSPIRE FlexiSaver                                       FSMTL                  CAT 2
+1014  INSPIRETM Duo                                             INC1                  CAT 2
+1015  INSPIRETM Duo                                             INC2                  CAT 2
+1016  INSPIRETM Duo                                             INC4                  CAT 2
+1017  INSPIRETM Duo                                            INO1C                  CAT 2
+1018  INSPIRETM Duo                                            INO2C                  CAT 2
+1019  INSPIRETM Duo                                            INO4C                  CAT 2
+1020  INSPIRETM Duo                                             INO1                  CAT 2
+1021  INSPIRETM Duo                                             INO2                  CAT 2
+1022  INSPIRETM Duo                                             INO4                  CAT 2
+1023  INSPIRETM Duo                                             INS1C                 CAT 2
+1024  INSPIRETM Duo                                             INS2C                 CAT 2
+1025  INSPIRETM Duo                                             INS1                  CAT 2
+1026  INSPIRETM Duo                                             INS2                  CAT 2
+1027  INSPIRETM Duo                                             INS4                  CAT 2
+1028  INSPIRETM Duo                                             INS4C                 CAT 2
+1029  INSPIRETM Duo                                             INR1                  CAT 2
+1030  INSPIRETM Duo                                             INR2                  CAT 2
+
+                                          # PUBLIC
+S/N   Product Name                                    PPF Product Master Code  Type of insured policy
+1031  INSPIRETM Duo                                               INR4                  CAT 2
+1032  Investors' Choice                                          ICRPN                  CAT 2
+1033  Investors' Choice                                           ICSPC                 CAT 2
+1034  Investors' Choice                                           ICSPD                 CAT 2
+1035  Investors' Choice                                           ICSPO                 CAT 2
+1036  Investors' Choice                                           ICSPS                 CAT 2
+1037  Joint Life Decreasing Term Assurance                        DJSD                  CAT 2
+1038  Joint Life Decreasing Term Assurance                        DJRD                  CAT 2
+1039  Joint Life Decreasing Term Assurance                       TD2A1                  CAT 2
+1040  Joint Life Decreasing Term Assurance                       TD2A2                  CAT 2
+1041  Level Convertible Term                                       CTR                  CAT 2
+1042  Level Convertible Term                                      CTTA                  CAT 2
+1043  Level Term Rider                                            LTTT                  CAT 2
+1044  Life Exentials (with Ace Cl)                                                      CAT 2
+1045  Life Exentials (with Ace Cl)                               WPCCT                  CAT 2
+1046  Life Exentials (with Ace Cl)                                LXCIA                 CAT 2
+1047  Life Exentials (with Ace Cl)                              WPCAA                   CAT 2
+1048  Life Exentials (with Ace Cl)                               WPCBA                  CAT 2
+1049  Life Exentials (with Ace Cl)                               WPCCA                  CAT 2
+1050  Life Exentials (with Ace Cl)                                LXCIB                 CAT 2
+1051  Life Exentials (with Ace Cl)                                LXCIC                 CAT 2
+1052  Life Exentials (with Ace Cl)                               WPCAT                  CAT 2
+1053  Life Exentials (with MDB)                                  WPCBT                  CAT 2
+1054  Life Exentials (with MDB)                                  LXMDC                  CAT 2
+1055  Life Exentials (with MDB)                                  LXMDB                  CAT 2
+1056  Life Exentials (with MDB)                                   WLPC                  CAT 2
+1057  Life Exentials (with MDB)                                LXMDB65                  CAT 2
+1058  Life Exentials (with MDB)                                  LXMDA                  CAT 2
+1059  Life Exentials (with MDB)                                   WLPB                  CAT 2
+1060  Life Exentials (without MDB)                                WLPA                  CAT 2
+1061  Life Exentials (without MDB)                                WLP                   CAT 2
+1062  Life Exentials Prime                                                              CAT 2
+1063  Life Exentials Prime                                          LX                  CAT 2
+1064  Life Exentials Prime                                        LXDIB                 CAT 2
+1065  Life Exentials Prime                                        LXDIC                 CAT 2
+1066  LifeXcite                                                    SCB                  CAT 2
+1067  LifeXcite                                                   LXDIA                 CAT 2
+1068  Living Accelerator Benefit                                  88CIB                 CAT 2
+1069  Living Accelerator Benefit                                  88WL                  CAT 2
+1070  Living Accelerator Benefit                                   LAR                  CAT 2
+1071  Living Accelerator Benefit for DTA                          LARB                  CAT 2
+1072  Living Accelerator Benefit for DTA                         PSLAR                  CAT 2
+1073  Living Term Assurance                                       RDLZ                  CAT 2
+1074  Living Term Assurance                                       RDLA                  CAT 2
+1075  Living Term Assurance                                       LTAT                  CAT 2
+1076  Living Term Assurance                                       LTZT                  CAT 2
+1077  Living Term Rider                                           LTAA                  CAT 2
+1078  Living Term Rider                                           LTZA                  CAT 2
+1079  Living Term Rider                                           ALTB                  CAT 2
+1080  Living Term Rider                                            LTR                  CAT 2
+1081  Living Term Rider                                           LTRD                  CAT 2
+1082  LivingXcite                                                 LVTN                  CAT 2
+1083  LivingXcite                                                 LVTT                  CAT 2
+1084  MaxSaver 60                                                 15CIR                 CAT 2
+1085  MaxSaver 60                                                 15WL                  CAT 2
+1086  MaxSaver 60                                                END60                  CAT 2
+1087  MaxSaver 8                                                  ENI60                 CAT 2
+1088  MaxSaver 8                                                  MS60                  CAT 2
+1089  MaxSaver 8                                                  END8                  CAT 2
+1090  Mortgage Reducing Term                                     ENDI8                  CAT 2
+1091  Mortgage Reducing Term                                      MS8                   CAT 2
+                                                                  MSLD
+                                                                  MSCB
+
+                                            # PUBLIC
+S/N   Product Name                                        PPF Product Master Code  Type of insured policy
+1092  Mortgage Reducing Term                                          MSAX                  CAT 2
+1093  Mortgage Reducing Term                                          MJCB                  CAT 2
+1094  Mortgage Reducing Term                                         MRRM                   CAT 2
+1095  Mortgage Term                                                  MRMT                   CAT 2
+1096  Multiplier Benefit on CI                                        MAC                   CAT 2
+1097  Multiplier Benefit on CI                                        MBC                   CAT 2
+1098  Multiplier Benefit on Death                                     MBD                   CAT 2
+1099  Multiplier Benefit on Death                                     MAD                   CAT 2
+1100  Multiplier Benefit on ECI                                       MBE                   CAT 2
+1101  Multiplier Benefit on ECI                                       MAE                   CAT 2
+1102  MumCare Plus                                                    6PN1                  CAT 2
+1103  MumCare Plus                                                   6PN1B                  CAT 2
+1104  Optimus                                                         PLV1                  CAT 2
+1105  Optimus                                                         PLVI1                 CAT 2
+1106  Optimus                                                        PLVF1                  CAT 2
+1107  Platinum 5                                                     PLAT5                  CAT 2
+1108  OPTIMUS 2015                                                  UNEMV                   CAT 2
+1109  Platinum Master                                                 PMS                   CAT 2
+1110  Platinum Premier                                                 PRE                  CAT 2
+1111  Platinum Pro                                                     PRO                  CAT 2
+1112  Platinum Reward                                                 PRW                   CAT 2
+1113  Platinum Reward Living Accelerator Rider                       PRLAR                  CAT 2
+1114  Platinum Shield                                                  PSD                  CAT 2
+1115  Polaris                                                          PL2                  CAT 2
+1116  Polaris                                                          PL1                  CAT 2
+1117  Polaris                                                         PLF1                  CAT 2
+1118  Polaris                                                         PLF5                  CAT 2
+1119  Polaris                                                          PL3                  CAT 2
+1120  Polaris                                                         PLF4                  CAT 2
+1121  Polaris                                                          PL4                  CAT 2
+1122  Polaris                                                         PLF2                  CAT 2
+1123  Polaris                                                          PL5                  CAT 2
+1124  Premier Life                                                    PL60                  CAT 2
+1125  Private Wealth Portfolio International                        PWPI01                  CAT 2
+1126  Pulsar                                                          PULA                  CAT 2
+1127  Pulsar                                                          PULF                  CAT 2
+1128  Pulsar                                                          PULS                  CAT 2
+1129  Retire Happy                                                    RILFA                 CAT 2
+1130  Retire Happy                                                   RILGA                  CAT 2
+1131  Retire Happy                                                   RLLEA                  CAT 2
+1132  Retire Happy                                                   HISAA                  CAT 2
+1133  Retire Happy                                                   HISBA                  CAT 2
+1134  Retire Happy                                                   HISBB                  CAT 2
+1135  Retire Happy                                                   HISCA                  CAT 2
+1136  Retire Happy                                                   HISDA                  CAT 2
+1137  Retire Happy                                                   HISDB                  CAT 2
+1138  Retire Happy                                                    HISEA                 CAT 2
+1139  Retire Happy                                                    HISEB                 CAT 2
+1140  Retire Happy                                                    HISFA                 CAT 2
+1141  Retire Happy                                                    HISFB                 CAT 2
+1142  Retire Happy                                                   HISGA                  CAT 2
+1143  Retire Happy                                                   HISGB                  CAT 2
+1144  Retire Happy                                                   HISHA                  CAT 2
+1145  Retire Happy                                                   HISHB                  CAT 2
+1146  Retire Happy                                                   HLSAA                  CAT 2
+1147  Retire Happy                                                   HLSBA                  CAT 2
+1148  Retire Happy                                                   HLSCA                  CAT 2
+1149  Retire Happy                                                   HLSCB                  CAT 2
+1150  Retire Happy                                                   HLSDA                  CAT 2
+1151  Retire Happy                                                   HLSEA                  CAT 2
+1152  Retire Happy                                                   HLSEB                  CAT 2
+1153  Retire Happy                                                   HLSFA                  CAT 2
+1154  Retire Happy                                                   HLSFB                  CAT 2
+1155  Retire Happy                                                   HLSGA                  CAT 2
+1156  Retire Happy                                                   HLSGB                  CAT 2
+1157  Retire Happy                                                   HLSHA                  CAT 2
+1158  Retire Happy                                                   RISDB                  CAT 2
+
+                                                # PUBLIC
+S/N   Product Name                      PPF Product Master Code  Type of insured policy
+1159  Retire Happy                                  RISEA                 CAT 2
+1160  Retire Happy                                  RISFA                 CAT 2
+1161  Retire Happy                                 RISGA                  CAT 2
+1162  Retire Happy                                 RISGB                  CAT 2
+1163  Retire Happy                                 RISHA                  CAT 2
+1164  Retire Happy                                 RLSDA                  CAT 2
+1165  Retire Happy                                 RLSDB                  CAT 2
+1166  Retire Happy                                 RLSEA                  CAT 2
+1167  Retire Happy                                 RLSFA                  CAT 2
+1168  Retire Happy                                 RLSFB                  CAT 2
+1169  Retire Happy                                 RLSGA                  CAT 2
+1170  Retire Happy                                 RLSGB                  CAT 2
+1171  Retire Happy                                 RLSHA                  CAT 2
+1172  Retire Happy                                 RLSHB                  CAT 2
+1173  Retire Happy                                 HILAB                  CAT 2
+1174  Retire Happy                                 HLLHB                  CAT 2
+1175  Retire Happy                                  RILDB                 CAT 2
+1176  Retire Happy                                 HILAA                  CAT 2
+1177  Retire Happy                                 HILBA                  CAT 2
+1178  Retire Happy                                 HLLAA                  CAT 2
+1179  Retire Happy                                 HLLBA                  CAT 2
+1180  Retire Happy                                 HLLDB                  CAT 2
+1181  Retire Happy                                  HILCA                 CAT 2
+1182  Retire Happy                                  HILCB                 CAT 2
+1183  Retire Happy                                 HLLCA                  CAT 2
+1184  Retire Happy                                 HLLCB                  CAT 2
+1185  Retire Happy                                  RILGB                 CAT 2
+1186  Retire Happy                                 RILHA                  CAT 2
+1187  Retire Happy                                  RILHB                 CAT 2
+1188  Retire Happy                                 HILHA                  CAT 2
+1189  Retire Happy                                 RLLFB                  CAT 2
+1190  Retire Happy                                 RLLHA                  CAT 2
+1191  Retire Happy                                 HILDA                  CAT 2
+1192  Retire Happy                                 HILDB                  CAT 2
+1193  Retire Happy                                  RILFB                 CAT 2
+1194  Retire Happy                                 HLLHA                  CAT 2
+1195  Retire Happy                                  HILEA                 CAT 2
+1196  Retire Happy                                 RLLGB                  CAT 2
+1197  Retire Happy                                  HILEB                 CAT 2
+1198  Retire Happy                                  HILFA                 CAT 2
+1199  Retire Happy                                 HILHB                  CAT 2
+1200  Retire Happy                                  HILFB                 CAT 2
+1201  Retire Happy                                  RILEB                 CAT 2
+1202  Retire Happy                                 HILGA                  CAT 2
+1203  Retire Happy                                 HILGB                  CAT 2
+1204  Retire Happy                                 HLLDA                  CAT 2
+1205  Retire Happy                                 HLLEA                  CAT 2
+1206  Retire Happy                                 HLLEB                  CAT 2
+1207  Retire Happy                                 HLLFA                  CAT 2
+1208  Retire Happy                                 HLLFB                  CAT 2
+1209  Retire Happy                                 HLLGA                  CAT 2
+1210  Retire Happy                                  RILDA                 CAT 2
+1211  Retire Happy                                 RLLDA                  CAT 2
+1212  Retire Happy                                 HLLGB                  CAT 2
+1213  Retire Happy                                  RILEA                 CAT 2
+1214  Retire Happy                                 RLLFA                  CAT 2
+1215  Retire Happy                                 RLLGA                  CAT 2
+1216  RewardSaver                                    AEN                  CAT 2
+1217  RewardSaver                                   AENI                  CAT 2
+1218  RewardSaver                                     RS                  CAT 2
+1219  RewardSaver CI Benefit                        AENC                  CAT 2
+1220  Saver's Choice                                SCAN                  CAT 2
+1221  Saver's Choice                                SCAT                  CAT 2
+1222  Saver's Choice                                SCBN                  CAT 2
+1223  Saver's Choice                                SCBT                  CAT 2
+1224  Savvy Saver                                    SS1                  CAT 2
+1225  Secure Term                                   TMR8                  CAT 2
+
+                              # PUBLIC
+S/N   Product Name                                      PPF Product Master Code  Type of insured policy
+1226  Secure Term                                                   STRA                  CAT 2
+1227  Secure Term                                                   STRC                  CAT 2
+1228  Secure Term                                                   STRD                  CAT 2
+1229  Secure Term                                                   STRB                  CAT 2
+1230  Secure Term                                                   TMR                   CAT 2
+1231  Single Premium Option                                          SPO                  CAT 2
+1232  Smart Investment                                              SMIC                  CAT 2
+1233  Smart Investment                                             SMID1                  CAT 2
+1234  Smart Investment                                              SMIO                  CAT 2
+1235  Smart Investment                                              SMIR                  CAT 2
+1236  Smart Investment                                              SMIS                  CAT 2
+1237  Standalone Critical Illness                                   ASCI                  CAT 1
+1238  Super CritiCare                                              MPCRA                  CAT 2
+1239  Super CritiCare                                              MPCRT                  CAT 2
+1240  Super CritiCare                                              SCC99                  CAT 2
+1241  Supplementary Excel Saver Benefit                              ESR                  CAT 2
+1242  Target Saver                                                  ADTS                  CAT 2
+1243  Target Saver                                                  ADTT                  CAT 2
+1244  Term Benefit                                                 PLT5T                  CAT 2
+1245  Term Protector                                                TPCT                  CAT 2
+1246  Term Protector                                                TPAT                  CAT 2
+1247  Term Protector                                                TPRT                  CAT 2
+1248  Term Protector                                                TPTT                  CAT 2
+1249  Term Protector                                                TPTLT                 CAT 2
+1250  Term Protector (To Age)                                      TPTLA                  CAT 2
+1251  Term Protector (To Age)                                      TPTL9                  CAT 2
+1252  Term Protector (To Age)                                      TPT85                  CAT 2
+1253  Term Protector (To Age)                                      TPT99                  CAT 2
+1254  Term Protector (To Age)                                       TPAA                  CAT 2
+1255  Term Protector (To Age)                                      TPR99                  CAT 2
+1256  Term Protector (To Age)                                       TPRA                  CAT 2
+1257  Term Protector (To Age)                                       TPTA                  CAT 2
+1258  Term Protector Prime                                          TPJT                  CAT 2
+1259  Term Protector Prime (To Age)                                 TPJL9                 CAT 2
+1260  Term Protector Prime (To Age)                                 TPJ99                 CAT 2
+1261  Term Protector Prime (To Age)                                 TPJA                  CAT 2
+1262  Term Protector Prime (2016)                                   TPJ85                 CAT 2
+1263  The Fortress Plan                                             FORC                  CAT 2
+1264  The Fortress Plan                                             FORO                  CAT 2
+1265  The Fortress Plan                                            FORO1                  CAT 2
+1266  Total and Permanent Disability Benefit                       WTPDC                  CAT 2
+1267  Total and Permanent Disability Benefit                       TD2JC                  CAT 2
+1268  Total and Permanent Disability Benefit                        CRTD                  CAT 2
+1269  Total and Permanent Disability Benefit                        TPDA                  CAT 2
+1270  Total and Permanent Disability Benefit                        ETDP                  CAT 2
+1271  Total and Permanent Disability Benefit                       PRWD                   CAT 2
+1272  Total and Permanent Disability Benefit                        AENT                  CAT 2
+1273  Total and Permanent Disability Benefit                       BITDN                  CAT 2
+1274  Total and Permanent Disability Benefit                       FCT80                  CAT 2
+1275  Total and Permanent Disability Benefit                       FMT80                  CAT 2
+1276  Total and Permanent Disability Benefit                       TPDXA                  CAT 2
+1277  Total and Permanent Disability Benefit                       TPDXB                  CAT 2
+1278  Total and Permanent Disability Benefit                       TPDXC                  CAT 2
+1279  Total and Permanent Disability Benefit                        TPD3                  CAT 2
+1280  Total and Permanent Disability Benefit                        TPDB                  CAT 2
+1281  Total and Permanent Disability Benefit                        TPDD                  CAT 2
+1282  Total Permanent Disability Multiplier                        DLL1A                  CAT 2
+1283  Total Permanent Disability Multiplier                        DLL9A                  CAT 2
+
+                                              # PUBLIC
+S/N   Product Name                                     PPF Product Master Code  Type of insured policy
+1284  Total Permanent Disability Multiplier                       DLL2A                  CAT 2
+1285  Total Permanent Disability Multiplier                       DLL3A                  CAT 2
+1286  Total Permanent Disability Multiplier                       DLL3B                  CAT 2
+1287  Total Permanent Disability Multiplier                       DLL8A                  CAT 2
+1288  Total Permanent Disability Multiplier                       TLL8A                  CAT 2
+1289  Total Permanent Disability Multiplier                        DIS8A                 CAT 2
+1290  Total Permanent Disability Multiplier                       DLS1A                  CAT 2
+1291  Total Permanent Disability Multiplier                       DLS2A                  CAT 2
+1292  Total Permanent Disability Multiplier                       DLS2B                  CAT 2
+1293  Total Permanent Disability Multiplier                       DLS3A                  CAT 2
+1294  Total Permanent Disability Multiplier                       DLS3B                  CAT 2
+1295  Total Permanent Disability Multiplier                       DLS4A                  CAT 2
+1296  Total Permanent Disability Multiplier                       DLS5A                  CAT 2
+1297  Total Permanent Disability Multiplier                       DLS6A                  CAT 2
+1298  Total Permanent Disability Multiplier                       DLS7A                  CAT 2
+1299  Total Permanent Disability Multiplier                       DLS8A                  CAT 2
+1300  Total Permanent Disability Multiplier                       DLS8B                  CAT 2
+1301  Total Permanent Disability Multiplier                       DLS8C                  CAT 2
+1302  Total Permanent Disability Multiplier                       DLS9A                  CAT 2
+1303  Total Permanent Disability Multiplier                       DLS9B                  CAT 2
+1304  Total Permanent Disability Multiplier                       DLS9C                  CAT 2
+1305  Total Permanent Disability Multiplier                        TIS1A                 CAT 2
+1306  Total Permanent Disability Multiplier                        TIS2A                 CAT 2
+1307  Total Permanent Disability Multiplier                        TIS3A                 CAT 2
+1308  Total Permanent Disability Multiplier                        TIS3B                 CAT 2
+1309  Total Permanent Disability Multiplier                        TIS3C                 CAT 2
+1310  Total Permanent Disability Multiplier                        TIS8A                 CAT 2
+1311  Total Permanent Disability Multiplier                        TIS8B                 CAT 2
+1312  Total Permanent Disability Multiplier                        TIS9A                 CAT 2
+1313  Total Permanent Disability Multiplier                        TIS9B                 CAT 2
+1314  Total Permanent Disability Multiplier                        TIS9C                 CAT 2
+1315  Total Permanent Disability Multiplier                       TLS1A                  CAT 2
+1316  Total Permanent Disability Multiplier                       TLS1B                  CAT 2
+1317  Total Permanent Disability Multiplier                       TLS2A                  CAT 2
+1318  Total Permanent Disability Multiplier                       TLS2B                  CAT 2
+1319  Total Permanent Disability Multiplier                       TLS3A                  CAT 2
+1320  Total Permanent Disability Multiplier                       TLS3B                  CAT 2
+1321  Total Permanent Disability Multiplier                       TLS5A                  CAT 2
+1322  Total Permanent Disability Multiplier                       TLS7A                  CAT 2
+1323  Total Permanent Disability Multiplier                       TLS8A                  CAT 2
+1324  Total Permanent Disability Multiplier                       TLS8B                  CAT 2
+1325  Total Permanent Disability Multiplier                       TLS8C                  CAT 2
+1326  Total Permanent Disability Multiplier                       TLS9A                  CAT 2
+1327  Total Permanent Disability Multiplier                       TLS9B                  CAT 2
+1328  Total Permanent Disability Multiplier                       TLS9C                  CAT 2
+1329  Total Permanent Disability Multiplier                        DIL8A                 CAT 2
+1330  Total Permanent Disability Multiplier                        DIL9B                 CAT 2
+1331  Total Permanent Disability Multiplier                       TLL1A                  CAT 2
+1332  Total Permanent Disability Multiplier                        TLL1B                 CAT 2
+1333  Total Permanent Disability Multiplier                       TLL5A                  CAT 2
+1334  Total Permanent Disability Multiplier                       TLL7A                  CAT 2
+1335  Total Permanent Disability Multiplier                        TLL8B                 CAT 2
+1336  Total Permanent Disability Multiplier                       DLL4A                  CAT 2
+1337  Total Permanent Disability Multiplier                       DLL6B                  CAT 2
+1338  Total Permanent Disability Multiplier                       TLL9A                  CAT 2
+1339  Total Permanent Disability Multiplier                        TIL9C                 CAT 2
+1340  Total Permanent Disability Multiplier                       DLL2B                  CAT 2
+1341  Total Permanent Disability Multiplier                       DLL5B                  CAT 2
+1342  Total Permanent Disability Multiplier                        TIL1A                 CAT 2
+1343  Total Permanent Disability Multiplier                        TIL2B                 CAT 2
+1344  Total Permanent Disability Multiplier                        TIL9A                 CAT 2
+
+                                             # PUBLIC
+S/N   Product Name                                     PPF Product Master Code  Type of insured policy
+1345  Total Permanent Disability Multiplier                        TLL5B                 CAT 2
+1346  Total Permanent Disability Multiplier                       DLL5A                  CAT 2
+1347  Total Permanent Disability Multiplier                       DLL8C                  CAT 2
+1348  Total Permanent Disability Multiplier                       DLL9B                  CAT 2
+1349  Total Permanent Disability Multiplier                        TIL4A                 CAT 2
+1350  Total Permanent Disability Multiplier                        TIL5A                 CAT 2
+1351  Total Permanent Disability Multiplier                        TIL6A                 CAT 2
+1352  Total Permanent Disability Multiplier                        TIL8A                 CAT 2
+1353  Total Permanent Disability Multiplier                        TLL2C                 CAT 2
+1354  Total Permanent Disability Multiplier                        TLL3C                 CAT 2
+1355  Total Permanent Disability Multiplier                        TLL6B                 CAT 2
+1356  Total Permanent Disability Multiplier                        TLL9C                 CAT 2
+1357  Total Permanent Disability Multiplier                        DIL8B                 CAT 2
+1358  Total Permanent Disability Multiplier                       DLL7A                  CAT 2
+1359  Total Permanent Disability Multiplier                       DLL9C                  CAT 2
+1360  Total Permanent Disability Multiplier                        TIL2A                 CAT 2
+1361  Total Permanent Disability Multiplier                        TLL4B                 CAT 2
+1362  Total Permanent Disability Multiplier                        TLL8C                 CAT 2
+1363  Total Permanent Disability Multiplier                       DLL1B                  CAT 2
+1364  Total Permanent Disability Multiplier                        TIL3A                 CAT 2
+1365  Total Permanent Disability Multiplier                       DLL6A                  CAT 2
+1366  Total Permanent Disability Multiplier                       DLL8B                  CAT 2
+1367  Total Permanent Disability Multiplier                        TIL3B                 CAT 2
+1368  Total Permanent Disability Multiplier                        TIL8B                 CAT 2
+1369  Total Permanent Disability Multiplier                       TLL2A                  CAT 2
+1370  Total Permanent Disability Multiplier                        TLL7B                 CAT 2
+1371  Total Permanent Disability Multiplier                        TLL9B                 CAT 2
+1372  Total Permanent Disability Multiplier                        MBT                   CAT 2
+1373  Total Permanent Disability Multiplier                        MAT                   CAT 2
+1374  Total Permanent Disability Multiplier                        MCT                   CAT 2
+1375  Total Permanent Disability Multiplier                        TLL2B                 CAT 2
+1376  Total Permanent Disability Multiplier                       TLL3A                  CAT 2
+1377  Total Permanent Disability Multiplier                        TLL3B                 CAT 2
+1378  Total Permanent Disability Multiplier                       TLL4A                  CAT 2
+1379  Total Permanent Disability Multiplier                       TLL6A                  CAT 2
+1380  TPD Benefit - Age                                           TPDBA                  CAT 2
+1381  Tri-Star                                                     TSTR                  CAT 2
+1382  Whole Life                                                  WLNP                   CAT 2
+1383  Whole Life                                                   WLPL                  CAT 2
+1384  Young Singaporean Plan                                       YSIN2                 CAT 2
+1385  Group Dental                                                                       CAT 1
+1386  Group Dental                                             BGDC-DENB                 CAT 1
+1387  Group Extended Major Medical                             BGDC-DENV                 CAT 1
+1388  Group Extended Major Medical                            BGDC-EMMB                  CAT 1
+1389  Group Critical Illness (Acceleration)                   BGDC-EMMV                  CAT 4
+1390  Group Critical Illness (Additional)                      BGDC-GCIC                 CAT 1
+1391  Group Critical Illness (Acceleration)                    BGDC-GCID                 CAT 2
+1392  Group Critical Illness (Additional)                      BGDC-GCIV                 CAT 1
+1393  Group Disability Income                                  BGDC-GCIW                 CAT 1
+1394  Group Disability Income                                  BGDC-GDIB                 CAT 1
+1395  Benefits+ Group General Practitioner                     BGDC-GDIV                 CAT 1
+1396  Benefits+ Group General Practitioner                     BGDC-GPRB                 CAT 1
+1397  Benefits+ Group Term Life                                BGDC-GPRV                 CAT 4
+1398  Benefits+ Group Term Life                                BGDC-GTLB                 CAT 2
+1399  Benefits+ Group Hospital and Surgical                    BGDC-GTLV                 CAT 1
+1400  Benefits+ Group Hospital and Surgical                    BGDC-HASG                 CAT 1
+1401  Benefits+ Group Hospital and Surgical                    BGDC-HASL                 CAT 1
+                                                               BGDC-HASV
+
+                                             # PUBLIC
+S/N   Product Name                                                  PPF Product Master Code                                     Type of insured policy
+1402  Benefits+ Group Hospital and Surgical                                BGDC-HASW                                                      CAT 1
+1403  Group Wellness                                                        BGDC-HSNB                                                     CAT 1
+1404  Group Maternity Optional Add-On                                      BGDC-MATB                                                      CAT 1
+1405  Group Maternity Optional Add-On                                      BGDC-MATV                                                      CAT 1
+1406  Group Major Medical                                                  BGDC-MJMB                                                      CAT 1
+1407  Group Major Medical                                                  BGDC-MJMV                                                      CAT 1
+1408  Group Optical                                                         BGDC-OPTB                                                     CAT 1
+1409  Group Optical                                                         BGDC-OPTV                                                     CAT 1
+1410  Group Specialist                                                      BGDC-SPTB                                                     CAT 1
+1411  Group Specialist                                                      BGDC-SPTV                                                     CAT 1
+1412  Group Wellness                                                        BGDC-VACB                                                     CAT 1
+1413  Group Personal Accident                                               BGDC-GPAB                                                     CAT 1
+1414  Group Personal Accident                                               BGDC-GPAV                                                     CAT 1
+1415  Benefits+ Business Dental                                             BGDP-DENB                                                     CAT 1
+1416  Benefits+ Business Extended Major Medical                            BGDP-EMMB                                                      CAT 1
+1417  Benefits+ Business Critical Illness (Acceleration)                    BGDP-GCIC                                                     CAT 4
+1418  Benefits+ Business Critical Illness (Additional)                      BGDP-GCID                                                     CAT 1
+1419  Benefits+ Business Personal Accident                                  BGDP-GPAB                                                     CAT 1
+1420  Benefits+ Business General Practitioner                               BGDP-GPRB                                                     CAT 1
+1421  Benefits+ Business Term Life                                          BGDP-GTLB                                                     CAT 4
+1422  Benefits+ Business Hospital and Surgical                              BGDP-HASG                                                     CAT 1
+1423  Benefits+ Business Hospital and Surgical                              BGDP-HASL                                                     CAT 1
+1424  Benefits+ Business Major Medical                                     BGDP-MJMB                                                      CAT 1
+1425  Benefits+ Business Specialist                                         BGDP-SPTB                                                     CAT 1
+1426  Benefits+ International Max                                                GIE                                                      CAT 1
+1427  HSBC Life Group Mortgage Protector                                        GMP                                                       CAT 2
+1428  International Exclusive                                                    BIIE                                                     CAT 1
+1429  SmartCare Optimum Enhanced                                                BIDO                                                      CAT 1
+1430  SmartCare Executive                                                       BIDE                                                      CAT 1
+1431  Benefits+ International                                                   BGIC                                                      CAT 1
+1432  Group Wellness                                                        BGDC-WELB                                                     CAT 1
+1433  Benefits+ Group Hospital and Surgical                                 BGDC-HSCV                                                     CAT 1
+1434  Group Major Medical                                                  BGDC-MMCV                                                      CAT 1
+1435  International Exclusive                                                    HAP
+1436  SmartCare Optimum Enhanced                                                 EOE                 Policy of insurance which provides personal accident/health cover
+1437  SmartCare Executive                                                        EPU                 Policy of insurance which provides personal accident/health cover
+1438  SmartCare Executive                                                        ESC                 Policy of insurance which provides personal accident/health cover
+1439  Benefits+ International                                                   HGT                  Policy of insurance which provides personal accident/health cover
+1440  Benefits+ International                                                   HAG                  Policy of insurance which provides personal accident/health cover
+1441  Hospitalsurance                                                            HSS                 Policy of insurance which provides personal accident/health cover
+                                                                                                     Policy of insurance which provides personal accident/health cover
+1442  GTOM COMM. MOTOR COMPREHENSIVE                                             CV1         Policy of insurance which complies with the requirements of the Motor Vehicles
+
+1443 WORK INJURY COMPENSATION INS                                               LWC                              (Third-Party Risks and Compensation) Act 1960
+                                                                                               Policy of insurance which complies with the requirements of the Work Injury
+1444  WORK INJURY COMPENSATION INS                                              LWP
+                                                                                                                               Compensation Act 2019
+1445  SMARTPERSONAL ACCIDENT                                                     PA1           Policy of insurance which complies with the requirements of the Work Injury
+1446  SMARTPA PROTECT+                                                           PA5
+1447  SMARTCARE THEONE                                                           SAO                                           Compensation Act 2019
+1448  SMARTCARE PRIME                                                            SAP                 Policy of insurance which provides personal accident/health cover
+1449  SMARTCARE ASSURE (GROUP)                                                   SAT                 Policy of insurance which provides personal accident/health cover
+1450  GTOM PRIVATE CARS COMP                                                     VA1                 Policy of insurance which provides personal accident/health cover
+                                                                                                     Policy of insurance which provides personal accident/health cover
+1451  COMMERCIAL VEHICLES COMP                                                   VCA                 Policy of insurance which provides personal accident/health cover
+
+1452 COMMERCIAL VEHICLES TPO                                                     VCB                       Policy of insurance which provides personal motor cover
+                                                                                             Policy of insurance which complies with the requirements of the Motor Vehicles
+1453  FLEET                                                                      VFX
+                                                                                                                 (Third-Party Risks and Compensation) Act 1960
+1454  MOTOR CYCLE TPO                                                           VMO          Policy of insurance which complies with the requirements of the Motor Vehicles
+1455  MOTOR CYCLE TPFT                                                          VMZ
+1456  PRIVATE CARS COMP                                                          VPA                             (Third-Party Risks and Compensation) Act 1960
+1457  PRIVATE HIGH END CARS                                                      VPX         Policy of insurance which complies with the requirements of the Motor Vehicles
+
+1458  SPECIAL TYPE                                                               VSX                             (Third-Party Risks and Compensation) Act 1960
+                                                                                                           Policy of insurance which provides personal motor cover
+                                                                                                           Policy of insurance which provides personal motor cover
+                                                                                                           Policy of insurance which provides personal motor cover
+                                                                                                           Policy of insurance which provides personal motor cover
+                                                                                             Policy of insurance which complies with the requirements of the Motor Vehicles
+
+                                                                                                                 (Third-Party Risks and Compensation) Act 1960
+
+                                                          # PUBLIC
+

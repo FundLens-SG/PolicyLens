@@ -1,0 +1,2 @@
+# Generated verification reports — re-run tools/verify-against-registers.mjs anytime.
+*.json

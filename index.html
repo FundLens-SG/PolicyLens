@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.66-premium-waiver-subtype';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.67-rider-verification-infrastructure';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -738,9 +738,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.66';
-const APP_VERSION_DATE = '2026-05-18';
-const APP_VERSION_NAME = 'Premium Waiver subType + Shield Rider canonicalisation + build-order fix';
+const APP_VERSION = 'v2.4.0-rc2.67';
+const APP_VERSION_DATE = '2026-05-19';
+const APP_VERSION_NAME = 'Register verification infrastructure + 7 corpus cleanups from cross-referenced PPF data';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1214,6 +1214,17 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.67',
+  date: '2026-05-19',
+  name: 'Register verification infrastructure + 7 corpus cleanups from cross-referenced PPF data',
+  sections: [{
+    heading: 'New tool: register cross-reference verification (tools/verify-against-registers.mjs)',
+    items: ['Added reusable, deterministic verification tool that cross-references every corpus entry against the insurer official PPF (Policy Owners Protection Scheme) register PDF. Downloads + extracts register text once via pdftotext, then matches each corpus row using 6 escalating strategies: exact substring, insurer-prefix stripped, trailing "rider" stripped, both stripped, progressive prefix reduction (lop leading words one-by-one), token-set overlap (≥80%), and token-set-loose (≥60%). Output JSON has verified / not-found / no-register buckets per insurer.', 'Downloaded and extracted 9 PPF registers covering: AIA (810 lines), Great Eastern (3,947), Manulife (blocked — Chrome PDF viewer renders inline, no programmatic download), NTUC Income (225), HSBC Life (1,554), FWD (142), Prudential (353), Singlife (354), Tokio Marine (515), China Life (80 — incomplete). 4 remaining insurers (Manulife, China Taiping, Etiqa, Raffles Health) blocked by 403/timeout/CORS.', 'First run on all 384 rider entries: 248 verified, 17 not-found, 119 no-register. Compared to a naive matching script that flagged 99 fabricated (61% false-positive rate), the proper progressive-prefix + token-set matcher gets it down to 17 with high confidence.']
+  }, {
+    heading: 'Corpus cleanup — 7 entries removed/replaced based on register evidence',
+    items: ['DELETED (5 confirmed fabrications / artifacts): GREAT Eduplanner Rider (Malaysian product, not in SG GE register); FWD Life Protection TPD Rider + FWD Stroke Recovery Rider (Phase 2 boilerplate, not in FWD register — FWD has "Life Protection" base + "Accelerated Neurological Disorders Benefit Rider to Stroke Insurance" but neither of these); 2× "Payor Premium Waiver Rider (parents CI..." entries (literal corpus-text-parser truncation artifacts — entry name itself contains the truncated parenthetical text).', 'RENAMED Tokio Marine entries: "TM Early Cover (rider" + "TM Early Cover (rider/standalone)" (broken parenthetical truncations) → replaced with one clean "TM Early Cover" entry classified as protection/Early Critical Illness with aliases ["Early Cover", "TM EarlyCover"].', 'Corpus: 3,315 → 3,309 (-6 net: 7 deletions + 1 addition).', 'Re-verification after cleanup: not-found reduced 17 → 10 across all rider entries. FWD, Tokio Marine, NTUC Income, Singlife all now 100% match against PPF registers.', 'NOT TOUCHED (verification not conclusive — kept pending): AIA Payor Benefit Rider (Death/CI/TPD) (likely real, slash inside name trips matcher); 2× China Life entries (CL register is only 80 lines, incomplete); 5× HSBC Life Shield Rider entries (Shield Riders are MOH-listed, not in HSBC PPF register); 2× GREAT Cancer Recovery / Disability Income Rider (low-confidence flagging, may be real under different exact names).']
+  }]
+}, {
   version: 'v2.4.0-rc2.66',
   date: '2026-05-18',
   name: 'Premium Waiver subType + Shield Rider canonicalisation + build-order fix',

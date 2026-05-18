@@ -1,4 +1,4 @@
-const SW_VERSION = 'v2.4.0-rc2.66-premium-waiver-subtype';
+const SW_VERSION = 'v2.4.0-rc2.67-rider-verification-infrastructure';
 const DB_NAME = 'PolicyLensSW';
 const DB_VERSION = 1;
 const SESSION_STORE = 'sessions';

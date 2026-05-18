@@ -346,5 +346,33 @@
   {
     "insurer": "Tokio Marine",
     "productName": "TM Atlas Classic / TM Atlas Wealth - Recurring Single Premium"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Eduplanner Rider"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Life Protection TPD Rider"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Stroke Recovery Rider"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Payor Premium Waiver Rider (parent's CI"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Payor Premium Waiver Rider (parent's CI/death waives child premium)"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "TM Early Cover (rider"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "TM Early Cover (rider/standalone)"
   }
 ]

@@ -1,0 +1,3 @@
+# PPF register PDFs are external sources — download fresh from each insurer.
+# Only commit the .txt extracts (deterministic for the verification tool).
+*.pdf
