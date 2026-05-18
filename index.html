@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.65-smaller-insurers-hnw';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.66-premium-waiver-subtype';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -738,9 +738,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.65';
+const APP_VERSION = 'v2.4.0-rc2.66';
 const APP_VERSION_DATE = '2026-05-18';
-const APP_VERSION_NAME = 'Phase 5 smaller insurers + HNW offshore — 6 new insurer entries, 3,315 total products';
+const APP_VERSION_NAME = 'Premium Waiver subType + Shield Rider canonicalisation + build-order fix';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1214,6 +1214,20 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.66',
+  date: '2026-05-18',
+  name: 'Premium Waiver subType + Shield Rider canonicalisation + build-order fix',
+  sections: [{
+    heading: 'Schema expansion — Premium Waiver as first-class subType',
+    items: ['Added "Premium Waiver" as a new sub-type under category=protection. Covers Payer Benefit / Premium Waiver riders that waive premiums on payer Death/TPD/CI events. Previously these 135 riders were spread across 8 different classifications (63 Disability Income, 34 Term Life, 29 Critical Illness, 5 Personal Accident, 5 Whole Life, 4 Early CI, 4 generic "Rider", 2 empty, 2 Retirement Income (Par WL)) — none of which captured what they actually do.', 'Distinct from existing protection subTypes: Disability Income PAYS monthly income on disability (different mechanism); Critical Illness pays a lump sum on CI (different trigger scope); Term Life pays death benefit (single trigger, different beneficiary).', 'Schema updated in two places: tools/assimilate-catalogue.mjs SUB_TYPES.protection (validator) and src/index.babel.html SUB_TYPES.protection (UI dropdown). Both kept in sync.', '135 corpus entries reclassified to protection/Premium Waiver via manual-corpus-overrides.json: AIA Payor Benefit / Payor Benefit Comprehensive (PBC) / Waiver of Premium Rider / Critical Protector Waiver / Early Critical Protector Payor Benefit; Manulife Critical Care Waiver / Premium Waiver / Payor Benefit; Prudential PRUWaiver / PRUExtra Waiver / PRUPayer Cover; Great Eastern Premium Waiver / Critical Care Waiver; HSBC Life Premium Waiver / Payer Benefit; Singlife Premium Waiver / Payer Benefit; China Life Enhanced Payer Benefit Rider / Payer Waiver Plus / Premium Waiver Rider; China Taiping Payer Rider / Enhanced Payer / Early Payer / i-Premium Waiver; Etiqa / FWD / NTUC Income / Tokio Marine equivalents. manual-corpus-overrides.json: 980 → 1,101 (+121 net after dedup against existing overrides).']
+  }, {
+    heading: 'Singlife Health Plus → Shield Rider (canonicalisation fix)',
+    items: ['The bare "Singlife Health Plus" parent entry was incorrectly tagged as health/Integrated Shield Plan, while all 12 of its child plan variants (Plan 1/2/3, Private, Public, Lite, Prime, Starter, "from 1 Apr 2026" reform variants) were correctly tagged as health/Shield Rider. The parent now matches its children. The actual ISP is "Singlife Shield"; "Singlife Health Plus" is the rider that attaches to it.']
+  }, {
+    heading: 'Build-script ordering fix — overrides now apply to additions too',
+    items: ['Identified and fixed a latent build-order bug: tools/build-singapore-product-knowledge.mjs ran manual-corpus-overrides.json BEFORE manual-corpus-additions.json. Entries added in Phase 5 (or any later phase) via additions were therefore not reachable by override corrections. The "Singlife Health Plus → Shield Rider" override was the first case to expose this — the override existed but silently did not apply because the addition came in after the override pass had finished.', 'Fix: added a second override pass AFTER additions. The first pass still handles classifying base-corpus rows; the second catches any addition rows that need correction. Idempotent: re-applying an override that already matches is a no-op. Logged separately as [manual-overrides-pass2] in build output. Applied 120 post-addition corrections on first run after the fix (mostly the Premium Waiver reclassifications above).']
+  }]
+}, {
   version: 'v2.4.0-rc2.65',
   date: '2026-05-18',
   name: 'Phase 5 smaller insurers + HNW offshore (Singlife / Income / HSBC / Tokio / Etiqa / FWD / China + 6 HNW carriers)',
@@ -3036,7 +3050,18 @@ const CATEGORIES = {
   }
 };
 const SUB_TYPES = {
-  protection: ['Term Life', 'Whole Life', 'Universal Life (UL)', 'Indexed UL (IUL)', 'Variable UL (VUL)', 'Critical Illness', 'Early Critical Illness', 'Personal Accident', 'Disability Income', 'Long-term Care', 'ILP (Protection)'],
+  // rc2.66: 'Premium Waiver' added to protection. Covers Payer Benefit / Premium Waiver
+  //   riders that waive premiums on payer's Death/TPD/CI events. Distinct from:
+  //     • Disability Income — PAYS monthly income on disability
+  //     • Critical Illness — pays lump sum on CI diagnosis
+  //     • Term Life — pays death benefit
+  //   Premium Waiver riders waive future premiums on multiple triggers (typically
+  //   Death + TPD + CI of the PAYER, not the insured). Common examples:
+  //     AIA Payor Benefit Rider · AIA Payor Benefit Comprehensive (PBC) Rider
+  //     Manulife Critical Care Waiver Rider · PRUExtra Waiver · PRUPayer Cover
+  //     Great Eastern Premium Waiver · HSBC Life Premium Waiver
+  //     Singlife Premium Waiver · China Life Enhanced Payer Benefit Rider
+  protection: ['Term Life', 'Whole Life', 'Universal Life (UL)', 'Indexed UL (IUL)', 'Variable UL (VUL)', 'Critical Illness', 'Early Critical Illness', 'Personal Accident', 'Disability Income', 'Long-term Care', 'ILP (Protection)', 'Premium Waiver'],
   savings: ['Endowment', 'Lifetime Endowment', 'Education Plan', 'Short-term Endowment'],
   health: ['Integrated Shield Plan', 'Shield Rider', 'Hospital Income', 'CareShield Life / Supplement', 'ElderShield 300', 'ElderShield 400', 'Long-term Care'],
   investment: ['ILP (Investment)', 'Unit Trust', 'Single Premium Investment'],

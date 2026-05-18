@@ -342,5 +342,9 @@
   {
     "insurer": "Sompo",
     "productName": "Sompo Health Insurance (group / individual)"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "TM Atlas Classic / TM Atlas Wealth - Recurring Single Premium"
   }
 ]

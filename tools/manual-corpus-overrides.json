@@ -105,7 +105,7 @@
     "insurer": "AIA",
     "productName": "AIA Early Critical Protector Waiver of Premium (II)",
     "category": "protection",
-    "subType": "Early Critical Illness"
+    "subType": "Premium Waiver"
   },
   {
     "insurer": "AIA",
@@ -777,7 +777,7 @@
     "insurer": "AIA",
     "productName": "Early Critical Protector Payor Benefit",
     "category": "protection",
-    "subType": "Critical Illness"
+    "subType": "Premium Waiver"
   },
   {
     "insurer": "AIA",
@@ -867,13 +867,13 @@
     "insurer": "AIA",
     "productName": "Payor Benefit Rider (Death/CI/TPD)",
     "category": "protection",
-    "subType": "Critical Illness"
+    "subType": "Premium Waiver"
   },
   {
     "insurer": "AIA",
     "productName": "Premium Waiver Benefit (Self)",
     "category": "protection",
-    "subType": ""
+    "subType": "Premium Waiver"
   },
   {
     "insurer": "AIA",
@@ -2445,25 +2445,25 @@
     "insurer": "Great Eastern",
     "productName": "Payor Premium Waiver Rider (parent's CI",
     "category": "protection",
-    "subType": "Critical Illness"
+    "subType": "Premium Waiver"
   },
   {
     "insurer": "Great Eastern",
     "productName": "Payor Premium Waiver Rider (parent's CI/death waives child premium)",
     "category": "protection",
-    "subType": "Critical Illness"
+    "subType": "Premium Waiver"
   },
   {
     "insurer": "Great Eastern",
     "productName": "Premium Waiver Benefit (TPD",
     "category": "protection",
-    "subType": ""
+    "subType": "Premium Waiver"
   },
   {
     "insurer": "Great Eastern",
     "productName": "Premium Waiver Benefit (TPD/CI on life insured)",
     "category": "protection",
-    "subType": "Critical Illness"
+    "subType": "Premium Waiver"
   },
   {
     "insurer": "Great Eastern",
@@ -3111,13 +3111,13 @@
     "insurer": "HSBC Life",
     "productName": "Payor Premium Waiver Rider",
     "category": "protection",
-    "subType": "Rider"
+    "subType": "Premium Waiver"
   },
   {
     "insurer": "HSBC Life",
     "productName": "Premium Waiver Benefit (HSBC Life rider)",
     "category": "protection",
-    "subType": "Rider"
+    "subType": "Premium Waiver"
   },
   {
     "insurer": "HSBC Life",
@@ -3381,7 +3381,7 @@
     "insurer": "Manulife",
     "productName": "Manulife Premium Waiver (Disability)",
     "category": "protection",
-    "subType": "Disability Income"
+    "subType": "Premium Waiver"
   },
   {
     "insurer": "Manulife",
@@ -3471,13 +3471,13 @@
     "insurer": "Manulife",
     "productName": "Payor Benefit Rider",
     "category": "protection",
-    "subType": "Rider"
+    "subType": "Premium Waiver"
   },
   {
     "insurer": "Manulife",
     "productName": "Premium Waiver Rider (LifeReady Plus II)",
     "category": "protection",
-    "subType": "Whole Life"
+    "subType": "Premium Waiver"
   },
   {
     "insurer": "Manulife",
@@ -5115,13 +5115,13 @@
     "insurer": "Singlife",
     "productName": "Payor Premium Waiver",
     "category": "protection",
-    "subType": "Rider"
+    "subType": "Premium Waiver"
   },
   {
     "insurer": "Singlife",
     "productName": "Premium Waiver Benefit (rider)",
     "category": "protection",
-    "subType": "Critical Illness"
+    "subType": "Premium Waiver"
   },
   {
     "insurer": "Singlife",
@@ -5878,5 +5878,731 @@
     "productName": "Sompo Health Insurance (Individual)",
     "category": "health",
     "subType": "Hospital Income"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Singlife Health Plus",
+    "category": "health",
+    "subType": "Shield Rider"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Advance Payment and Waiver of Premium (APWP) Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Critical Protector Waiver of Premium",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Critical Protector Waiver of Premium (II)",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Payor Benefit (PB) Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Payor Benefit Comprehensive (PBC) Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Payor Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Premium Waiver Benefit",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Waiver of Premium Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Waiver of Premium Rider (Embedded)",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Critical Protector Waiver of Premium (II)",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Early Critical Protector Payor Benefit (II)",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Early Critical Protector Waiver of Premium (II)",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Payor Benefit",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "Payor Benefit Comprehensive Special (II)",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "China Life",
+    "productName": "China Life Enhanced Payer Benefit Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "China Life",
+    "productName": "China Life Payer Benefit Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "China Life",
+    "productName": "China Life Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "Early Payer Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "Enhanced Payer Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "i-Premium Waiver",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "Payer Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "Taiping Waiver of Premium Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Etiqa Payer Benefit Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Etiqa Waiver of Premium Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Tiq Premium Waiver",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "CI Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD CI Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Critical Illness Plus Premium Waiver Benefit",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Flex Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Invest First Horizon Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Invest First Plus Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Invest Goal Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Life Income Plus Payor Benefit Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Life Protection - Payer Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Life Protection CI Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Life Protection Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Payer Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Term Life Plus Premium Waiver Benefit Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Term Life Plus Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Waiver of Premium Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "Life Income Plus (Regular Premium) - CI Premium Waiver",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "Premium Waiver Benefit Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "Waiver of Premium Rider to Term Life (Level Term)",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "Waiver of Premium Rider to Term Life Plus (Level Term)",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Payer Benefit Advantage Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Payer Benefit Advantage Rider - CriticalCare",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Payer Benefit Advantage Rider - MultiPay CriticalCare",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Payor Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Premium Waiver Advantage Rider - CriticalCare",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Premium Waiver Advantage Rider - MultiPay CriticalCare",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Payer Benefit Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Smart Early Critical Care Payer Benefit Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Smart Early Critical Care Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Comprehensive Payer Benefit",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Comprehensive Payor Benefit",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Critical Illness Premium Waiver - END",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Critical Illness Premium Waiver - PF21",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Critical Illness Premium Waiver - SmartMortgage",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Critical Illness Premium Waiver - WL",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Cancer Care Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Cancer Care Premium Waiver Rider (I)",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Critical Care Payor Benefit (Spouse) Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Critical Care Payor Benefit Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Critical Care Waiver Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Critical Care Waiver Rider (II)",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Critical Illness Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Early Critical Care Waiver",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Payer Benefit Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Payor Benefit (Owner)",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Payor Benefit (Spouse)",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Payor Benefit (Spouse) Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Payor Benefit (With Critical Illness)",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Payor Benefit (With Dread Disease)",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Payor Benefit Plus Rider (I)",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Payor Benefit Plus Rider (I) Spouse",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Payor Benefit Plus Rider (II)",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Payor Benefit Plus Rider (II) Spouse",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Waiver Of Premium Benefit On Cancer",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Waiver Of Premium On Critical Illness",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Waiver Of Premium On Dread Disease",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Cancer Premium Waiver (GIO)",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Dread Disease Premium Waiver",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Dread Disease Premium Waiver (ILP)",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Enhanced Payor Premium Waiver",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Enhanced Waiver of Premium",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Enhanced Waiver of Premium Benefit",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Cancer Premium Waiver",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Dread Disease Premium Waiver",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Enhanced Waiver of Premium Benefit",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Payor Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Income Premium Waiver Benefit",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Payor Premium Waiver",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Special Waiver of Premium",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Special Waiver of Premium Benefit",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Cancer Premium Waiver (2025)",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Cancer Premium Waiver II",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "CI Waiver of Premium Supplementary Benefit",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Critical Illness Premium Waiver (2025)",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Critical Illness Premium Waiver II",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Early Critical Illness Premium Waiver (2025)",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "EasyPayer Premium Waiver",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Enhanced Payer Benefit",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Enhanced Payer with AB Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Enhanced Waiver of Premium",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Joint Life Premium Waiver",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Payer Benefit",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Payer Critical Illness Premium Waiver (2025)",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Payer Early Critical Illness Premium Waiver (2025)",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Asia Enhanced Payer Benefit Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Asia Payer Benefit Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Early CI Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Early Critical Illness Premium Waiver Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Enhanced Payer Benefit",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Enhanced Payer Benefit Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Enhanced Payer Benefit Rider (for KidAssure GIO)",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Payer Benefit Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Waiver of Premium Rider",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Waiver of Premium Rider (for KidAssure GIO)",
+    "category": "protection",
+    "subType": "Premium Waiver"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Waiver of Premium Rider (for Protect 1 Lite)",
+    "category": "protection",
+    "subType": "Premium Waiver"
   }
 ]

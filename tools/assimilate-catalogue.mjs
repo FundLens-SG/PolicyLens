@@ -52,7 +52,12 @@ if (!SELFTEST && inputs.length === 0) {
 const CATEGORIES = new Set(['protection','savings','health','investment','retirement','maternity','cash_investments','other_assets']);
 
 const SUB_TYPES = {
-  protection: new Set(['Term Life','Whole Life','Universal Life (UL)','Indexed UL (IUL)','Variable UL (VUL)','Critical Illness','Early Critical Illness','Personal Accident','Disability Income','Long-term Care','ILP (Protection)']),
+  // rc2.66: 'Premium Waiver' added — covers Payer Benefit / Premium Waiver riders that
+  //   waive premiums on payer's Death/TPD/CI events. Distinct from Disability Income
+  //   (which PAYS income) and from CI (which pays a lump sum). Examples: AIA Payor
+  //   Benefit, Manulife Critical Care Waiver, PRUExtra Waiver, China Life Enhanced
+  //   Payer Benefit Rider, GE Premium Waiver, HSBC Life Premium Waiver.
+  protection: new Set(['Term Life','Whole Life','Universal Life (UL)','Indexed UL (IUL)','Variable UL (VUL)','Critical Illness','Early Critical Illness','Personal Accident','Disability Income','Long-term Care','ILP (Protection)','Premium Waiver']),
   savings: new Set(['Endowment','Lifetime Endowment','Education Plan','Short-term Endowment']),
   health: new Set(['Integrated Shield Plan','Shield Rider','Hospital Income','CareShield Life / Supplement','ElderShield 300','ElderShield 400','Long-term Care']),
   investment: new Set(['ILP (Investment)','Unit Trust','Single Premium Investment']),

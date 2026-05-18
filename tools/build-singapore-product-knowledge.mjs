@@ -526,6 +526,36 @@ try {
   console.warn('[manual-additions] skipped:', err.message);
 }
 
+// rc2.66: second override pass — apply overrides AGAIN after additions so corrections
+//   reach rows that came in via manual-corpus-additions.json. Without this, an entry
+//   like "Singlife Health Plus" added in Phase 5 with subType=Integrated Shield Plan
+//   could not be corrected to Shield Rider — the first override pass ran before the
+//   addition existed. Idempotent: re-applying an override that already matches is a no-op.
+try {
+  const overridesPath = path.join(repoRoot, 'tools/manual-corpus-overrides.json');
+  if (fs.existsSync(overridesPath)) {
+    const overrides = JSON.parse(fs.readFileSync(overridesPath, 'utf8'));
+    const ovIdx = new Map();
+    for (const ov of overrides) {
+      const key = canonicalInsurer(ov.insurer || '') + '|' + normalizeText(ov.productName || '');
+      ovIdx.set(key, ov);
+    }
+    let applied = 0;
+    productRows = productRows.map(row => {
+      const key = canonicalInsurer(row[0]) + '|' + normalizeText(row[1]);
+      const ov = ovIdx.get(key);
+      if (!ov) return row;
+      const nextCat = ov.category != null ? ov.category : row[2];
+      const nextSub = ov.subType != null ? ov.subType : row[3];
+      if (nextCat !== row[2] || nextSub !== row[3]) applied++;
+      return [row[0], row[1], nextCat, nextSub, row[4], row[5]];
+    });
+    console.log('[manual-overrides-pass2] applied ' + applied + ' post-addition corrections');
+  }
+} catch (err) {
+  console.warn('[manual-overrides-pass2] skipped:', err.message);
+}
+
 const falsePositives = [
   'AIA Vitality',
   'Live Great',
