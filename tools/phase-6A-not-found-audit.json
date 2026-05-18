@@ -1,0 +1,2489 @@
+{
+  "metadata": {
+    "phase": "P6A-not-found-audit",
+    "purpose": "Verify entries that our register cross-check could not match. For EACH entry, either prove it real with a register-line quote, or mark for deletion.",
+    "verificationToolRun": "verification-summary-2026-05-18T16-48-44.json",
+    "totalEntries": 324,
+    "registersChecked": [
+      "aia.txt",
+      "china-life.txt",
+      "fwd.txt",
+      "ge.txt",
+      "hsbc-life.txt",
+      "income.txt",
+      "manulife.txt",
+      "prudential.txt",
+      "singlife.txt",
+      "tokio-marine.txt"
+    ],
+    "instructions": [
+      "For EACH entry, return ONE of:",
+      "  (a) {verdict:\"keep\", canonicalName:\"...\", correctName:\"...\", registerLineQuote:\"...\", sourceUrl:\"...\", category:\"...\", subType:\"...\"} — if you find the entry in the official PPF register or insurer materials, with the exact register line quoted",
+      "  (b) {verdict:\"rename\", canonicalName:\"...\", suggestedName:\"...\", reason:\"...\", registerLineQuote:\"...\", sourceUrl:\"...\", category:\"...\", subType:\"...\"} — if the entry exists but under a different name in the register",
+      "  (c) {verdict:\"delete\", canonicalName:\"...\", reason:\"...\", evidenceUrl:\"...\"} — if you can confirm the entry does NOT exist (and ideally provide a link showing what DOES exist instead)",
+      "  (d) {verdict:\"defer\", canonicalName:\"...\", reason:\"...\", whatToCheck:\"...\"} — only if you absolutely cannot find evidence; explain what specific document or website needs to be checked",
+      "NO SPECULATION. Every verdict must cite a URL + a quote from the document.",
+      "If the entry name appears to be a slash-joined family (e.g. \"Plan A / Plan B\"), use verdict:\"split\" with an array of variants: {verdict:\"split\", canonicalName:\"...\", variants:[{name:\"Plan A\", category, subType, sourceUrl, registerLineQuote}, ...]}"
+    ]
+  },
+  "entriesByInsurer": {
+    "AIA": [
+      {
+        "canonicalName": "AIA Adaptable Income",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Older income product"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "AIA Adaptable Wealth",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "AIA Asset Builder",
+        "currentClassification": "savings/Endowment",
+        "aliases": [
+          "Legacy ILP"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "AIA Asset Evolution",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [
+          "Asset Evolution"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "AIA Asset Growth",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Legacy ILP"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "AIA Capital Guard",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "AIA Centurion PA - Dementia Benefit",
+        "currentClassification": "protection/Long-term Care",
+        "aliases": [
+          "Dementia Benefit (Centurion PA)",
+          "CPA Dementia"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "AIA Cigna and AIA International Wealth (AIA IW) branches",
+        "currentClassification": "protection/",
+        "aliases": [
+          "not retail SG plans"
+        ],
+        "source": "ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "AIA Diabetes Care - Cancer Cover (add-on)",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [
+          "Cancer Cover (Diabetes Care)",
+          "AIA Diabetes Care Cancer Cover"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "AIA Education Plus",
+        "currentClassification": "savings/Education Plan",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "AIA Elite Funds",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "AIA Group H&S",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-slash-split-2026-05-18"
+      },
+      {
+        "canonicalName": "AIA Health CashPlan",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "AIA Hospital Income Basic",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "AIA HS Gold Booster",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "AIA HSG Booster",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [
+          "HSG Booster"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "AIA Income Builder",
+        "currentClassification": "savings/Endowment",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "AIA International Wealth (AIA IW)",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "AIA Invest Easy",
+        "currentClassification": "investment/",
+        "aliases": [
+          "Simplified ILP"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "AIA Living Care",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "AIA Living Protector",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "AIA Max Healthcare",
+        "currentClassification": "protection/",
+        "aliases": [
+          "(older rider naming)"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "AIA Max Plus",
+        "currentClassification": "protection/",
+        "aliases": [
+          "(legacy))"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "AIA Max VitalCare (closed)",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [
+          "AIA Max VitalHealth Pro"
+        ],
+        "source": "ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "AIA Mum2Baby Choices",
+        "currentClassification": "maternity/Maternity Coverage",
+        "aliases": [
+          "M2B Choices",
+          "M2BC"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "AIA Mum2Baby Choices - Assisted Conception Pregnancy Coverage",
+        "currentClassification": "maternity/Maternity Coverage",
+        "aliases": [
+          "Assisted Conception Coverage",
+          "IVF/IUI/ICI/ICSI Pregnancy Coverage"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "AIA Mum2Baby Choices – AIA Mum2Baby Bundle",
+        "currentClassification": "maternity/Maternity Coverage",
+        "aliases": [
+          "AIA Mum2Baby Bundle"
+        ],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      },
+      {
+        "canonicalName": "AIA Mum2Baby Choices – AIA Mum2Baby Protect Bundle",
+        "currentClassification": "maternity/Maternity Coverage",
+        "aliases": [
+          "AIA Mum2Baby Protect Bundle"
+        ],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      },
+      {
+        "canonicalName": "AIA Mum2Baby Protect",
+        "currentClassification": "maternity/Maternity Coverage",
+        "aliases": [
+          "Mum2Baby Protect"
+        ],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      },
+      {
+        "canonicalName": "AIA Platinum AccidentCare - Monthly Support Benefit",
+        "currentClassification": "protection/Disability Income",
+        "aliases": [
+          "Monthly Support Benefit (Platinum AccidentCare)",
+          "PAC MSB"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "AIA Retire Easy",
+        "currentClassification": "retirement/Retirement Income",
+        "aliases": [
+          "Older annuity (referenced)"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "AIA Secure Wealth",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Legacy WL",
+          "wealth (referenced)"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "AIA SmartCare",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "AIA SmartGen",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "AIA SmartGuard",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "AIA Solitaire PA",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [
+          "Solitaire PA"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "AIA Solitaire PA (II)",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [
+          "Solitaire PA",
+          "SPA"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "AIA Vista Series",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "AIA Vitality",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Wellness PROGRAMME",
+          "NOT a policy"
+        ],
+        "source": "ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "AIA Vivolife",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [
+          "Older WL (referenced)"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "AON HappyTails",
+        "currentClassification": "protection/",
+        "aliases": [
+          "AON HappyTails (digital aggregator",
+          "underwritten"
+        ],
+        "source": "cpf_and_general_insurance.txt"
+      },
+      {
+        "canonicalName": "Group ECI",
+        "currentClassification": "protection/",
+        "aliases": [
+          "AIA Group Term Life",
+          "Group H&S",
+          "Group PA",
+          "various scheme names"
+        ],
+        "source": "ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "Group H&S",
+        "currentClassification": "protection/",
+        "aliases": [
+          "AIA Group Term Life",
+          "Group PA",
+          "Group ECI",
+          "various scheme names"
+        ],
+        "source": "ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "Group PA",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [
+          "AIA Group Term Life",
+          "Group H&S",
+          "Group ECI",
+          "various scheme names"
+        ],
+        "source": "ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "HS Gold Booster",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [
+          "AIA HealthShield Gold Max Booster",
+          "older marketing name for rider"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "Spouse Waiver Benefit",
+        "currentClassification": "protection/",
+        "aliases": [
+          "waives premiums on spouse event"
+        ],
+        "source": "ge_aia_findings.txt"
+      }
+    ],
+    "China Life (Singapore)": [
+      {
+        "canonicalName": "China Life (Singapore) Wholelife Plans",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [
+          "China Life Whole Life",
+          "China Life (S'pore) WL"
+        ],
+        "source": "deep-research-2026-05-17"
+      }
+    ],
+    "China Life": [
+      {
+        "canonicalName": "China Life Family Treasure 10",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "China Life Family Treasure 15",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "China Life Family Treasure 5",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "China Life Hospital Cash Rider",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "China Life Lifelong Care",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "China Life Lifelong Income",
+        "currentClassification": "savings/Endowment",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "China Life Mortgage Term",
+        "currentClassification": "protection/Term Life",
+        "aliases": [
+          "Mortgage Term"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "China Life Payer Waiver Plus Rider",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "China Life Wealth Treasure",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "China Life Wealth Treasure (II)",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      }
+    ],
+    "FWD": [
+      {
+        "canonicalName": "Automobile Association",
+        "currentClassification": "protection/",
+        "aliases": [
+          "AA Personal Mobility Plus (AAS-branded",
+          "underwritten"
+        ],
+        "source": "cpf_and_general_insurance.txt"
+      },
+      {
+        "canonicalName": "Business",
+        "currentClassification": "protection/",
+        "aliases": [
+          "FWD Travel Insurance (Premium",
+          "First)",
+          "FWD Travel"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Executive",
+        "currentClassification": "protection/",
+        "aliases": [
+          "FWD Car Insurance (Classic",
+          "Prestige)",
+          "FWD Car"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "FWD Cancer Insurance (legacy v1)",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [
+          "FWD Cancer"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "FWD Flex (CI)",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [
+          "FWD Flex"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "FWD HDB Fire Insurance",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [
+          "FWD HDB Fire"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "FWD Home Insurance",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [
+          "FWD Home"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "FWD Imperial Fortune (SG)",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "FWD Maid Insurance Essential",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [
+          "FWD Maid Essential"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "FWD Maid Insurance Exclusive",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [
+          "FWD Maid Exclusive"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "FWD Motorcycle Insurance",
+        "currentClassification": "protection/",
+        "aliases": [
+          "FWD Motorcycle"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "FWD Personal Accident",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [
+          "FWD PA"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "FWD Personal Accident Fracture Benefit",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "FWD Personal Accident Medical Reimbursement Benefit",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "FWD Personal Accident Weekly Income Benefit",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      }
+    ],
+    "Great Eastern": [
+      {
+        "canonicalName": "(Legacy: GREAT SupremeHealth B, A, P)",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "Pre-rebrand tiers",
+          "still in force"
+        ],
+        "source": "ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "(Severe Disability) Income Replacement Riders",
+        "currentClassification": "protection/Disability Income",
+        "aliases": [
+          "various GE riders"
+        ],
+        "source": "ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "Bank-branded",
+        "currentClassification": "protection/",
+        "aliases": [
+          "DBS TravellerShield Plus (Classic",
+          "Premier"
+        ],
+        "source": "cpf_and_general_insurance.txt"
+      },
+      {
+        "canonicalName": "Care Plus Programme",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Complimentary disability programme"
+        ],
+        "source": "ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "CI on life insured)",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [
+          "Premium Waiver Benefit (TPD",
+          "PWB"
+        ],
+        "source": "ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "DBS",
+        "currentClassification": "protection/",
+        "aliases": [
+          "OCBC",
+          "UOB",
+          "Bank-branded distributions of the above"
+        ],
+        "source": "cpf_and_general_insurance.txt"
+      },
+      {
+        "canonicalName": "death waives child premium)",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Payor Premium Waiver Rider (parent's CI",
+          "PWR"
+        ],
+        "source": "ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "DIRECT - GREAT Life (I) 70",
+        "currentClassification": "protection/Term Life",
+        "aliases": [
+          "DPI"
+        ],
+        "source": "ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "DIRECT - GREAT Life (I) 85",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "rc2.68-slash-cleanup-2026-05-19"
+      },
+      {
+        "canonicalName": "GREAT Additional Benefit",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "GREAT Cancer Recovery Rider",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "GREAT Child Guaranteed Insurability Option",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "GREAT Disability Income Rider",
+        "currentClassification": "protection/Disability Income",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "Great Eastern General",
+        "currentClassification": "protection/",
+        "aliases": [
+          "GREAT Auto Plus",
+          "GREAT Auto Protect360",
+          "GREAT Travel Pro",
+          "GREAT TravelSmart",
+          "GREAT Home Protect",
+          "GREAT Maid Protect"
+        ],
+        "source": "cpf_and_general_insurance.txt"
+      },
+      {
+        "canonicalName": "Great Eastern Maxgrowth Endowment",
+        "currentClassification": "savings/Endowment",
+        "aliases": [
+          "GE Maxgrowth",
+          "Maxgrowth Endowment"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "GREAT Eduplanner",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Education endowment (legacy)"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "GREAT Family Protection",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "GREAT FlexiChoice",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "GREAT Golden Promise",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "GREAT Income Advantage",
+        "currentClassification": "retirement/Income Plan",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "GREAT INDEX INCOME (CLASSIC)",
+        "currentClassification": "retirement/Income Plan",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "GREAT Junior Income Advantage Series",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Whole-life income for juveniles"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "GREAT Life Multiplier (MLA)",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [
+          "GLM"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "GREAT Maternity Conversion Option",
+        "currentClassification": "maternity/Maternity Coverage",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "GREAT Maximizer Series",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "GREAT MaxSelect",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "GREAT Pinnacle Series",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "GREAT Relapse Cover",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [
+          "Relapse Cover"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "GREAT Smart Family",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "GREAT SP Series (multiple tranches: Aug 2025, etc.)",
+        "currentClassification": "savings/Endowment",
+        "aliases": [
+          "rolling tranches"
+        ],
+        "source": "ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "GREAT SupremeHealth A Plus",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "GSH A+",
+          "GSH A Plus",
+          "GREAT TotalCare 2 -> + GREAT TotalCare Plus 2"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "GREAT SupremeHealth B PLUS",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "GSH B+",
+          "GSH B Plus",
+          "GREAT TotalCare 2 -> + GREAT TotalCare Plus 2"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "GREAT SupremeHealth P PLUS",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "GSH P+",
+          "GSH P Plus",
+          "GREAT TotalCare 2 -> + GREAT TotalCare Plus 2"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "GREAT SupremeHealth Standard",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "(Standard Plan only",
+          "no riders)"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "GREAT SupremeHealth Standard Plan",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "GSH Std"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "GREAT TotalCare (CLASSIC)",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [
+          "GTC Classic"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "GREAT TotalCare (ELITE)",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [
+          "GTC Elite"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "GREAT TravelCare",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [
+          "GTC (travel)"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "Legacy GSH (pre-rebrand)",
+        "currentClassification": "protection/Universal Life",
+        "aliases": [
+          "GREAT TotalCare (Elite",
+          "Classic) [legacy]"
+        ],
+        "source": "ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "Liberty Insurance",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Liberty Car Insurance (tiers: Classic",
+          "Comprehensive"
+        ],
+        "source": "cpf_and_general_insurance.txt"
+      },
+      {
+        "canonicalName": "Living Policy",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [
+          "Living Assurance",
+          "Pre-1990s whole life (legacy)"
+        ],
+        "source": "ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "Prestige Series",
+        "currentClassification": "protection/Universal Life",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "PROTECT BOOSTER 2 (10-PAY)",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "PROTECT BOOSTER 2 (15-PAY)",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "PROTECT BOOSTER 2 (5-PAY)",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "Smart Baby Shield",
+        "currentClassification": "maternity/Maternity Coverage",
+        "aliases": [],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      },
+      {
+        "canonicalName": "Supreme Livin' Care",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [
+          "Supreme Livin' Care Plus",
+          "SLC"
+        ],
+        "source": "ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "Supreme Term-Life",
+        "currentClassification": "protection/Term Life",
+        "aliases": [
+          "Convertible term",
+          "WL (legacy)"
+        ],
+        "source": "ge_aia_findings.txt"
+      },
+      {
+        "canonicalName": "SupremeCare (Group Managed Care)",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "SupremeCare"
+        ],
+        "source": "ge_aia_findings.txt"
+      }
+    ],
+    "HSBC Life": [
+      {
+        "canonicalName": "\"AXA\"",
+        "currentClassification": "protection/",
+        "aliases": [
+          "\"AXA Insurance\"",
+          "\"AXA Life\""
+        ],
+        "source": "shield_rider_anchors.txt"
+      },
+      {
+        "canonicalName": "AXA Basic Care Rider (legacy)",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [
+          "ABCR"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "AXA Disability Care",
+        "currentClassification": "protection/Disability Income",
+        "aliases": [
+          "ADC"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "AXA Shield Plan B (legacy)",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "AXS PB"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "AXA Shield Plus Option B (legacy)",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [
+          "AXS+ B"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "AXA Shield Plus Option C (legacy)",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [
+          "AXS+ C"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "AXA Shield Standard Plan (legacy)",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "AXS Std"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "AXA SmartCare PA",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [
+          "ASPA"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "AXA Standard Care Rider (legacy)",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [
+          "ASCR"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "Bank-branded",
+        "currentClassification": "protection/",
+        "aliases": [
+          "HSBC Enhanced HomeCare (AXA",
+          "Chubb underwritten)"
+        ],
+        "source": "cpf_and_general_insurance.txt"
+      },
+      {
+        "canonicalName": "Comprehensive Payer Benefit",
+        "currentClassification": "protection/Premium Waiver",
+        "aliases": [],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      },
+      {
+        "canonicalName": "HSBC Life – Care Secure",
+        "currentClassification": "health/CareShield Life / Supplement",
+        "aliases": [
+          "HSBC Care Secure",
+          "AXA Care Secure legacy"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "HSBC Life Accident Protection Plan",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [
+          "Accident Protection Plan"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "HSBC Life Basic Care Rider",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [
+          "HLBCR"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "HSBC Life EmpoweredMum – Transfer Protection Option",
+        "currentClassification": "maternity/Maternity Coverage",
+        "aliases": [
+          "Transfer Protection Option"
+        ],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      },
+      {
+        "canonicalName": "HSBC Life HappyFamily",
+        "currentClassification": "protection/Maternity",
+        "aliases": [
+          "HLHF"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "HSBC Life HappyFamily – EmpoweredMum Family Bundle",
+        "currentClassification": "maternity/Maternity Coverage",
+        "aliases": [
+          "HappyFamily EmpoweredMum Bundle"
+        ],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      },
+      {
+        "canonicalName": "HSBC Life HappyMummy",
+        "currentClassification": "protection/Maternity",
+        "aliases": [
+          "HLHM"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "HSBC Life HappyMummy Baby Cover",
+        "currentClassification": "maternity/Maternity Coverage",
+        "aliases": [
+          "HappyMummy Baby Cover"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "HSBC Life HappyMummy Mother Cover",
+        "currentClassification": "maternity/Maternity Coverage",
+        "aliases": [
+          "HappyMummy Mother Cover"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "HSBC Life Harvest Saver",
+        "currentClassification": "savings/Endowment",
+        "aliases": [
+          "Harvest Saver"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "HSBC Life Income Protector",
+        "currentClassification": "protection/Disability Income",
+        "aliases": [
+          "Disability Income",
+          "HLIP"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "HSBC Life Shield - Standard",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "HSBC Life Shield Standard",
+          "AXA Standard (legacy)"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "HSBC Life Shield Plan A",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "HLS PA"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "HSBC Life Shield Plan B",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "HLS PB"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "HSBC Life Shield Plus (rider)",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [
+          "HLS+"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "HSBC Life Shield Standard Plan",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "HLS Std"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "HSBC Life short",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "HSBC Life Standard Care Rider",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [
+          "HLSCR"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "HSBC Life Wealth Goal",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [
+          "HLWG"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "HSBC Life Wealth Goal II",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [
+          "HLWG II"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      }
+    ],
+    "Manulife": [
+      {
+        "canonicalName": "Classic Term Protector",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "Customised Smartlife",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "Enhanced RetireReady",
+        "currentClassification": "retirement/Retirement",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "First Choice Manucare",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "First Choice Manucare Plus",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "Flexi-Link",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "Heirloom (IV)",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "Income Booster (II)",
+        "currentClassification": "retirement/Income Plan",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "Income Booster (III)",
+        "currentClassification": "retirement/Income Plan",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "Income Booster 10-Pay SGD (III)",
+        "currentClassification": "retirement/Income Plan",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "Income Booster 10-Pay USD (III)",
+        "currentClassification": "retirement/Income Plan",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "Income Booster 5-Pay SGD (III)",
+        "currentClassification": "retirement/Income Plan",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "Income Booster 5-Pay USD (III)",
+        "currentClassification": "retirement/Income Plan",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "InvestLife",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "InvestLife (II)",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "InvestReady III Plus",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [
+          "Manulife InvestReady III Plus",
+          "IR3 Plus"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "Manu Multi-Care",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [
+          "MMC"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "Manu Multi-Care 3 (legacy)",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [
+          "MMC3"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "Manu Multi-Care II",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [
+          "MMC II"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "ManuAce",
+        "currentClassification": "savings/Endowment",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "ManuCancerCover",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [
+          "MCC"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "ManuCare Cash",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "ManuGrowth",
+        "currentClassification": "savings/Endowment",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "ManuGrowth (II)",
+        "currentClassification": "savings/Endowment",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "Manulife IncomeReady",
+        "currentClassification": "protection/Endowment",
+        "aliases": [
+          "MIRdy"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "Manulife InvestReady (III) Plus",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [
+          "MIR III+"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "Manulife Signature Life Series",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [
+          "Signature Life Series",
+          "MSL Series"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "ManuLifeStyle",
+        "currentClassification": "protection/Universal Life",
+        "aliases": [
+          "MLS"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "Manulink Protect",
+        "currentClassification": "protection/ILP (Protection)",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "Manulink Protected",
+        "currentClassification": "protection/ILP (Protection)",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "ManuRegal",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [
+          "MReg"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      }
+    ],
+    "NTUC Income": [
+      {
+        "canonicalName": "Enhanced IncomeShield Advantage Care",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Gro Capital Plus",
+        "currentClassification": "savings/Endowment",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "HL Assurance",
+        "currentClassification": "protection/",
+        "aliases": [
+          "HL PMD Insurance"
+        ],
+        "source": "cpf_and_general_insurance.txt"
+      },
+      {
+        "canonicalName": "Hospital Care Insurance",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [
+          "Income Hospital Care"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "Income Capital Builder",
+        "currentClassification": "retirement/Income Plan",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "Income Cash Builder",
+        "currentClassification": "retirement/Income Plan",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "Income Cashback Endowment",
+        "currentClassification": "retirement/Income Plan",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "Income Classic Life",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "Income Education Benefit",
+        "currentClassification": "retirement/Income Plan",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "Income Insurance (formerly NTUC Income)",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Income Legacy Endowment",
+        "currentClassification": "retirement/Income Plan",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "Income LifeSecure Plus",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "Income Maternity 360 Mother Benefit",
+        "currentClassification": "maternity/Maternity Coverage",
+        "aliases": [
+          "Maternity 360 Mother Benefit"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "Income Maternity 360 Newborn Benefit",
+        "currentClassification": "maternity/Maternity Coverage",
+        "aliases": [
+          "Maternity 360 Newborn Benefit"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "Income RevoGain",
+        "currentClassification": "retirement/Income Plan",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "Income Saver's Benefit",
+        "currentClassification": "retirement/Income Plan",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "Income Secure Life",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "Income VivoEducate",
+        "currentClassification": "retirement/Income Plan",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "Income Wealth Builder",
+        "currentClassification": "retirement/Income Plan",
+        "aliases": [],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "IncomeShield A",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "IncomeShield Plan P"
+        ],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "IncomeShield B",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "IncomeShield Plan P"
+        ],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "IncomeShield C",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "IncomeShield Plan P"
+        ],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "IncomeShield Plan A",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [],
+        "source": "rc2.68-slash-cleanup-2026-05-19"
+      },
+      {
+        "canonicalName": "IncomeShield Plan B",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [],
+        "source": "rc2.68-slash-cleanup-2026-05-19"
+      },
+      {
+        "canonicalName": "IncomeShield Plan C",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [],
+        "source": "rc2.68-slash-cleanup-2026-05-19"
+      },
+      {
+        "canonicalName": "IncomeShield Plan P",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Integrated Shield Plans for Public Officers",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "Public Officers Integrated Shield"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "Liberty Insurance",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Liberty PetCare (Plan A",
+          "Plan B",
+          "Plan C —"
+        ],
+        "source": "cpf_and_general_insurance.txt"
+      },
+      {
+        "canonicalName": "LUV",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [
+          "Income LUV"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "PA Assurance",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [
+          "Income PA Assurance"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "PA Fitness Protect",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [
+          "Income PA Fitness Protect"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "PA Secure",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [
+          "Income PA Secure"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "SilverCare",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [
+          "Income SilverCare"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "Sompo",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Sompo PMD",
+          "Bicycle Insurance"
+        ],
+        "source": "cpf_and_general_insurance.txt"
+      },
+      {
+        "canonicalName": "SpecialCare (Autism)",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [
+          "Income SpecialCare Autism"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "SpecialCare (Down Syndrome)",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [
+          "Income SpecialCare Down Syndrome"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "Star Recovery",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      }
+    ],
+    "Prudential": [
+      {
+        "canonicalName": "Child Cover Benefit",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      },
+      {
+        "canonicalName": "NRIC pattern:",
+        "currentClassification": "protection/",
+        "aliases": [
+          "[STFG]\\d{7}[A-Z]"
+        ],
+        "source": "pru_income_findings.txt"
+      },
+      {
+        "canonicalName": "PRUCancer (CI)",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [
+          "PRUEarly",
+          "PRUCrisis",
+          "PRUMulti"
+        ],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "PRUCare Secure",
+        "currentClassification": "health/CareShield Life / Supplement",
+        "aliases": [
+          "PRU Care Secure",
+          "PruCare Secure"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "PRUCrisis Cover Premier",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "PRUDENTIAL (PRUExtra series) --",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Prudential PRULink Active Invest Portfolio",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [
+          "PRULink ActiveInvest",
+          "ActiveInvest Portfolio"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "PRUExtra Plus",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "PRUExtra Premier",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "PRUExtra Premier CoPay. Disambiguate by neighbouring",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "PRUExtra Standard",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "PRU Extra Standard"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "PRULink Exact Protector",
+        "currentClassification": "protection/ILP (Protection)",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "PRULink Golden Bond",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "PRULink Golden Growth",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-4-big-four-2026-05-17"
+      },
+      {
+        "canonicalName": "PRUMulti-CI Plus",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "PRURetirement Income",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "PRUShield A Plus",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "PRUShield B Lite",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "PRUShield B Plus",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "PRUShield Extra",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "PRUShield Plus",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "PRUShield Premier",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "PRUTerm Lite",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "PRUVantage Asia",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "PRUVantage Heritage",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "PRUWorking Mum",
+        "currentClassification": "maternity/Maternity Coverage",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Spouse Waiver Benefit",
+        "currentClassification": "protection/Disability Income",
+        "aliases": [],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      }
+    ],
+    "Singlife": [
+      {
+        "canonicalName": "Aviva MyHealthPlus Inpatient Pregnancy Complications Benefit",
+        "currentClassification": "maternity/Maternity Coverage",
+        "aliases": [
+          "MyHealthPlus Inpatient Pregnancy Complications"
+        ],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      },
+      {
+        "canonicalName": "Aviva MyLongTermCare",
+        "currentClassification": "health/Long-term Care",
+        "aliases": [
+          "Aviva MyLongTermCare Plus"
+        ],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Aviva MyLongTermCare Plus",
+        "currentClassification": "health/Long-term Care",
+        "aliases": [
+          "Aviva MyLongTermCare"
+        ],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Aviva MyMaternityPlan",
+        "currentClassification": "maternity/Maternity Coverage",
+        "aliases": [
+          "MyMaternityPlan"
+        ],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      },
+      {
+        "canonicalName": "Aviva MyShield",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "MyShield (Aviva legacy)"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "Aviva MyShield Plan 3",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "Aviva MyShield Plan 1",
+          "Plan 2",
+          "Plan 3",
+          "Plan A",
+          "Standard"
+        ],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Aviva MyShield Plan A",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "Aviva MyShield Plan 1",
+          "Plan 2",
+          "Plan 3",
+          "Plan A",
+          "Standard"
+        ],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Aviva MyShield Standard",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "Aviva MyShield Plan 1",
+          "Plan 2",
+          "Plan 3",
+          "Plan A",
+          "Standard"
+        ],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Aviva)",
+        "currentClassification": "protection/Term Life",
+        "aliases": [
+          "MyProtector-Term Plan (II) (Singlife w",
+          "MPTP II"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "CareShield Life",
+        "currentClassification": "health/National Scheme",
+        "aliases": [],
+        "source": "cpf_and_general_insurance.txt"
+      },
+      {
+        "canonicalName": "Dependants' Protection Scheme",
+        "currentClassification": "health/National Scheme",
+        "aliases": [],
+        "source": "cpf_and_general_insurance.txt"
+      },
+      {
+        "canonicalName": "ECICS",
+        "currentClassification": "protection/",
+        "aliases": [
+          "ECICS Private Motor Car Insurance",
+          "ECICS Home Contents Insurance",
+          "ECICS Maid Insurance",
+          "ECICS Personal Accident"
+        ],
+        "source": "cpf_and_general_insurance.txt"
+      },
+      {
+        "canonicalName": "Flexi Cashback",
+        "currentClassification": "savings/Endowment",
+        "aliases": [
+          "FCB"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "MINDEF & MHA Group Insurance - Core Scheme (GPI)",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [
+          "MINDEF/MHA Core GPI",
+          "MINDEF Group Personal Injury"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "MINDEF & MHA Group Insurance - Core Scheme (GTL)",
+        "currentClassification": "protection/Term Life",
+        "aliases": [
+          "MINDEF/MHA Core GTL",
+          "MINDEF Core Group Term Life"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "MINDEF & MHA Group Insurance - Voluntary Scheme",
+        "currentClassification": "protection/Term Life",
+        "aliases": [
+          "MINDEF Voluntary",
+          "MINDEF/MHA Voluntary Scheme"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "My Multipay CI Plan III (Aviva legacy)",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [
+          "MMCI III"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "MyCancerCare (Aviva legacy)",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [
+          "MCC"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "MyCoreCI II",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "rc2.68-slash-cleanup-2026-05-19"
+      },
+      {
+        "canonicalName": "MyCoreCI II (Aviva legacy)",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [
+          "MyCoreCI",
+          "MCCI"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "MyEndowment",
+        "currentClassification": "savings/Endowment",
+        "aliases": [],
+        "source": "phase-5-slash-split-2026-05-18"
+      },
+      {
+        "canonicalName": "MyEndowment (Aviva legacy)",
+        "currentClassification": "protection/Universal Life",
+        "aliases": [
+          "MyEndowmentPlan"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "MyEndowmentPlan",
+        "currentClassification": "savings/Endowment",
+        "aliases": [
+          "MyEndowment (Aviva legacy)"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "MyHealthPlus B",
+        "currentClassification": "protection/Universal Life",
+        "aliases": [
+          "MyHealthPlus Option A",
+          "C (original)",
+          "MHP A"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "MyHealthPlus C (original)",
+        "currentClassification": "protection/Universal Life",
+        "aliases": [
+          "MyHealthPlus Option A",
+          "C (original)",
+          "MHP A"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "MyHealthPlus Option A",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [
+          "C (original)",
+          "MHP A"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "MyHealthPlus Option A-II",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "MyHealthPlus Option A-II (Aviva legacy)",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [
+          "MHP A-II"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "MyHealthPlus Option B",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "MyHealthPlus Option B-II (Aviva legacy)",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [
+          "MHP B-II"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "MyHealthPlus Option C",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "MyHealthPlus Option C-II",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "MyHealthPlus Option C-II (Aviva legacy)",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [
+          "MHP C-II"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "MyLifeChoice (Singlife with Aviva)",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [
+          "MLC"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "MyProtector-Term Plan (II) (Singlife w/ Aviva)",
+        "currentClassification": "protection/Term Life",
+        "aliases": [
+          "MPTP II"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "MyRetirementChoice (Aviva legacy)",
+        "currentClassification": "protection/Universal Life",
+        "aliases": [
+          "MRC"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "MyRetirementSavings",
+        "currentClassification": "retirement/Annuity",
+        "aliases": [
+          "MyRetirementChoice",
+          "MRC",
+          "MRS"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "MySavingsPlan (Aviva legacy)",
+        "currentClassification": "protection/Universal Life",
+        "aliases": [
+          "MSP"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "MyShield Plan 1 (Aviva legacy)",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "MyS P1"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "MyShield Plan 2 (Aviva legacy)",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "MyS P2"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "MyShield Plan 3 (Aviva legacy)",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "MyS P3"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "MyShield Plan A (Aviva legacy)",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "MyS PA"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "MyWealthPlan (Aviva legacy)",
+        "currentClassification": "protection/Universal Life",
+        "aliases": [
+          "MWP"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "MyWholeLifePlan (Singlife with Aviva)",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [
+          "MWLP"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "Public Officers Group Insurance Scheme",
+        "currentClassification": "protection/Term Life",
+        "aliases": [
+          "POGIS"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "QBE",
+        "currentClassification": "protection/",
+        "aliases": [
+          "QBE Private Car Plus",
+          "QBE Single Premium Car",
+          "QBE Travel",
+          "QBE Travel Prestige",
+          "QBE Home Insurance",
+          "QBE House & Home",
+          "QBE Personal Accident"
+        ],
+        "source": "cpf_and_general_insurance.txt"
+      },
+      {
+        "canonicalName": "Recovery Support Benefit (Apr 2026 add-on)",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [
+          "RSB"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "Singlife Financial Adviser",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Singlife GROW",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Singlife Health Plus Plan 3",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [
+          "SHP-P3"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "Singlife Health Plus Private",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Singlife Health Plus Private (from 1 Apr 2026)",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [
+          "SHP-Pri"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "Singlife Health Plus Private Lite",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Singlife Health Plus Private Prime",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [
+          "SHP-PriPr"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "Singlife Health Plus Public",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Singlife Health Plus Public (from 1 Apr 2026)",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [
+          "SHP-Pub"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "Singlife Health Plus Public Lite",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Singlife Health Plus Public Prime",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Singlife Hospital Cash (legacy MyHospitalCash)",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "SHC"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "Singlife MyDashboard",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Singlife MyHospitalIncome",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Singlife Retirement Income",
+        "currentClassification": "retirement/Retirement Income",
+        "aliases": [
+          "SRI"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "Singlife Savvy Endowment IV",
+        "currentClassification": "savings/Short-term Endowment",
+        "aliases": [
+          "VI etc.",
+          "SSE N"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "Singlife Savvy Endowment V",
+        "currentClassification": "savings/Short-term Endowment",
+        "aliases": [],
+        "source": "phase-5-slash-split-2026-05-18"
+      },
+      {
+        "canonicalName": "Singlife Savvy Endowment VI",
+        "currentClassification": "savings/Short-term Endowment",
+        "aliases": [],
+        "source": "phase-5-slash-split-2026-05-18"
+      },
+      {
+        "canonicalName": "Singlife Shield Plan 3",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "SS P3"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "Singlife Steady Saver",
+        "currentClassification": "savings/Endowment",
+        "aliases": [
+          "SStS"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "Singlife Sure Invest",
+        "currentClassification": "protection/ILP (Investment)",
+        "aliases": [
+          "SSurInv"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "VI etc.",
+        "currentClassification": "protection/ILP (Investment)",
+        "aliases": [
+          "Singlife Savvy Endowment IV",
+          "SSE N"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "written by GI insurers)",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Bank Car Insurance",
+          "DBS Car Insurance",
+          "SC \"Allianz"
+        ],
+        "source": "cpf_and_general_insurance.txt"
+      }
+    ],
+    "Tokio Marine": [
+      {
+        "canonicalName": "HL Assurance",
+        "currentClassification": "protection/",
+        "aliases": [
+          "HL Car Protect360 (tiers Basic",
+          "Enhanced",
+          "HL Travel Insurance (Basic",
+          "Superior",
+          "HL Home Protect360",
+          "Home Contents Insurance",
+          "HL Maid Insurance",
+          "HL Maid Protect360"
+        ],
+        "source": "cpf_and_general_insurance.txt"
+      },
+      {
+        "canonicalName": "standalone)",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [
+          "TM Early Cover (rider",
+          "TM Early Cover"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Tokio Marine Home Insurance",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [
+          "TM Home"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Tokio Marine Maid Insurance",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [
+          "TM Maid"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Tokio Marine Private Car Insurance",
+        "currentClassification": "protection/",
+        "aliases": [
+          "TM Car"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Tokio Marine TA Travel Insurance",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [
+          "Travel Explorer",
+          "TM Travel"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Travel Explorer",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [
+          "Tokio Marine TA Travel Insurance",
+          "TM Travel"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      }
+    ]
+  }
+}

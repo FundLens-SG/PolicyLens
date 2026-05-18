@@ -1,0 +1,3417 @@
+{
+  "metadata": {
+    "phase": "P6B-no-register-audit",
+    "purpose": "Verify entries from insurers without committed PPF register coverage. Include Tier B carriers (Etiqa, China Taiping, Raffles, MSIG, Sompo, etc.) and HNW offshore (Manulife Bermuda, Sun Life HK, FPI, Quilter, Transamerica Bermuda, Hansard). Banks/brokers/robo-advisors are out-of-scope and should NOT be audited (cash + brokerage products use different verification model).",
+    "verificationToolRun": "verification-summary-2026-05-18T16-48-44.json",
+    "totalEntries": 513,
+    "instructions": [
+      "Same verdict format as Phase 6A: keep / rename / delete / split / defer.",
+      "For Tier B insurers WITH a register: provide the official register URL + line quote.",
+      "For HNW offshore: provide product brochure URL + extracted feature quote.",
+      "For BANKS/BROKERS/ROBO-ADVISORS in the list (Citibank, DBS, HSBC, Maybank, OCBC, UOB, Standard Chartered, Saxo, iFAST, Tiger Brokers, moomoo, Interactive Brokers, Philip Securities, StashAway, Syfe, Endowus, SGX Central Depository, CPF Board, MOH): SKIP — these will use a different audit pipeline. Mark verdict:\"out-of-scope\"."
+    ],
+    "skippedBankBrokerEntries": 353
+  },
+  "entriesByInsurer": {
+    "Allianz": [
+      {
+        "canonicalName": "Allianz Accident Protect - Silver",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [
+          "Accident Protect Silver",
+          "Allianz PA Silver"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "Allianz Accident Protect Plus",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [
+          "Accident Protect Plus"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "Allianz Cancer Cover",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Allianz Cancer Protect",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [
+          "Cancer Protect"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "Allianz Critical Cover",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Allianz Foreign Worker Medical",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Allianz Group Medical",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Allianz Group Personal Accident",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Allianz Hospital Cash",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Allianz Hospital Income Protect",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [
+          "Hospital Income Protect"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "Allianz International Healthcare Plan",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "Allianz International Health"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "Allianz Personal Accident",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Allianz Travel PA",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Allianz Travel Protect",
+        "currentClassification": "other_assets/Brokerage Account",
+        "aliases": [
+          "Allianz Travel",
+          "Allianz Travel Insurance"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "Allianz Trip Protect",
+        "currentClassification": "other_assets/Brokerage Account",
+        "aliases": [
+          "Allianz Trip Protect (SC)"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "SC Protector Plus",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [
+          "Standard Chartered Protector Plus"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      }
+    ],
+    "China Taiping": [
+      {
+        "canonicalName": "AdvancedCare Rider",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      },
+      {
+        "canonicalName": "AdvancedCare Rider (II)",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      },
+      {
+        "canonicalName": "China Taiping i-Assure 99",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [
+          "i-Assure 99",
+          "CT i-Assure 99"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "China Taiping i-CashLife",
+        "currentClassification": "savings/Endowment",
+        "aliases": [
+          "i-CashLife"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "China Taiping i-Save Series",
+        "currentClassification": "savings/Endowment",
+        "aliases": [
+          "i-Save Series"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "China Taiping i-Saver8",
+        "currentClassification": "savings/Endowment",
+        "aliases": [
+          "i-Saver8"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "China Taiping i-Secure",
+        "currentClassification": "protection/Term Life",
+        "aliases": [
+          "i-Secure",
+          "CT i-Secure"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "China Taiping i-WealthBuilder",
+        "currentClassification": "savings/Endowment",
+        "aliases": [
+          "i-WealthBuilder"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "China Taiping i-WealthSaver",
+        "currentClassification": "savings/Endowment",
+        "aliases": [
+          "i-WealthSaver"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "CompleteCare Rider",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      },
+      {
+        "canonicalName": "Coverage Extender Rider",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      },
+      {
+        "canonicalName": "DIRECT - Critical Illness Rider (II)",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      },
+      {
+        "canonicalName": "DIRECT-Term",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "DIRECT-Whole Life",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [
+          "Direct WL"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "DisabilityCare Rider",
+        "currentClassification": "protection/Disability Income",
+        "aliases": [],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      },
+      {
+        "canonicalName": "Early Payer Rider",
+        "currentClassification": "protection/Premium Waiver",
+        "aliases": [],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      },
+      {
+        "canonicalName": "Early Spouse Rider",
+        "currentClassification": "protection/Disability Income",
+        "aliases": [],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      },
+      {
+        "canonicalName": "Early Waiver Rider",
+        "currentClassification": "protection/Disability Income",
+        "aliases": [],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      },
+      {
+        "canonicalName": "EarlyCare Rider",
+        "currentClassification": "protection/Early Critical Illness",
+        "aliases": [],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      },
+      {
+        "canonicalName": "EasyAssure",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "EasyCare Senior",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "EasyCash Pro",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "EasyTerm",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Enhanced Payer Rider",
+        "currentClassification": "protection/Premium Waiver",
+        "aliases": [],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      },
+      {
+        "canonicalName": "Enhanced Spouse Rider",
+        "currentClassification": "protection/Disability Income",
+        "aliases": [],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      },
+      {
+        "canonicalName": "Enhanced Waiver Rider",
+        "currentClassification": "protection/Disability Income",
+        "aliases": [],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      },
+      {
+        "canonicalName": "GB Term Rider (i-Secure Legacy (II)_AC)",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      },
+      {
+        "canonicalName": "HNW:",
+        "currentClassification": "protection/Universal Life",
+        "aliases": [
+          "\"Infinite <Word>\""
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "i-Accident Rider",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Assure99",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "i-Assure99 Plus",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Cash Bonus",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Cash Bonus (II)",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Cash Bonus (III)",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Cash Plus (III)",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "i-Critical Care Rider",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Family",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Healthcare Plus Rider",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Healthcare Rider",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Premium Waiver",
+        "currentClassification": "protection/Premium Waiver",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Protect",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "i-Protect Plus",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Protect Premier",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Reserve",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Reserve (USD)",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Retire",
+        "currentClassification": "retirement/Retirement",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Retire Plus",
+        "currentClassification": "retirement/Retirement",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Retire Premier",
+        "currentClassification": "retirement/Retirement",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Save",
+        "currentClassification": "savings/Endowment",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "i-Save Flexi",
+        "currentClassification": "savings/Endowment",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Save Goal",
+        "currentClassification": "savings/Endowment",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Saver10",
+        "currentClassification": "savings/Endowment",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Saver12",
+        "currentClassification": "savings/Endowment",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Saver4",
+        "currentClassification": "savings/Endowment",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Secure Critical Illness",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Secure Critical Illness Plus",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Secure II",
+        "currentClassification": "protection/",
+        "aliases": [
+          "i-Secure II (WITHDRAWN)"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "i-Secure Legacy",
+        "currentClassification": "protection/Universal Life",
+        "aliases": [],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "i-Secure Legacy (II)",
+        "currentClassification": "protection/Universal Life",
+        "aliases": [],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "i-Secure Legacy Premier",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Secure Plus",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Secure Premier",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "i-Secure Whole Life",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Termlife Rider",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Wealth Advance",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Wealth Advance Plus",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Wealth Legacy",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Wealth Lite",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Infinite Harvest",
+        "currentClassification": "savings/Endowment",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Infinite Harvest (II)",
+        "currentClassification": "savings/Endowment",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Infinite Harvest (III)",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Infinite Indexed Legacy",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Infinite Indexed Legacy (USD)",
+        "currentClassification": "protection/Indexed Universal Life",
+        "aliases": [
+          "IIL USD"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Infinite Indexed Wealth",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Infinite Indexed Wealth (USD)",
+        "currentClassification": "protection/Indexed Universal Life",
+        "aliases": [
+          "IIW USD"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Infinite Legacy (II)",
+        "currentClassification": "protection/Universal Life",
+        "aliases": [],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Infinite Universal",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Infinite Universal (USD)",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "MultiCare CI",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Payer Rider",
+        "currentClassification": "protection/Premium Waiver",
+        "aliases": [],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      },
+      {
+        "canonicalName": "Taiping Child Protection Rider",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Taiping Early Critical Illness Rider",
+        "currentClassification": "protection/Early Critical Illness",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Taiping Family Income Rider",
+        "currentClassification": "savings/Endowment",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Taiping Hospital Cash Rider",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Taiping i-Save Baby",
+        "currentClassification": "maternity/Maternity Coverage",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Taiping Personal Accident Rider",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Taiping Smartcare",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Taiping TPD Rider",
+        "currentClassification": "protection/Disability Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Taiping Waiver of Premium Rider",
+        "currentClassification": "protection/Premium Waiver",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      }
+    ],
+    "Etiqa": [
+      {
+        "canonicalName": "AmplifyFlex",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "ANNUM",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Business Owners Super Suite (Tiq)",
+        "currentClassification": "protection/",
+        "aliases": [
+          "BOSS"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "CANCER (Etiqa branded)",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [
+          "LIFE"
+        ],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "CANCER (Tiq by Etiqa digital)",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [
+          "LIFE"
+        ],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "CI benefit rider",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "CIMB (bank-branded)",
+        "currentClassification": "protection/",
+        "aliases": [
+          "CIMB My Paw Pal (Liberty-underwritten)"
+        ],
+        "source": "cpf_and_general_insurance.txt"
+      },
+      {
+        "canonicalName": "CIMB Family Protect",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Commercial Vehicle (Tiq)",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Tiq Commercial Veh"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "DBS eMyCare",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "DBS eMyTerm",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "DIRECT - Etiqa Term Life II",
+        "currentClassification": "protection/Term Life",
+        "aliases": [
+          "Direct Etiqa Term Life II",
+          "DPI Etiqa Term"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "DIRECT – Etiqa term life II Critical Illness option",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      },
+      {
+        "canonicalName": "DIRECT – Etiqa whole life Critical Illness option",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      },
+      {
+        "canonicalName": "DIRECT-Etiqa Whole Life",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [
+          "DIRECT-Etiqa WL"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Early CI benefit rider",
+        "currentClassification": "protection/Early Critical Illness",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "ELASTIQ",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Enrich assure",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Enrich flex plus",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Enrich goal",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Enrich income",
+        "currentClassification": "retirement/",
+        "aliases": [],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Enrich retirement",
+        "currentClassification": "retirement/Retirement Income",
+        "aliases": [],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Enrich rewards",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Enrich saver",
+        "currentClassification": "savings/Endowment",
+        "aliases": [],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "ePREMIER Save",
+        "currentClassification": "savings/Endowment",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "ePREMIER Term",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "ePREMIER Wealth",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "ePROTECT CI Rider",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "ePROTECT home",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [
+          "home pro"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "ePROTECT home / home pro",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [
+          "ePROTECT home"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "ePROTECT maid",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "ePROTECT mortgage",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "ePROTECT Mortgage II",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "ePROTECT motorcycle",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "ePROTECT personal mobility",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [
+          "ePROTECT PMD"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "ePROTECT savings",
+        "currentClassification": "savings/Endowment",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "ePROTECT Savings II",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "ePROTECT term life",
+        "currentClassification": "protection/Term Life",
+        "aliases": [
+          "ePROTECT Term"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "ePROTECT Term Life II",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "ePROTECT Term Rider",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "ePROTECT TPD Rider",
+        "currentClassification": "protection/Disability Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "eSAVE assure",
+        "currentClassification": "savings/Endowment",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "eSAVE flex",
+        "currentClassification": "savings/Endowment",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "eSAVE reward",
+        "currentClassification": "savings/Endowment",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Essential Life Secure",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Essential lifetime secure",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Essential whole life cover",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [
+          "Essential WL"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Essential whole life cover II",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Etiqa Cancer 360",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Etiqa Cancer Protect Plus",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Etiqa Critical Illness Protect",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Etiqa Early Critical Illness Protect",
+        "currentClassification": "protection/Early Critical Illness",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Etiqa Enrich Wealth",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Etiqa Eternal Mum",
+        "currentClassification": "maternity/Maternity Coverage",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Etiqa GIO Retire",
+        "currentClassification": "retirement/Retirement",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Etiqa GIO Retire II",
+        "currentClassification": "retirement/Retirement",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Etiqa Growth Assure II",
+        "currentClassification": "savings/Endowment",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Etiqa Hospital Cash Benefit",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Etiqa ILP:",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [
+          "\"Invest <words>\""
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Etiqa Lady Secure",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Etiqa Maternity Cover Plus",
+        "currentClassification": "maternity/Maternity Coverage",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Etiqa MaxCover Active",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Etiqa Payer Benefit Rider",
+        "currentClassification": "protection/Premium Waiver",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Etiqa Personal Accident Insurance",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [
+          "Etiqa PA"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "Etiqa Personal Accident Plus",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Etiqa retail:",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [
+          "\"ePROTECT <thing>\""
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Etiqa savings:",
+        "currentClassification": "savings/Endowment",
+        "aliases": [
+          "\"Enrich <word>\""
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Etiqa Waiver of Premium Rider",
+        "currentClassification": "protection/Premium Waiver",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "eXTRA payer waiver",
+        "currentClassification": "protection/Disability Income",
+        "aliases": [],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      },
+      {
+        "canonicalName": "eXTRA secure waiver",
+        "currentClassification": "protection/Disability Income",
+        "aliases": [],
+        "source": "phase-3-maternity-riders-2026-05-17"
+      },
+      {
+        "canonicalName": "Family Life Secure",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "home pro",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [
+          "ePROTECT home"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Invest flex prime",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Invest flex prime II",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Invest flex pro",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Invest flex pro II",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Invest flex wealth II",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Invest future",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Invest future II",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Invest Future Takaful",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [
+          "Etiqa Invest Future Takaful"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "Invest plus SP",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Invest purpose II",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Invest smart flex II",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Invest Smart Vista",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Invest vista",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Invest vista II",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Invest Wealth Purpose",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [
+          "Invest Wealth Purp"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "LIFE / CI / CANCER (Etiqa branded)",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "LIFE / CI / CANCER (Tiq by Etiqa digital)",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Maternity 360",
+        "currentClassification": "maternity/Maternity Coverage",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Maybank Family Secure",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Maybank Platinum Life",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Personal Cyber Insurance (Tiq)",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [
+          "Tiq Cyber"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Premier Wholelife (Premier Solutions)",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [
+          "Premier WL"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Private Car",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Tiq Car Insurance",
+          "Tiq Car"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Singtel Growth Assure II",
+        "currentClassification": "savings/Endowment",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Standard Chartered",
+        "currentClassification": "protection/",
+        "aliases": [
+          "SC Cyber Personal Insurance (Allied World underwrt.)"
+        ],
+        "source": "cpf_and_general_insurance.txt"
+      },
+      {
+        "canonicalName": "Standard Chartered ProtectLite",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Tiq",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Etiqa",
+          "Tiq Car Insurance (Classic",
+          "Deluxe",
+          "Savvy)"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,cpf_and_general_insurance.txt"
+      },
+      {
+        "canonicalName": "Tiq 3 Plus Critical Illness",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [
+          "Tiq 3 Plus CI"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Tiq by Etiqa",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Tiq Travel Insurance (Entry",
+          "Savvy",
+          "Luxury)",
+          "Tiq Home Insurance",
+          "Tiq Domestic Helper Insurance",
+          "Tiq Maid Insurance",
+          "Tiq Personal Accident",
+          "Tiq Personal Cyber Insurance"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,cpf_and_general_insurance.txt"
+      },
+      {
+        "canonicalName": "Tiq Cancer Insurance",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [
+          "Tiq Cancer"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Tiq Car Insurance",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Private Car",
+          "Tiq Car"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Tiq CashSaver",
+        "currentClassification": "savings/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Tiq Critical Illness",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [
+          "Tiq CI"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Tiq Critical Illness Rider",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Tiq Easy Save",
+        "currentClassification": "savings/Endowment",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Tiq ePROTECT Term Life",
+        "currentClassification": "protection/Term Life",
+        "aliases": [
+          "ePROTECT term life",
+          "Tiq Term Life"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "Tiq general)",
+        "currentClassification": "protection/",
+        "aliases": [
+          "GENERAL INSURANCE (Etiqa"
+        ],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Tiq Home Insurance",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [
+          "Tiq Home"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Tiq Hospital Cash",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Tiq Invest",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Tiq Lady Cancer",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Tiq Maid",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Tiq Mum and Baby",
+        "currentClassification": "maternity/Maternity Coverage",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Tiq Personal Accident",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [
+          "Tiq PA"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Tiq Pet Insurance",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [
+          "Tiq Pet"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Tiq Premium Waiver",
+        "currentClassification": "protection/Premium Waiver",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Tiq SI",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Tiq Term Life Insurance",
+        "currentClassification": "protection/Term Life",
+        "aliases": [
+          "Tiq Term Life"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Tiq Travel Insurance",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [
+          "Tiq Travel"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Tiq Whole Life Insurance",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [
+          "Tiq Whole Life"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Total and Permanent Disability Benefit Rider",
+        "currentClassification": "protection/Disability Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "TripCare 360 (Silver",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Gold",
+          "Platinum)",
+          "TripCare 360"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      }
+    ],
+    "Friends Provident International": [
+      {
+        "canonicalName": "Global Portfolio",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Global Wealth Advance",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Global Wealth Manager",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "International Investment Bond",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Premier Account",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Premier Advance",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Premier Wealth Capital Redemption",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Reserve",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Reserve Capital Redemption",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Reserve Collective Investments",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Reserve Corporate Application Plan",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Reserve Personalised Assets",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Ultra Wealth Capital Redemption",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      }
+    ],
+    "Generali": [
+      {
+        "canonicalName": "Generali Singapore Travel Insurance",
+        "currentClassification": "other_assets/Brokerage Account",
+        "aliases": [
+          "Generali Travel"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "Generali Vision",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      }
+    ],
+    "Hansard International": [
+      {
+        "canonicalName": "Ascend",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Aspire",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Capital Investment Bond",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Global Select",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Hansard Worldwide Lump Sum Bond",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Hansard Worldwide Regular Saver",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Personal Portfolio Bond",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Vantage",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Vantage Platinum II",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Vantage Platinum Worldwide",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      }
+    ],
+    "HL Assurance": [
+      {
+        "canonicalName": "Cancer Protect360",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Critical Illness Protect360",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Early Protect360 Plus",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Fraud Insurance Protect360",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Helper Hospitalisation Protect360",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "HL Assurance",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Hospital Cash Protect360",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Maid Protect360 Medical",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Personal Accident Protect360",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      }
+    ],
+    "Liberty / Liberty Insurance": [
+      {
+        "canonicalName": "CityCare Individual",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "EZCare",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "FAMILYCare",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Foreign Worker Medical Insurance",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Group PAsafe",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Group Personal Accident",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Individual PA",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Liberty Centennial PA Plan",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "MyHEALTH",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "MyHealth (Business)",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "PA Care Plus Enhanced",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "PA Savvy",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "PA Smart 365",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "PallasHealth",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "PASafe",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "proMediCare Group",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "proMediCare Individual",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "proMediCash",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "proMedico",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "SeniorCare",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      }
+    ],
+    "Liberty Insurance": [
+      {
+        "canonicalName": "Liberty Group PASafe",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [
+          "Group PASafe"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "Liberty PACare Plus Enhanced",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [
+          "PACare Plus Enhanced"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      }
+    ],
+    "Liberty": [
+      {
+        "canonicalName": "Car",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Liberty Motor"
+        ],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Liberty BeautyCare",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Liberty CafeCare",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Liberty GolfCare",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Liberty Home (HomeCare)",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Liberty Insurance",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Liberty MaidCare",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Liberty Motor",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [
+          "Car"
+        ],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Liberty OfficeCare",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Liberty Personal Accident",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Liberty PetCare",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Liberty ShopCare",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Liberty Travel",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      }
+    ],
+    "Manulife (International) Bermuda": [
+      {
+        "canonicalName": "Manulife Global HNW Universal Life",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Manulife Global Indexed Universal Life",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Manulife Heirloom",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Manulife Heirloom (I)",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Manulife Heirloom (II)",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Manulife Heirloom (III)",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Manulife Heirloom (IV)",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Manulife Heirloom (V)",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Manulife Heirloom (VI)",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Manulife Heirloom (VII)",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Manulife Indexed Universal Life Insurance Pro",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Manulife Signature Income",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Manulife Signature Indexed Income",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Manulife Signature Indexed Universal Life",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Manulife Signature Indexed Universal Life Select",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Manulife Signature Indexed Universal Life Select (II)",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Manulife Signature Indexed Universal Life Select (III)",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Manulife Signature Legacy Growth",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Manulife Signature Legacy Harvest",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Manulife Signature Wealth",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      }
+    ],
+    "MSIG": [
+      {
+        "canonicalName": "5-IN-1 Hospital Cash Plan",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "50-PLUS CARE",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Active Care",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Blue Ribbon",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "CancerCare Plus",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "DBS Joyous Care",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Doctor Cash",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Early Critical IllnessCare",
+        "currentClassification": "protection/Early Critical Illness",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Group Hospital & Surgical",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Group Outpatient Care",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Group Personal Accident",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Healthcare CashPlus",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Hospital CashPlus",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "i-Secure PA",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Income Builder Accident Care",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Lifestyle Protector",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Mediplus",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "MSIG 3C Critical Illness",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "MSIG CriticalCare Plus",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [
+          "CriticalCare Plus",
+          "MSIG CC Plus"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "MSIG EarlyCare Plus",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "MSIG Group Critical Illness",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "MSIG Group Hospital Cash",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "MSIG Group Major Medical",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "MSIG Group Specialist Outpatient",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "MSIG PA PrimePlus",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "MSIG PA PrimePlus Series II",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "MSIG ProtectionPlus Critical Illness",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "MSIG ProtectionPlus Hospital Cash",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "MSIG TravelEasy",
+        "currentClassification": "other_assets/Brokerage Account",
+        "aliases": [
+          "TravelEasy",
+          "MSIG TE"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "MSIG TravelEasy Flex",
+        "currentClassification": "other_assets/Brokerage Account",
+        "aliases": [
+          "TravelEasy Flex"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "MSIG TravelEasy Pre-Ex",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [
+          "TravelEasy Pre-Ex"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "MSIG Work Injury Plus",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "PA PrimePlus (Series II)",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [
+          "MSIG PA PrimePlus II",
+          "PA Prime Plus Series II"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "PA RecoveryPlus",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [
+          "MSIG PA Recovery Plus"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "Personal Accident Prime",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "PrimeCare",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "ProtectionPlus",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [
+          "MSIG Protection Plus"
+        ],
+        "source": "deep-research-2026-05-17"
+      },
+      {
+        "canonicalName": "RecoveryPlus",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Senior Critical Care",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "SME Healthcare",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "SME PA Plus",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Student Personal Accident",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Supreme Care",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Women Care",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Workfare PA",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      }
+    ],
+    "Old Mutual International / Quilter International": [
+      {
+        "canonicalName": "Collective Investment Bond",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Collective Redemption Bond",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "European Collective Investment Bond",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "European Executive Investment Bond",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Executive Investment Account",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Executive Investment Bond",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Executive Life Portfolio",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Executive Redemption Bond",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "International Executive Portfolio Life",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "International Executive Portfolio Redemption",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "International Portfolio Bond Life",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "International Portfolio Bond Redemption",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Professional Portfolio Bond",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Wealth Management Plan",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      }
+    ],
+    "Raffles Health Insurance": [
+      {
+        "canonicalName": "Raffles Cancer Guard Rider Plus",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Raffles Corporate Hospital & Surgical",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Raffles Corporate Outpatient",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Raffles Corporate Personal Accident",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Raffles Elite Care Outpatient",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Raffles Group Shield",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Raffles Group Shield A",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Raffles Group Shield B",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Raffles Group Shield Standard",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Raffles Hospital Cash Rider Plus",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Raffles Major Medical Rider",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Raffles MOM Work Injury Cover",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      }
+    ],
+    "Raffles Health": [
+      {
+        "canonicalName": "Credit & Collateral",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Tugu Credit"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "EAR",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Engineering",
+          "CAR",
+          "Tugu Engineering"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Energy (Onshore",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Offshore)",
+          "Tugu Energy"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Engineering",
+        "currentClassification": "protection/",
+        "aliases": [
+          "CAR",
+          "EAR",
+          "Tugu Engineering"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Engineering / CAR / EAR",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Tugu Engineering"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Hull & Machinery",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Tugu H&M"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "IPs:",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Raffles Shield Private",
+          "Standard"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Liberty BeautyCare",
+        "currentClassification": "protection/",
+        "aliases": [
+          "BeautyCare"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Liberty CafeCare",
+        "currentClassification": "protection/",
+        "aliases": [
+          "CafeCare"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Liberty GolfCare",
+        "currentClassification": "protection/",
+        "aliases": [
+          "GolfCare"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Liberty Home (HomeCare)",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [
+          "HomeCare"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Liberty MaidCare",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [
+          "MaidCare"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Liberty Motor",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [
+          "Car",
+          "Liberty Car"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Liberty Motor / Car",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [
+          "Liberty Car"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Liberty OfficeCare",
+        "currentClassification": "protection/",
+        "aliases": [
+          "OfficeCare"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Liberty Personal Accident",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [
+          "Liberty PA"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Liberty PetCare",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [
+          "PetCare"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Liberty ShopCare",
+        "currentClassification": "protection/",
+        "aliases": [
+          "ShopCare"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Liberty Travel",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Protection & Indemnity (P&I)",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Tugu P&I"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Raffles A",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Raffles Shield (Private",
+          "High",
+          "Standard"
+        ],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Raffles B)",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Raffles Shield (Private",
+          "High",
+          "Standard"
+        ],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Raffles Cancer Guard Rider",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [
+          "RCGR",
+          "Cancer Guard Rider"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Raffles Choice Rider",
+        "currentClassification": "protection/Rider",
+        "aliases": [
+          "Choice Rider"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Raffles Choice Rider (from 1 Apr 2026)",
+        "currentClassification": "protection/Rider",
+        "aliases": [
+          "RCR"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "Raffles Corporate Care",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Corporate Care"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Raffles Elite Care (Gold",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [
+          "Silver)",
+          "Raffles Elite Care"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Raffles Elite Care Outpatient Rider",
+        "currentClassification": "protection/Rider",
+        "aliases": [
+          "Elite Care OP Rider"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Raffles Elite Care Silver",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-slash-split-2026-05-18"
+      },
+      {
+        "canonicalName": "Raffles Group Personal Accident",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [
+          "Raffles Group PA"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Raffles Hospital Cash Rider",
+        "currentClassification": "health/Shield Rider",
+        "aliases": [
+          "Hospital Cash Rider"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Raffles Key Rider",
+        "currentClassification": "protection/Rider",
+        "aliases": [
+          "Key Rider"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Raffles Key Rider (CEASED 1 Apr 2026 new sales)",
+        "currentClassification": "protection/Rider",
+        "aliases": [
+          "RKR"
+        ],
+        "source": "singlife_manulife_hsbc_findings.txt"
+      },
+      {
+        "canonicalName": "Raffles Key Rider Option B",
+        "currentClassification": "protection/Rider",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Raffles Premier Rider",
+        "currentClassification": "protection/Rider",
+        "aliases": [
+          "RPR",
+          "Premier Rider"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Raffles Shield (Private",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "High",
+          "Standard",
+          "RSP",
+          "Raffles Shield Pvt"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Raffles Shield A",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "RSA"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Raffles Shield B",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "RSB"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Raffles Shield High Deductible (option, not on Std)",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "Raffles Shield HD"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Raffles Shield Plan A",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [],
+        "source": "phase-5-slash-split-2026-05-18"
+      },
+      {
+        "canonicalName": "Raffles Shield Plan B",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [],
+        "source": "phase-5-slash-split-2026-05-18"
+      },
+      {
+        "canonicalName": "Raffles Shield Standard",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "RSStd",
+          "Raffles Shield Std"
+        ],
+        "source": "01_flat_policy_name_corpus.txt,singlife_manulife_hsbc_findings.txt,smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Raffles Shield Standard Plan",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [],
+        "source": "phase-5-slash-split-2026-05-18"
+      },
+      {
+        "canonicalName": "Raffles Standard",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Raffles Shield (Private",
+          "High",
+          "Standard"
+        ],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Sharia-based insurance",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Tugu Syariah"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Sompo Domestic Helper Insurance",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [
+          "Sompo Maid"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Sompo Health Insurance (group",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "individual)",
+          "Sompo Health"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Sompo Health Insurance (group / individual)",
+        "currentClassification": "health/Integrated Shield Plan",
+        "aliases": [
+          "Sompo Health"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Sompo HomeBliss",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [
+          "HomeBliss"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Sompo Overseas Travel PLUS",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [
+          "Overseas Travel PLUS"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Sompo PA Ease",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [
+          "PA Ease"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Sompo Private Car Insurance",
+        "currentClassification": "protection/",
+        "aliases": [
+          "Sompo Car"
+        ],
+        "source": "smaller_insurers_findings.txt"
+      },
+      {
+        "canonicalName": "Sompo:",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [
+          "\"Sompo <ProductName>\""
+        ],
+        "source": "smaller_insurers_findings.txt"
+      }
+    ],
+    "Sompo": [
+      {
+        "canonicalName": "Group Hospital Cash",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Group Major Medical",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Group MediWell Classic",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Group Specialist Outpatient",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "MaidEase Medical",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "MediLite",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "MediWell Classic",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "MyHealth",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "OTAP",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "PA Ease Plus",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "PA Essential",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "PA Grandeur",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "PAJunior Plus",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "PAStar Plus",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Personal Accident (Group)",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Revital Accident Care",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Revital Recovery Plus",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "SimpleCare",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "SME PA",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Sompo",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Sompo Cancer Care",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Sompo Critical Illness Plus",
+        "currentClassification": "protection/Critical Illness",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Sompo Domestic Helper Insurance",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Sompo Health Insurance (Group)",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-slash-split-2026-05-18"
+      },
+      {
+        "canonicalName": "Sompo Health Insurance (Individual)",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-slash-split-2026-05-18"
+      },
+      {
+        "canonicalName": "Sompo HomeBliss",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Sompo Hospital Cash",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Sompo Overseas Travel PLUS",
+        "currentClassification": "protection/General Insurance",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Sompo PA Ease",
+        "currentClassification": "protection/Personal Accident",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Sompo Private Car Insurance",
+        "currentClassification": "protection/",
+        "aliases": [],
+        "source": "01_flat_policy_name_corpus.txt"
+      },
+      {
+        "canonicalName": "Sompo Senior PA",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Spectra",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "WorldCare",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "YourHealth",
+        "currentClassification": "health/Hospital Income",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      }
+    ],
+    "Sun Life Hong Kong": [
+      {
+        "canonicalName": "BRIGHT UL Wealth-Builder",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Stellar Multi-Currency Insurance Plan II",
+        "currentClassification": "savings/Endowment",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Stellar Multi-Currency Plan",
+        "currentClassification": "savings/Endowment",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Sun Bright Whole Life",
+        "currentClassification": "protection/Whole Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Sun Life Indexed Universal Life Insurance",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Sun Life SunPLUS",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Sun Life Victoria Plus",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "SunBrilliance Indexed Universal Life II",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "SunRise Universal Life",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "SunRise Universal Life Insurance II (8-pay)",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      }
+    ],
+    "Transamerica Life Bermuda": [
+      {
+        "canonicalName": "Genesis II Indexed Universal Life",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Genesis III Indexed Universal Life",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Genesis+ Indexed Universal Life 2",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Opera One",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Opus One Indexed Universal Life",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Prospera FlexiGrowth Indexed Savings",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "TransACE",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "TransACE Elite",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "TransACE Elite II",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "TransACE Elite III",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "TransHorizon",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "TransUltra",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "TransUltra Elite",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "TransUltra Elite II",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Trendsetter Ultra Term Life (Singapore)",
+        "currentClassification": "protection/Term Life",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Universal Life Alpha",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Universal Life Alpha (Singapore)",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Universal Life Alpha Pro (Singapore)",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Universal Life Alpha Pro Century (Singapore)",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Universal Life Plus",
+        "currentClassification": "protection/Universal Life (UL)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      }
+    ],
+    "Zurich International Life": [
+      {
+        "canonicalName": "Zurich DOMUS",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Zurich Elite International Bond",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Zurich International Portfolio Bond",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Zurich International Wealth Account",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      },
+      {
+        "canonicalName": "Zurich International Wealth Account (IWA)",
+        "currentClassification": "investment/Single Premium Investment",
+        "aliases": [
+          "IWA",
+          "Zurich IWA"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "Zurich Vista (Singapore distribution)",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [
+          "Vista Savings Plan",
+          "Zurich Vista"
+        ],
+        "source": "deep-research-2026-05-17-phase2"
+      },
+      {
+        "canonicalName": "Zurich Vista Retirement Scheme",
+        "currentClassification": "investment/ILP (Investment)",
+        "aliases": [],
+        "source": "phase-5-smaller-insurers-2026-05-18"
+      }
+    ]
+  }
+}
