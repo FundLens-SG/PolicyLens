@@ -1504,16 +1504,6 @@
     "source": "deep-research-2026-05-17"
   },
   {
-    "insurer": "Singlife",
-    "productName": "Public Officers Group Insurance Scheme",
-    "category": "protection",
-    "subType": "Term Life",
-    "aliases": [
-      "POGIS"
-    ],
-    "source": "deep-research-2026-05-17"
-  },
-  {
     "insurer": "HSBC Life",
     "productName": "HSBC Life – Shield",
     "category": "health",
@@ -1605,16 +1595,6 @@
     "subType": "ILP (Investment)",
     "aliases": [
       "Etiqa Invest Future Takaful"
-    ],
-    "source": "deep-research-2026-05-17"
-  },
-  {
-    "insurer": "Etiqa",
-    "productName": "Etiqa Personal Accident Insurance",
-    "category": "protection",
-    "subType": "Personal Accident",
-    "aliases": [
-      "Etiqa PA"
     ],
     "source": "deep-research-2026-05-17"
   },
@@ -2609,17 +2589,6 @@
   },
   {
     "insurer": "AIA",
-    "productName": "AIA Diabetes Care - Cancer Cover (add-on)",
-    "category": "protection",
-    "subType": "Critical Illness",
-    "aliases": [
-      "Cancer Cover (Diabetes Care)",
-      "AIA Diabetes Care Cancer Cover"
-    ],
-    "source": "deep-research-2026-05-17"
-  },
-  {
-    "insurer": "AIA",
     "productName": "AIA Star Protector Plus - Child Critical Illness Benefit",
     "category": "protection",
     "subType": "Critical Illness",
@@ -2631,34 +2600,12 @@
   },
   {
     "insurer": "AIA",
-    "productName": "AIA Centurion PA - Dementia Benefit",
-    "category": "protection",
-    "subType": "Long-term Care",
-    "aliases": [
-      "Dementia Benefit (Centurion PA)",
-      "CPA Dementia"
-    ],
-    "source": "deep-research-2026-05-17"
-  },
-  {
-    "insurer": "AIA",
     "productName": "AIA Platinum AccidentCare - Weekly Income Benefit",
     "category": "protection",
     "subType": "Disability Income",
     "aliases": [
       "Weekly Income Benefit (Platinum AccidentCare)",
       "PAC WIB"
-    ],
-    "source": "deep-research-2026-05-17"
-  },
-  {
-    "insurer": "AIA",
-    "productName": "AIA Platinum AccidentCare - Monthly Support Benefit",
-    "category": "protection",
-    "subType": "Disability Income",
-    "aliases": [
-      "Monthly Support Benefit (Platinum AccidentCare)",
-      "PAC MSB"
     ],
     "source": "deep-research-2026-05-17"
   },
@@ -2935,17 +2882,6 @@
   },
   {
     "insurer": "HSBC Life",
-    "productName": "HSBC Life Shield - Standard",
-    "category": "health",
-    "subType": "Integrated Shield Plan",
-    "aliases": [
-      "HSBC Life Shield Standard",
-      "AXA Standard (legacy)"
-    ],
-    "source": "deep-research-2026-05-17"
-  },
-  {
-    "insurer": "HSBC Life",
     "productName": "HSBC Life Enhanced Care II rider",
     "category": "health",
     "subType": "Integrated Shield Plan",
@@ -3002,17 +2938,6 @@
   },
   {
     "insurer": "Etiqa",
-    "productName": "Tiq ePROTECT Term Life",
-    "category": "protection",
-    "subType": "Term Life",
-    "aliases": [
-      "ePROTECT term life",
-      "Tiq Term Life"
-    ],
-    "source": "deep-research-2026-05-17"
-  },
-  {
-    "insurer": "Etiqa",
     "productName": "DIRECT - Etiqa Term Life II",
     "category": "protection",
     "subType": "Term Life",
@@ -3063,17 +2988,6 @@
     "aliases": [
       "i-Assure 99",
       "CT i-Assure 99"
-    ],
-    "source": "deep-research-2026-05-17"
-  },
-  {
-    "insurer": "China Life (Singapore)",
-    "productName": "China Life (Singapore) Wholelife Plans",
-    "category": "protection",
-    "subType": "Whole Life",
-    "aliases": [
-      "China Life Whole Life",
-      "China Life (S'pore) WL"
     ],
     "source": "deep-research-2026-05-17"
   },
@@ -5433,16 +5347,6 @@
   },
   {
     "insurer": "Allianz",
-    "productName": "Allianz International Healthcare Plan",
-    "category": "health",
-    "subType": "Integrated Shield Plan",
-    "aliases": [
-      "Allianz International Health"
-    ],
-    "source": "deep-research-2026-05-17-phase2"
-  },
-  {
-    "insurer": "Allianz",
     "productName": "Allianz Cancer Protect",
     "category": "protection",
     "subType": "Critical Illness",
@@ -5647,16 +5551,6 @@
     "subType": "Personal Accident",
     "aliases": [
       "PACare Plus Enhanced"
-    ],
-    "source": "deep-research-2026-05-17-phase2"
-  },
-  {
-    "insurer": "MSIG",
-    "productName": "MSIG TravelEasy Pre-Ex",
-    "category": "health",
-    "subType": "Hospital Income",
-    "aliases": [
-      "TravelEasy Pre-Ex"
     ],
     "source": "deep-research-2026-05-17-phase2"
   },
@@ -7403,38 +7297,6 @@
     "source": "deep-research-2026-05-17-phase2"
   },
   {
-    "insurer": "MSIG",
-    "productName": "MSIG CriticalCare Plus",
-    "category": "protection",
-    "subType": "Critical Illness",
-    "aliases": [
-      "CriticalCare Plus",
-      "MSIG CC Plus"
-    ],
-    "source": "deep-research-2026-05-17-phase2"
-  },
-  {
-    "insurer": "MSIG",
-    "productName": "MSIG TravelEasy",
-    "category": "other_assets",
-    "subType": "Brokerage Account",
-    "aliases": [
-      "TravelEasy",
-      "MSIG TE"
-    ],
-    "source": "deep-research-2026-05-17-phase2"
-  },
-  {
-    "insurer": "MSIG",
-    "productName": "MSIG TravelEasy Flex",
-    "category": "other_assets",
-    "subType": "Brokerage Account",
-    "aliases": [
-      "TravelEasy Flex"
-    ],
-    "source": "deep-research-2026-05-17-phase2"
-  },
-  {
     "insurer": "Allianz",
     "productName": "Allianz Travel Protect",
     "category": "other_assets",
@@ -7452,17 +7314,6 @@
     "subType": "Brokerage Account",
     "aliases": [
       "Allianz Trip Protect (SC)"
-    ],
-    "source": "deep-research-2026-05-17-phase2"
-  },
-  {
-    "insurer": "Allianz",
-    "productName": "Allianz Accident Protect - Silver",
-    "category": "protection",
-    "subType": "Personal Accident",
-    "aliases": [
-      "Accident Protect Silver",
-      "Allianz PA Silver"
     ],
     "source": "deep-research-2026-05-17-phase2"
   },
@@ -7507,16 +7358,6 @@
     "aliases": [
       "IWA",
       "Zurich IWA"
-    ],
-    "source": "deep-research-2026-05-17-phase2"
-  },
-  {
-    "insurer": "Generali",
-    "productName": "Generali Singapore Travel Insurance",
-    "category": "other_assets",
-    "subType": "Brokerage Account",
-    "aliases": [
-      "Generali Travel"
     ],
     "source": "deep-research-2026-05-17-phase2"
   },
@@ -7582,17 +7423,6 @@
     "aliases": [
       "Heirloom VI",
       "Heirloom 6"
-    ],
-    "source": "deep-research-2026-05-17-phase2"
-  },
-  {
-    "insurer": "Manulife",
-    "productName": "Manulife Signature Life Series",
-    "category": "protection",
-    "subType": "Whole Life",
-    "aliases": [
-      "Signature Life Series",
-      "MSL Series"
     ],
     "source": "deep-research-2026-05-17-phase2"
   },
@@ -8180,16 +8010,6 @@
     "subType": "Maternity Coverage",
     "aliases": [
       "MyHealthPlus Inpatient Pregnancy Complications"
-    ],
-    "source": "phase-3-maternity-riders-2026-05-17"
-  },
-  {
-    "insurer": "HSBC Life",
-    "productName": "HSBC Life EmpoweredMum – Transfer Protection Option",
-    "category": "maternity",
-    "subType": "Maternity Coverage",
-    "aliases": [
-      "Transfer Protection Option"
     ],
     "source": "phase-3-maternity-riders-2026-05-17"
   },
@@ -10121,14 +9941,6 @@
   {
     "insurer": "Great Eastern",
     "productName": "Living Assurance",
-    "category": "protection",
-    "subType": "Whole Life",
-    "aliases": [],
-    "source": "phase-4-corrections-2026-05-17"
-  },
-  {
-    "insurer": "Great Eastern",
-    "productName": "Living Policy",
     "category": "protection",
     "subType": "Whole Life",
     "aliases": [],
@@ -13234,14 +13046,6 @@
   },
   {
     "insurer": "Great Eastern",
-    "productName": "GREAT INDEX INCOME (CLASSIC)",
-    "category": "retirement",
-    "subType": "Income Plan",
-    "aliases": [],
-    "source": "phase-4-big-four-2026-05-17"
-  },
-  {
-    "insurer": "Great Eastern",
     "productName": "GREAT INVEST ADVANTAGE (RSP)",
     "category": "investment",
     "subType": "ILP (Investment)",
@@ -14073,30 +13877,6 @@
     "source": "phase-4-big-four-2026-05-17"
   },
   {
-    "insurer": "Great Eastern",
-    "productName": "PROTECT BOOSTER 2 (10-PAY)",
-    "category": "protection",
-    "subType": "Whole Life",
-    "aliases": [],
-    "source": "phase-4-big-four-2026-05-17"
-  },
-  {
-    "insurer": "Great Eastern",
-    "productName": "PROTECT BOOSTER 2 (15-PAY)",
-    "category": "protection",
-    "subType": "Whole Life",
-    "aliases": [],
-    "source": "phase-4-big-four-2026-05-17"
-  },
-  {
-    "insurer": "Great Eastern",
-    "productName": "PROTECT BOOSTER 2 (5-PAY)",
-    "category": "protection",
-    "subType": "Whole Life",
-    "aliases": [],
-    "source": "phase-4-big-four-2026-05-17"
-  },
-  {
     "insurer": "Singlife",
     "productName": "Aviva MyShield Plan 1",
     "category": "health",
@@ -14343,14 +14123,6 @@
   {
     "insurer": "Sompo",
     "productName": "Sompo Health Insurance (Group)",
-    "category": "health",
-    "subType": "Hospital Income",
-    "aliases": [],
-    "source": "phase-5-slash-split-2026-05-18"
-  },
-  {
-    "insurer": "Sompo",
-    "productName": "Sompo Health Insurance (Individual)",
     "category": "health",
     "subType": "Hospital Income",
     "aliases": [],
@@ -17838,14 +17610,6 @@
   },
   {
     "insurer": "Etiqa",
-    "productName": "ePROTECT Term Rider",
-    "category": "protection",
-    "subType": "Term Life",
-    "aliases": [],
-    "source": "phase-5-smaller-insurers-2026-05-18"
-  },
-  {
-    "insurer": "Etiqa",
     "productName": "ePROTECT CI Rider",
     "category": "protection",
     "subType": "Critical Illness",
@@ -19966,14 +19730,6 @@
   },
   {
     "insurer": "Raffles Health Insurance",
-    "productName": "Raffles Major Medical Rider",
-    "category": "health",
-    "subType": "Hospital Income",
-    "aliases": [],
-    "source": "phase-5-smaller-insurers-2026-05-18"
-  },
-  {
-    "insurer": "Raffles Health Insurance",
     "productName": "Raffles Cancer Guard Rider Plus",
     "category": "protection",
     "subType": "Critical Illness",
@@ -20022,25 +19778,9 @@
   },
   {
     "insurer": "Liberty / Liberty Insurance",
-    "productName": "Foreign Worker Medical Insurance",
-    "category": "health",
-    "subType": "Hospital Income",
-    "aliases": [],
-    "source": "phase-5-smaller-insurers-2026-05-18"
-  },
-  {
-    "insurer": "Liberty / Liberty Insurance",
     "productName": "Group PAsafe",
     "category": "protection",
     "subType": "Term Life",
-    "aliases": [],
-    "source": "phase-5-smaller-insurers-2026-05-18"
-  },
-  {
-    "insurer": "Liberty / Liberty Insurance",
-    "productName": "Group Personal Accident",
-    "category": "protection",
-    "subType": "Personal Accident",
     "aliases": [],
     "source": "phase-5-smaller-insurers-2026-05-18"
   },
@@ -20230,22 +19970,6 @@
   },
   {
     "insurer": "MSIG",
-    "productName": "Group Outpatient Care",
-    "category": "health",
-    "subType": "Hospital Income",
-    "aliases": [],
-    "source": "phase-5-smaller-insurers-2026-05-18"
-  },
-  {
-    "insurer": "MSIG",
-    "productName": "Group Personal Accident",
-    "category": "protection",
-    "subType": "Personal Accident",
-    "aliases": [],
-    "source": "phase-5-smaller-insurers-2026-05-18"
-  },
-  {
-    "insurer": "MSIG",
     "productName": "Healthcare CashPlus",
     "category": "health",
     "subType": "Hospital Income",
@@ -20281,14 +20005,6 @@
     "productName": "Lifestyle Protector",
     "category": "protection",
     "subType": "Whole Life",
-    "aliases": [],
-    "source": "phase-5-smaller-insurers-2026-05-18"
-  },
-  {
-    "insurer": "MSIG",
-    "productName": "Mediplus",
-    "category": "protection",
-    "subType": "Term Life",
     "aliases": [],
     "source": "phase-5-smaller-insurers-2026-05-18"
   },
@@ -20337,22 +20053,6 @@
     "productName": "MSIG Group Specialist Outpatient",
     "category": "health",
     "subType": "Hospital Income",
-    "aliases": [],
-    "source": "phase-5-smaller-insurers-2026-05-18"
-  },
-  {
-    "insurer": "MSIG",
-    "productName": "MSIG PA PrimePlus",
-    "category": "protection",
-    "subType": "Personal Accident",
-    "aliases": [],
-    "source": "phase-5-smaller-insurers-2026-05-18"
-  },
-  {
-    "insurer": "MSIG",
-    "productName": "MSIG PA PrimePlus Series II",
-    "category": "protection",
-    "subType": "Personal Accident",
     "aliases": [],
     "source": "phase-5-smaller-insurers-2026-05-18"
   },
@@ -20582,14 +20282,6 @@
   },
   {
     "insurer": "Sompo",
-    "productName": "MaidEase Medical",
-    "category": "health",
-    "subType": "Hospital Income",
-    "aliases": [],
-    "source": "phase-5-smaller-insurers-2026-05-18"
-  },
-  {
-    "insurer": "Sompo",
     "productName": "MediLite",
     "category": "protection",
     "subType": "Term Life",
@@ -20601,38 +20293,6 @@
     "productName": "MediWell Classic",
     "category": "protection",
     "subType": "Term Life",
-    "aliases": [],
-    "source": "phase-5-smaller-insurers-2026-05-18"
-  },
-  {
-    "insurer": "Sompo",
-    "productName": "Group MediWell Classic",
-    "category": "protection",
-    "subType": "Term Life",
-    "aliases": [],
-    "source": "phase-5-smaller-insurers-2026-05-18"
-  },
-  {
-    "insurer": "Sompo",
-    "productName": "Group Major Medical",
-    "category": "health",
-    "subType": "Hospital Income",
-    "aliases": [],
-    "source": "phase-5-smaller-insurers-2026-05-18"
-  },
-  {
-    "insurer": "Sompo",
-    "productName": "Group Specialist Outpatient",
-    "category": "health",
-    "subType": "Hospital Income",
-    "aliases": [],
-    "source": "phase-5-smaller-insurers-2026-05-18"
-  },
-  {
-    "insurer": "Sompo",
-    "productName": "Group Hospital Cash",
-    "category": "health",
-    "subType": "Hospital Income",
     "aliases": [],
     "source": "phase-5-smaller-insurers-2026-05-18"
   },
@@ -20717,30 +20377,6 @@
     "source": "phase-5-smaller-insurers-2026-05-18"
   },
   {
-    "insurer": "HL Assurance",
-    "productName": "Helper Hospitalisation Protect360",
-    "category": "health",
-    "subType": "Hospital Income",
-    "aliases": [],
-    "source": "phase-5-smaller-insurers-2026-05-18"
-  },
-  {
-    "insurer": "HL Assurance",
-    "productName": "Fraud Insurance Protect360",
-    "category": "protection",
-    "subType": "Whole Life",
-    "aliases": [],
-    "source": "phase-5-smaller-insurers-2026-05-18"
-  },
-  {
-    "insurer": "Allianz",
-    "productName": "Allianz Personal Accident",
-    "category": "protection",
-    "subType": "Personal Accident",
-    "aliases": [],
-    "source": "phase-5-smaller-insurers-2026-05-18"
-  },
-  {
     "insurer": "Allianz",
     "productName": "Allianz Hospital Cash",
     "category": "health",
@@ -20777,22 +20413,6 @@
     "productName": "Allianz Group Medical",
     "category": "health",
     "subType": "Hospital Income",
-    "aliases": [],
-    "source": "phase-5-smaller-insurers-2026-05-18"
-  },
-  {
-    "insurer": "Allianz",
-    "productName": "Allianz Foreign Worker Medical",
-    "category": "health",
-    "subType": "Hospital Income",
-    "aliases": [],
-    "source": "phase-5-smaller-insurers-2026-05-18"
-  },
-  {
-    "insurer": "Allianz",
-    "productName": "Allianz Travel PA",
-    "category": "protection",
-    "subType": "Term Life",
     "aliases": [],
     "source": "phase-5-smaller-insurers-2026-05-18"
   },
@@ -20846,14 +20466,6 @@
   },
   {
     "insurer": "Manulife (International) Bermuda",
-    "productName": "Manulife Heirloom",
-    "category": "protection",
-    "subType": "Universal Life (UL)",
-    "aliases": [],
-    "source": "phase-5-smaller-insurers-2026-05-18"
-  },
-  {
-    "insurer": "Manulife (International) Bermuda",
     "productName": "Manulife Heirloom (I)",
     "category": "protection",
     "subType": "Universal Life (UL)",
@@ -20902,14 +20514,6 @@
   },
   {
     "insurer": "Manulife (International) Bermuda",
-    "productName": "Manulife Heirloom (VII)",
-    "category": "protection",
-    "subType": "Universal Life (UL)",
-    "aliases": [],
-    "source": "phase-5-smaller-insurers-2026-05-18"
-  },
-  {
-    "insurer": "Manulife (International) Bermuda",
     "productName": "Manulife Signature Indexed Universal Life",
     "category": "protection",
     "subType": "Universal Life (UL)",
@@ -20918,23 +20522,7 @@
   },
   {
     "insurer": "Manulife (International) Bermuda",
-    "productName": "Manulife Signature Indexed Universal Life Select",
-    "category": "protection",
-    "subType": "Universal Life (UL)",
-    "aliases": [],
-    "source": "phase-5-smaller-insurers-2026-05-18"
-  },
-  {
-    "insurer": "Manulife (International) Bermuda",
     "productName": "Manulife Signature Indexed Universal Life Select (II)",
-    "category": "protection",
-    "subType": "Universal Life (UL)",
-    "aliases": [],
-    "source": "phase-5-smaller-insurers-2026-05-18"
-  },
-  {
-    "insurer": "Manulife (International) Bermuda",
-    "productName": "Manulife Signature Indexed Universal Life Select (III)",
     "category": "protection",
     "subType": "Universal Life (UL)",
     "aliases": [],
@@ -21563,22 +21151,6 @@
     "source": "rc2.68-slash-cleanup-2026-05-19"
   },
   {
-    "insurer": "Great Eastern",
-    "productName": "DIRECT - GREAT Life (I) 70",
-    "category": "protection",
-    "subType": "Term Life",
-    "aliases": [],
-    "source": "rc2.68-slash-cleanup-2026-05-19"
-  },
-  {
-    "insurer": "Great Eastern",
-    "productName": "DIRECT - GREAT Life (I) 85",
-    "category": "protection",
-    "subType": "Term Life",
-    "aliases": [],
-    "source": "rc2.68-slash-cleanup-2026-05-19"
-  },
-  {
     "insurer": "NTUC Income",
     "productName": "IncomeShield Plan P",
     "category": "health",
@@ -21657,5 +21229,461 @@
     "subType": "Critical Illness",
     "aliases": [],
     "source": "rc2.68-slash-cleanup-2026-05-19"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Centurion PA",
+    "category": "protection",
+    "subType": "Long-term Care",
+    "aliases": [
+      "AIA Centurion PA - Dementia Benefit",
+      "AIA Centurion PA - Dementia Benefit"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Diabetes Care",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "AIA Diabetes Care - Cancer Cover (add-on)",
+      "AIA Diabetes Care - Cancer Cover (add-on)"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "China Life (Singapore)",
+    "productName": "China Life Whole Life Guardian",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [
+      "China Life (Singapore) Wholelife Plans",
+      "China Life (Singapore) Wholelife Plans"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "Cancer Insurance",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "FWD Cancer Insurance (legacy v1)",
+      "FWD Cancer Insurance (legacy v1)"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "DIRECT - GREAT LIFE 70",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "DIRECT - GREAT Life (I) 70",
+      "DIRECT - GREAT Life (I) 70"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "DIRECT - GREAT LIFE 85",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "DIRECT - GREAT Life (I) 85",
+      "DIRECT - GREAT Life (I) 85"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Index Income",
+    "category": "retirement",
+    "subType": "Income Plan",
+    "aliases": [
+      "GREAT INDEX INCOME (CLASSIC)",
+      "GREAT INDEX INCOME (CLASSIC)"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT TOTALCARE",
+    "category": "health",
+    "subType": "Shield Rider",
+    "aliases": [
+      "GREAT TotalCare (CLASSIC)",
+      "GREAT TotalCare (CLASSIC)"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "LIVING ASSURANCE POLICY",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [
+      "Living Policy",
+      "Living Policy"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "PROTECT BOOSTER 2 - REGION A (PREFERRED LIFE)",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [
+      "PROTECT BOOSTER 2 (10-PAY)",
+      "PROTECT BOOSTER 2 (10-PAY)"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GROUP SUPREMECARE",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "SupremeCare (Group Managed Care)",
+      "SupremeCare (Group Managed Care)"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life EmpoweredMum",
+    "category": "maternity",
+    "subType": "Maternity Coverage",
+    "aliases": [
+      "HSBC Life EmpoweredMum – Transfer Protection Option",
+      "HSBC Life EmpoweredMum – Transfer Protection Option"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Shield                                              ASIMA                  CAT 1",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "HSBC Life Shield - Standard",
+      "HSBC Life Shield - Standard"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Signature Life",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [
+      "Manulife Signature Life Series",
+      "Manulife Signature Life Series"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MYCORECI PLAN",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "MyCoreCI II (Aviva legacy)",
+      "MyCoreCI II (Aviva legacy)"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MYPROTECTOR - TERM PLAN",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "MyProtector-Term Plan (II) (Singlife w/ Aviva)",
+      "MyProtector-Term Plan (II) (Singlife w/ Aviva)"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "GROUP MATERNITY                                       POGIS - Group Term Life",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "Public Officers Group Insurance Scheme",
+      "Public Officers Group Insurance Scheme"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Allianz",
+    "productName": "Allianz Accident Protect",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "Allianz Accident Protect - Silver",
+      "Allianz Accident Protect - Silver"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Allianz",
+    "productName": "International Healthcare Plans for Singapore (Corporate Group Schemes)",
+    "category": "health",
+    "subType": "Integrated Shield Plan",
+    "aliases": [
+      "Allianz International Healthcare Plan",
+      "Allianz International Healthcare Plan"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Allianz",
+    "productName": "Allianz Group Personal Accident Insurance",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "Allianz Personal Accident",
+      "Allianz Personal Accident"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "eXTRA cancer waiver",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "CANCER (Etiqa branded)",
+      "CANCER (Etiqa branded)"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "COMMERCIAL VEHICLE",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Commercial Vehicle (Tiq)",
+      "Commercial Vehicle (Tiq)"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "ePROTECT term life",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "ePROTECT Term Rider",
+      "ePROTECT Term Rider"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Policy of insurance which provides personal accident/ health cover",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "Etiqa Personal Accident Insurance",
+      "Etiqa Personal Accident Insurance"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Tiq Home Insurance",
+    "category": "protection",
+    "subType": "Term Life",
+    "aliases": [
+      "Tiq by Etiqa",
+      "Tiq by Etiqa"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "MOTOR  PRIVATE  CAR",
+    "category": "other_assets",
+    "subType": "Other",
+    "aliases": [
+      "Tiq Car Insurance",
+      "Tiq Car Insurance"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "HL Assurance",
+    "productName": "Fraud Protect360 Plus",
+    "category": "protection",
+    "subType": "Whole Life",
+    "aliases": [
+      "Fraud Insurance Protect360",
+      "Fraud Insurance Protect360"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Liberty",
+    "productName": "Motor Cycle-Individual",
+    "category": "other_assets",
+    "subType": "Other",
+    "aliases": [
+      "Liberty Motor",
+      "Liberty Motor"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Manulife (International) Bermuda",
+    "productName": "Heirloom (VII)",
+    "category": "protection",
+    "subType": "Universal Life (UL)",
+    "aliases": [
+      "Manulife Heirloom",
+      "Manulife Heirloom"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Manulife (International) Bermuda",
+    "productName": "Signature Indexed Universal Life Select (III)",
+    "category": "protection",
+    "subType": "Universal Life (UL)",
+    "aliases": [
+      "Manulife Signature Indexed Universal Life Select",
+      "Manulife Signature Indexed Universal Life Select"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "CRITICALCARE PLUS",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "MSIG CriticalCare Plus",
+      "MSIG CriticalCare Plus"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "TRAVELEASY - GROUP COVER",
+    "category": "other_assets",
+    "subType": "Other",
+    "aliases": [
+      "MSIG TravelEasy",
+      "MSIG TravelEasy"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "TRAVELEASY FLEX - ANNUAL PLAN",
+    "category": "other_assets",
+    "subType": "Other",
+    "aliases": [
+      "MSIG TravelEasy Flex",
+      "MSIG TravelEasy Flex"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "TRAVELEASY PRE-EX ELITE PLAN",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [
+      "MSIG TravelEasy Pre-Ex",
+      "MSIG TravelEasy Pre-Ex"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Raffles Health Insurance",
+    "productName": "27. Group Major Medical Rider",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [
+      "Raffles Major Medical Rider",
+      "Raffles Major Medical Rider"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "50. Cancer Guard Rider",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Raffles Cancer Guard Rider",
+      "Raffles Cancer Guard Rider"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "29. Group Personal Accident Rider",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "Raffles Group Personal Accident",
+      "Raffles Group Personal Accident"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "MyHealth Individual by APRIL",
+    "category": "health",
+    "subType": "Hospital Income",
+    "aliases": [
+      "Sompo Health Insurance (Individual)",
+      "Sompo Health Insurance (Individual)"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "PA Ease",
+    "category": "protection",
+    "subType": "Personal Accident",
+    "aliases": [
+      "Sompo PA Ease",
+      "Sompo PA Ease"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "Private Car Insurance",
+    "category": "other_assets",
+    "subType": "Other",
+    "aliases": [
+      "Sompo Private Car Insurance",
+      "Sompo Private Car Insurance"
+    ],
+    "source": "phase-6-rename-2026-05-19"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "ePROTECT home",
+    "category": "other_assets",
+    "subType": "Other",
+    "aliases": [],
+    "source": "phase-6-split-2026-05-19"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "home pro",
+    "category": "other_assets",
+    "subType": "Other",
+    "aliases": [],
+    "source": "phase-6-split-2026-05-19"
   }
 ]

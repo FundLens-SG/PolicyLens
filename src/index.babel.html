@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.68-full-corpus-verification-batch1';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.69-phase6-batch1-trash-and-classifications';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -728,9 +728,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.68';
+const APP_VERSION = 'v2.4.0-rc2.69';
 const APP_VERSION_DATE = '2026-05-19';
-const APP_VERSION_NAME = 'Full corpus verification batch 1 — Manulife register + truncation/slash-joined cleanups';
+const APP_VERSION_NAME = 'Phase 6 batch 1 — 80 trash deletes + 144 classification overrides + 40 renames from audit';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -987,6 +987,25 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.4.0-rc2.69',
+    date: '2026-05-19',
+    name: 'Phase 6 batch 1 — 80 trash deletes + 144 classification overrides + 40 renames from audit',
+    sections: [
+      {
+        heading: 'Phase 6 audit-with-evidence returned — batch 1 high-confidence cleanup',
+        items: [
+          'GPT-5.5 Pro completed Phase 6 audit of 837 entries (324 from 6A not-found + 513 from 6B no-register). Result: 144 keep + 53 rename + 510 delete + 1 split + 129 defer. Each verdict cited a source URL and a register-line quote (where available). The verification tool we built in rc2.67 was the key enabler — pre-extracted register text in the hand-off bundle meant GPT could quote from .txt files instead of trying to read PDFs.',
+          'BATCH 1 applied (high-confidence): 46 obvious-trash deletes from initial categoriser + 34 additional trash from extended pattern matching (lifestyle GI like PetCare/GolfCare, GI category headings like Engineering/Hull & Machinery/Marine Cargo, distributor-only names mis-attributed to wrong insurer, heading artifacts like "Bank-branded"/"IPs:"/"HNW:", govt-scheme misattributions like CareShield Life under Singlife, motor/maid/home GI products, truncated parenthetical artifacts). Total: 80 entries deleted.',
+          '40 RENAMES applied: GPT identified entries that exist in the register but under a slightly different name. Applied as override with the corpus name as alias.',
+          '144 KEEPS applied as classification overrides: confirms category + subType with register-line evidence quoted by GPT. These shift the corpus from "guessed classification" to "register-verified classification".',
+          '2 SPLIT variants applied: 1 slash-joined family split into proper canonical entries.',
+          'Corpus: 3,303 → 3,204 (-99 net). Re-verification: not-found 324 → 269, no-register 866 → 811, verified 2,113 → 2,124.',
+          'HELD for next batch: 430 "ambiguous" delete recommendations. These look like real legacy products that are not in the current PPF register (e.g. Aviva MyShield, AIA Adaptable Income, Manulife Customised Smartlife, Income Cash Builder, China Life Family Treasure series). Aviva MyShield in particular is a pre-merger product still in active SG FC books — deleting it would break extraction for old policy schedules. Approach for next session: per-insurer review against historical product references rather than mass deletion.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.4.0-rc2.68',
     date: '2026-05-19',

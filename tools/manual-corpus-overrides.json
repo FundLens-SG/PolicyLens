@@ -63,7 +63,7 @@
     "insurer": "AIA",
     "productName": "AIA Centurion PA",
     "category": "protection",
-    "subType": "Personal Accident"
+    "subType": "Long-term Care"
   },
   {
     "insurer": "AIA",
@@ -1017,7 +1017,7 @@
     "insurer": "China Taiping",
     "productName": "i-Protect",
     "category": "protection",
-    "subType": ""
+    "subType": "Term Life"
   },
   {
     "insurer": "China Taiping",
@@ -1161,37 +1161,37 @@
     "insurer": "Etiqa",
     "productName": "Enrich assure",
     "category": "protection",
-    "subType": ""
+    "subType": "Term Life"
   },
   {
     "insurer": "Etiqa",
     "productName": "Enrich flex plus",
     "category": "protection",
-    "subType": ""
+    "subType": "Term Life"
   },
   {
     "insurer": "Etiqa",
     "productName": "Enrich goal",
     "category": "protection",
-    "subType": ""
+    "subType": "Term Life"
   },
   {
     "insurer": "Etiqa",
     "productName": "Enrich income",
     "category": "retirement",
-    "subType": ""
+    "subType": "Income Plan"
   },
   {
     "insurer": "Etiqa",
     "productName": "Enrich retirement",
     "category": "retirement",
-    "subType": "Retirement Income"
+    "subType": "Income Plan"
   },
   {
     "insurer": "Etiqa",
     "productName": "Enrich rewards",
     "category": "protection",
-    "subType": ""
+    "subType": "Term Life"
   },
   {
     "insurer": "Etiqa",
@@ -1202,8 +1202,8 @@
   {
     "insurer": "Etiqa",
     "productName": "ePROTECT home",
-    "category": "protection",
-    "subType": "General Insurance"
+    "category": "other_assets",
+    "subType": "Other"
   },
   {
     "insurer": "Etiqa",
@@ -1214,20 +1214,20 @@
   {
     "insurer": "Etiqa",
     "productName": "ePROTECT maid",
-    "category": "protection",
-    "subType": "General Insurance"
+    "category": "other_assets",
+    "subType": "Other"
   },
   {
     "insurer": "Etiqa",
     "productName": "ePROTECT mortgage",
     "category": "protection",
-    "subType": ""
+    "subType": "Term Life"
   },
   {
     "insurer": "Etiqa",
     "productName": "ePROTECT motorcycle",
-    "category": "protection",
-    "subType": ""
+    "category": "other_assets",
+    "subType": "Other"
   },
   {
     "insurer": "Etiqa",
@@ -1298,8 +1298,8 @@
   {
     "insurer": "Etiqa",
     "productName": "home pro",
-    "category": "protection",
-    "subType": "General Insurance"
+    "category": "other_assets",
+    "subType": "Other"
   },
   {
     "insurer": "Etiqa",
@@ -1388,8 +1388,8 @@
   {
     "insurer": "Etiqa",
     "productName": "Private Car",
-    "category": "protection",
-    "subType": ""
+    "category": "other_assets",
+    "subType": "Other"
   },
   {
     "insurer": "Etiqa",
@@ -1449,7 +1449,7 @@
     "insurer": "Etiqa",
     "productName": "Tiq CashSaver",
     "category": "savings",
-    "subType": ""
+    "subType": "Endowment"
   },
   {
     "insurer": "Etiqa",
@@ -1466,8 +1466,8 @@
   {
     "insurer": "Etiqa",
     "productName": "Tiq Home Insurance",
-    "category": "protection",
-    "subType": "General Insurance"
+    "category": "other_assets",
+    "subType": "Other"
   },
   {
     "insurer": "Etiqa",
@@ -1502,8 +1502,8 @@
   {
     "insurer": "Etiqa",
     "productName": "Tiq Travel Insurance",
-    "category": "protection",
-    "subType": "General Insurance"
+    "category": "other_assets",
+    "subType": "Other"
   },
   {
     "insurer": "Etiqa",
@@ -2096,8 +2096,8 @@
   {
     "insurer": "Great Eastern",
     "productName": "GREAT Index Income",
-    "category": "investment",
-    "subType": ""
+    "category": "retirement",
+    "subType": "Income Plan"
   },
   {
     "insurer": "Great Eastern",
@@ -2281,7 +2281,7 @@
   },
   {
     "insurer": "Great Eastern",
-    "productName": "GREAT TotalCare",
+    "productName": "GREAT TOTALCARE",
     "category": "health",
     "subType": "Shield Rider"
   },
@@ -2870,8 +2870,8 @@
   {
     "insurer": "HSBC Life",
     "productName": "HSBC Life EmpoweredMum",
-    "category": "protection",
-    "subType": "Maternity"
+    "category": "maternity",
+    "subType": "Maternity Coverage"
   },
   {
     "insurer": "HSBC Life",
@@ -3140,14 +3140,14 @@
   {
     "insurer": "Liberty",
     "productName": "Liberty BeautyCare",
-    "category": "protection",
-    "subType": ""
+    "category": "other_assets",
+    "subType": "Other"
   },
   {
     "insurer": "Liberty",
     "productName": "Liberty CafeCare",
-    "category": "protection",
-    "subType": ""
+    "category": "other_assets",
+    "subType": "Other"
   },
   {
     "insurer": "Liberty",
@@ -3188,8 +3188,8 @@
   {
     "insurer": "Liberty",
     "productName": "Liberty OfficeCare",
-    "category": "protection",
-    "subType": ""
+    "category": "other_assets",
+    "subType": "Other"
   },
   {
     "insurer": "Liberty",
@@ -4544,8 +4544,8 @@
   {
     "insurer": "Raffles Health",
     "productName": "Raffles Corporate Care",
-    "category": "protection",
-    "subType": ""
+    "category": "other_assets",
+    "subType": "Other"
   },
   {
     "insurer": "Raffles Health",
@@ -4563,7 +4563,7 @@
     "insurer": "Raffles Health",
     "productName": "Raffles Elite Care Outpatient Rider",
     "category": "protection",
-    "subType": "Rider"
+    "subType": "Personal Accident"
   },
   {
     "insurer": "Raffles Health",
@@ -5055,7 +5055,7 @@
     "insurer": "Singlife",
     "productName": "MyRetirementChoice (Aviva legacy)",
     "category": "protection",
-    "subType": "Universal Life"
+    "subType": "Term Life"
   },
   {
     "insurer": "Singlife",
@@ -5073,7 +5073,7 @@
     "insurer": "Singlife",
     "productName": "MySavingsPlan (Aviva legacy)",
     "category": "protection",
-    "subType": "Universal Life"
+    "subType": "Term Life"
   },
   {
     "insurer": "Singlife",
@@ -5103,7 +5103,7 @@
     "insurer": "Singlife",
     "productName": "MyWealthPlan (Aviva legacy)",
     "category": "protection",
-    "subType": "Universal Life"
+    "subType": "Term Life"
   },
   {
     "insurer": "Singlife",
@@ -5516,8 +5516,8 @@
   {
     "insurer": "Sompo",
     "productName": "Sompo HomeBliss",
-    "category": "protection",
-    "subType": ""
+    "category": "other_assets",
+    "subType": "Other"
   },
   {
     "insurer": "Sompo",
@@ -6646,5 +6646,797 @@
     "productName": "MyCoreCI II",
     "category": "protection",
     "subType": "Critical Illness"
+  },
+  {
+    "insurer": "China Life (Singapore)",
+    "productName": "China Life Whole Life Guardian",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "Cancer Insurance",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "DIRECT - GREAT LIFE 70",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "DIRECT - GREAT LIFE 85",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "LIVING ASSURANCE POLICY",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "PROTECT BOOSTER 2 - REGION A (PREFERRED LIFE)",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GROUP SUPREMECARE",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Shield                                              ASIMA                  CAT 1",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Signature Life",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MYCORECI PLAN",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MYPROTECTOR - TERM PLAN",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "GROUP MATERNITY                                       POGIS - Group Term Life",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Allianz",
+    "productName": "Allianz Accident Protect",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Allianz",
+    "productName": "International Healthcare Plans for Singapore (Corporate Group Schemes)",
+    "category": "health",
+    "subType": "Integrated Shield Plan"
+  },
+  {
+    "insurer": "Allianz",
+    "productName": "Allianz Group Personal Accident Insurance",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "eXTRA cancer waiver",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "COMMERCIAL VEHICLE",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Policy of insurance which provides personal accident/ health cover",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "MOTOR  PRIVATE  CAR",
+    "category": "other_assets",
+    "subType": "Other"
+  },
+  {
+    "insurer": "HL Assurance",
+    "productName": "Fraud Protect360 Plus",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Liberty",
+    "productName": "Motor Cycle-Individual",
+    "category": "other_assets",
+    "subType": "Other"
+  },
+  {
+    "insurer": "Manulife (International) Bermuda",
+    "productName": "Heirloom (VII)",
+    "category": "protection",
+    "subType": "Universal Life (UL)"
+  },
+  {
+    "insurer": "Manulife (International) Bermuda",
+    "productName": "Signature Indexed Universal Life Select (III)",
+    "category": "protection",
+    "subType": "Universal Life (UL)"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "CRITICALCARE PLUS",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "TRAVELEASY - GROUP COVER",
+    "category": "other_assets",
+    "subType": "Other"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "TRAVELEASY FLEX - ANNUAL PLAN",
+    "category": "other_assets",
+    "subType": "Other"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "TRAVELEASY PRE-EX ELITE PLAN",
+    "category": "health",
+    "subType": "Hospital Income"
+  },
+  {
+    "insurer": "Raffles Health Insurance",
+    "productName": "27. Group Major Medical Rider",
+    "category": "health",
+    "subType": "Hospital Income"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "50. Cancer Guard Rider",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "29. Group Personal Accident Rider",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "MyHealth Individual by APRIL",
+    "category": "health",
+    "subType": "Hospital Income"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "PA Ease",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "Private Car Insurance",
+    "category": "other_assets",
+    "subType": "Other"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MINDEF & MHA Group Insurance - Core Scheme (GPI)",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MINDEF & MHA Group Insurance - Core Scheme (GTL)",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MINDEF & MHA Group Insurance - Voluntary Scheme",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Allianz",
+    "productName": "Allianz Accident Protect Plus",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Allianz",
+    "productName": "Allianz Cancer Protect",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Allianz",
+    "productName": "Allianz Group Personal Accident",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Allianz",
+    "productName": "Allianz Hospital Income Protect",
+    "category": "health",
+    "subType": "Hospital Income"
+  },
+  {
+    "insurer": "Allianz",
+    "productName": "Allianz Travel Protect",
+    "category": "other_assets",
+    "subType": "Other"
+  },
+  {
+    "insurer": "Allianz",
+    "productName": "Allianz Trip Protect",
+    "category": "other_assets",
+    "subType": "Other"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "China Taiping i-Save Series",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "China Taiping i-Saver8",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "China Taiping i-WealthSaver",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "Early Spouse Rider",
+    "category": "protection",
+    "subType": "Disability Income"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "Early Waiver Rider",
+    "category": "protection",
+    "subType": "Disability Income"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "EarlyCare Rider",
+    "category": "protection",
+    "subType": "Early Critical Illness"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "Enhanced Spouse Rider",
+    "category": "protection",
+    "subType": "Disability Income"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "i-Wealth Legacy",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "AmplifyFlex",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "CI benefit rider",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "DIRECT - Etiqa Term Life II",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Early CI benefit rider",
+    "category": "protection",
+    "subType": "Early Critical Illness"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "ELASTIQ",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "eSAVE assure",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "eSAVE flex",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "eSAVE reward",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Essential lifetime secure",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Etiqa Growth Assure II",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "eXTRA payer waiver",
+    "category": "protection",
+    "subType": "Disability Income"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "eXTRA secure waiver",
+    "category": "protection",
+    "subType": "Disability Income"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Invest flex prime",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Invest flex prime II",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Invest flex pro",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Invest future",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Singtel Growth Assure II",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Tiq Easy Save",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Friends Provident International",
+    "productName": "Global Portfolio",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Friends Provident International",
+    "productName": "Global Wealth Advance",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Friends Provident International",
+    "productName": "Global Wealth Manager",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Hansard International",
+    "productName": "Aspire",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Hansard International",
+    "productName": "Capital Investment Bond",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Hansard International",
+    "productName": "Vantage",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Hansard International",
+    "productName": "Vantage Platinum II",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "HL Assurance",
+    "productName": "Critical Illness Protect360",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "HL Assurance",
+    "productName": "Early Protect360 Plus",
+    "category": "protection",
+    "subType": "Whole Life"
+  },
+  {
+    "insurer": "Manulife (International) Bermuda",
+    "productName": "Manulife Signature Indexed Universal Life",
+    "category": "protection",
+    "subType": "Universal Life (UL)"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "5-IN-1 Hospital Cash Plan",
+    "category": "health",
+    "subType": "Hospital Income"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "50-PLUS CARE",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "Active Care",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "Blue Ribbon",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "CancerCare Plus",
+    "category": "protection",
+    "subType": "Critical Illness"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "DBS Joyous Care",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "Group Hospital & Surgical",
+    "category": "health",
+    "subType": "Hospital Income"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "Hospital CashPlus",
+    "category": "health",
+    "subType": "Hospital Income"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "PA PrimePlus (Series II)",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Old Mutual International / Quilter International",
+    "productName": "Collective Investment Bond",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Old Mutual International / Quilter International",
+    "productName": "Executive Redemption Bond",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Old Mutual International / Quilter International",
+    "productName": "International Executive Portfolio Redemption",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Old Mutual International / Quilter International",
+    "productName": "International Portfolio Bond Life",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Old Mutual International / Quilter International",
+    "productName": "International Portfolio Bond Redemption",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Old Mutual International / Quilter International",
+    "productName": "Professional Portfolio Bond",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Raffles Health Insurance",
+    "productName": "Raffles Elite Care Outpatient",
+    "category": "health",
+    "subType": "Hospital Income"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "MediWell Classic",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "MyHealth",
+    "category": "health",
+    "subType": "Hospital Income"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "OTAP",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "PA Essential",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "PA Grandeur",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "Personal Accident (Group)",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "Revital Accident Care",
+    "category": "protection",
+    "subType": "Personal Accident"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "Revital Recovery Plus",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "SimpleCare",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "SME PA",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "Spectra",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "WorldCare",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "YourHealth",
+    "category": "health",
+    "subType": "Hospital Income"
+  },
+  {
+    "insurer": "Sun Life Hong Kong",
+    "productName": "BRIGHT UL Wealth-Builder",
+    "category": "protection",
+    "subType": "Universal Life (UL)"
+  },
+  {
+    "insurer": "Sun Life Hong Kong",
+    "productName": "Stellar Multi-Currency Insurance Plan II",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Sun Life Hong Kong",
+    "productName": "Stellar Multi-Currency Plan",
+    "category": "savings",
+    "subType": "Endowment"
+  },
+  {
+    "insurer": "Sun Life Hong Kong",
+    "productName": "Sun Life Indexed Universal Life Insurance",
+    "category": "protection",
+    "subType": "Universal Life (UL)"
+  },
+  {
+    "insurer": "Sun Life Hong Kong",
+    "productName": "Sun Life SunPLUS",
+    "category": "protection",
+    "subType": "Universal Life (UL)"
+  },
+  {
+    "insurer": "Sun Life Hong Kong",
+    "productName": "SunBrilliance Indexed Universal Life II",
+    "category": "protection",
+    "subType": "Universal Life (UL)"
+  },
+  {
+    "insurer": "Sun Life Hong Kong",
+    "productName": "SunRise Universal Life",
+    "category": "protection",
+    "subType": "Universal Life (UL)"
+  },
+  {
+    "insurer": "Sun Life Hong Kong",
+    "productName": "SunRise Universal Life Insurance II (8-pay)",
+    "category": "protection",
+    "subType": "Universal Life (UL)"
+  },
+  {
+    "insurer": "Transamerica Life Bermuda",
+    "productName": "Genesis II Indexed Universal Life",
+    "category": "protection",
+    "subType": "Universal Life (UL)"
+  },
+  {
+    "insurer": "Transamerica Life Bermuda",
+    "productName": "Genesis III Indexed Universal Life",
+    "category": "protection",
+    "subType": "Universal Life (UL)"
+  },
+  {
+    "insurer": "Transamerica Life Bermuda",
+    "productName": "Prospera FlexiGrowth Indexed Savings",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Transamerica Life Bermuda",
+    "productName": "TransACE",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Transamerica Life Bermuda",
+    "productName": "TransACE Elite",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Transamerica Life Bermuda",
+    "productName": "TransACE Elite II",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Transamerica Life Bermuda",
+    "productName": "TransACE Elite III",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Transamerica Life Bermuda",
+    "productName": "TransHorizon",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Transamerica Life Bermuda",
+    "productName": "TransUltra",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Transamerica Life Bermuda",
+    "productName": "TransUltra Elite",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Transamerica Life Bermuda",
+    "productName": "TransUltra Elite II",
+    "category": "investment",
+    "subType": "ILP (Investment)"
+  },
+  {
+    "insurer": "Transamerica Life Bermuda",
+    "productName": "Trendsetter Ultra Term Life (Singapore)",
+    "category": "protection",
+    "subType": "Term Life"
+  },
+  {
+    "insurer": "Transamerica Life Bermuda",
+    "productName": "Universal Life Alpha",
+    "category": "protection",
+    "subType": "Universal Life (UL)"
+  },
+  {
+    "insurer": "Transamerica Life Bermuda",
+    "productName": "Universal Life Alpha (Singapore)",
+    "category": "protection",
+    "subType": "Universal Life (UL)"
+  },
+  {
+    "insurer": "Transamerica Life Bermuda",
+    "productName": "Universal Life Alpha Pro (Singapore)",
+    "category": "protection",
+    "subType": "Universal Life (UL)"
+  },
+  {
+    "insurer": "Transamerica Life Bermuda",
+    "productName": "Universal Life Alpha Pro Century (Singapore)",
+    "category": "protection",
+    "subType": "Universal Life (UL)"
+  },
+  {
+    "insurer": "Transamerica Life Bermuda",
+    "productName": "Universal Life Plus",
+    "category": "protection",
+    "subType": "Universal Life (UL)"
   }
 ]

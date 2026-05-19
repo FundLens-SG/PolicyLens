@@ -426,5 +426,541 @@
   {
     "insurer": "Tokio Marine",
     "productName": "Tokio Marine TA Travel Insurance / Travel Explorer"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "Business"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "Executive"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD HDB Fire Insurance"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Home Insurance"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Maid Insurance Essential"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Maid Insurance Exclusive"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "(Legacy: GREAT SupremeHealth B, A, P)"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "(Severe Disability) Income Replacement Riders"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "CI on life insured)"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "DBS"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "death waives child premium)"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "\"AXA\""
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "HL Assurance"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Sompo"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "NRIC pattern:"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Aviva)"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "QBE"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "written by GI insurers)"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "HL Assurance"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "standalone)"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Tokio Marine Home Insurance"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Tokio Marine Maid Insurance"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Tokio Marine Private Car Insurance"
+  },
+  {
+    "insurer": "Tokio Marine",
+    "productName": "Tokio Marine TA Travel Insurance"
+  },
+  {
+    "insurer": "China Taiping",
+    "productName": "HNW:"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Etiqa ILP:"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Etiqa retail:"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Etiqa savings:"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Standard Chartered"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Tiq"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Tiq general)"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "TripCare 360 (Silver"
+  },
+  {
+    "insurer": "Generali",
+    "productName": "Generali Singapore Travel Insurance"
+  },
+  {
+    "insurer": "HL Assurance",
+    "productName": "HL Assurance"
+  },
+  {
+    "insurer": "Liberty",
+    "productName": "Car"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "Mediplus"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Energy (Onshore"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Engineering"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "IPs:"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles B)"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Elite Care (Gold"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Shield (Private"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Sompo Health Insurance (group"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Sompo Private Car Insurance"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Sompo:"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "Sompo"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Centurion PA - Dementia Benefit"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Diabetes Care - Cancer Cover (add-on)"
+  },
+  {
+    "insurer": "AIA",
+    "productName": "AIA Platinum AccidentCare - Monthly Support Benefit"
+  },
+  {
+    "insurer": "China Life (Singapore)",
+    "productName": "China Life (Singapore) Wholelife Plans"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Cancer Insurance (legacy v1)"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Flex (CI)"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "DIRECT - GREAT Life (I) 70"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "DIRECT - GREAT Life (I) 85"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT INDEX INCOME (CLASSIC)"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT Life Multiplier (MLA)"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT TotalCare (CLASSIC)"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "GREAT TotalCare (ELITE)"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Living Policy"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "PROTECT BOOSTER 2 (10-PAY)"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "PROTECT BOOSTER 2 (15-PAY)"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "PROTECT BOOSTER 2 (5-PAY)"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "SupremeCare (Group Managed Care)"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life EmpoweredMum – Transfer Protection Option"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Shield - Standard"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "HSBC Life Shield Plan A"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Signature Life Series"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyCoreCI II (Aviva legacy)"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "MyProtector-Term Plan (II) (Singlife w/ Aviva)"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "Public Officers Group Insurance Scheme"
+  },
+  {
+    "insurer": "Allianz",
+    "productName": "Allianz Accident Protect - Silver"
+  },
+  {
+    "insurer": "Allianz",
+    "productName": "Allianz International Healthcare Plan"
+  },
+  {
+    "insurer": "Allianz",
+    "productName": "Allianz Personal Accident"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "CANCER (Etiqa branded)"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "CANCER (Tiq by Etiqa digital)"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Commercial Vehicle (Tiq)"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "ePROTECT Term Rider"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Etiqa Personal Accident Insurance"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Tiq by Etiqa"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Tiq Car Insurance"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Tiq ePROTECT Term Life"
+  },
+  {
+    "insurer": "HL Assurance",
+    "productName": "Fraud Insurance Protect360"
+  },
+  {
+    "insurer": "Liberty",
+    "productName": "Liberty Motor"
+  },
+  {
+    "insurer": "Manulife (International) Bermuda",
+    "productName": "Manulife Heirloom"
+  },
+  {
+    "insurer": "Manulife (International) Bermuda",
+    "productName": "Manulife Heirloom (VII)"
+  },
+  {
+    "insurer": "Manulife (International) Bermuda",
+    "productName": "Manulife Signature Indexed Universal Life Select"
+  },
+  {
+    "insurer": "Manulife (International) Bermuda",
+    "productName": "Manulife Signature Indexed Universal Life Select (III)"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "MSIG CriticalCare Plus"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "MSIG PA PrimePlus"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "MSIG PA PrimePlus Series II"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "MSIG TravelEasy"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "MSIG TravelEasy Flex"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "MSIG TravelEasy Pre-Ex"
+  },
+  {
+    "insurer": "Raffles Health Insurance",
+    "productName": "Raffles Major Medical Rider"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Cancer Guard Rider"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Raffles Group Personal Accident"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "Sompo Health Insurance (Individual)"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "Sompo PA Ease"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "Sompo Private Car Insurance"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "ePROTECT home / home pro"
+  },
+  {
+    "insurer": "FWD",
+    "productName": "FWD Motorcycle Insurance"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Bank-branded"
+  },
+  {
+    "insurer": "Great Eastern",
+    "productName": "Liberty Insurance"
+  },
+  {
+    "insurer": "HSBC Life",
+    "productName": "Bank-branded"
+  },
+  {
+    "insurer": "NTUC Income",
+    "productName": "Liberty Insurance"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "CareShield Life"
+  },
+  {
+    "insurer": "Singlife",
+    "productName": "ECICS"
+  },
+  {
+    "insurer": "Allianz",
+    "productName": "Allianz Foreign Worker Medical"
+  },
+  {
+    "insurer": "Allianz",
+    "productName": "Allianz Travel PA"
+  },
+  {
+    "insurer": "Etiqa",
+    "productName": "Tiq Pet Insurance"
+  },
+  {
+    "insurer": "HL Assurance",
+    "productName": "Helper Hospitalisation Protect360"
+  },
+  {
+    "insurer": "Liberty / Liberty Insurance",
+    "productName": "Foreign Worker Medical Insurance"
+  },
+  {
+    "insurer": "Liberty / Liberty Insurance",
+    "productName": "Group Personal Accident"
+  },
+  {
+    "insurer": "Liberty",
+    "productName": "Liberty GolfCare"
+  },
+  {
+    "insurer": "Liberty",
+    "productName": "Liberty Insurance"
+  },
+  {
+    "insurer": "Liberty",
+    "productName": "Liberty MaidCare"
+  },
+  {
+    "insurer": "Liberty",
+    "productName": "Liberty PetCare"
+  },
+  {
+    "insurer": "Liberty",
+    "productName": "Liberty ShopCare"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "Group Outpatient Care"
+  },
+  {
+    "insurer": "MSIG",
+    "productName": "Group Personal Accident"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Credit & Collateral"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "EAR"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Hull & Machinery"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Liberty BeautyCare"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Liberty CafeCare"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Liberty GolfCare"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Liberty MaidCare"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Liberty PetCare"
+  },
+  {
+    "insurer": "Raffles Health",
+    "productName": "Liberty ShopCare"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "Group Hospital Cash"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "Group Major Medical"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "Group MediWell Classic"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "Group Specialist Outpatient"
+  },
+  {
+    "insurer": "Sompo",
+    "productName": "MaidEase Medical"
   }
 ]
