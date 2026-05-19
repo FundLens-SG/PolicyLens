@@ -41,7 +41,79 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.12-family-report-parity';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.13-stale-sw-self-heal';
+// rc2.75.13: STALE SERVICE WORKER SELF-HEAL.
+// Background — FCs were hitting "Network Error — API calls are being blocked"
+// across Firefox/Edge/Chrome simultaneously. Console showed the OLD SW
+// (rc2e.35) was intercepting fetches to ckg-ai-proxy.workers.dev and the
+// Supabase Edge Functions and rejecting them with CORS errors. The cause:
+// the FC's browsers had a months-old SW cached from rc2e.35, and the new
+// SW's clients.claim() + client.navigate() hadn't fired (the page-session
+// pre-dated the new SW install). Result: page JS was up-to-date but every
+// fetch hit the old SW's broken caching/rewriting logic.
+//
+// This block detects the version mismatch on every page load by querying
+// the active SW for its version. If the SW reports a version != the page's
+// POLICYLENS_SW_VERSION, we render a "Stale app version" banner with a
+// one-click self-heal: unregister all SWs → clear all caches → hard reload.
+async function policylensSelfHealStaleSW() {
+  try {
+    if (!('serviceWorker' in navigator)) return;
+    const regs = await navigator.serviceWorker.getRegistrations();
+    let staleDetected = false;
+    let activeSwVersion = null;
+    for (const reg of regs) {
+      const sw = reg.active || reg.installing || reg.waiting;
+      if (!sw) continue;
+      const ver = await new Promise((resolve) => {
+        let settled = false;
+        const ch = new MessageChannel();
+        ch.port1.onmessage = (e) => { if (!settled) { settled = true; resolve(e?.data?.version || null); } };
+        try { sw.postMessage({ type: 'CHECK_SUPPORT' }, [ch.port2]); }
+        catch (_) { if (!settled) { settled = true; resolve(null); } }
+        setTimeout(() => { if (!settled) { settled = true; resolve(null); } }, 2500);
+      });
+      if (ver && ver !== POLICYLENS_SW_VERSION) {
+        staleDetected = true;
+        activeSwVersion = ver;
+      }
+    }
+    if (staleDetected) {
+      console.warn('[SW] Stale service worker detected — active=' + activeSwVersion + ' vs expected=' + POLICYLENS_SW_VERSION);
+      window.__policylensStaleSWBanner = { active: activeSwVersion, expected: POLICYLENS_SW_VERSION };
+      try { window.dispatchEvent(new CustomEvent('policylens-stale-sw', { detail: window.__policylensStaleSWBanner })); } catch(_) {}
+    }
+  } catch (err) {
+    console.warn('[SW] Self-heal check failed:', err?.message || err);
+  }
+}
+// Public helper — wired to the "Force update" button in the staleness banner
+// and to the Network Error toast retry hint. Unregisters all SWs, clears all
+// caches, and hard-reloads. Idempotent; safe to call multiple times.
+window.policylensForceUpdate = async function policylensForceUpdate() {
+  try {
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister().catch(() => false)));
+    }
+  } catch(_) {}
+  try {
+    if (typeof caches !== 'undefined' && caches.keys) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k).catch(() => false)));
+    }
+  } catch(_) {}
+  try {
+    const url = new URL(window.location.href);
+    // Strip the _plsw query param so the new SW assigns a fresh one
+    url.searchParams.delete('_plsw');
+    // Add a one-shot cache-buster
+    url.searchParams.set('_force', Date.now());
+    window.location.replace(url.href);
+  } catch(_) {
+    window.location.reload();
+  }
+};
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -64,6 +136,10 @@ if ('serviceWorker' in navigator) {
       });
       try { window.dispatchEvent(new Event('policylens-service-worker-ready')); } catch(_) {}
       console.log('[SW] Registered PolicyLens worker', reg.scope);
+      // rc2.75.13: poll the active SW for version mismatch shortly after register
+      // (give the new SW ~2s to install + claim before checking). If still
+      // stale after this, the banner will surface and the FC can self-heal.
+      setTimeout(policylensSelfHealStaleSW, 2500);
     } catch (e) {
       console.warn('[SW] Registration failed:', e);
     }
@@ -743,9 +819,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.75.12';
+const APP_VERSION = 'v2.4.0-rc2.75.13';
 const APP_VERSION_DATE = '2026-05-20';
-const APP_VERSION_NAME = 'rc2.75.12 Family report: coverage chips + insurer-prefix dedup + cleaner rider codes';
+const APP_VERSION_NAME = 'rc2.75.13 Stale Service Worker self-heal banner + Network Error guidance';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1350,6 +1426,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.75.13',
+  date: '2026-05-20',
+  name: 'rc2.75.13 Stale Service Worker self-heal — fixes cross-browser "Network Error" loop',
+  sections: [{
+    heading: 'FC reported "Network Error — API calls are being blocked" in Firefox AND Edge AND Chrome simultaneously',
+    items: ['ROOT CAUSE — DevTools console showed CORS / NetworkError failures on all four backend endpoints (ckg-drive-bridge, drive-auth-dev, ckg-ai-proxy/claude, ckg-ai-proxy/gemini) with the smoking-gun message "A ServiceWorker passed a promise to FetchEvent.respondWith() that rejected with TypeError: NetworkError when attempting to fetch resource". The URL bar showed `?_plsw=v2.3.0-rc2e.35-idbfix` — the FC was on a months-old service worker (rc2e.35) that was intercepting every fetch with stale CORS/caching logic the current backend no longer accepts. The new SW (rc2.75.x) had downloaded but never activated for this FC because their browser session pre-dated the install and clients.claim() + client.navigate() didn\'t fire for an already-open tab. All three browsers exhibited the same symptom because the SAME stale SW was registered separately in each browser\'s profile.', 'FIX #1 — STALENESS DETECTION ON PAGE LOAD: New policylensSelfHealStaleSW() helper runs ~2.5s after SW registration. Sends CHECK_SUPPORT message to every registered SW, reads the version response, and compares to the page\'s POLICYLENS_SW_VERSION. If they don\'t match, dispatches a policylens-stale-sw event with both versions in the detail.', 'FIX #2 — STALE SW BANNER: New StaleSWBanner React component listens for the staleness event and renders a red banner at the very top of the app chrome (above DriveReconnectBar). The banner explains "You are on [old version] but the latest is [new version]. This causes the Network Error you may have seen." A red "Update now" button calls window.policylensForceUpdate() which: (a) unregisters all service workers, (b) clears all browser caches, (c) hard-reloads with _plsw stripped + a one-shot _force=Date.now() cache-buster query param. One click recovers from any stale-SW state.', 'FIX #3 — NETWORK ERROR TOAST GUIDANCE: When a fetch fails with TypeError/NetworkError mid-extraction, the toast now leads with "MOST LIKELY: Stale Service Worker — scroll to the top, click Update now if you see a red banner". The previous toast jumped straight to ad-blocker / firewall guidance which doesn\'t help in the stale-SW case. The toast also explicitly names the backend domains (generativelanguage.googleapis.com, ckg-ai-proxy.workers.dev) so corporate-firewall victims know which domains to whitelist with their IT team. Triggering a NetworkError now also explicitly invokes policylensSelfHealStaleSW() so the banner surfaces even if the early-load check missed a slow SW handshake.', 'NET: The next time the FC opens PolicyLens, the staleness check runs at boot. If their SW is still old, the banner pops at the top with a one-click fix. If their SW has updated naturally, no banner. Either way they\'re never silently stuck again.', 'OUT-OF-SCOPE follow-up: this RC ships the CLIENT-SIDE self-heal. Once every active FC has reloaded into rc2.75.13+, the stale-SW class of bug becomes self-correcting going forward. Cloudflare\'s edge cache TTL on sw.js should also be lowered to <60s (currently appears longer) so future SW updates propagate faster — that\'s a CDN-config change, not a code change.']
+  }]
+}, {
   version: 'v2.4.0-rc2.75.12',
   date: '2026-05-20',
   name: 'rc2.75.12 Family Executive Review fixes (Alex Family smoke test)',
@@ -32076,7 +32160,7 @@ function App() {
       fontSize: 13,
       color: '#aaa'
     }
-  }, v22MigrationProgress ? v22MigrationProgress.current + ' of ' + v22MigrationProgress.total + ' clients…' : 'Preparing…'))), /*#__PURE__*/React.createElement(DriveReconnectBar, null), /*#__PURE__*/React.createElement(Header, null), /*#__PURE__*/React.createElement(ClientContextHeader, null), /*#__PURE__*/React.createElement("div", {
+  }, v22MigrationProgress ? v22MigrationProgress.current + ' of ' + v22MigrationProgress.total + ' clients…' : 'Preparing…'))), /*#__PURE__*/React.createElement(StaleSWBanner, null), /*#__PURE__*/React.createElement(DriveReconnectBar, null), /*#__PURE__*/React.createElement(Header, null), /*#__PURE__*/React.createElement(ClientContextHeader, null), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflow: 'auto',
@@ -34306,6 +34390,100 @@ function SyncStatusPill({
 }
 
 // ── v2.2.0-beta: Drive reconnect status bar ──
+// rc2.75.13: STALE SERVICE WORKER BANNER. Surfaces when the version-check
+// in policylensSelfHealStaleSW() detects that the active SW reports an
+// older version than the page's POLICYLENS_SW_VERSION. The "Update now"
+// button calls window.policylensForceUpdate() which unregisters all SWs,
+// clears all caches, and hard-reloads with a cache-buster query param.
+// This is the recovery path for FCs who hit "Network Error" across multiple
+// browsers — caused by an old SW intercepting fetches with stale CORS /
+// caching logic that the current backend no longer supports.
+function StaleSWBanner() {
+  const [staleInfo, setStaleInfo] = useState(() => typeof window !== 'undefined' && window.__policylensStaleSWBanner || null);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    const h = e => setStaleInfo(e?.detail || typeof window !== 'undefined' && window.__policylensStaleSWBanner || null);
+    try {
+      window.addEventListener('policylens-stale-sw', h);
+    } catch (_) {}
+    return () => {
+      try {
+        window.removeEventListener('policylens-stale-sw', h);
+      } catch (_) {}
+    };
+  }, []);
+  if (!staleInfo) return null;
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: 'color-mix(in oklch, var(--red, #c97b7b) 14%, transparent)',
+      borderBottom: '1px solid color-mix(in oklch, var(--red, #c97b7b) 36%, transparent)',
+      padding: '10px 16px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 10,
+      flexShrink: 0,
+      fontSize: 12,
+      color: 'var(--text)',
+      flexWrap: 'wrap'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      minWidth: 0,
+      flex: '1 1 auto'
+    }
+  }, /*#__PURE__*/React.createElement("strong", {
+    style: {
+      color: 'var(--red, #c97b7b)'
+    }
+  }, "\u26A0\uFE0F Stale app version detected."), ' ', /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: 'var(--text2)'
+    }
+  }, "You are on ", /*#__PURE__*/React.createElement("code", {
+    style: {
+      fontFamily: 'ui-monospace, monospace',
+      fontSize: 11,
+      background: 'rgba(0,0,0,.18)',
+      padding: '1px 5px',
+      borderRadius: 3
+    }
+  }, staleInfo.active || '(unknown)'), " but the latest is ", /*#__PURE__*/React.createElement("code", {
+    style: {
+      fontFamily: 'ui-monospace, monospace',
+      fontSize: 11,
+      background: 'rgba(0,0,0,.18)',
+      padding: '1px 5px',
+      borderRadius: 3
+    }
+  }, staleInfo.expected), ". This causes the \"Network Error \u2014 API calls are being blocked\" you may have seen. Click ", /*#__PURE__*/React.createElement("em", null, "Update now"), " to clear the cached service worker and reload.")), /*#__PURE__*/React.createElement("button", {
+    onClick: async () => {
+      if (busy) return;
+      setBusy(true);
+      try {
+        if (typeof window.policylensForceUpdate === 'function') await window.policylensForceUpdate();
+      } catch (_) {
+        try {
+          window.location.reload();
+        } catch (__) {}
+      }
+    },
+    disabled: busy,
+    style: {
+      background: 'var(--red, #c97b7b)',
+      color: '#fff',
+      border: 'none',
+      borderRadius: 14,
+      padding: '6px 16px',
+      fontSize: 11,
+      fontWeight: 700,
+      cursor: busy ? 'wait' : 'pointer',
+      flexShrink: 0,
+      opacity: busy ? .6 : 1,
+      minHeight: 32
+    }
+  }, busy ? 'Updating…' : 'Update now'));
+}
 function DriveReconnectBar() {
   const {
     tab
@@ -65909,13 +66087,25 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       } else if (wasBackgroundedLongEnough() && (errMsg.includes('networkerror') || errMsg.includes('failed to fetch') || errMsg.includes('timed out') || errMsg.includes('abort') || e instanceof TypeError && (errMsg.includes('fetch') || errMsg.includes('network')))) {
         msg = '🚫 Extraction interrupted — you tabbed away from PolicyLens while files were still uploading.\n\nMobile Chrome suspends background tabs to save battery, which kills in-flight API calls to Gemini/Claude.\n\nFix: Tap Upload again and keep PolicyLens in the foreground until extraction completes. The screen wake lock should prevent this, but it was either unsupported or overridden.';
       } else if (errMsg.includes('networkerror') || errMsg.includes('failed to fetch') || e instanceof TypeError && (errMsg.includes('fetch') || errMsg.includes('network'))) {
-        msg = '🚫 Network Error — API calls are being blocked.\n\nCommon causes:\n\n';
+        msg = '🚫 Network Error — API calls are being blocked.\n\n';
+        // rc2.75.13: if the SAME error appears across Firefox / Edge / Chrome
+        // on this device, the #1 cause is a stale Service Worker intercepting
+        // fetches with broken CORS/caching logic. Mention this first; the
+        // staleness banner at the top of the page offers one-click recovery.
+        msg += '➤ MOST LIKELY: Stale Service Worker (the cached app version is intercepting API calls with old CORS logic).\n';
+        msg += '   Fix: scroll to the top of the page — if you see a red "Stale app version detected" banner, click Update now. Otherwise hold Shift while clicking the browser reload button to force-refresh.\n\n';
+        msg += 'Other possible causes:\n';
         msg += '1. You tabbed away during extraction (mobile Chrome suspends background tabs)\n';
         msg += '2. Firefox Enhanced Tracking Protection — click the shield 🛡️ icon → turn OFF for this site\n';
         msg += '3. Ad blocker (Adblock Plus, uBlock, etc.) — disable for this site\n';
         msg += '4. Browser privacy extensions blocking API requests\n';
-        msg += '5. Corporate firewall/proxy blocking external API calls\n\n';
-        msg += 'Fix: Try again and keep PolicyLens in the foreground. If still failing, check browser shield/ad-blocker settings.';
+        msg += '5. Corporate firewall blocking generativelanguage.googleapis.com OR ckg-ai-proxy.workers.dev — if the error appears in every browser on this machine, your network is the culprit; ask IT to allow these domains.\n\n';
+        msg += 'Fix: Try again and keep PolicyLens in the foreground. If still failing, check browser shield/ad-blocker settings or use the Stale Service Worker recovery above.';
+        // rc2.75.13: also trigger the SW staleness check explicitly when a network
+        // error fires — sometimes the early-load check missed a slow SW handshake.
+        try {
+          if (typeof policylensSelfHealStaleSW === 'function') policylensSelfHealStaleSW();
+        } catch (_) {}
       } else if (errMsg.includes('cors') || errMsg.includes('origin')) {
         msg = '🚫 CORS Error — Browser is blocking API requests.\n\nDisable ad blocker or try Incognito mode.';
       } else if (errMsg.includes('parse') || errMsg.includes('json')) {
