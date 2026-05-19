@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.70-legacy-retained-tagging';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.71-rider-placement-guard';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -728,9 +728,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.70';
+const APP_VERSION = 'v2.4.0-rc2.71';
 const APP_VERSION_DATE = '2026-05-19';
-const APP_VERSION_NAME = 'Legacy-retained tagging — 444 pre-PPF products preserved with explicit audit trail';
+const APP_VERSION_NAME = 'Rider-placement guard — rider products auto-attach to parent plans during extraction';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -987,6 +987,23 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.4.0-rc2.71',
+    date: '2026-05-19',
+    name: 'Rider-placement guard — rider products auto-attach to parent plans during extraction',
+    sections: [
+      {
+        heading: 'New extraction stage: reAttachRiderProductsToParents()',
+        items: [
+          'Fixes a long-standing bug: when an FC workbook had a rider on its own row (with own insurer, premium, etc.), extraction was emitting it as a standalone policy card. The new guard inspects each extracted row AFTER catalogue match — if the matched subType is "Shield Rider" or "Premium Waiver", OR the productName explicitly ends with "Rider" / "(rider)" / "(rider/standalone)", OR the name follows the "Payor Benefit" / "Payer Benefit" pattern, the row is re-attached to its parent base plan in the same sheet+section+insurer block. The rider becomes part of parent.riders with proper type classification (premium_waiver / ci / eci / di / accidental / other).',
+          'Conservative parent selection — only attaches when (1) there is exactly ONE base-plan candidate in the same block, OR (2) multiple candidates exist but exactly one has matching lifeInsured. If still ambiguous, the rider stays as a standalone policy with _unattachedRider=true so the FC can manually link it.',
+          'Detection deliberately strict to avoid false positives: requires the WORD "Rider" as a standalone suffix, not anywhere in the name. Does NOT catch products with "rider" as a substring of another word (e.g. "Driver" / "Spider").',
+          'De-dup against existing parent riders (same name + same premium) — if the rider would duplicate one already there (e.g. from coalesceContinuationRiders), it stays standalone for FC review.',
+          'Soh family extraction: 190/190 unchanged — guard is bounded to the cases coalesceContinuationRiders does not handle (standalone rider rows with own data, vs continuation rows under the parent).'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.4.0-rc2.70',
     date: '2026-05-19',
@@ -13741,6 +13758,126 @@ function coalesceIspShieldRows(policiesRaw) {
   return out;
 }
 
+// rc2.71: Rider-placement guard. After enrichSpreadsheetPolicyCandidate has matched
+//   policies against the catalogue, identify entries that are RIDER products (not
+//   standalone base plans) and re-attach them to their likely parent policy. This
+//   fixes the long-standing bug where extracted workbooks emitted "AIA Payor Benefit
+//   Rider" or "PRUExtra Premier" as their own policy cards instead of placing them
+//   inside the parent plan's Coverage & Riders section.
+//
+//   Detection criteria (must satisfy at least ONE — conservative):
+//     1. subType ∈ {Shield Rider, Premium Waiver} — schema-tagged riders
+//     2. productName ends with the standalone word "Rider" / "(rider)" — explicit
+//
+//   Parent selection: must be a non-rider policy in the SAME sourceSheet + _section
+//   + insurer. If multiple base candidates, prefer one with matching lifeInsured.
+//   If still ambiguous (>1), leave the rider as standalone with _unattachedRider flag
+//   so the FC can manually link it.
+//
+//   Conservatism: we do NOT detect riders by "rider" appearing anywhere in the name
+//   (would catch false positives like "Driver Plus", "Spider"-themed products etc.).
+//   We require the WORD as a standalone suffix or in known-rider context.
+function isLikelyRiderProductForGuard(policy) {
+  const sub = String(policy.subType || '').trim().toLowerCase();
+  // Schema-tagged riders — strongest signal
+  if (sub === 'shield rider' || sub === 'premium waiver') return true;
+  const name = String(policy.productName || policy.policyName || '').trim();
+  // Explicit "Rider" suffix at end of name OR "(rider)" parenthetical
+  if (/\bRider\b\s*(\([^)]*\))?\s*$/i.test(name)) return true;
+  if (/\(rider(?:\/standalone)?\)?\s*$/i.test(name)) return true;
+  // Known payor-benefit naming pattern (Premium Waiver-equivalent without "Rider" suffix)
+  if (/^.{0,40}(?:payor|payer)\s+benefit\b.{0,40}$/i.test(name)) return true;
+  return false;
+}
+
+function classifyRiderTypeForGuard(policy) {
+  const sub = String(policy.subType || '').toLowerCase();
+  const subMap = {
+    'premium waiver': 'premium_waiver',
+    'shield rider': 'other',
+    'critical illness': 'ci',
+    'early critical illness': 'eci',
+    'disability income': 'di',
+    'personal accident': 'accidental',
+    'long-term care': 'other',
+    'maternity coverage': 'other',
+  };
+  if (subMap[sub]) return subMap[sub];
+  const name = String(policy.productName || policy.policyName || '').toLowerCase();
+  if (/payor benefit|payer benefit|premium waiver|critical care waiver|spouse waiver/.test(name)) return 'premium_waiver';
+  if (/early ci|early critical/.test(name)) return 'eci';
+  if (/critical illness|ci rider|cancer/.test(name)) return 'ci';
+  if (/\btpd\b|disability income/.test(name)) return 'di';
+  if (/personal accident|pa rider|accidental death/.test(name)) return 'accidental';
+  return 'other';
+}
+
+function reAttachRiderProductsToParents(policies) {
+  // Build per-(sheet+section+insurer) groups of NON-rider base candidates so each
+  // rider can pick a parent inside the same logical block.
+  const baseByKey = new Map();
+  const riderRows = [];
+  for (const p of policies) {
+    if (isLikelyRiderProductForGuard(p)) {
+      riderRows.push(p);
+    } else {
+      const key = [p.sourceSheet || '', p._section || '', p.insurer || ''].join('||');
+      if (!baseByKey.has(key)) baseByKey.set(key, []);
+      baseByKey.get(key).push(p);
+    }
+  }
+  if (riderRows.length === 0) return policies;
+
+  let attached = 0, unattached = 0;
+  for (const rider of riderRows) {
+    const key = [rider.sourceSheet || '', rider._section || '', rider.insurer || ''].join('||');
+    const candidates = baseByKey.get(key) || [];
+    let parent = null;
+    if (candidates.length === 1) parent = candidates[0];
+    else if (candidates.length > 1) {
+      // Prefer matching lifeInsured (or both empty)
+      const rl = String(rider.lifeInsured || '').trim().toLowerCase();
+      const sameLI = candidates.filter(c => String(c.lifeInsured || '').trim().toLowerCase() === rl);
+      if (sameLI.length === 1) parent = sameLI[0];
+    }
+    if (!parent) {
+      rider._unattachedRider = true;
+      unattached++;
+      continue;
+    }
+    parent.riders = Array.isArray(parent.riders) ? parent.riders : [];
+    const riderEntry = {
+      type: classifyRiderTypeForGuard(rider),
+      riderName: rider.productName || rider.policyName || '(unnamed)',
+      sa: parseFloat(rider.sumAssured) || 0,
+      premium: parseFloat(rider.premiumAmount || rider.annualPremium) || 0,
+      bundled: false,
+      coverageText: rider.coverage || '',
+      _attachedByGuard: true,
+      _attachedFromPolicyNumber: rider.policyNumber || null,
+      _attachedFromSubType: rider.subType || null,
+    };
+    // De-dup against existing riders by riderName + premium
+    const dupKey = (riderEntry.riderName + '|' + riderEntry.premium).toLowerCase();
+    const isDup = parent.riders.some(r => ((r.riderName || '') + '|' + (r.premium || 0)).toLowerCase() === dupKey);
+    if (isDup) {
+      rider._unattachedRider = true;
+      rider._reason = 'duplicate-of-existing-rider-in-parent';
+      unattached++;
+      continue;
+    }
+    parent.riders.push(riderEntry);
+    rider._consumedByRiderGuard = true;
+    attached++;
+  }
+  // Return only the base policies (their .riders arrays now include attached rider products)
+  // + the unattached riders that couldn't be matched to a parent (with the _unattachedRider flag).
+  const out = [];
+  for (const ps of baseByKey.values()) out.push(...ps);
+  for (const r of riderRows) if (!r._consumedByRiderGuard) out.push(r);
+  return out;
+}
+
 function coalesceContinuationRiders(policiesRaw) {
   const out = [];
   for (const original of (policiesRaw || [])) {
@@ -14259,7 +14396,11 @@ async function extractSpreadsheetFilesLocally(files, opts = {}) {
         })
         .map(p => enrichSpreadsheetPolicyCandidate(p, { fileName, repo: repoList }))
         .filter(Boolean);
-      allPols.push(...policies);
+      // rc2.71: re-attach rider products to their parent base plans. Conservative —
+      // only fires when subType is schema-tagged rider (Shield Rider / Premium Waiver)
+      // or productName explicitly ends with "Rider" / "(rider)". See definition above.
+      const guardedPolicies = reAttachRiderProductsToParents(policies);
+      allPols.push(...guardedPolicies);
     }
   }
   if (allPols.length > 0) {
