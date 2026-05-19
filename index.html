@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.69-phase6-batch1-trash-and-classifications';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.70-legacy-retained-tagging';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -738,9 +738,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.69';
+const APP_VERSION = 'v2.4.0-rc2.70';
 const APP_VERSION_DATE = '2026-05-19';
-const APP_VERSION_NAME = 'Phase 6 batch 1 — 80 trash deletes + 144 classification overrides + 40 renames from audit';
+const APP_VERSION_NAME = 'Legacy-retained tagging — 444 pre-PPF products preserved with explicit audit trail';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1214,6 +1214,17 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.70',
+  date: '2026-05-19',
+  name: 'Legacy-retained tagging — 444 pre-PPF products preserved with explicit audit trail',
+  sections: [{
+    heading: 'New file: tools/manual-legacy-retained.json',
+    items: ['Created a tagged registry of 444 corpus entries that GPT-5.5 Pro Phase 6 audit flagged as "not in current PPF register" BUT we chose to keep because they are real legacy products still appearing on older FC policy schedules. Examples: Aviva MyShield (pre-Singlife-acquisition), AIA Adaptable Income / Asset Builder family, Manulife Customised Smartlife / Enhanced RetireReady, Income Cash Builder / Cashback Endowment, China Life Family Treasure 5/10/15, HSBC AXA-legacy Care/Shield products, MINDEF / MHA Group Insurance schemes.', 'Each entry records insurer · productName · status="legacy-not-in-current-register" · reason · phase6Verdict · phase6Reason · reviewedAt. Future deep-research passes know not to flag these as fabrications.', 'tools/verify-against-registers.mjs updated to recognise legacy-retained entries — they now report as a separate "legacy retained" bucket rather than "not-found", which was scaring future audit passes into recommending deletion.']
+  }, {
+    heading: 'Verification state after rc2.69 + rc2.70',
+    items: ['Full-corpus verification on 3,204 entries:', '  ✓ Verified in register : 2,124 (66%)', '  ✓ Legacy retained     :   444 (14%) — tagged audit trail', '  ⚠ No register avail   :   636 (20%) — mostly Tier B insurers + banks/brokers/robo-advisors', '  ✗ Not found           :     0 (0%) — clean state', 'The 0 not-found is the success criterion. Every corpus entry now has explicit status: either register-verified, legacy-tagged with reason, or from an insurer outside register coverage (in which case the verification tool correctly reports no-register rather than not-found).']
+  }]
+}, {
   version: 'v2.4.0-rc2.69',
   date: '2026-05-19',
   name: 'Phase 6 batch 1 — 80 trash deletes + 144 classification overrides + 40 renames from audit',

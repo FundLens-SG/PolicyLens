@@ -1,4 +1,4 @@
-const SW_VERSION = 'v2.4.0-rc2.69-phase6-batch1-trash-and-classifications';
+const SW_VERSION = 'v2.4.0-rc2.70-legacy-retained-tagging';
 const DB_NAME = 'PolicyLensSW';
 const DB_VERSION = 1;
 const SESSION_STORE = 'sessions';

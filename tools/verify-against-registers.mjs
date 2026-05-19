@@ -77,6 +77,16 @@ for (const f of fs.readdirSync(registersDir)) {
 }
 console.log('Available registers: ' + Object.keys(registers).sort().join(', '));
 
+// ─── Load legacy-retained registry (entries intentionally kept despite not being
+//   in current register). These are reported as 'legacy-retained' instead of 'not-found'.
+const legacyRetainedPath = path.join(rootDir, 'tools/manual-legacy-retained.json');
+const legacyKeys = new Set();
+if (fs.existsSync(legacyRetainedPath)) {
+  const legacy = JSON.parse(fs.readFileSync(legacyRetainedPath, 'utf8'));
+  for (const e of legacy) legacyKeys.add((e.insurer + '||' + e.productName).toLowerCase());
+  console.log('Legacy-retained entries loaded: ' + legacyKeys.size);
+}
+
 // ─── Helpers ───
 function norm(s) {
   return String(s || '')
@@ -267,8 +277,16 @@ console.log('Entries to verify: ' + toCheck.length + (ridersOnly ? ' (riders onl
 const verified = [];
 const notFound = [];
 const noRegister = [];
+const legacyRetained = [];
 
 for (const e of toCheck) {
+  // Check legacy-retained registry first — these are intentionally kept even though
+  // they aren't in the current register, so don't report them as "not-found".
+  const entryKey = (e.insurer + '||' + e.name).toLowerCase();
+  if (legacyKeys.has(entryKey)) {
+    legacyRetained.push({ ...e, status: 'legacy-not-in-current-register' });
+    continue;
+  }
   const regFile = insurerToRegister[e.insurer];
   const lines = regFile ? getRegisterLines(regFile) : null;
   if (!lines) { noRegister.push({ ...e, reason: regFile ? 'register file missing' : 'no register mapping' }); continue; }
@@ -288,6 +306,7 @@ const summary = {
   verified: verified.length,
   notFound: notFound.length,
   noRegister: noRegister.length,
+  legacyRetained: legacyRetained.length,
   ridersOnly,
   insurerArg,
   registersAvailable: Object.keys(registers).sort(),
@@ -296,12 +315,13 @@ const summary = {
 const byInsurerSummary = {};
 for (const e of toCheck) {
   const ins = e.insurer;
-  if (!byInsurerSummary[ins]) byInsurerSummary[ins] = { total: 0, verified: 0, notFound: 0, noRegister: 0 };
+  if (!byInsurerSummary[ins]) byInsurerSummary[ins] = { total: 0, verified: 0, notFound: 0, noRegister: 0, legacyRetained: 0 };
   byInsurerSummary[ins].total++;
 }
 for (const v of verified) byInsurerSummary[v.insurer].verified++;
 for (const n of notFound) byInsurerSummary[n.insurer].notFound++;
 for (const n of noRegister) byInsurerSummary[n.insurer].noRegister++;
+for (const l of legacyRetained) byInsurerSummary[l.insurer].legacyRetained++;
 summary.byInsurer = byInsurerSummary;
 
 const strategiesUsed = {};
@@ -312,11 +332,13 @@ fs.writeFileSync(path.join(outDir, 'verification-summary-' + ts + '.json'), JSON
 fs.writeFileSync(path.join(outDir, 'verified-' + ts + '.json'), JSON.stringify(verified, null, 2));
 fs.writeFileSync(path.join(outDir, 'not-found-' + ts + '.json'), JSON.stringify(notFound, null, 2));
 fs.writeFileSync(path.join(outDir, 'no-register-' + ts + '.json'), JSON.stringify(noRegister, null, 2));
+fs.writeFileSync(path.join(outDir, 'legacy-retained-' + ts + '.json'), JSON.stringify(legacyRetained, null, 2));
 
 console.log('\n═══ VERIFICATION SUMMARY ═══');
 console.log('  Verified            : ' + verified.length);
 console.log('  Not found in reg    : ' + notFound.length);
 console.log('  No register avail   : ' + noRegister.length);
+console.log('  Legacy retained     : ' + legacyRetained.length);
 
 console.log('\nMatch strategies used:');
 for (const [s, n] of Object.entries(strategiesUsed).sort((a, b) => b[1] - a[1])) {
