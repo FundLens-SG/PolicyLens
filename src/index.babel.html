@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.10-isp-rider-audit';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.11-mobile-ui-fixes';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -733,9 +733,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.75.10';
+const APP_VERSION = 'v2.4.0-rc2.75.11';
 const APP_VERSION_DATE = '2026-05-20';
-const APP_VERSION_NAME = 'rc2.75.10 AIA ISP-rider polno stem audit + warning chips';
+const APP_VERSION_NAME = 'rc2.75.11 Mobile UI fixes: Drive modal button stacking + touch targets';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1111,6 +1111,26 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.4.0-rc2.75.11',
+    date: '2026-05-20',
+    name: 'rc2.75.11 Mobile UI fixes from static-analysis sweep',
+    sections: [
+      {
+        heading: 'Audited PolicyLens for mobile alignment bugs after FC reported "some areas could be out of alignment"',
+        items: [
+          'FOUND — DriveSyncPromptModal action row had 4 buttons (Why is this required? / Continue without Drive (7d) / Try again (no redirect) / Connect Google Drive →) in a single flex row with flexWrap. At iPhone 375px (modal renders ~343px wide) the buttons wrapped to 3 awkward rows with mixed alignment. Touch targets on "Why is this required?" were also undersized (padding 8px×4px → ~24px tall, below the 44px Apple HIG minimum).',
+          'FIXED — Modal now uses useViewportIsMobile() to switch to a single-column flex stack on phones. Each button takes full modal width with minHeight 44-48px (52px on the primary Connect button). Button order on mobile reverses so the PRIMARY action (Connect Drive) renders at the top, then Try again, then Continue without Drive, then Why is this required at the bottom — matches Apple\'s "primary action at top" convention for action sheets. Touch targets all meet HIG minimums.',
+          'FOUND — Sync Activity dropdown menu had width:300 + maxWidth:80vw. On very narrow phones (320-360px) this left almost no edge padding, and there was no left-edge guard if the trigger sat near the left of the viewport.',
+          'FIXED — Width clamped to `min(300px, calc(100vw - 20px))` so the menu always leaves 20px of viewport gutter even on the narrowest phones.',
+          'AUDITED, NO FIX NEEDED — Policy table at line 48989 already has `overflowX:\'auto\'` wrapper so the table horizontal-scrolls cleanly on narrow viewports. Column widths sum to ~349px at 375px viewport which fits. No change required.',
+          'AUDITED, NO FIX NEEDED — `.grid-2` and `.grid-3` collapse to single column at @media(max-width:768px) which fires AT 768px (iPad portrait) per CSS spec. The audit\'s claim that this needs 767px was wrong; 768px max-width matches 768px viewport.',
+          'AUDITED, NO FIX NEEDED — CKG suite strip has dedicated @media(max-width:640px) rules that hide the breadcrumb, increase back-button touch target to 32px height, and shrink padding. Renders correctly on iPhone.',
+          'NEXT STEPS — Static audit can only catch obvious patterns. If specific areas still look misaligned after this RC deploys, send a screenshot with the area circled so I can target the exact element. Browser dev-tools mobile preview at 375×667 is the fastest way to spot remaining issues.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.4.0-rc2.75.10',
     date: '2026-05-20',
@@ -29077,7 +29097,7 @@ function SyncStatusPill({ driveState }) {
         {age && <span style={{color:'var(--text3)',fontSize:10.5,letterSpacing:'0.01em'}}>· {age}</span>}
       </button>
       {open && (
-        <div onClick={e=>e.stopPropagation()} style={{position:'absolute',right:0,top:'calc(100% + 8px)',width:300,maxWidth:'80vw',zIndex:10001,background:'#172033',border:'1px solid var(--border2)',borderRadius:10,boxShadow:'0 16px 40px rgba(0,0,0,.35)',padding:10}}>
+        <div onClick={e=>e.stopPropagation()} style={{position:'absolute',right:0,top:'calc(100% + 8px)',width:'min(300px, calc(100vw - 20px))',maxWidth:'90vw',zIndex:10001,background:'#172033',border:'1px solid var(--border2)',borderRadius:10,boxShadow:'0 16px 40px rgba(0,0,0,.35)',padding:10}}>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:8,marginBottom:8}}>
             <div style={{fontSize:11,fontWeight:800,color:'var(--text2)'}}>Sync Activity</div>
             <button onClick={()=>setOpen(false)} style={{background:'transparent',border:'none',color:'var(--text3)',fontSize:14,cursor:'pointer'}}>x</button>
@@ -34925,6 +34945,11 @@ function DriveSyncPromptModal({ open, onSkip, onConnect }) {
   const [retrying, setRetrying] = useState(false);
   const [retryMsg, setRetryMsg] = useState(null);
   const [retryDiag, setRetryDiag] = useState(null); // raw error from silent refresh, shown in "Show details"
+  // rc2.75.11: stack the 4-button action row vertically on phones — at 343px
+  // modal width (iPhone), four buttons (Why / Continue without Drive / Try
+  // again / Connect) wrap to 3 awkward rows. Single-column stacking is
+  // clearer and gives each button a comfortable touch target.
+  const isMobile = useViewportIsMobile();
   // rc2.75.5: retry counter — if both Try Again and Connect have been
   // attempted multiple times and still fail (iPad Safari ITP + ckgtools-admin
   // drive_tokens row missing/stale), show the escape hatch prominently.
@@ -35022,19 +35047,52 @@ function DriveSyncPromptModal({ open, onSkip, onConnect }) {
             <strong style={{color:'var(--text2)'}}>Stuck in a loop?</strong> Use the <em>Continue without Drive (7d)</em> button below to dismiss this modal for 7 days. Your existing policies are already on this device — only new data won't back up to Drive until you reconnect (Settings → Connect Drive).
           </div>
         )}
-        <div style={{display:'flex',gap:8,justifyContent:'flex-end',alignItems:'center',flexWrap:'wrap'}}>
-          <button onClick={() => setShowWhy(v => !v)} style={{background:'transparent',color:'var(--text3)',border:'none',padding:'8px 4px',fontSize:11,cursor:'pointer',textDecoration:'underline'}}>
+        <div style={{
+          display:'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? 6 : 8,
+          justifyContent: isMobile ? 'stretch' : 'flex-end',
+          alignItems: isMobile ? 'stretch' : 'center',
+          flexWrap: 'wrap',
+        }}>
+          <button onClick={() => setShowWhy(v => !v)} style={{
+            background:'transparent',color:'var(--text3)',border:'none',
+            padding: isMobile ? '12px 10px' : '10px 6px',
+            minHeight: isMobile ? 44 : 'auto',
+            fontSize:11,cursor:'pointer',textDecoration:'underline',
+            textAlign: isMobile ? 'center' : 'left',
+            order: isMobile ? 4 : 0,
+          }}>
             {showWhy ? 'Hide details' : 'Why is this required?'}
           </button>
           {showEscapeHatch && (
-            <button onClick={handleDefer} style={{background:'transparent',color:'var(--text3)',border:'1px solid var(--border)',borderRadius:6,padding:'8px 12px',fontSize:11,fontWeight:600,cursor:'pointer'}}>
+            <button onClick={handleDefer} style={{
+              background:'transparent',color:'var(--text3)',border:'1px solid var(--border)',
+              borderRadius:6, padding: isMobile ? '12px' : '8px 12px',
+              minHeight: isMobile ? 44 : 'auto',
+              fontSize:11,fontWeight:600,cursor:'pointer',
+              order: isMobile ? 3 : 0,
+            }}>
               Continue without Drive (7d)
             </button>
           )}
-          <button onClick={handleRetry} disabled={retrying} style={{background:'transparent',color:'var(--teal)',border:'1px solid rgba(91,168,160,.45)',borderRadius:6,padding:'8px 14px',fontSize:11,fontWeight:600,cursor:retrying?'wait':'pointer',opacity:retrying?0.6:1}}>
+          <button onClick={handleRetry} disabled={retrying} style={{
+            background:'transparent',color:'var(--teal)',
+            border:'1px solid rgba(91,168,160,.45)',
+            borderRadius:6, padding: isMobile ? '12px' : '8px 14px',
+            minHeight: isMobile ? 44 : 'auto',
+            fontSize:11,fontWeight:600,cursor:retrying?'wait':'pointer',opacity:retrying?0.6:1,
+            order: isMobile ? 2 : 0,
+          }}>
             {retrying ? 'Retrying…' : 'Try again (no redirect)'}
           </button>
-          <button onClick={onConnect} style={{background:'var(--teal)',color:'#fff',border:'none',borderRadius:6,padding:'8px 16px',fontSize:11,fontWeight:700,cursor:'pointer'}}>
+          <button onClick={onConnect} style={{
+            background:'var(--teal)',color:'#fff',border:'none',
+            borderRadius:6, padding: isMobile ? '14px 16px' : '10px 16px',
+            minHeight: isMobile ? 48 : 'auto',
+            fontSize: isMobile ? 13 : 11, fontWeight:700, cursor:'pointer',
+            order: isMobile ? 1 : 0,
+          }}>
             Connect Google Drive →
           </button>
         </div>
