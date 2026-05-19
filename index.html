@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.4-hotfix-drive-prompt-loop';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.5-hotfix-drive-modal-escape-hatch';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -743,9 +743,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.75.4';
+const APP_VERSION = 'v2.4.0-rc2.75.5';
 const APP_VERSION_DATE = '2026-05-19';
-const APP_VERSION_NAME = 'rc2.75.4 hotfix: Drive prompt loop on iPad (silent refresh + Try Again button)';
+const APP_VERSION_NAME = 'rc2.75.5 hotfix: escape hatch for stuck Drive modal + Edge Function diagnostic';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1350,6 +1350,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.75.5',
+  date: '2026-05-19',
+  name: 'rc2.75.5 hotfix: escape hatch + diagnostic for stuck Drive modal',
+  sections: [{
+    heading: 'User confirmed both Try Again AND Connect still loop them back — added an emergency exit',
+    items: ['CONTEXT: rc2.75.4 added a silent Edge Function refresh attempt before showing the Drive prompt modal, plus a "Try Again (no redirect)" button. User reports both still fail on iPad: "Silent refresh failed — your session may have expired" toast appears, Connect redirects but brings them back to the same modal. They\'re completely stuck.', 'WHAT THIS REVEALS: the user\'s `drive_tokens` row on the ckgtools-admin Edge Function side does NOT have a valid refresh_token, OR Google has invalidated it. The "Connect Google Drive →" redirect to ckgtools.com/ goes through the hub, which detects the existing session and bounces back — but does NOT re-trigger Google OAuth with Drive scope on iPad Safari (Safari\'s popup-blocked / cross-origin redirect behaviour may be silently breaking the OAuth dance the hub uses on desktop). Fixing the hub-side OAuth flow is out-of-scope for this PolicyLens patch — but we can stop holding the FC hostage.', 'FIX #1 — ESCAPE HATCH: Added "Continue without Drive (7d)" button to the modal. Appears as soon as the first retry fails. Calls onSkip which writes DRIVE_PROMPT_DISMISS_KEY=now() — suppressing the modal for the existing 7-day window. The FC can keep using PolicyLens with their existing extracted data (already in IndexedDB) and reconnect Drive later from Settings. A clear warning toast fires explaining "Existing data is on this device only — reconnect Drive from Settings to back up new policies."', 'FIX #2 — EDGE FUNCTION DIAGNOSTIC: When Try Again fails, the modal now shows a "Show technical details" disclosure containing the raw error from the drive-auth-dev Edge Function. This lets the FC paste the diagnostic into a support message so we can see exactly what\'s failing on the server side (refresh_token missing? Edge Function 500? CORS? Account mismatch?).', 'FIX #3 — RETRY COUNTER GATE: The escape hatch button only appears after the user has tried at least once (retryCountRef ≥ 1) OR there\'s an error message to acknowledge. Doesn\'t clutter the modal for first-time signed-out users who legitimately need to Connect.', 'NET: Stuck iPad users now have three paths out — Try Again (silent refresh, works for transient ITP wipes), Connect (full OAuth round-trip, works when refresh_token can be re-issued), or Continue without Drive (escape valve when both server-side fixes are unavailable). The FC always has the option to keep working on existing data.', 'TODO (out-of-scope for this RC): the ckgtools-admin Edge Function side needs an explicit "force-reissue Drive scope" URL that bypasses the hub session check and triggers a fresh Google OAuth consent flow. The current "/" redirect only re-issues if the user is signed-OUT — for signed-in users with stale refresh_tokens it does nothing useful.']
+  }]
+}, {
   version: 'v2.4.0-rc2.75.4',
   date: '2026-05-19',
   name: 'rc2.75.4 hotfix: iPad Safari Drive prompt loop after extraction',
@@ -43492,22 +43500,20 @@ function DriveSyncPromptModal({
   onSkip,
   onConnect
 }) {
-  // onSkip kept in the signature for compatibility with the App mount
-  // — it's wired to nothing user-clickable anymore.
-  void onSkip;
   const [showWhy, setShowWhy] = useState(false);
-  // rc2.75.4: Try Again button retries the silent Edge Function refresh.
-  // Without this, iPad Safari users in the ITP-wiped-provider_token state
-  // get stuck in a loop: Connect redirects to /, hub bounces them back,
-  // modal pops again because the provider_token is still missing. Try
-  // Again uses the same in-page refresh path that runs at mount, so a
-  // successful retry closes the modal WITHOUT a redirect.
+  // rc2.75.4: Try Again button retries the silent Edge Function refresh in-page.
   const [retrying, setRetrying] = useState(false);
   const [retryMsg, setRetryMsg] = useState(null);
+  const [retryDiag, setRetryDiag] = useState(null); // raw error from silent refresh, shown in "Show details"
+  // rc2.75.5: retry counter — if both Try Again and Connect have been
+  // attempted multiple times and still fail (iPad Safari ITP + ckgtools-admin
+  // drive_tokens row missing/stale), show the escape hatch prominently.
+  const retryCountRef = useRef(0);
   const handleRetry = async () => {
     if (retrying) return;
     setRetrying(true);
     setRetryMsg(null);
+    retryCountRef.current += 1;
     try {
       if (typeof _refreshDriveTokenViaEdgeFn === 'function') {
         const tok = await _refreshDriveTokenViaEdgeFn();
@@ -43515,19 +43521,54 @@ function DriveSyncPromptModal({
           try {
             if (typeof driveLSSet === 'function' && typeof DRIVE_LS === 'object') driveLSSet(DRIVE_LS.hasEverConnected, '1');
           } catch (_) {}
-          // Reuse the onSkip path so the parent closes the modal and persists dismissal.
           if (typeof onSkip === 'function') onSkip();
           return;
         }
-        setRetryMsg('Silent refresh failed — your session may have expired. Please use Connect Google Drive to re-sign-in.');
+        // rc2.75.5: surface the actual Edge Function diagnostic so we can debug.
+        let diag = 'Edge Function returned no access_token.';
+        try {
+          const sb = window._SB || (typeof getSB === 'function' ? getSB() : null);
+          if (sb?.functions?.invoke) {
+            const probe = await sb.functions.invoke('drive-auth-dev', {
+              body: {
+                mode: 'refresh'
+              }
+            });
+            if (probe?.error) {
+              diag = 'Edge Function error: ' + (probe.error.message || JSON.stringify(probe.error)).slice(0, 280);
+            } else if (probe?.data?.error) {
+              diag = 'Edge Function reported: ' + String(probe.data.error).slice(0, 280);
+            } else if (probe?.data && !probe.data.access_token) {
+              diag = 'Edge Function response missing access_token. Keys returned: ' + Object.keys(probe.data || {}).join(', ');
+            }
+          }
+        } catch (probeErr) {
+          diag = 'Probe threw: ' + (probeErr?.message || String(probeErr)).slice(0, 280);
+        }
+        setRetryDiag(diag);
+        setRetryMsg('Silent refresh failed. Your Drive session on the server (refresh_token) is missing or stale. The "Connect Google Drive" button below will redirect through Google OAuth to issue a fresh one.');
       } else {
         setRetryMsg('Refresh helper unavailable in this build. Use Connect Google Drive instead.');
       }
     } catch (err) {
-      setRetryMsg('Retry threw: ' + (err?.message || String(err)).slice(0, 120));
+      setRetryDiag('Retry threw: ' + (err?.message || String(err)).slice(0, 280));
+      setRetryMsg('Retry hit an exception. Check the diagnostic below.');
     } finally {
       setRetrying(false);
     }
+  };
+  // rc2.75.5: emergency escape — defer Drive setup for 24h. Used when
+  // both Try Again and Connect have failed and the FC needs to keep
+  // working on existing data instead of being held hostage by the modal.
+  // Their existing policies are already in IndexedDB, so PolicyLens is
+  // usable; only NEW data won't sync to Drive until they reconnect.
+  const handleDefer = () => {
+    if (typeof onSkip === 'function') onSkip(); // onSkip writes DRIVE_PROMPT_DISMISS_KEY = now()
+    try {
+      if (typeof window !== 'undefined' && typeof window.__policylensToast === 'function') {
+        window.__policylensToast('Drive prompt dismissed for 7 days. Existing data is on this device only — reconnect Drive from Settings to back up new policies.', 'warning', 6000);
+      }
+    } catch (_) {}
   };
   if (!open) return null;
   const modalBg = {
@@ -43544,11 +43585,12 @@ function DriveSyncPromptModal({
     background: 'var(--bg2)',
     borderRadius: 16,
     border: '1px solid rgba(91,168,160,.3)',
-    maxWidth: 440,
+    maxWidth: 480,
     width: '100%',
     padding: 24,
     boxShadow: '0 20px 60px rgba(0,0,0,.5)'
   };
+  const showEscapeHatch = retryCountRef.current >= 1 || retryMsg; // surface defer button after first retry fails
   return /*#__PURE__*/React.createElement("div", {
     style: modalBg
   }, /*#__PURE__*/React.createElement("div", {
@@ -43606,7 +43648,43 @@ function DriveSyncPromptModal({
       borderRadius: 6,
       lineHeight: 1.45
     }
-  }, retryMsg), /*#__PURE__*/React.createElement("div", {
+  }, retryMsg, retryDiag && /*#__PURE__*/React.createElement("details", {
+    style: {
+      marginTop: 6
+    }
+  }, /*#__PURE__*/React.createElement("summary", {
+    style: {
+      cursor: 'pointer',
+      fontSize: 10,
+      color: 'var(--text3)'
+    }
+  }, "Show technical details"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 6,
+      fontSize: 10,
+      color: 'var(--text2)',
+      fontFamily: 'monospace',
+      wordBreak: 'break-word',
+      padding: '6px 8px',
+      background: 'rgba(0,0,0,.15)',
+      borderRadius: 4
+    }
+  }, retryDiag))), showEscapeHatch && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: 'var(--text3)',
+      marginBottom: 10,
+      padding: '8px 10px',
+      background: 'rgba(91,168,160,.04)',
+      border: '1px solid rgba(91,168,160,.18)',
+      borderRadius: 6,
+      lineHeight: 1.45
+    }
+  }, /*#__PURE__*/React.createElement("strong", {
+    style: {
+      color: 'var(--text2)'
+    }
+  }, "Stuck in a loop?"), " Use the ", /*#__PURE__*/React.createElement("em", null, "Continue without Drive (7d)"), " button below to dismiss this modal for 7 days. Your existing policies are already on this device \u2014 only new data won't back up to Drive until you reconnect (Settings \u2192 Connect Drive)."), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
@@ -43625,7 +43703,19 @@ function DriveSyncPromptModal({
       cursor: 'pointer',
       textDecoration: 'underline'
     }
-  }, showWhy ? 'Hide details' : 'Why is this required?'), /*#__PURE__*/React.createElement("button", {
+  }, showWhy ? 'Hide details' : 'Why is this required?'), showEscapeHatch && /*#__PURE__*/React.createElement("button", {
+    onClick: handleDefer,
+    style: {
+      background: 'transparent',
+      color: 'var(--text3)',
+      border: '1px solid var(--border)',
+      borderRadius: 6,
+      padding: '8px 12px',
+      fontSize: 11,
+      fontWeight: 600,
+      cursor: 'pointer'
+    }
+  }, "Continue without Drive (7d)"), /*#__PURE__*/React.createElement("button", {
     onClick: handleRetry,
     disabled: retrying,
     style: {
