@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75-multi-stage-bundle-pipeline';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.1-hotfix-allpols-orphan-rollback';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -743,9 +743,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.75';
+const APP_VERSION = 'v2.4.0-rc2.75.1';
 const APP_VERSION_DATE = '2026-05-19';
-const APP_VERSION_NAME = 'Multi-stage bundle pipeline + visual fingerprint + orphan-continuation prompt';
+const APP_VERSION_NAME = 'rc2.75 hotfix: allPols typo + orphan-rule rollback + bundle pipeline flag-gated';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1311,6 +1311,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.75.1',
+  date: '2026-05-19',
+  name: 'rc2.75 hotfix: allPols typo + orphan-rule rollback + bundle pipeline flag-gated',
+  sections: [{
+    heading: 'Three immediate fixes after rc2.75 regression report',
+    items: ['Fix #1 — TYPO: rc2.75\'s cross-batch context handoff referenced `allPols` but the actual accumulator in handleExtract is `allExtracted`. This threw "allPols is not defined" on every batch after the first, killing extraction mid-flight and surfacing a confusing "pipeline bug" toast. Corrected to `allExtracted`.', 'Fix #2 — ORPHAN-CONTINUATION PROMPT ROLLED BACK: rc2.75 added rules 9 + 10 to EXTRACT_PROMPT that told the AI to treat fund-allocation / cash-value / premium-schedule / benefit-table pages as continuation pages and merge them into parents without extracting premium/SA. The AI applied this too broadly, causing the $0-premium-anomaly check to fire (all extracted policies had $0 premium because the AI thought they were continuation pages). Rolled back to the rc2.74 prompt. The cross-batch context handoff (priorBatchesSummary block) is KEPT — that\'s additive and safe.', 'Fix #3 — BUNDLE PIPELINE GATED BEHIND FEATURE FLAG: rc2.75\'s structural pre-classification stage may have been mis-classifying some policy header pages as continuation pages, contributing to the extraction regression. Now disabled by default. To re-enable for testing: localStorage.setItem(\'policylens_bundlePipeline\', \'1\'). All the helper code (preclassifyImageStructure, computeImageCornerFingerprint, assembleImageBundles) is still in place — just not called.', 'NET RESULT: rc2.75.1 behaviour is now ≈ rc2.74 + the cross-batch context handoff. ZIP unpacking still works, Import error surfacing still works, rider legend cleanup still in place. The aggressive bundle/orphan changes are paused until we can validate against real photo workbooks without breaking existing extraction quality.']
+  }]
+}, {
   version: 'v2.4.0-rc2.75',
   date: '2026-05-19',
   name: 'Multi-stage bundle pipeline + visual fingerprint + orphan-continuation prompt (max-accuracy extraction)',
@@ -63126,9 +63134,15 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
           text: priorBatchesSummary
         });
       }
+
+      // rc2.75 hotfix: orphan-continuation rules (9 + 10) ROLLED BACK. They were
+      // making the AI too hesitant to extract premium/SA from pages that look like
+      // summary or continuation pages, causing the $0-premium anomaly. The
+      // cross-batch context handoff (priorBatchesSummary block) is kept — that's
+      // additive and safe.
       content.push({
         type: 'text',
-        text: 'Extract ALL insurance policies AND financial instruments from these documents. CRITICAL RULES:\n1. Multiple photos may show DIFFERENT PAGES of the SAME policy — correlate them by policy number, insurer+product name, filename/upload order, or context clues. Merge information from multiple pages into ONE policy entry.\n2. Adjacent upload images with sequential filenames (e.g. IMG_1011 then IMG_1012) are likely consecutive pages. If the later page lacks a clear new policy identity, merge it into the nearest previous compatible policy instead of creating a standalone policy.\n3. Multiple photos may also show DIFFERENT policies — extract each as a separate entry when a distinct policy number/product/instrument is visible.\n4. NEVER skip or merge genuinely different policies. Two policies from the same insurer with different product names = 2 entries. Same insurer/product but different policy owner or life insured = separate entries unless the same printed policy number clearly proves they are one policy.\n5. If the same fund (e.g. "Allianz Global High Payout") appears under DIFFERENT accounts (CPFIS-OA vs Cash), these are SEPARATE entries — differentiate by appending the account type in policyName.\n6. Look across ALL images for related data — page 1 might have the policy name while page 3 has the premium details.\n7. If REPOSITORY PRIOR KNOWLEDGE is provided above, treat those products\' canonical category/subType as authoritative — do not reclassify them based on document appearance.\n8. If a page is a dependant/life-assured page, trace back to the same physical document for the checked proposer/owner/main life assured and fill policyOwner/documentOwner; keep the dependant as lifeInsured.\n9. ORPHAN CONTINUATION PAGE RULE: If a page shows ONLY (a) a fund-allocation table with rows of "Fund Name + percentage + amount", OR (b) a cash-value / surrender projection table, OR (c) a premium-payment schedule, OR (d) a benefit / coupon table — AND the page has NO policy number, NO product name, NO insurer logo on it — then this is a CONTINUATION page of the MOST RECENT preceding policy in the same batch (or in the "Policies Already Identified in Earlier Batches" block above, if provided). DO NOT emit it as a new policy. Instead, attach its data (fund allocations / cash values / premium schedule / benefit table) to that preceding policy by REUSING the SAME productName and policyNumber. Pick parent by: matching insurer hint > visual template similarity > timestamp sequence > filename adjacency > most-recent ILP-category policy (default for fund-allocation continuations).\n10. Skip KYC pages, NRIC forms, cover letters, and document summaries — these are not policies. Do not emit them.\nReturn ONLY valid JSON array or object.'
+        text: 'Extract ALL insurance policies AND financial instruments from these documents. CRITICAL RULES:\n1. Multiple photos may show DIFFERENT PAGES of the SAME policy — correlate them by policy number, insurer+product name, filename/upload order, or context clues. Merge information from multiple pages into ONE policy entry.\n2. Adjacent upload images with sequential filenames (e.g. IMG_1011 then IMG_1012) are likely consecutive pages. If the later page lacks a clear new policy identity, merge it into the nearest previous compatible policy instead of creating a standalone policy.\n3. Multiple photos may also show DIFFERENT policies — extract each as a separate entry when a distinct policy number/product/instrument is visible.\n4. NEVER skip or merge genuinely different policies. Two policies from the same insurer with different product names = 2 entries. Same insurer/product but different policy owner or life insured = separate entries unless the same printed policy number clearly proves they are one policy.\n5. If the same fund (e.g. "Allianz Global High Payout") appears under DIFFERENT accounts (CPFIS-OA vs Cash), these are SEPARATE entries — differentiate by appending the account type in policyName.\n6. Look across ALL images for related data — page 1 might have the policy name while page 3 has the premium details.\n7. If REPOSITORY PRIOR KNOWLEDGE is provided above, treat those products\' canonical category/subType as authoritative — do not reclassify them based on document appearance.\n8. If a page is a dependant/life-assured page, trace back to the same physical document for the checked proposer/owner/main life assured and fill policyOwner/documentOwner; keep the dependant as lifeInsured.\nReturn ONLY valid JSON array or object.'
       });
 
       // ── RUN EXTRACTION WITH SELF-HEALING TRUNCATION RECOVERY ──
@@ -63623,11 +63637,21 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       // insurer hint + temporal proximity. Bundles stay INTACT through
       // batching so a multi-page policy is never split across batches.
       //
-      // Fail-open: if pre-classification fails for any reason, we keep
-      // the time-grouped + perceptual-hash result and continue.
+      // rc2.75 hotfix: DISABLED by default. Initial production test showed
+      // the pre-classifier sometimes mis-classified policy header pages as
+      // continuation pages, causing the AI to skip premium extraction.
+      // Re-enable via localStorage.setItem('policylens_bundlePipeline', '1').
+      // Will re-enable globally after we can validate against real workbooks.
       let bundleAssemblyUsed = false;
       let skippedByPreclassify = 0;
-      if (dedupedPhotos.length >= 3) {
+      const _bundlePipelineFlag = (() => {
+        try {
+          return localStorage.getItem('policylens_bundlePipeline') === '1';
+        } catch (_) {
+          return false;
+        }
+      })();
+      if (_bundlePipelineFlag && dedupedPhotos.length >= 3) {
         try {
           const uid = window._user?.id || '';
           const gk = ((await dbGet('settings', 'geminiKey_' + uid).catch(() => null))?.value || (await dbGet('settings', 'geminiKey').catch(() => null))?.value || '').trim();
@@ -64121,9 +64145,13 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
         // merge continuation pages (fund allocations, cash value tables
         // etc.) into the correct parent policy. Capped at 30 most-recent
         // policies to keep prompt size predictable.
+        // rc2.75 hotfix: correct accumulator name is `allExtracted` (not `allPols`).
+        // Previous version threw "allPols is not defined" on batch 2+, which cascaded
+        // into AI calls without context AND made the import flow surface a confusing
+        // pipeline-bug toast.
         let priorBatchesSummary = '';
-        if (b > 0 && Array.isArray(allPols) && allPols.length > 0) {
-          const summary = allPols.slice(-30).map((p, i) => {
+        if (b > 0 && Array.isArray(allExtracted) && allExtracted.length > 0) {
+          const summary = allExtracted.slice(-30).map((p, i) => {
             const insurer = String(p.insurer || '?').trim();
             const product = String(p.productName || p.policyName || '?').trim();
             const polNo = String(p.policyNumber || '').trim();
