@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.11-mobile-ui-fixes';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.12-family-report-parity';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -743,9 +743,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.75.11';
+const APP_VERSION = 'v2.4.0-rc2.75.12';
 const APP_VERSION_DATE = '2026-05-20';
-const APP_VERSION_NAME = 'rc2.75.11 Mobile UI fixes: Drive modal button stacking + touch targets';
+const APP_VERSION_NAME = 'rc2.75.12 Family report: coverage chips + insurer-prefix dedup + cleaner rider codes';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1350,6 +1350,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.75.12',
+  date: '2026-05-20',
+  name: 'rc2.75.12 Family Executive Review fixes (Alex Family smoke test)',
+  sections: [{
+    heading: 'Three fixes from the Alex Family PDF + FC request for coverage-chip parity',
+    items: ['FEATURE — Coverage breakdown chips in family report. FC asked for per-benefit chip display (D / TPD / CI / ECI / DI / PA / CV) in the family report\'s per-member policy registers, matching the Individual Executive Review that rc2.75.6 already has. Hoisted buildPolicyCoverageChips() to module scope so both reports call the SAME function — guarantees no drift between formats. Refactored Individual report\'s 60-line inline implementation to reuse the shared helper. Family report\'s drawPolicyDetailRow now renders chips below the cover cell, right-aligned to match the cover number, row height auto-adjusts to fit up to 3 chip lines.', 'BUG — Redundant insurer prefix. "AIA - AIA HealthShield GoldMaxB" rendered with the insurer name doubled (page-2 screenshot showed this). The product-line builder concatenated [insurer, productName] without checking if productName already led with the insurer. Now detects and strips the leading insurer prefix from productName (case-insensitive, escaped) before joining, so "AIA HealthShield GoldMaxB" cleans to "AIA - HealthShield GoldMaxB".', 'BUG — "OTHER, Rider" Riders column noise. riderCodes() emitted "OTHER" for any unknown rider type AND "Rider" whenever pol.hasRider was true; ISP rows with hasRider+other ended up showing the useless "OTHER, Rider" pair. Now: (a) maps hospital/isp → "ISP", (b) only includes short rider names (≤6 chars, not "other/rider/none/n/a") as codes — filters known abbreviations like "TCM" or "Booster" through, (c) drops the literal "Rider" word unless there are NO other codes AND it\'s an ISP, in which case shows "ISP+R" as a clean ISP-with-rider indicator.', 'AUDITED — No structural alignment bug found in the family member table or policy register column geometry. drawPolicyDetailRow uses fixed x-offsets that lock column positions; the pdftotext layout-skew artefacts the audit revealed are pdftotext-parser quirks, not actual PDF positioning issues.']
+  }]
+}, {
   version: 'v2.4.0-rc2.75.11',
   date: '2026-05-20',
   name: 'rc2.75.11 Mobile UI fixes from static-analysis sweep',
@@ -3546,6 +3554,72 @@ function annualizedPremium(pol) {
   if (!raw) return 0;
   if (pol.premFrequency === 'monthly') return raw * 12;
   return raw;
+}
+
+// rc2.75.12: shared coverage-breakdown chip builder. Used by both the
+// Individual Executive Review and the Family Portfolio Review PDFs (and
+// any future surface that wants per-benefit chips). Returns an array of
+// short chip strings like ["D 300k", "TPD 300k", "CV 5k"] in priority
+// order. Skips zero-amount benefits. Falls back to a friendly label
+// ("ISP+rider" / "ISP" / "PA cover") for policies whose benefits don't
+// show as numeric SA but still need a non-empty Cover cell.
+function buildPolicyCoverageChips(pol) {
+  if (!pol || typeof pol !== 'object') return [];
+  const num = v => {
+    if (v == null || v === '') return 0;
+    if (typeof v === 'number') return isFinite(v) ? v : 0;
+    const cleaned = String(v).replace(/[^0-9.\-]/g, '');
+    const x = parseFloat(cleaned);
+    return isFinite(x) ? x : 0;
+  };
+  const subLc = String(pol.subType || '').toLowerCase();
+  const isProt = pol.category === 'protection' && !['Personal Accident', 'Critical Illness'].includes(pol.subType);
+  const isCI = pol.subType === 'Critical Illness';
+  const isECI = pol.subType === 'Early Critical Illness';
+  const isDI = pol.subType === 'Disability Income';
+  const isPA = pol.subType === 'Personal Accident';
+  const isISP = /integrated shield|^isp/i.test(subLc);
+  const baseSA = num(pol.sumAssured);
+  const mult = parseFloat(pol.saMultiplier) || 1;
+  const effDeathSA = isProt && mult > 1 ? baseSA * mult : baseSA;
+  let riderDeath = 0,
+    riderTpd = 0,
+    riderCi = 0,
+    riderEci = 0,
+    riderDi = 0,
+    riderAcc = 0;
+  (pol.riders || []).forEach(rd => {
+    const sa = num(rd?.sa);
+    if (rd?.type === 'death') riderDeath += sa;
+    if (rd?.type === 'tpd') riderTpd += sa;
+    if (rd?.type === 'ci') riderCi += sa;
+    if (rd?.type === 'eci') riderEci += sa;
+    if (rd?.type === 'di') riderDi += sa;
+    if (rd?.type === 'accidental') riderAcc += sa;
+  });
+  const bundlesTpd = /whole\s*life|term\s*life|^term$|ilp\s*\(protection\)/i.test(subLc) || pol.tpdBundled === true || pol.acceleratedTpd === true;
+  const tpdSA = riderTpd > 0 ? riderTpd : isProt && bundlesTpd ? effDeathSA : 0;
+  const deathSA = isProt ? effDeathSA + riderDeath : riderDeath;
+  const ciSA = (isCI ? baseSA : 0) + riderCi;
+  const eciSA = (isECI ? baseSA : 0) + riderEci;
+  const diMonthly = (isDI ? num(pol.diMonthlyBenefit || pol.monthlyBenefit || baseSA) : 0) + riderDi;
+  const paSA = (isPA ? num(pol.addSA || baseSA) : 0) + riderAcc;
+  const cv = num(pol.cashValue);
+  const chipAmount = v => {
+    const abs = Math.abs(Math.round(num(v)));
+    if (abs >= 1000000) return (abs / 1000000).toFixed(abs >= 10000000 ? 0 : 1).replace(/\.0$/, '') + 'M';
+    if (abs >= 1000) return Math.round(abs / 1000).toLocaleString('en-SG') + 'k';
+    return abs.toLocaleString('en-SG');
+  };
+  const chip = (label, amount, suffix) => {
+    if (!(amount > 0)) return null;
+    return label + ' ' + chipAmount(amount) + (suffix || '');
+  };
+  const chips = [chip('D', deathSA), chip('TPD', tpdSA), chip('CI', ciSA), chip('ECI', eciSA), chip('DI', diMonthly, '/mo'), chip('PA', paSA), chip('CV', cv)].filter(Boolean);
+  if (chips.length === 0) {
+    if (isISP) chips.push(pol.hasRider ? 'ISP+rider' : 'ISP');else if (isPA) chips.push('PA cover');
+  }
+  return chips;
 }
 function moneyNumber(value) {
   if (value == null || value === '') return 0;
@@ -80853,69 +80927,11 @@ function ReportTab() {
             return bits.length ? bits.join(' - ') : '';
           })();
           const productLine = [pol.insurer || '-', pol.productName || pol.policyName || pol.subType || 'Policy'].filter(Boolean).join(' - ');
-          // rc2.75.6: build a per-policy coverage breakdown for the Cover cell.
-          // Headline number (cover) is the largest visible coverage amount so
-          // FCs scanning the column still see one prominent figure; the
-          // coverBreakdown chips below show the split by benefit type.
-          // Compact format: "D 300k · TPD 300k · CV 5k" wraps within the
-          // 26mm Cover cell when present.
-          const buildCoverBreakdown = pol => {
-            const subLc = String(pol.subType || '').toLowerCase();
-            const isProt = pol.category === 'protection' && !['Personal Accident', 'Critical Illness'].includes(pol.subType);
-            const isCI = pol.subType === 'Critical Illness';
-            const isECI = pol.subType === 'Early Critical Illness';
-            const isDI = pol.subType === 'Disability Income';
-            const isPA = pol.subType === 'Personal Accident';
-            const isISP = /integrated shield|^isp/i.test(subLc);
-            const baseSA = n(pol.sumAssured);
-            const mult = parseFloat(pol.saMultiplier) || 1;
-            const effDeathSA = isProt && mult > 1 ? baseSA * mult : baseSA;
-            // Rider contributions — keep them separate from the base buckets so
-            // the FC sees the standalone rider amounts (some policies have
-            // CI/ECI riders attached to a Whole Life base, etc.)
-            let riderDeath = 0,
-              riderTpd = 0,
-              riderCi = 0,
-              riderEci = 0,
-              riderDi = 0,
-              riderAcc = 0;
-            (pol.riders || []).forEach(rd => {
-              const sa = n(rd.sa);
-              if (rd.type === 'death') riderDeath += sa;
-              if (rd.type === 'tpd') riderTpd += sa;
-              if (rd.type === 'ci') riderCi += sa;
-              if (rd.type === 'eci') riderEci += sa;
-              if (rd.type === 'di') riderDi += sa;
-              if (rd.type === 'accidental') riderAcc += sa;
-            });
-            const bundlesTpd = /whole\s*life|term\s*life|^term$|ilp\s*\(protection\)/i.test(subLc) || pol.tpdBundled === true || pol.acceleratedTpd === true;
-            const tpdSA = riderTpd > 0 ? riderTpd : isProt && bundlesTpd ? effDeathSA : 0;
-            const deathSA = isProt ? effDeathSA + riderDeath : riderDeath;
-            const ciSA = (isCI ? baseSA : 0) + riderCi;
-            const eciSA = (isECI ? baseSA : 0) + riderEci;
-            const diMonthly = (isDI ? n(pol.diMonthlyBenefit || pol.monthlyBenefit || baseSA) : 0) + riderDi;
-            const paSA = (isPA ? n(pol.addSA || baseSA) : 0) + riderAcc;
-            const cv = n(pol.cashValue);
-            // Build chip list. Compact amount format that drops the "S$" prefix
-            // and uses k/M shorthand to fit the narrow 26mm Cover cell.
-            const chipAmount = v => {
-              const abs = Math.abs(Math.round(n(v)));
-              if (abs >= 1000000) return (abs / 1000000).toFixed(abs >= 10000000 ? 0 : 1).replace(/\.0$/, '') + 'M';
-              if (abs >= 1000) return Math.round(abs / 1000).toLocaleString('en-SG') + 'k';
-              return abs.toLocaleString('en-SG');
-            };
-            const chip = (label, amount, suffix) => {
-              if (!(amount > 0)) return null;
-              return label + ' ' + chipAmount(amount) + (suffix || '');
-            };
-            const chips = [chip('D', deathSA), chip('TPD', tpdSA), chip('CI', ciSA), chip('ECI', eciSA), chip('DI', diMonthly, '/mo'), chip('PA', paSA), chip('CV', cv)].filter(Boolean);
-            // ISP and PA-only policies get a friendly label instead of an empty list.
-            if (chips.length === 0) {
-              if (isISP) chips.push(pol.hasRider ? 'ISP+rider' : 'ISP');else if (isPA) chips.push('PA cover');
-            }
-            return chips;
-          };
-          const coverBreakdown = buildCoverBreakdown(pol);
+          // rc2.75.6: per-policy coverage breakdown chips for the Cover cell.
+          // rc2.75.12: hoisted to module-scope buildPolicyCoverageChips() so
+          // the Family Portfolio Review uses the SAME breakdown logic — no
+          // drift between the individual and family report formats.
+          const coverBreakdown = buildPolicyCoverageChips(pol);
           const cover = n(pol.sumAssured) > 0 ? money(pol.sumAssured) : coverBreakdown.length === 1 && /^(ISP|PA cover)/.test(coverBreakdown[0]) ? coverBreakdown[0] : '-';
           // v2.4.0-rc1.91: premium uses full numbers ({full:true}) so the
           // FC reads exact amounts (S$24,000/yr) not shorthand (S$24k/yr).
@@ -81387,11 +81403,19 @@ function ReportTab() {
       // the page-break guard correctly reserves space.
       const policyRowHeight = policy => {
         const remark = policyRemarks(policy);
-        if (!remark) return 17;
         font('helvetica', 'bold', 5.4, T.text3);
         const prefixW = doc.getTextWidth(cleanPdfText('Remarks: '));
-        const lines = doc.splitTextToSize(cleanPdfText(remark), CW - 88 - prefixW).slice(0, 2);
-        return lines.length > 1 ? 22 : 17;
+        const lines = remark ? doc.splitTextToSize(cleanPdfText(remark), CW - 88 - prefixW).slice(0, 2) : [];
+        const baseH = !remark ? 17 : lines.length > 1 ? 22 : 17;
+        // rc2.75.12: account for the coverage chip rows in the Cover cell.
+        // Up to 7 chips (D/TPD/CI/ECI/DI/PA/CV) at 2 per line ≈ 4 lines × 3mm
+        // = 12mm — but cap at 3 lines (9mm) since the row visually balances
+        // better. Overestimate is cheaper than under (would orphan a row at
+        // page bottom).
+        const chips = typeof buildPolicyCoverageChips === 'function' ? buildPolicyCoverageChips(policy) : [];
+        const chipsPerLine = chips.length <= 2 ? chips.length : 2;
+        const chipLineCount = chipsPerLine > 0 ? Math.min(Math.ceil(chips.length / chipsPerLine), 3) : 0;
+        return baseH + chipLineCount * 3;
       };
       const requiredCategoryHeight = firstPolicy => {
         return 11 + 8 + (firstPolicy ? policyRowHeight(firstPolicy) : 14);
@@ -81479,9 +81503,28 @@ function ReportTab() {
         };
         (pol.riders || []).forEach(rd => {
           const t = String(rd.type || rd.riderType || rd.name || '').toLowerCase();
-          if (t.includes('death')) add('D');else if (t.includes('tpd') || t.includes('disability')) add('TPD');else if (t === 'ci' || t.includes('critical')) add(t.includes('early') ? 'ECI' : 'CI');else if (t.includes('early')) add('ECI');else if (t.includes('accident')) add('ACC');else if (t.includes('waiver')) add('WP');else add(safe(rd.name || rd.type || 'Rider', 10).toUpperCase());
+          if (t.includes('death')) add('D');else if (t.includes('tpd') || t.includes('disability')) add('TPD');else if (t === 'ci' || t.includes('critical')) add(t.includes('early') ? 'ECI' : 'CI');else if (t.includes('early')) add('ECI');else if (t.includes('accident')) add('ACC');else if (t.includes('waiver')) add('WP');else if (t.includes('hospital') || t.includes('isp')) add('ISP');
+          // rc2.75.12: skip generic 'OTHER' / 'Rider' fallback codes — they
+          // add noise without information ("OTHER, Rider" on an ISP row).
+          // Only add a recognisable abbreviation if the rider name has a
+          // specific identifying word; otherwise drop it.
+          else {
+            const name = String(rd.name || '').trim();
+            // Only include if name is short and distinct (≤ 6 chars), e.g.
+            // "TCM", "Booster". Otherwise leave it out — the FC can see
+            // full rider details in the per-policy edit view.
+            if (name && /^[A-Za-z0-9\s]{1,6}$/.test(name) && !/^(other|rider|none|n\/a)$/i.test(name)) {
+              add(name.toUpperCase());
+            }
+          }
         });
-        if (pol.hasRider) add('Rider');
+        // rc2.75.12: drop the literal "Rider" badge when we already have
+        // specific codes. Only add "ISP+Rider" hint if there are no other
+        // codes AND the policy is ISP.
+        if (pol.hasRider && codes.length === 0) {
+          const isISP = /integrated shield|^isp/i.test(String(pol.subType || ''));
+          if (isISP) add('ISP+R');
+        }
         if (String(pol.subType || '').toLowerCase().includes('personal accident')) add('ACC');
         return codes.length ? codes.join(', ') : '-';
       };
@@ -81606,9 +81649,26 @@ function ReportTab() {
       //   Matures (c) x+197 / Method (c) x+222 / Riders (l) x+240
       const drawPolicyDetailRow = (x, y, w, pol, idx, memberAge = null) => {
         const fill = idx % 2 ? T.tableAlt : T.surface;
-        const product = safe([pol.insurer, pol.productName || pol.policyName || pol.planName || pol.subType || 'Policy'].filter(Boolean).join(' - '), 56);
+        // rc2.75.12: redundant-insurer prefix guard. When productName ALREADY
+        // starts with the insurer name (e.g. "AIA - AIA HealthShield GoldMaxB"),
+        // collapse it to just the product name. The Insurer/Product header makes
+        // the prefix obvious anyway.
+        const insurerStr = String(pol.insurer || '').trim();
+        const productRaw = String(pol.productName || pol.policyName || pol.planName || pol.subType || 'Policy').trim();
+        const productClean = insurerStr && new RegExp('^' + insurerStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*[\\-:·•|]?\\s*', 'i').test(productRaw) ? productRaw.replace(new RegExp('^' + insurerStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*[\\-:·•|]?\\s*', 'i'), '').trim() || productRaw : productRaw;
+        const product = safe([insurerStr, productClean].filter(Boolean).join(' - '), 56);
         const status = policyStatusLine(pol);
         const remark = policyRemarks(pol);
+        // rc2.75.12: coverage breakdown chips (D / TPD / CI / ECI / DI / PA / CV)
+        // rendered below the headline Cover number — same logic as the
+        // Individual Executive Review for visual parity. Module-scope
+        // buildPolicyCoverageChips() ensures both reports stay in sync.
+        const chips = typeof buildPolicyCoverageChips === 'function' ? buildPolicyCoverageChips(pol) : [];
+        // Pack chips ~2 per line. Cover column is ~30mm wide (between x+96 and x+126),
+        // small font fits 2 short chips per line. Cap at 3 lines.
+        const chipsPerLine = chips.length <= 2 ? chips.length : 2;
+        const chipLineCount = chipsPerLine > 0 ? Math.min(Math.ceil(chips.length / chipsPerLine), 3) : 0;
+        const chipExtraH = chipLineCount > 0 ? chipLineCount * 3 : 0;
         // Remarks max width spans most of the row; wrap to up to 2 lines
         const remarkX = x + 85;
         const remarkMaxW = w - 88;
@@ -81618,7 +81678,8 @@ function ReportTab() {
         })();
         const remarkLines = remark ? doc.splitTextToSize(cleanPdfText(remark), remarkMaxW - remarkPrefixW).slice(0, 2) : [];
         const remarkLineCount = remarkLines.length;
-        const rowH = remarkLineCount > 1 ? 22 : 17;
+        const baseRowH = remarkLineCount > 1 ? 22 : 17;
+        const rowH = baseRowH + chipExtraH;
         card(x, y, w, rowH, fill, T.border, 1.2);
         write(product, x + 3, y + 5.4, {
           size: 6.4,
@@ -81641,6 +81702,20 @@ function ReportTab() {
           color: T.text2,
           align: 'right'
         });
+        // rc2.75.12: render coverage chips below the cover number,
+        // right-aligned at the same column edge as the headline cover.
+        if (chipLineCount > 0) {
+          for (let li = 0; li < chipLineCount; li++) {
+            const slice = chips.slice(li * chipsPerLine, (li + 1) * chipsPerLine);
+            write(slice.join(' · '), x + 126, y + 5.4 + 3 + li * 3, {
+              size: 5.2,
+              color: T.text3,
+              align: 'right',
+              maxW: 38,
+              maxLines: 1
+            });
+          }
+        }
         const prem = isSinglePremium(pol) ? n(pol.annualPremium) ? money(n(pol.annualPremium), {
           full: true
         }) + ' single' : 'single' : policyAnnual(pol) ? money(policyAnnual(pol), {
@@ -81680,7 +81755,9 @@ function ReportTab() {
         }
 
         // Sub-line — status (left, ~80mm) + remarks (rest, up to 2 lines)
-        write(status, x + 3, y + 11.6, {
+        // rc2.75.12: push down by chipExtraH so chips don't collide with status / remarks.
+        const sublineY = y + 11.6 + chipExtraH;
+        write(status, x + 3, sublineY, {
           size: 5.4,
           color: T.text3,
           maxW: 78,
@@ -81689,10 +81766,10 @@ function ReportTab() {
         if (remarkLineCount > 0) {
           // Render "Remarks:" prefix bold then the wrapped lines
           font('helvetica', 'bold', 5.4, T.text3);
-          doc.text(cleanPdfText('Remarks: '), remarkX, y + 11.6);
+          doc.text(cleanPdfText('Remarks: '), remarkX, sublineY);
           font('helvetica', 'normal', 5.4, T.text3);
           remarkLines.forEach((ln, i) => {
-            doc.text(cleanPdfText(ln), remarkX + remarkPrefixW, y + 11.6 + i * 4);
+            doc.text(cleanPdfText(ln), remarkX + remarkPrefixW, sublineY + i * 4);
           });
         }
       };
