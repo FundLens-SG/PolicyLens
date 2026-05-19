@@ -1,4 +1,4 @@
-const SW_VERSION = 'v2.4.0-rc2.75.5-hotfix-drive-modal-escape-hatch';
+const SW_VERSION = 'v2.4.0-rc2.75.6-report-fixes';
 const DB_NAME = 'PolicyLensSW';
 const DB_VERSION = 1;
 const SESSION_STORE = 'sessions';

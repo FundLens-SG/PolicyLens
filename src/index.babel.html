@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.5-hotfix-drive-modal-escape-hatch';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.6-report-fixes';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -733,9 +733,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.75.5';
-const APP_VERSION_DATE = '2026-05-19';
-const APP_VERSION_NAME = 'rc2.75.5 hotfix: escape hatch for stuck Drive modal + Edge Function diagnostic';
+const APP_VERSION = 'v2.4.0-rc2.75.6';
+const APP_VERSION_DATE = '2026-05-20';
+const APP_VERSION_NAME = 'rc2.75.6 Individual Report fixes: Death/TPD separation + chart axes + coverage breakdown chips';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1111,6 +1111,23 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.4.0-rc2.75.6',
+    date: '2026-05-20',
+    name: 'rc2.75.6 Individual Executive Review fixes (Hayley smoke test)',
+    sections: [
+      {
+        heading: 'User-reported via Hayley Individual Executive Review (1).pdf — three issues fixed',
+        items: [
+          'BUG #1 — Death & TPD showed identical values for every protection policy. The protection-coverage loop unconditionally added base sumAssured to BOTH coverage.death AND coverage.tpd for every protection policy (excluding PA/CI). For Hayley\'s PruLife Multiplier (Whole Life, S$300k SA), this produced "Death & Total Invalidity S$300k · 83%" AND "TPD S$300k · 83%" — same numbers, looked redundant and was technically double-counting against any explicit TPD rider amounts captured in the rider list. Fix: TPD coverage now uses explicit TPD rider amounts first; if none recorded, falls back to base SA ONLY when the policy subType is Whole Life / Term Life / ILP (Protection) — the SG product classes that typically bundle accelerated TPD. Endowments, ILP Investments, Universal Life no longer auto-add to TPD. Same logic mirrored into the Policy Register coverage chips so the breakdown stays consistent.',
+          'BUG #2 — "Death & Total Invalidity" label was ambiguous. "Total Invalidity" is sometimes shorthand for TPD in SG insurance literature, but the row\'s "advice" copy ("Income replacement and liabilities for family") and the separate TPD row below make clear this row is really Death + Terminal Illness (TI is bundled into most life policies). Renamed to "Death & Terminal Illness" everywhere it appears (PDF report + Dashboard step-0 coverage table).',
+          'BUG #3 — 20-year premium chart had duplicate "S$2k" y-axis labels. When a policy\'s annual premium is around S$1,973 the yMaxP rounded up to S$2,000 — but at 75% gridline S$1,500 also rounded to "S$2k" via the money() shorthand, producing duplicate labels. Three fixes: (a) y-axis labels now use full numbers when yMaxP < S$10k so adjacent gridlines stay distinct (S$500 / S$1,000 / S$1,500 / S$2,000), (b) yMaxP now includes 25% headroom so the tallest bar doesn\'t max out the chart, (c) niceCeil() rounds to S$500 increments under S$5k, S$1k increments under S$10k, etc.',
+          'BUG #4 — Chart axes were unlabeled. Added "S$/yr" caption above the y-axis and "Age" caption centered under the x-axis tick row. Both fit within the existing chart padding (left padding bumped 18→22, bottom 18→22).',
+          'FEATURE #1 — Coverage breakdown chips in Policy Register. Each policy row in the register now shows a compact per-benefit breakdown below the headline Cover number: "D 300k · TPD 300k · CI 50k · CV 5k" etc. Chips emitted only for benefit types with > 0 coverage (so a pure ISP shows "ISP+rider", a Term Life shows "D 500k · TPD 500k", an endowment shows "CV 55k"). Logic mirrors the dashboard coverage rollup so the FC can verify at a glance which benefits a policy actually provides without opening the Edit screen.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.4.0-rc2.75.5',
     date: '2026-05-19',
@@ -36803,7 +36820,7 @@ function ReviewSession({onClose}) {
             <h4 style={{fontSize:14,fontWeight:700,marginBottom:12}}>🛡 Protection Coverage vs LIA Benchmarks</h4>
             <div style={{fontSize:11,color:'var(--text3)',marginBottom:12}}>Industry benchmarks: Death 10× income · CI 5× expenses · DI 75% monthly · ISP required</div>
             {[
-              {label:'Death & Total Invalidity',have:cDeath,need:rDeath,icon:'💀'},
+              {label:'Death & Terminal Illness',have:cDeath,need:rDeath,icon:'💀'},
               {label:'Total Permanent Disability',have:cTPD,need:rDeath,icon:'🦽'},
               {label:'Critical Illness',have:cCI,need:rCI,icon:'🏥'},
               {label:'Early Critical Illness',have:cECI,need:rCI*0.4,icon:'⚕️'},
@@ -53748,7 +53765,12 @@ function ReportTab() {
         const cleaned = pdfSafe(remarkSrc);
         const hasRemarks = cleaned && cleaned.length > 0;
         const hasRiders = Array.isArray(policy.riders) && policy.riders.length > 0;
-        return hasRemarks || hasRiders ? 12 : 9;
+        // rc2.75.6: chip estimate. Up to 7 chips (D/TPD/CI/ECI/DI/PA/CV) at
+        // 2 per line ≈ 4 extra lines * 3.4mm = ~14mm extra. Overestimate is
+        // cheaper than under (would force a needless page break, but worse
+        // would be content overflowing the page bottom).
+        const chipExtra = hasRemarks || hasRiders ? 14 : 14;
+        return (hasRemarks || hasRiders ? 12 : 9) + chipExtra;
       };
       const requiredCategoryHeight = (firstPolicy) => {
         // Category band (7) + table header (6) + first policy row.
@@ -54089,7 +54111,17 @@ function ReportTab() {
         const remarkLines = hasRemarks
           ? doc.splitTextToSize(pdfSafe(remarksText), w - 6 - remLblW).slice(0, 2)
           : [];
-        const rowH = remarkLines.length > 1 ? 22 : (hasRemarks ? 18 : 14);
+        // rc2.75.6: coverBreakdown chips render BELOW the cover headline.
+        // Each chip occupies ~4.2mm vertical space. Cap at 4 chip lines (2
+        // chips per line within a 26mm cell ≈ enough for D / TPD / CI / ECI
+        // / DI / PA / CV — 7 chips → up to 4 lines).
+        const chips = Array.isArray(p.coverBreakdown) ? p.coverBreakdown.filter(Boolean) : [];
+        // Pack chips ~2 per line at 6pt
+        const chipsPerLine = chips.length <= 2 ? chips.length : 2;
+        const chipLineCount = chipsPerLine > 0 ? Math.ceil(chips.length / chipsPerLine) : 0;
+        const chipExtraH = chipLineCount > 0 ? Math.min(chipLineCount, 4) * 3.4 : 0;
+        const baseRowH = remarkLines.length > 1 ? 22 : (hasRemarks ? 18 : 14);
+        const rowH = baseRowH + chipExtraH;
         // Background
         doc.setFillColor(...(alt ? T.surface2 : T.surface));
         doc.setDrawColor(...T.border); doc.setLineWidth(0.12);
@@ -54101,6 +54133,19 @@ function ReportTab() {
         text(p.type || '-', cx + 2, topY, { size: 6.4, color: T.text3, maxW: cols[1] - 4, maxLines: 1 });
         cx += cols[1];
         text(p.cover || '-', cx + cols[2] - 2, topY, { size: 7, color: T.text2, align: 'right' });
+        // rc2.75.6: render coverage breakdown chips directly under the cover number.
+        if (chipLineCount > 0) {
+          const chipColX = cx;
+          const chipColW = cols[2];
+          for (let li = 0; li < Math.min(chipLineCount, 4); li++) {
+            const lineY = topY + 3.6 + li * 3.4;
+            const slice = chips.slice(li * chipsPerLine, (li + 1) * chipsPerLine);
+            // Right-aligned to match the cover number above.
+            text(slice.join(' · '), chipColX + chipColW - 2, lineY, {
+              size: 5.4, color: T.text3, align: 'right', maxW: chipColW - 4, maxLines: 1,
+            });
+          }
+        }
         cx += cols[2];
         text(p.premium || '-', cx + cols[3] - 2, topY, { size: 7, color: T.text2, align: 'right' });
         cx += cols[3];
@@ -54117,13 +54162,16 @@ function ReportTab() {
         if (p.subline) {
           text(p.subline, x + 2, subY, { size: 5.6, color: T.text3, maxW: cols[0] + cols[1] - 4, maxLines: 1 });
         }
-        // Remarks: bold prefix + wrapped lines spanning full row width
+        // Remarks: bold prefix + wrapped lines spanning full row width.
+        // rc2.75.6: push down by chipExtraH so chips in the Cover cell don't
+        // collide with the remarks band that spans the full row width.
         if (hasRemarks) {
+          const remY = y + 14.4 + chipExtraH;
           setFont('helvetica', 'bold', 5.6, T.text3);
-          doc.text(remarksLabel, x + 2, y + 14.4);
+          doc.text(remarksLabel, x + 2, remY);
           setFont('helvetica', 'normal', 5.6, T.text2);
           remarkLines.forEach((ln, i) => {
-            doc.text(pdfSafe(ln), x + 2 + remLblW, y + 14.4 + i * 4);
+            doc.text(pdfSafe(ln), x + 2 + remLblW, remY + i * 4);
           });
         }
         return rowH;
@@ -54168,12 +54216,15 @@ function ReportTab() {
 
       const coverage = {death:0,tpd:0,ci:0,eci:0,di:0,add:0,amr:0,tcm:0,hasISP:false,ispRider:false};
       activePolicies.forEach(pol => {
+        // rc2.75.6: track per-policy whether we saw an explicit TPD rider so
+        // the base-SA fallback can correctly decide whether to auto-add.
+        let policyTpdFromRiders = 0;
         (pol.riders || []).forEach(rd => {
           const sa = n(rd.sa);
           const expAge = parseInt(rd.expiryAge) || 99;
           if (expAge <= currentAge) return;
           if (rd.type === 'death') coverage.death += sa;
-          if (rd.type === 'tpd') coverage.tpd += sa;
+          if (rd.type === 'tpd') { coverage.tpd += sa; policyTpdFromRiders += sa; }
           if (rd.type === 'ci') coverage.ci += sa;
           if (rd.type === 'eci') coverage.eci += sa;
           if (rd.type === 'di') coverage.di += sa;
@@ -54186,7 +54237,21 @@ function ReportTab() {
           const multEnd = parseInt(pol.multiplierEndAge) || 70;
           const effSA = currentAge < multEnd ? sa * mult : sa;
           coverage.death += effSA;
-          coverage.tpd += effSA;
+          // rc2.75.6: TPD policy: only auto-add base SA if (a) we didn't already
+          // pick up an explicit TPD rider for this policy AND (b) the policy
+          // type typically bundles accelerated TPD. Previously we ALWAYS added
+          // base SA to coverage.tpd for every protection policy, which made
+          // Death & TPD show identical values for every Whole Life / Term
+          // client and double-counted when a TPD rider was also recorded.
+          // Whole Life / Term Life in SG usually do bundle accelerated TPD;
+          // Endowment, ILP Investment, Universal Life typically don't.
+          const subLc = sub.toLowerCase();
+          const bundlesTpd = /whole\s*life|term\s*life|^term$|ilp\s*\(protection\)/i.test(subLc) ||
+                             pol.tpdBundled === true ||
+                             pol.acceleratedTpd === true;
+          if (policyTpdFromRiders === 0 && bundlesTpd) {
+            coverage.tpd += effSA;
+          }
         }
         if (sub === 'Critical Illness') coverage.ci += n(pol.sumAssured);
         if (sub === 'Early Critical Illness') coverage.eci += n(pol.sumAssured);
@@ -54200,7 +54265,7 @@ function ReportTab() {
       const basisAnnual = selectedExpenses > 0 ? selectedExpenses * 12 : (annualIncome || basisMonthly * 12);
       const multipliers = (typeof LIA_MULTIPLIERS !== 'undefined' && LIA_MULTIPLIERS) || {deathYrs:10,tpdYrs:10,ciYrs:5,eciYrs:2,diPct:75};
       const protRows = [
-        {key:'death', label:'Death & Total Invalidity', short:'Death/TI', have:coverage.death, need:basisAnnual*multipliers.deathYrs, weight:20, color:T.primary, advice:'Income replacement and liabilities for family.'},
+        {key:'death', label:'Death & Terminal Illness', short:'Death/TI', have:coverage.death, need:basisAnnual*multipliers.deathYrs, weight:20, color:T.primary, advice:'Income replacement and liabilities for family.'},
         {key:'tpd', label:'TPD', short:'TPD', have:coverage.tpd, need:basisAnnual*multipliers.tpdYrs, weight:20, color:T.sky, advice:'Capital reserve if work stops permanently.'},
         {key:'ci', label:'Critical Illness', short:'CI', have:coverage.ci, need:basisMonthly*12*multipliers.ciYrs, weight:25, color:T.danger, advice:'Recovery capital during treatment.'},
         {key:'eci', label:'Early CI', short:'ECI', have:coverage.eci, need:basisMonthly*12*multipliers.eciYrs, weight:10, color:T.lavender, advice:'Early-stage care flexibility.'},
@@ -55205,18 +55270,39 @@ function ReportTab() {
         + (premiumRatio > 0 ? ' (' + premiumRatio + '% of income)' : '')
         + ' - bars track annual recurring premium by age';
       text(subStr, M + 4, chartCardY + 9.6, { size: 5.8, color: T.text3, style: 'italic', maxW: leftW - 8, maxLines: 1 });
-      const pcPadL = 18, pcPadR = 6, pcPadT = 14, pcPadB = 18;
+      // rc2.75.6: widened left padding 18 → 22 to fit longer y-axis labels
+      // (full S$1,973 instead of shorthand S$2k) and the rotated y-axis title.
+      // Bottom padding bumped 18 → 22 to fit the "Age" x-axis label below ticks.
+      const pcPadL = 22, pcPadR = 6, pcPadT = 14, pcPadB = 22;
       const pcX = M + pcPadL, pcY = chartCardY + pcPadT;
       const pcW = leftW - pcPadL - pcPadR, pcH = leftCardH - pcPadT - pcPadB;
       const maxPrem = Math.max(1, ...premiumYears.map(r => r.total));
-      const yMaxP = Math.max(1000, Math.ceil(maxPrem / 1000) * 1000);
+      // rc2.75.6: give the chart 25% headroom so the tallest bar doesn't max
+      // out the y-axis (previously 100% gridline collided with the bar top).
+      // Round to nearest 500 below 5k, 1000 below 10k, 5000 below 50k, else 10000.
+      const niceCeil = (v) => {
+        const step = v < 5000 ? 500 : v < 10000 ? 1000 : v < 50000 ? 5000 : 10000;
+        return Math.ceil(v / step) * step;
+      };
+      const yMaxP = Math.max(500, niceCeil(maxPrem * 1.25));
+      // rc2.75.6: yAxisLabel formatter — use full numbers (S$1,500, S$2,000)
+      // when values are below 10k so adjacent gridlines never round to the
+      // same shorthand. For larger premiums, "k" shorthand is fine.
+      const yAxisLabel = (v) => {
+        if (v === 0) return 'S$0';
+        if (yMaxP < 10000) return 'S$' + v.toLocaleString();
+        return money(v);
+      };
       // Soft horizontal gridlines
       doc.setDrawColor(...T.border); doc.setLineWidth(0.1);
       [0, 0.25, 0.5, 0.75, 1].forEach(f => {
         const v = Math.round(yMaxP * f), yy = pcY + pcH - (v / yMaxP) * pcH;
         doc.line(pcX, yy, pcX + pcW, yy);
-        text(money(v), pcX - 2, yy + 1.2, { size: 5.4, color: T.text3, align: 'right' });
+        text(yAxisLabel(v), pcX - 2, yy + 1.2, { size: 5.4, color: T.text3, align: 'right' });
       });
+      // rc2.75.6: small y-axis title above the topmost gridline. Kept short
+      // (just "S$/yr") so it fits in the left margin without needing rotation.
+      text('S$/yr', pcX - 2, pcY - 1.5, { size: 5.2, style: 'bold', color: T.text3, align: 'right' });
       // Bars — primary before retirement, muted after
       const pBarW = (pcW / premiumYears.length) * 0.72;
       premiumYears.forEach((r, idx) => {
@@ -55234,6 +55320,8 @@ function ReportTab() {
           text(String(r.age), xx, pcY + pcH + 5, { size: 5.4, color: T.text3, align: 'center' });
         }
       });
+      // rc2.75.6: x-axis title "Age" centered below the tick labels.
+      text('Age', pcX + pcW / 2, pcY + pcH + 11, { size: 5.6, style: 'bold', color: T.text3, align: 'center' });
       // Retirement marker
       const retIdx = premiumYears.findIndex(r => r.age === retirementAge);
       if (retIdx >= 0) {
@@ -55468,7 +55556,77 @@ function ReportTab() {
           })();
 
           const productLine = [pol.insurer || '-', pol.productName || pol.policyName || pol.subType || 'Policy'].filter(Boolean).join(' - ');
-          const cover = n(pol.sumAssured) > 0 ? money(pol.sumAssured) : '-';
+          // rc2.75.6: build a per-policy coverage breakdown for the Cover cell.
+          // Headline number (cover) is the largest visible coverage amount so
+          // FCs scanning the column still see one prominent figure; the
+          // coverBreakdown chips below show the split by benefit type.
+          // Compact format: "D 300k · TPD 300k · CV 5k" wraps within the
+          // 26mm Cover cell when present.
+          const buildCoverBreakdown = (pol) => {
+            const subLc = String(pol.subType || '').toLowerCase();
+            const isProt = pol.category === 'protection' && !['Personal Accident','Critical Illness'].includes(pol.subType);
+            const isCI = pol.subType === 'Critical Illness';
+            const isECI = pol.subType === 'Early Critical Illness';
+            const isDI = pol.subType === 'Disability Income';
+            const isPA = pol.subType === 'Personal Accident';
+            const isISP = /integrated shield|^isp/i.test(subLc);
+            const baseSA = n(pol.sumAssured);
+            const mult = parseFloat(pol.saMultiplier) || 1;
+            const effDeathSA = (isProt && mult > 1) ? baseSA * mult : baseSA;
+            // Rider contributions — keep them separate from the base buckets so
+            // the FC sees the standalone rider amounts (some policies have
+            // CI/ECI riders attached to a Whole Life base, etc.)
+            let riderDeath = 0, riderTpd = 0, riderCi = 0, riderEci = 0, riderDi = 0, riderAcc = 0;
+            (pol.riders || []).forEach(rd => {
+              const sa = n(rd.sa);
+              if (rd.type === 'death') riderDeath += sa;
+              if (rd.type === 'tpd') riderTpd += sa;
+              if (rd.type === 'ci') riderCi += sa;
+              if (rd.type === 'eci') riderEci += sa;
+              if (rd.type === 'di') riderDi += sa;
+              if (rd.type === 'accidental') riderAcc += sa;
+            });
+            const bundlesTpd = /whole\s*life|term\s*life|^term$|ilp\s*\(protection\)/i.test(subLc) ||
+                                pol.tpdBundled === true || pol.acceleratedTpd === true;
+            const tpdSA = riderTpd > 0
+              ? riderTpd
+              : (isProt && bundlesTpd ? effDeathSA : 0);
+            const deathSA = isProt ? (effDeathSA + riderDeath) : riderDeath;
+            const ciSA = (isCI ? baseSA : 0) + riderCi;
+            const eciSA = (isECI ? baseSA : 0) + riderEci;
+            const diMonthly = (isDI ? n(pol.diMonthlyBenefit || pol.monthlyBenefit || baseSA) : 0) + riderDi;
+            const paSA = (isPA ? n(pol.addSA || baseSA) : 0) + riderAcc;
+            const cv = n(pol.cashValue);
+            // Build chip list. Compact amount format that drops the "S$" prefix
+            // and uses k/M shorthand to fit the narrow 26mm Cover cell.
+            const chipAmount = (v) => {
+              const abs = Math.abs(Math.round(n(v)));
+              if (abs >= 1000000) return (abs / 1000000).toFixed(abs >= 10000000 ? 0 : 1).replace(/\.0$/, '') + 'M';
+              if (abs >= 1000) return Math.round(abs / 1000).toLocaleString('en-SG') + 'k';
+              return abs.toLocaleString('en-SG');
+            };
+            const chip = (label, amount, suffix) => {
+              if (!(amount > 0)) return null;
+              return label + ' ' + chipAmount(amount) + (suffix || '');
+            };
+            const chips = [
+              chip('D', deathSA),
+              chip('TPD', tpdSA),
+              chip('CI', ciSA),
+              chip('ECI', eciSA),
+              chip('DI', diMonthly, '/mo'),
+              chip('PA', paSA),
+              chip('CV', cv),
+            ].filter(Boolean);
+            // ISP and PA-only policies get a friendly label instead of an empty list.
+            if (chips.length === 0) {
+              if (isISP) chips.push(pol.hasRider ? 'ISP+rider' : 'ISP');
+              else if (isPA) chips.push('PA cover');
+            }
+            return chips;
+          };
+          const coverBreakdown = buildCoverBreakdown(pol);
+          const cover = n(pol.sumAssured) > 0 ? money(pol.sumAssured) : (coverBreakdown.length === 1 && /^(ISP|PA cover)/.test(coverBreakdown[0]) ? coverBreakdown[0] : '-');
           // v2.4.0-rc1.91: premium uses full numbers ({full:true}) so the
           // FC reads exact amounts (S$24,000/yr) not shorthand (S$24k/yr).
           const prem = isSinglePremium(pol)
@@ -55526,6 +55684,9 @@ function ReportTab() {
             // v2.4.0-rc1.79: column header already says "Riders" — no
             // need for the redundant "Riders:" prefix on every row.
             riders: riderCodes || '-',
+            // rc2.75.6: per-benefit coverage breakdown chips (D / TPD / CI /
+            // ECI / DI / PA / CV) rendered below the cover headline number.
+            coverBreakdown,
             subline, remarks, notes: ''
           }, { alt: i % 2 === 1, cols: polCols });
           invY += consumed;
