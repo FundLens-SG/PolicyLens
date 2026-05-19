@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.71-rider-placement-guard';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.72-soh-family-three-bugs';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -738,9 +738,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.71';
+const APP_VERSION = 'v2.4.0-rc2.72';
 const APP_VERSION_DATE = '2026-05-19';
-const APP_VERSION_NAME = 'Rider-placement guard — rider products auto-attach to parent plans during extraction';
+const APP_VERSION_NAME = 'Soh family 3-bug fix — CompleteCare tiers, ReadyProtect status, HSG MAX B coalesce';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1214,6 +1214,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.72',
+  date: '2026-05-19',
+  name: 'Soh family 3-bug fix — CompleteCare tiers, ReadyProtect status, HSG MAX B coalesce',
+  sections: [{
+    heading: 'Three Soh Family extraction bugs found and fixed',
+    items: ['Bug 1 — Manulife Early CompleteCare (Deluxe) was failing catalogue match because the corpus only had "Manulife Early CompleteCare" (no plan-tier suffix). Added (Deluxe)/(Standard)/(Premier) tier variants for both Early CompleteCare and Ready CompleteCare to manual-corpus-additions.json. Total 6 new variants — protection/Early Critical Illness for Early variants, protection/Critical Illness for Ready variants.', 'Bug 2 — Manulife ReadyProtect (Advantage) in JE sheet had inception Dec 2024 + end Dec 2025 (1-year term), which made isMaturedPolicy auto-mark it as MATURED. The dates are clearly a workbook error — ReadyProtect Advantage is a multi-decade CI plan, not 1-year. Fixed isMaturedPolicy with a "short-term suspicious" guard: if catalogue subType is in the long-term set (CI, ECI, WL, UL/IUL/VUL, Annuity, Retirement Income, Endowment, ILP, LTC) AND policy term is < 2 years, treat as in-force (FC can mark explicitly via status if it really did terminate). Triggered by Soh family JE sheet but applies to any workbook with similar copy-paste errors.', 'Bug 3 — JY sheet had "AIA HEALTHSHIELD GOLD MAX" (base ISP) on row 5 followed by "AIA HSG MAX B" (the rider/plan-tier component, no policy number, dates only) on row 6. coalesceContinuationRiders was emitting row 6 as a phantom DUPLICATE ISP because its product name did not match any of the rider keyword regex patterns (no "rider"/"waiver"/"tpd"/"critical"/"booster" etc.). Extended the regex to catch plan-tier patterns: max+letter, plan+letter, shield. Plus added shared-prefix detection — if current row name and previous policy name share >=10 chars at the start AND current is similar length, treat as continuation. The HSG MAX B row now correctly suppresses (no phantom dup) — only the base ISP remains.', 'Soh family extraction: 190/190 unchanged. xlsx-smoke: 4/4 workbooks unchanged.']
+  }]
+}, {
   version: 'v2.4.0-rc2.71',
   date: '2026-05-19',
   name: 'Rider-placement guard — rider products auto-attach to parent plans during extraction',
@@ -13702,7 +13710,30 @@ function coalesceContinuationRiders(policiesRaw) {
     const hasFinancial = hasPremium || parseXlsxMoneyNumber(row.sumAssured) > 0 || parseXlsxMoneyNumber(row.cashValue) > 0;
     const productName = String(row.productName || row.policyName || '').replace(/\s+/g, ' ').trim();
     const continuationText = [productName, getXlsxRawCoverageText(row), getXlsxRawText(row)].filter(Boolean).join(' ');
-    const looksContinuation = !hasOrdinal && !hasPolicyNumber && !hasInsurer && !hasFinancial && out.length > 0 && (productName || row._xlsxContinuationOnly || isLikelyXlsxContinuationRawRow(row)) && /\b(rider|waiver|tpd|critical|ci\b|eci\b|accid|cancer|health\s*plus|vitalhealth|special|booster|sum\s*assured|sa\b|co-?payment|deductible)\b/i.test(continuationText);
+    // rc2.72: Extended continuation detection. The base regex catches rider-flavored
+    // keywords. The shared-prefix check additionally catches plan-tier rows like
+    // "AIA HSG MAX B" appearing under "AIA HEALTHSHIELD GOLD MAX" — same product
+    // family, different ward class, but the row has no rider keyword. Triggered by
+    // Soh Family JY sheet's HSG MAX B row that previously got emitted as a phantom
+    // duplicate ISP.
+    const prevRow = out.length > 0 ? out[out.length - 1] : null;
+    const prevName = String(prevRow?.productName || prevRow?.policyName || '').trim().toLowerCase();
+    const currName = productName.toLowerCase();
+    const sharesPrefix = prevName && currName && (() => {
+      // Find longest leading shared prefix (case-insensitive, normalized whitespace)
+      const a = prevName.replace(/\s+/g, ' ');
+      const b = currName.replace(/\s+/g, ' ');
+      let n = 0;
+      while (n < a.length && n < b.length && a[n] === b[n]) n++;
+      // Trim back to a word boundary to avoid matching e.g. "Manul" + "ife..."
+      while (n > 0 && /[a-z0-9]/i.test(a[n - 1] || '') && /[a-z0-9]/i.test(a[n] || '')) n--;
+      // Require >=10 chars shared (rules out coincidental "AIA " 4-char prefixes) and
+      // that the current row is meaningfully a SUFFIX/PLAN-TIER addition, not a
+      // longer different product (currName.length <= prevName.length + 8).
+      return n >= 10 && currName.length <= prevName.length + 8;
+    })();
+    const matchesRiderKeyword = /\b(rider|waiver|tpd|critical|ci\b|eci\b|accid|cancer|health\s*plus|vitalhealth|special|booster|sum\s*assured|sa\b|co-?payment|deductible|max\s+[a-z]\b|plan\s+[a-z]\b|shield)\b/i.test(continuationText);
+    const looksContinuation = !hasOrdinal && !hasPolicyNumber && !hasInsurer && !hasFinancial && out.length > 0 && (productName || row._xlsxContinuationOnly || isLikelyXlsxContinuationRawRow(row)) && (matchesRiderKeyword || sharesPrefix);
     if (looksContinuation) {
       const prev = out[out.length - 1];
       const parts = [];
@@ -60637,12 +60668,31 @@ function Policies() {
     };
     const fdMat = parseDate(pol.fdMaturityDate);
     const polMat = parseDate(pol.maturityDate);
+    const polStart = parseDate(pol.inceptionDate);
     // ── Any policy with a MATURITY DATE IN THE FUTURE is NOT matured ──
     // This overrides any stale status flag.
     if (polMat != null && polMat > now) return false;
     if (fdMat != null && fdMat > now) return false;
     // ── FDs/T-bills past maturity (not auto-renewing) ──
     if (pol.category === 'cash_investments' && fdMat != null && fdMat < now && !pol.fdAutoRenew) return true;
+    // ── rc2.72: SHORT-TERM SUSPICIOUS GUARD ─────────────────────────────
+    //   FCs sometimes paste a wrong "Policy End" date (e.g. next-renewal-due, or
+    //   copy-paste from another row). If the policy term (inception → maturity)
+    //   is < 2 years AND the catalogue/subType says it's a long-term product
+    //   (Whole Life, CI, ECI, UL/IUL/VUL, Annuity, Retirement Income, Endowment,
+    //   ILP), DON'T auto-mature on the past end date — the date is almost
+    //   certainly a workbook error. User can mark explicitly via status if
+    //   the policy really did terminate early (surrendered/lapsed).
+    //   Triggered by Soh Family JE sheet's "Manulife ReadyProtect (Advantage)"
+    //   with Dec 2024 → Dec 2025 dates that the FC entered by mistake — the
+    //   product is a multi-decade CI plan, not a 1-year policy.
+    const longTermSubTypes = new Set(['Critical Illness', 'Early Critical Illness', 'Whole Life', 'Universal Life (UL)', 'Indexed UL (IUL)', 'Variable UL (VUL)', 'Annuity', 'Retirement Income (Par WL)', 'Retirement', 'Income Plan', 'CPF Life', 'Endowment', 'Lifetime Endowment', 'Education Plan', 'ILP (Protection)', 'ILP (Investment)', 'Long-term Care', 'CareShield Life / Supplement', 'ElderShield 300', 'ElderShield 400']);
+    if (polMat != null && polStart != null && polMat < now && longTermSubTypes.has(pol.subType)) {
+      const termYears = (polMat - polStart) / (365.25 * 86400000);
+      if (termYears > 0 && termYears < 2) {
+        return false; // Treat as in-force; the dates look like a workbook error.
+      }
+    }
     // ── Any policy with a past maturity date ──
     if (polMat != null && polMat < now) return true;
     // ── Explicit status flags (only when no contradicting future date above) ──

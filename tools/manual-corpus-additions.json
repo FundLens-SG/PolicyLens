@@ -21685,5 +21685,74 @@
     "subType": "Other",
     "aliases": [],
     "source": "phase-6-split-2026-05-19"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Early CompleteCare (Deluxe)",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [
+      "Early CompleteCare Deluxe",
+      "MECC Deluxe",
+      "Manulife Early CompleteCare Deluxe"
+    ],
+    "source": "rc2.72-completecare-tiers-2026-05-19"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Early CompleteCare (Standard)",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [
+      "Early CompleteCare Standard",
+      "MECC Standard",
+      "Manulife Early CompleteCare Standard"
+    ],
+    "source": "rc2.72-completecare-tiers-2026-05-19"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Early CompleteCare (Premier)",
+    "category": "protection",
+    "subType": "Early Critical Illness",
+    "aliases": [
+      "Early CompleteCare Premier",
+      "MECC Premier",
+      "Manulife Early CompleteCare Premier"
+    ],
+    "source": "rc2.72-completecare-tiers-2026-05-19"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Ready CompleteCare (Deluxe)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Ready CompleteCare Deluxe",
+      "MRCC Deluxe"
+    ],
+    "source": "rc2.72-completecare-tiers-2026-05-19"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Ready CompleteCare (Standard)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Ready CompleteCare Standard",
+      "MRCC Standard"
+    ],
+    "source": "rc2.72-completecare-tiers-2026-05-19"
+  },
+  {
+    "insurer": "Manulife",
+    "productName": "Manulife Ready CompleteCare (Premier)",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "Ready CompleteCare Premier",
+      "MRCC Premier"
+    ],
+    "source": "rc2.72-completecare-tiers-2026-05-19"
   }
 ]
