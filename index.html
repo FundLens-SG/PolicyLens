@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.13-stale-sw-self-heal';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.14-sw-cache-bust';
 // rc2.75.13: STALE SERVICE WORKER SELF-HEAL.
 // Background — FCs were hitting "Network Error — API calls are being blocked"
 // across Firefox/Edge/Chrome simultaneously. Console showed the OLD SW
@@ -119,7 +119,16 @@ if ('serviceWorker' in navigator) {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
     if (!canRegister) return;
     try {
-      const reg = await navigator.serviceWorker.register('./sw.js', { scope: './' });
+      // rc2.75.14: cache-bust the sw.js URL with the expected version AND
+      // pass updateViaCache:'none' so the browser ALWAYS revalidates the
+      // SW script with the server on each fetch, bypassing both HTTP cache
+      // and Cloudflare's edge cache. Without this, an FC who already has
+      // a stale SW registered would re-fetch the (potentially still-cached)
+      // sw.js on update, register the SAME stale version again, and stay
+      // stuck in the version-mismatch loop. Cache-busting the URL forces
+      // CDN to treat each version as a separate resource.
+      const swUrl = './sw.js?v=' + encodeURIComponent(POLICYLENS_SW_VERSION);
+      const reg = await navigator.serviceWorker.register(swUrl, { scope: './', updateViaCache: 'none' });
       const promoteWaiting = (worker) => {
         try { worker && worker.postMessage({ type: 'SKIP_WAITING', version: POLICYLENS_SW_VERSION }); } catch(_) {}
       };
@@ -819,9 +828,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.75.13';
+const APP_VERSION = 'v2.4.0-rc2.75.14';
 const APP_VERSION_DATE = '2026-05-20';
-const APP_VERSION_NAME = 'rc2.75.13 Stale Service Worker self-heal banner + Network Error guidance';
+const APP_VERSION_NAME = 'rc2.75.14 SW cache-bust + Cloudflare no-cache headers (fix Update-now loop)';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1426,6 +1435,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.75.14',
+  date: '2026-05-20',
+  name: 'rc2.75.14 SW cache-bust + Cloudflare no-cache headers (fixes Update-now loop)',
+  sections: [{
+    heading: 'rc2.75.13 banner appeared correctly but "Update now" still left the FC on the same stale version — root cause was Cloudflare edge cache serving the OLD sw.js',
+    items: ['WHAT HAPPENED — rc2.75.13 detected the staleness and showed the banner. FC clicked "Update now", which: (a) unregistered all SWs, (b) cleared all browser caches, (c) hard-reloaded with `_plsw` stripped and a `_force` cache-buster on the URL. After reload, page JS re-registered `./sw.js` via the standard URL. Cloudflare\'s edge cache returned the SAME OLD `sw.js` blob (cached when the FC last visited months ago, TTL not yet expired). New SW registered with OLD content → reported the OLD SW_VERSION → staleness check fired again → banner reappeared. The loop was unbreakable from the client side alone.', 'FIX #1 — CACHE-BUST THE SW URL: `navigator.serviceWorker.register("./sw.js?v=" + POLICYLENS_SW_VERSION)`. The query param makes each version a distinct resource at Cloudflare\'s edge cache, so an FC moving from rc2.75.13 to rc2.75.14 fetches `./sw.js?v=...-rc2.75.14...` which Cloudflare hasn\'t cached yet → origin pull → fresh sw.js.', 'FIX #2 — `updateViaCache: "none"` on the register call. Tells the browser to ALWAYS revalidate sw.js with the server (skipping HTTP cache) on every SW update check. Standardised SW option specifically designed for this CDN-stale-SW problem.', 'FIX #3 — Cloudflare `_headers` rules in `ckgtools/public/_headers`. Every `tools/*/sw.js` and `tools/*/index.html` now has `Cache-Control: no-cache, no-store, must-revalidate, max-age=0 + Pragma: no-cache + Expires: 0`. This applies at the Cloudflare edge AND in the browser, so even if a future change misses the cache-bust param, the file will still be revalidated on every fetch. Applied wildcard to `/tools/*/` so every tool benefits automatically.', 'NET: this RC is the final piece. Once an FC reaches rc2.75.14, future SW updates propagate within seconds because (a) sw.js is no longer CDN-cached, (b) the URL changes on every version bump, and (c) the browser is told to bypass cache on the register call. The "Update now" loop should not recur.', 'NOTE on deployment: This RC ships changes to TWO repos — `FundLens-SG/PolicyLens` (the cache-bust + updateViaCache code) AND `FundLens-SG/ckgtools` (the `_headers` rules). The auto-sync chain mirrors PolicyLens → ckgtools/public/tools/policylens/, but the `_headers` file in ckgtools/public/_headers needs its own commit. Both must land on Cloudflare Pages for the fix to fully apply.']
+  }]
+}, {
   version: 'v2.4.0-rc2.75.13',
   date: '2026-05-20',
   name: 'rc2.75.13 Stale Service Worker self-heal — fixes cross-browser "Network Error" loop',
