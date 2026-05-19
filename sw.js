@@ -1,4 +1,4 @@
-const SW_VERSION = 'v2.4.0-rc2.72-soh-family-three-bugs';
+const SW_VERSION = 'v2.4.0-rc2.73-section-titles-headers-inferences';
 const DB_NAME = 'PolicyLensSW';
 const DB_VERSION = 1;
 const SESSION_STORE = 'sessions';

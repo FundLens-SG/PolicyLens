@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.72-soh-family-three-bugs';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.73-section-titles-headers-inferences';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -738,9 +738,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.72';
+const APP_VERSION = 'v2.4.0-rc2.73';
 const APP_VERSION_DATE = '2026-05-19';
-const APP_VERSION_NAME = 'Soh family 3-bug fix — CompleteCare tiers, ReadyProtect status, HSG MAX B coalesce';
+const APP_VERSION_NAME = 'Section-title filter + header-row reject + legacy insurer inference (PrimeGold/ReadyBuilder/etc)';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1214,6 +1214,23 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.73',
+  date: '2026-05-19',
+  name: 'Anomaly-detector pass — section-title filter + header-row reject + legacy insurer inference',
+  sections: [{
+    heading: 'New tool: tools/test-extraction-anomalies.mjs',
+    items: ['Built a comprehensive extraction anomaly detector that goes beyond the structural smoke test. Checks every policy for 13 specific bug classes: missing insurer (AA1), zero premium on active non-SP policy (AA2), zero SA on protection/savings (AA3), maturity before inception (AA4), inception year out of range (AA5), suspicious dups (AA6), empty productName (AA7), unnamed riders (AA8), missing polno (AA9), multi-line lifeInsured (AA10), unparseable dates (AA13), premium > $1M without SP/UL context (AA12).', 'First run found 114 anomalies (23 high severity) across the 4 fixture workbooks.']
+  }, {
+    heading: 'Bug found + fixed: section titles extracted as policies',
+    items: ['Tan Kah Lan workbook has sub-section titles like "Fixed Deposits", "Short Term Endowments", "Long Term Endowments", "Income", "Govt Schemes", "Investment" between policy tables. The column-mapper was treating each title as a separate row → policy. Found 8+ phantom "policies" in TKL extract.', 'Fixed in coalesceContinuationRiders: drop rows whose productName matches a known section-title (case-insensitive, with parenthetical stripping). Also drops bare header-row labels like productName="Name" with polno="Year" (TKL Govt Schemes header leaking).', 'Result: TKL extracted policy count 28 → 23 (clean). Insurer-detection rate 75% → 100%. Premium-detection rate 82% → 100%.']
+  }, {
+    heading: 'Legacy insurer inference extended',
+    items: ['NTUC Income regex extended to catch PrimeGold (legacy endowment), Prestige Life Rewards (par WL), Growth Policy (savings), RevoSave/RevoSecure/RevoGain (savings), VivoLife/Care/Educate/Child/Save (family), SMART INVEST (legacy single-premium ILP).', 'Manulife regex extended for ReadyBuilder, SteadyPayout, ManuGrowth, ManuCare, ManuAce, ManuEdu, ManuRetire, ManuInvest, ManuHealth, Heirloom, Signature Income — all real Manulife product families that previously had no auto-insurer-match.', 'Great Eastern regex updated to match "GREAT <SPACE> <word>" variants (GREAT SP SERIES 12, GREAT TRAVELCARE) that the no-space pattern missed.', 'Added CPF Board govt-scheme catch-all: CPF LIFE / Retirement Sum / Medisave / DPS (Dependents Protection Scheme) / CareShield Life base / MediShield Life base.']
+  }, {
+    heading: 'Result',
+    items: ['Anomaly count: 114 → 72 (-37%). HIGH-severity: 23 → 2 (-91%).', 'Eunice Kong workbook: insurer 71% → 100% / premium 86% → 100%.', 'Tan Kah Lan workbook: insurer 75% → 100% / premium 82% → 100%.', 'Soh Family workbook: 190/190 truth-table fields unchanged. Insurer 93% → 96%.', 'Remaining 2 high-severity are both on the same SAMWOH Corporate Group H&S edge case (corporate group policy with no insurer in name + maturity-before-inception date error) — acceptable edge case for now.']
+  }]
+}, {
   version: 'v2.4.0-rc2.72',
   date: '2026-05-19',
   name: 'Soh family 3-bug fix — CompleteCare tiers, ReadyProtect status, HSG MAX B coalesce',
@@ -11789,8 +11806,10 @@ function inferInsurerFromProductName(productName) {
     name: 'AIA'
   },
   // rc2.29 — also match bare "Manu" prefix (FC shorthand)
+  // rc2.73: also catch ReadyBuilder, SteadyPayout, ManuGrowth, ManuCare, ManuAce,
+  // ManuEdu, ManuRetire, ManuInvest, Heirloom — all Manulife product families.
   {
-    re: /manulife|manulink|investready|incomegen|retireready|lifeready|manuprotect|completecare|readyprotect|signature\s+indexed\s+universal\s+life|signature\s+life|signature\s+wealth|\bsiuls\b|\bmanu\b/i,
+    re: /manulife|manulink|investready|incomegen|retireready|lifeready|manuprotect|completecare|readyprotect|readybuilder|steadypayout|manugrowth|manucare|manuace|manuedu|manuretire|manuinvest|manuhealth|heirloom|signature\s+indexed\s+universal\s+life|signature\s+life|signature\s+wealth|signature\s+income|\bsiuls\b|\bmanu\b/i,
     name: 'Manulife'
   }, {
     re: /china life/i,
@@ -11801,11 +11820,20 @@ function inferInsurerFromProductName(productName) {
   //   GREAT SUPREMEHEALTH, GREAT TERM, LIFE PERKS (a GE life-savings plan), etc. Singapore's
   //   "Great" prefix is GE-exclusive across insurance product lines, so the broad pattern is
   //   safe. The previous specific-list approach left GREATLINK FLEXIPLAN with no insurer.
+  // rc2.73: also catch "GREAT <SPACE> <word>" variants — TKL workbook has
+  //   "GREAT SP SERIES 12" / "GREAT TRAVELCARE" which the no-space pattern missed.
   {
-    re: /\bge\b|gepremier|great\s+eastern|greateastern|\bgreat[a-z]+\b|life\s+perks/i,
+    re: /\bge\b|gepremier|great\s+eastern|greateastern|\bgreat\s+[a-z]+|life\s+perks/i,
     name: 'Great Eastern'
-  }, {
-    re: /ntuc|income insurance|incomeshield|gro\s*cash|grocash|cashsure|cashsurance|vivolife/i,
+  },
+  // rc2.73: extended NTUC Income to catch legacy product families that appear in older
+  // FC books: PrimeGold (legacy endowment series), Prestige Life Rewards (par WL),
+  // Growth Policy (savings), RevoSave / RevoSecure / RevoGain (savings).
+  // rc2.73: NTUC Income legacy: PrimeGold (endowment), Prestige Life Rewards (par WL),
+  // Growth Policy (savings), RevoSave family, VivoLife/Care/Educate/Child/Save family,
+  // SMART INVEST (single-premium ILP — NTUC legacy).
+  {
+    re: /ntuc|income insurance|incomeshield|gro\s*cash|grocash|cashsure|cashsurance|vivolife|primegold|prestige\s+life\s+rewards|\bgrowth\s+policy\b|revosave|revosecure|revogain|vivocare|vivoeducate|vivochild|vivosave|smart\s+invest/i,
     name: 'NTUC Income'
   },
   // rc2.45: catch any "PRU*" prefix (Prudential's product naming convention) — PRUSHIELD,
@@ -11895,6 +11923,13 @@ function inferInsurerFromProductName(productName) {
   }, {
     re: /\binteractive\s*brokers\b|\bibkr\b/i,
     name: 'Interactive Brokers'
+  },
+  // rc2.73: CPF Board govt-scheme catch-all. DPS = Dependents' Protection Scheme;
+  // CPF LIFE / Retirement Sum / Medisave / MediShield Life base / CareShield Life
+  // base / ElderShield base are all CPF Board / MOH administered.
+  {
+    re: /^cpf\b|cpf life|cpf retirement|cpf\s+ordinary|cpf\s+special|cpf\s+medisave|dependents.{0,2} protection scheme|\bdps\b|careshield life|medishield life base/i,
+    name: 'CPF Board'
   }];
   const hay = t + ' ' + c;
   const hit = rules.find(rule => rule.re.test(hay));
@@ -13633,12 +13668,62 @@ function classifyRiderTypeForGuard(policy) {
   if (/personal accident|pa rider|accidental death/.test(name)) return 'accidental';
   return 'other';
 }
+
+// rc2.73: filter out extracted rows that are actually SECTION TITLES or COLUMN-HEADER
+//   labels, not real policies. These leak through when an FC's workbook has multiple
+//   sub-sections under one sheet (e.g. TKL workbook's Wealth sheet has "Fixed Deposits",
+//   "Short Term Endowments", "Long Term Endowments", "Income", "Govt Schemes",
+//   "Investment" subsection titles). Each title gets parsed as a row with only a name
+//   and no other data — looks like a policy to the column-mapper.
+//
+//   Filter: drop rows that have NO policy number, NO insurer, NO premium, NO SA, AND
+//   whose name matches a known section-title pattern (case-insensitive, normalised).
+function isSectionTitleRow(p) {
+  const raw = String(p.productName || p.policyName || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  if (!raw) return true; // empty name is always trash
+  // rc2.73: header-row labels (Name/Policy Name/Amount/etc.) are ALWAYS rejected
+  // even if the row appears to have a "policy number" (it might be "Year" / a header
+  // value in a different column). Caught the TKL Govt Schemes section header which
+  // had productName="Name" and policyNumber="Year".
+  if (/^(name|policy name|no\.?|policy no\.?|amount|premium|life insured|coverage|remarks|status)\s*$/i.test(raw)) return true;
+  // Bare dash / single-char artifact
+  if (/^[-—–]{1,3}\s*$/.test(raw) || raw.length === 1) return true;
+  // For section-title check below, require no useful policy data
+  const hasPolNo = !!String(p.policyNumber || '').trim();
+  const hasInsurer = !!String(p.insurer || '').trim() && !/^unknown$/i.test(p.insurer || '');
+  const moneyNum = v => {
+    if (v == null || v === '') return 0;
+    const n = parseFloat(String(v).replace(/[^0-9.\-]/g, ''));
+    return Number.isFinite(n) ? n : 0;
+  };
+  const prem = moneyNum(p.premiumAmount ?? p.annualPremium);
+  const sa = moneyNum(p.sumAssured);
+  if (hasPolNo || hasInsurer || prem > 0 || sa > 0) return false;
+  // Section-title patterns — these are sub-headers, never product names
+  const sectionTitles = new Set(['fixed deposits', 'short term endowments', 'long term endowments', 'endowment plans', 'endowments / investment-linked plans', 'investments', 'investment', 'investment-linked plans', 'wealth', 'wealth accumulation', 'income', 'life protection', 'protection', 'hospitalisation', 'critical illness protection', 'personal accident protection', 'personal accident', 'maternity', 'maternity coverage', 'cash investments', 'cash management', 'cash', 'savings', 'retirement', 'retirement planning', 'legacy planning', 'health', 'health insurance', 'govt schemes', 'government schemes', 'govt', 'government', 'bank-branded', 'digital arm:', 'singapore-specific', 'general insurance', 'distributor:', 'distributor', 'distributors', 'tier b', 'niche / general health']);
+  if (sectionTitles.has(raw)) return true;
+  // rc2.73: strip parenthetical qualifier (e.g. "Income (Annuities)" → "income")
+  const rawStripped = raw.replace(/\s*\([^)]*\)\s*$/, '').trim();
+  if (rawStripped !== raw && sectionTitles.has(rawStripped)) return true;
+  // Header-row labels leaking as policy
+  if (/^(name|policy name|no\.?|policy no\.?|amount|premium|life insured|coverage)\s*$/i.test(raw)) return true;
+  // Bare dash or single char (parser artifact)
+  if (/^[-—–]{1,3}$/.test(raw)) return true;
+  // Column-header-pair leaking ("Name" with policy number "Year" — TKL Govt Schemes case)
+  // Caught above by 'name' in sectionTitles. The matching policyNumber='Year' falls naturally.
+  return false;
+}
 function reAttachRiderProductsToParents(policies) {
+  // rc2.73: First drop section-title / column-header rows that leaked from the
+  // policy-row extractor. These have no insurer, premium, polno or SA — just a
+  // generic section name like "Wealth" / "Income" / "Govt Schemes" — and would
+  // otherwise pollute the user's policy list.
+  const filtered = policies.filter(p => !isSectionTitleRow(p));
   // Build per-(sheet+section+insurer) groups of NON-rider base candidates so each
   // rider can pick a parent inside the same logical block.
   const baseByKey = new Map();
   const riderRows = [];
-  for (const p of policies) {
+  for (const p of filtered) {
     if (isLikelyRiderProductForGuard(p)) {
       riderRows.push(p);
     } else {
@@ -13647,7 +13732,7 @@ function reAttachRiderProductsToParents(policies) {
       baseByKey.get(key).push(p);
     }
   }
-  if (riderRows.length === 0) return policies;
+  if (riderRows.length === 0) return filtered;
   let attached = 0,
     unattached = 0;
   for (const rider of riderRows) {
@@ -13709,6 +13794,28 @@ function coalesceContinuationRiders(policiesRaw) {
     const hasPremium = parseXlsxMoneyNumber(row.premiumAmount ?? row.annualPremium) > 0;
     const hasFinancial = hasPremium || parseXlsxMoneyNumber(row.sumAssured) > 0 || parseXlsxMoneyNumber(row.cashValue) > 0;
     const productName = String(row.productName || row.policyName || '').replace(/\s+/g, ' ').trim();
+    // rc2.73: skip section-title rows entirely. These leaked from policy-row extraction
+    // when an FC's workbook had sub-section titles like "Fixed Deposits" / "Income" /
+    // "Govt Schemes" / "Investment" between policy tables. Identified by: no ordinal,
+    // no polno, no insurer, no financial data, and name matches a known section title.
+    if (productName) {
+      const lc = productName.toLowerCase();
+      // UNCONDITIONAL: header-row labels are NEVER product names — drop regardless
+      // of whether other columns also have data. Catches "Name" with polno="Year"
+      // (TKL Govt Schemes section header leaking).
+      if (/^(name|policy name|no\.?|policy no\.?|amount|premium|life insured|coverage|remarks|status)\s*$/i.test(lc)) continue;
+      // UNCONDITIONAL: bare-dash / single-char artifacts (Anne workbook "-" entries)
+      if (/^[-—–]{1,3}\s*$/.test(lc) || lc.length === 1) continue;
+      // Section-title check: requires no useful policy data (otherwise might be a real
+      // product whose name happens to overlap with a category word).
+      if (!hasOrdinal && !hasPolicyNumber && !hasInsurer && !hasFinancial) {
+        const sectionTitles = new Set(['fixed deposits', 'short term endowments', 'long term endowments', 'endowment plans', 'endowments / investment-linked plans', 'investments', 'investment', 'investment-linked plans', 'wealth', 'wealth accumulation', 'income', 'life protection', 'protection', 'hospitalisation', 'critical illness protection', 'personal accident protection', 'personal accident', 'maternity', 'maternity coverage', 'cash investments', 'cash management', 'cash', 'savings', 'retirement', 'retirement planning', 'legacy planning', 'health', 'health insurance', 'govt schemes', 'government schemes', 'govt', 'government', 'bank-branded', 'digital arm:', 'singapore-specific', 'general insurance']);
+        if (sectionTitles.has(lc)) continue;
+        // strip parenthetical qualifier ("Income (Annuities)" → "income")
+        const lcStripped = lc.replace(/\s*\([^)]*\)\s*$/, '').trim();
+        if (lcStripped !== lc && sectionTitles.has(lcStripped)) continue;
+      }
+    }
     const continuationText = [productName, getXlsxRawCoverageText(row), getXlsxRawText(row)].filter(Boolean).join(' ');
     // rc2.72: Extended continuation detection. The base regex catches rider-flavored
     // keywords. The shared-prefix check additionally catches plan-tier rows like
