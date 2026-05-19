@@ -1,4 +1,4 @@
-const SW_VERSION = 'v2.4.0-rc2.75.6-report-fixes';
+const SW_VERSION = 'v2.4.0-rc2.75.7-spreadsheet-premium-detection';
 const DB_NAME = 'PolicyLensSW';
 const DB_VERSION = 1;
 const SESSION_STORE = 'sessions';

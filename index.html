@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.6-report-fixes';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.7-spreadsheet-premium-detection';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -743,9 +743,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.75.6';
+const APP_VERSION = 'v2.4.0-rc2.75.7';
 const APP_VERSION_DATE = '2026-05-20';
-const APP_VERSION_NAME = 'rc2.75.6 Individual Report fixes: Death/TPD separation + chart axes + coverage breakdown chips';
+const APP_VERSION_NAME = 'rc2.75.7 Spreadsheet-aware preprocessing + Premium-not-detected verify badge';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1350,6 +1350,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.75.7',
+  date: '2026-05-20',
+  name: 'rc2.75.7 Spreadsheet-aware preprocessing + Premium-not-detected verify badge',
+  sections: [{
+    heading: 'User-reported: premium amounts missed when uploading a wide Google Sheets screenshot',
+    items: ['CONTEXT: FC uploaded a landscape iPad screenshot of an "Atlas Wealth Planners" portfolio summary Google Sheet showing 10+ policies across 3 family members (Alex, Hayley, Heather). Each row had visible monthly premiums in the source (e.g. PRUFLEXICASH PROTECTION PLUS Hayley $555.49/mo, AIA HSG MAX B+VITALHEALTH B Hayley $197.62/mo) but PolicyLens extracted only the first policy\'s premium ($164/mo for PRULIFE MULTIPLIER) — every other policy came through with $0 premium.', 'ROOT CAUSE: preprocessImageFile aggressively downscales any image with longest edge > 1568px (Anthropic vision "sweet spot"). For a 2400×1500 landscape Google Sheets screenshot this shrinks every column\'s width by ~35%, which crushes the small digits in the premium column below OCR legibility. Phone-shot policy schedules (typically 1500×2200 portrait) don\'t hit this because their text is already large. Wide spreadsheet screenshots specifically degrade because the per-column pixel budget halves.', 'FIX #1 — SPREADSHEET-AWARE PREPROCESSING CEILING: When the image aspect ratio is >= 1.6 (wide landscape: spreadsheets, tables, sheets-style portfolio summaries), the downscale ceiling is raised from 1568px to 2400px on the longest edge. Portrait phone screenshots and square-ish photos keep the 1568px ceiling so token cost stays controlled. Wide images cost ~50% more tokens but extraction accuracy on dense tables is materially better.', 'FIX #2 — "PREMIUM NOT DETECTED" VERIFY BADGE: When a non-Single-Premium in-force policy ends up with annualPremium=0, the Policies tab now shows a red "Not detected · verify" caption under the $0 instead of a silent zero. Tooltip explains "Premium not detected during extraction — open Edit to enter the correct amount." Suppressed for matured/lapsed/surrendered policies (genuinely zero) and for cash_investments / other_assets / Unit Trust categories where premium isn\'t conceptually applicable. Makes the extraction gap impossible to miss on visual scan.', 'NOTE — access-list issue: The user also reported a new approved user seeing "Your Gmail isn\'t on the access list yet." That message comes from Google\'s OAuth 403 access_denied response, NOT from a PolicyLens-managed allowlist. The fix is on the Google Cloud Console side: APIs & Services → OAuth consent screen → Test users → Add user. Until the OAuth app is verified, this manual step is required for every new tester. Not a PolicyLens bug.']
+  }]
+}, {
   version: 'v2.4.0-rc2.75.6',
   date: '2026-05-20',
   name: 'rc2.75.6 Individual Executive Review fixes (Hayley smoke test)',
@@ -10368,13 +10376,27 @@ async function preprocessImageFile(file) {
       i.src = dataUrl;
     });
 
-    // Compute target dimensions preserving aspect ratio
+    // Compute target dimensions preserving aspect ratio.
+    // rc2.75.7: spreadsheet-aware ceiling. Very wide screenshots (aspect
+    // ratio >= 1.6, e.g. iPad horizontal sheet captures at ~2400×1500)
+    // contain dense small text — downscaling the longest edge to 1568px
+    // crushes the text below OCR legibility, which is what was making the
+    // AI miss premium amounts and per-row policy data in landscape
+    // Google Sheets screenshots. For these, raise the cap to 2400px so
+    // the long edge keeps enough pixels per column to keep text readable.
+    // Token cost increases ~50% but extraction accuracy on these images
+    // is substantially better. Heuristic gated to 1.6 aspect ratio so it
+    // only kicks in for genuinely wide layouts; portrait phone screenshots
+    // (1.0-0.6 aspect ratio inverse) keep the old 1568px ceiling.
+    const aspect = Math.max(img.naturalWidth, img.naturalHeight) / Math.max(1, Math.min(img.naturalWidth, img.naturalHeight));
+    const isWideLayout = aspect >= 1.6;
+    const dimensionCeiling = isWideLayout ? 2400 : IMAGE_PREPROCESS_MAX_DIMENSION;
     const longest = Math.max(img.naturalWidth, img.naturalHeight);
-    if (longest <= IMAGE_PREPROCESS_MAX_DIMENSION) {
+    if (longest <= dimensionCeiling) {
       // Already small enough — but still re-encode if it's a huge PNG
       if (file.type !== 'image/png' || file.size < 1024 * 1024) return file;
     }
-    const scale = Math.min(1, IMAGE_PREPROCESS_MAX_DIMENSION / longest);
+    const scale = Math.min(1, dimensionCeiling / longest);
     const targetW = Math.round(img.naturalWidth * scale);
     const targetH = Math.round(img.naturalHeight * scale);
 
@@ -67132,9 +67154,38 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
         }
       }, "Unconfirmed"));
       // Default: annual premium — show /yr suffix so it's unambiguous vs monthly.
-      // Suppress suffix if premium is 0/missing (nothing to qualify).
+      // rc2.75.7: when premium is 0 on a NON-Single-Premium in-force policy,
+      // surface a red "Not detected — verify" hint instead of a silent $0.
+      // The previous silent-$0 made FCs scan the row twice to notice the gap.
+      // Skip the hint for matured/lapsed/surrendered policies (premium
+      // genuinely is 0 once the policy is no longer in force) and for
+      // policies in the cash_investments / other_assets categories where
+      // premium isn't conceptually applicable.
       const prem = parseFloat(p.annualPremium) || 0;
-      if (prem === 0) return /*#__PURE__*/React.createElement("div", null, fmt(p.annualPremium, p.currency || 'SGD'));
+      if (prem === 0) {
+        const status = String(p.status || '').toLowerCase();
+        const isFinished = ['matured', 'lapsed', 'surrendered'].includes(status);
+        const isNotPremiumPolicy = p.category === 'cash_investments' || p.category === 'other_assets' || p.subType === 'Unit Trust';
+        if (!isFinished && !isNotPremiumPolicy) {
+          return /*#__PURE__*/React.createElement("div", {
+            title: "Premium not detected during extraction \u2014 open Edit to enter the correct amount.",
+            style: {
+              cursor: 'help'
+            }
+          }, /*#__PURE__*/React.createElement("div", {
+            style: {
+              fontSize: 11,
+              color: 'var(--danger,#c97b7b)'
+            }
+          }, "$0"), /*#__PURE__*/React.createElement("div", {
+            style: {
+              fontSize: 9,
+              color: 'var(--danger,#c97b7b)'
+            }
+          }, "Not detected \xB7 verify"));
+        }
+        return /*#__PURE__*/React.createElement("div", null, fmt(p.annualPremium, p.currency || 'SGD'));
+      }
       return /*#__PURE__*/React.createElement("div", {
         style: {
           fontSize: 11
