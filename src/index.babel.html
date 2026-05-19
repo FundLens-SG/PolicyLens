@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.3-hotfix-funds-orphan-merge';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.4-hotfix-drive-prompt-loop';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -733,9 +733,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.75.3';
+const APP_VERSION = 'v2.4.0-rc2.75.4';
 const APP_VERSION_DATE = '2026-05-19';
-const APP_VERSION_NAME = 'rc2.75.3 hotfix: funds-orphan extraction fix (currency-in-name detection + fund-allocation guard)';
+const APP_VERSION_NAME = 'rc2.75.4 hotfix: Drive prompt loop on iPad (silent refresh + Try Again button)';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1111,6 +1111,24 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.4.0-rc2.75.4',
+    date: '2026-05-19',
+    name: 'rc2.75.4 hotfix: iPad Safari Drive prompt loop after extraction',
+    sections: [
+      {
+        heading: 'User-reported: after extracting policies on iPad, "Connect Google Drive to continue" modal loops back to tools index',
+        items: [
+          'CONTEXT: User extracted 142 photos worth of policies via iPad Safari. The save succeeded (Policies tab populated with AIA HealthShield Gold Max, AIA SOLITAIRE PERSONAL ACCIDENT, ACHIEVER, etc.) — but a "Connect Google Drive to continue" modal popped up. Clicking the green Connect button redirected to ckgtools.com/, the hub bounced them back to PolicyLens, and the modal popped AGAIN — infinite loop. User correctly noted they were already signed in to ckgtools and had previously connected Drive.',
+          'ROOT CAUSE: Safari ITP (Intelligent Tracking Prevention) silently clears `session.provider_token` from localStorage after 7 days of inactivity, even when the hub session cookie itself is still valid. The rc2e.51 Drive sync prompt at line 43004 calls `sb.auth.getSession()` and checks `session.provider_token` directly — if missing, modal fires. The modal\'s onConnect handler does `window.location.href = "/"` which round-trips through the hub but does NOT restore the missing provider_token, so the same check fails on return and the modal pops again. Loop.',
+          'FIX #1 — SILENT REFRESH BEFORE MODAL: Before showing the modal, if the user has an authenticated hub session (regardless of provider_token freshness), call the `drive-auth-dev` Edge Function to mint a fresh access token from the server-side refresh_token. If it succeeds, the user IS connected to Drive — just on a device where the at-mount check raced with the boot path. Persist `hasEverConnected=1` so future mounts skip the dance.',
+          'FIX #2 — "TRY AGAIN" BUTTON IN MODAL: Added a non-destructive recovery button next to "Connect Google Drive →". It runs the same silent refresh in-page (no redirect, no state loss). If the refresh succeeds, the modal closes and the user keeps their extracted policies. If it fails, a clear error message appears explaining they need to use the full Connect path. This gives the FC a way out of the loop without redirecting away from PolicyLens and risking pending state.',
+          'FIX #3 — LONGER DELAY ON TOUCH DEVICES: Bumped the at-mount modal trigger delay from 3s to 6s on iPad / iPhone / Android (detected via ontouchstart + maxTouchPoints + UA). Safari boot is materially slower than desktop Chrome — the 3s window was too tight for the in-page Drive boot path to settle before the modal fired.',
+          'NET: iPad users with a valid hub session should never see this modal again (silent refresh resolves it auto). If they DO see it (genuinely revoked Drive scope), they get a clear path forward via either Try Again (in-page recovery) or Connect (full re-auth).'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.4.0-rc2.75.3',
     date: '2026-05-19',
@@ -34677,6 +34695,37 @@ function DriveSyncPromptModal({ open, onSkip, onConnect }) {
   // — it's wired to nothing user-clickable anymore.
   void onSkip;
   const [showWhy, setShowWhy] = useState(false);
+  // rc2.75.4: Try Again button retries the silent Edge Function refresh.
+  // Without this, iPad Safari users in the ITP-wiped-provider_token state
+  // get stuck in a loop: Connect redirects to /, hub bounces them back,
+  // modal pops again because the provider_token is still missing. Try
+  // Again uses the same in-page refresh path that runs at mount, so a
+  // successful retry closes the modal WITHOUT a redirect.
+  const [retrying, setRetrying] = useState(false);
+  const [retryMsg, setRetryMsg] = useState(null);
+  const handleRetry = async () => {
+    if (retrying) return;
+    setRetrying(true);
+    setRetryMsg(null);
+    try {
+      if (typeof _refreshDriveTokenViaEdgeFn === 'function') {
+        const tok = await _refreshDriveTokenViaEdgeFn();
+        if (tok) {
+          try { if (typeof driveLSSet === 'function' && typeof DRIVE_LS === 'object') driveLSSet(DRIVE_LS.hasEverConnected, '1'); } catch(_){}
+          // Reuse the onSkip path so the parent closes the modal and persists dismissal.
+          if (typeof onSkip === 'function') onSkip();
+          return;
+        }
+        setRetryMsg('Silent refresh failed — your session may have expired. Please use Connect Google Drive to re-sign-in.');
+      } else {
+        setRetryMsg('Refresh helper unavailable in this build. Use Connect Google Drive instead.');
+      }
+    } catch (err) {
+      setRetryMsg('Retry threw: ' + (err?.message || String(err)).slice(0, 120));
+    } finally {
+      setRetrying(false);
+    }
+  };
   if (!open) return null;
   const modalBg = {position:'fixed',inset:0,zIndex:10001,background:'rgba(0,0,0,.7)',display:'flex',alignItems:'center',justifyContent:'center',padding:16};
   const modalBox = {background:'var(--bg2)',borderRadius:16,border:'1px solid rgba(91,168,160,.3)',maxWidth:440,width:'100%',padding:24,boxShadow:'0 20px 60px rgba(0,0,0,.5)'};
@@ -34696,9 +34745,17 @@ function DriveSyncPromptModal({ open, onSkip, onConnect }) {
             Singapore PDPA: client info (NRIC, financials) is sensitive. Storing it in your own Drive — not on our servers — keeps you in full control. You can revoke our access at any time from Google Account → Security → Third-party apps.
           </div>
         )}
-        <div style={{display:'flex',gap:8,justifyContent:'flex-end',alignItems:'center'}}>
+        {retryMsg && (
+          <div style={{fontSize:11,color:'var(--gold)',marginBottom:12,padding:'8px 10px',background:'rgba(218,165,32,.08)',border:'1px solid rgba(218,165,32,.25)',borderRadius:6,lineHeight:1.45}}>
+            {retryMsg}
+          </div>
+        )}
+        <div style={{display:'flex',gap:8,justifyContent:'flex-end',alignItems:'center',flexWrap:'wrap'}}>
           <button onClick={() => setShowWhy(v => !v)} style={{background:'transparent',color:'var(--text3)',border:'none',padding:'8px 4px',fontSize:11,cursor:'pointer',textDecoration:'underline'}}>
             {showWhy ? 'Hide details' : 'Why is this required?'}
+          </button>
+          <button onClick={handleRetry} disabled={retrying} style={{background:'transparent',color:'var(--teal)',border:'1px solid rgba(91,168,160,.45)',borderRadius:6,padding:'8px 14px',fontSize:11,fontWeight:600,cursor:retrying?'wait':'pointer',opacity:retrying?0.6:1}}>
+            {retrying ? 'Retrying…' : 'Try again (no redirect)'}
           </button>
           <button onClick={onConnect} style={{background:'var(--teal)',color:'#fff',border:'none',borderRadius:6,padding:'8px 16px',fontSize:11,fontWeight:700,cursor:'pointer'}}>
             Connect Google Drive →
@@ -43017,14 +43074,16 @@ function Policies() {
       if (driveClient.getStatus() === 'connected') return; // already on Drive
       const dismissedAt = parseInt(driveLSGet(DRIVE_PROMPT_DISMISS_KEY) || '0', 10);
       if (dismissedAt && (Date.now() - dismissedAt) < DRIVE_PROMPT_DISMISS_MS) return;
-      // 3s delay (was 1.5s) gives Drive boot — including the
-      // _refreshDriveTokenViaEdgeFn fallback path — time to finish.
-      // Re-check Drive status when the timer fires; if Drive connected
-      // during the wait, skip the prompt entirely. This closes the
-      // race condition where the suite strip shows '● Drive synced'
-      // but the modal still pops because the at-mount status check
-      // fired before the boot resolved.
-      setTimeout(() => {
+      // rc2.75.4: bumped from 3s to 6s on touch devices (iPad Safari boot
+      // path is materially slower than desktop). Also added a silent
+      // refresh attempt before showing the modal — see notes below.
+      const isTouchOrSlow = (typeof navigator !== 'undefined') && (
+        'ontouchstart' in window ||
+        navigator.maxTouchPoints > 0 ||
+        /iPad|iPhone|Android/i.test(navigator.userAgent || '')
+      );
+      const triggerDelay = isTouchOrSlow ? 6000 : 3000;
+      setTimeout(async () => {
         try {
           if (driveClient.getStatus() === 'connected') return;
           if (driveLSGet(DRIVE_LS.hasEverConnected) === '1') return;
@@ -43034,15 +43093,43 @@ function Policies() {
           // hasn't pinged yet.
           const sb = window._SB || (typeof getSB === 'function' ? getSB() : null);
           if (sb?.auth?.getSession) {
-            sb.auth.getSession().then(r => {
-              if (r?.data?.session?.provider_token) return;
-              setDriveSyncPromptOpen(true);
-            }).catch(() => setDriveSyncPromptOpen(true));
+            const r = await sb.auth.getSession().catch(() => null);
+            if (r?.data?.session?.provider_token) return;
+            // rc2.75.4: SILENT REFRESH GUARD for iPad / mobile Safari.
+            // Safari ITP can wipe `session.provider_token` from localStorage
+            // after 7 days even when the hub session cookie is still valid.
+            // Without this guard, returning iPad users hit a false "Connect
+            // Google Drive" modal that loops them back to the tools index
+            // and re-pops every time they navigate to PolicyLens — because
+            // `window.location.href = '/'` (the onConnect handler) doesn't
+            // restore the missing provider_token, just round-trips them.
+            //
+            // Before showing the modal, if the user has an authenticated
+            // hub session (regardless of provider_token freshness), call
+            // the drive-auth-dev Edge Function to mint a fresh access
+            // token from the server-side refresh_token. If it succeeds the
+            // user IS connected — just on a device where the at-mount check
+            // raced with the boot path. Persist hasEverConnected so future
+            // mounts skip this whole dance.
+            if (r?.data?.session?.user?.id && typeof _refreshDriveTokenViaEdgeFn === 'function') {
+              try {
+                const refreshed = await _refreshDriveTokenViaEdgeFn();
+                if (refreshed) {
+                  console.log('[DrivePrompt] Silent refresh succeeded — suppressing modal');
+                  try { driveLSSet(DRIVE_LS.hasEverConnected, '1'); } catch(_){}
+                  return;
+                }
+                console.log('[DrivePrompt] Silent refresh returned null — Drive genuinely disconnected');
+              } catch (refreshErr) {
+                console.warn('[DrivePrompt] Silent refresh threw, falling through to modal:', refreshErr?.message || refreshErr);
+              }
+            }
+            setDriveSyncPromptOpen(true);
             return;
           }
           setDriveSyncPromptOpen(true);
         } catch(_) { setDriveSyncPromptOpen(true); }
-      }, 3000);
+      }, triggerDelay);
     } catch(_){}
   }, [policies?.length]);
 
