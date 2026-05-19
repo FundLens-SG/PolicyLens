@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.1-hotfix-allpols-orphan-rollback';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.2-hotfix-handoff-orphan-removed';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -733,9 +733,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.75.1';
+const APP_VERSION = 'v2.4.0-rc2.75.2';
 const APP_VERSION_DATE = '2026-05-19';
-const APP_VERSION_NAME = 'rc2.75 hotfix: allPols typo + orphan-rule rollback + bundle pipeline flag-gated';
+const APP_VERSION_NAME = 'rc2.75.2 hotfix: cross-batch handoff orphan rule fully removed';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -753,7 +753,7 @@ const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 // Pass-through for non-zip inputs (single function for all entry points).
 // Filters out hidden / metadata entries (__MACOSX/, .DS_Store, leading-dot)
 // that pollute the queue without being real policy documents.
-async function expandZipFiles(files) {
+async function expandZipFiles(files, _depth = 0) {
   if (!Array.isArray(files) && !files?.length) return files || [];
   const arr = Array.isArray(files) ? files.slice() : Array.from(files);
   if (typeof JSZip === 'undefined') {
@@ -761,6 +761,11 @@ async function expandZipFiles(files) {
     // current MIME-rejection error, same as before this rc.
     return arr;
   }
+  // rc2.75.2: zip-bomb guard. Recurse into nested zips up to 2 levels deep,
+  // so a WhatsApp zip containing another zip still gets unpacked, but a
+  // pathological nested zip can't blow the stack.
+  const MAX_RECURSION_DEPTH = 2;
+  const toastFn = (typeof window !== 'undefined') ? window.__policylensToast : null;
   const out = [];
   for (const f of arr) {
     const name = String(f?.name || '').toLowerCase();
@@ -774,6 +779,7 @@ async function expandZipFiles(files) {
       const buf = await f.arrayBuffer();
       const zip = await JSZip.loadAsync(buf);
       let extracted = 0;
+      const nestedZips = [];
       for (const entryName of Object.keys(zip.files)) {
         const entry = zip.files[entryName];
         if (entry.dir) continue;
@@ -781,7 +787,8 @@ async function expandZipFiles(files) {
         if (/^__MACOSX\//.test(entryName)) continue;
         if (/(^|\/)\.[^/]+$/.test(entryName)) continue;  // dotfiles
         const blob = await entry.async('blob');
-        const baseName = entryName.split('/').pop() || entryName;
+        // rc2.75.2: handle Windows-style backslash separators in some zip tools.
+        const baseName = entryName.split(/[\\/]/).pop() || entryName;
         // Infer MIME from extension. Browsers' Blob constructor doesn't
         // auto-detect; the staging code routes by file.type so we set it.
         const ext = (baseName.match(/\.([^.]+)$/) || [, ''])[1].toLowerCase();
@@ -794,24 +801,57 @@ async function expandZipFiles(files) {
           doc: 'application/msword',
           docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
           html: 'text/html', htm: 'text/html', txt: 'text/plain', rtf: 'application/rtf',
+          zip: 'application/zip',
         };
         const mime = mimeMap[ext] || blob.type || 'application/octet-stream';
         const extractedFile = new File([blob], baseName, { type: mime, lastModified: entry.date?.getTime() || f.lastModified || Date.now() });
-        out.push(extractedFile);
+        if (ext === 'zip' && _depth < MAX_RECURSION_DEPTH) {
+          // Nested zip — defer to recursive pass below.
+          nestedZips.push(extractedFile);
+        } else {
+          out.push(extractedFile);
+        }
         extracted++;
       }
-      try { console.log('[ZipExpand]', f.name, '→', extracted, 'files unpacked'); } catch(_) {}
-      try {
-        if (typeof window !== 'undefined' && extracted > 0) {
-          // Polite toast — only fires when we successfully unpack at least one file.
-          const toastFn = window.__policylensToast;
-          if (typeof toastFn === 'function') toastFn('📦 Unpacked ' + extracted + ' file' + (extracted === 1 ? '' : 's') + ' from ' + f.name, 'success', 3500);
+      // rc2.75.2: recurse into nested zips so multi-layered WhatsApp shares unpack fully.
+      if (nestedZips.length > 0) {
+        try {
+          const innerExpanded = await expandZipFiles(nestedZips, _depth + 1);
+          for (const inner of innerExpanded) out.push(inner);
+        } catch (innerErr) {
+          console.warn('[ZipExpand] Nested-zip recursion failed for', f.name, ':', innerErr?.message || innerErr);
+          // Push the inner zips as-is so the user at least sees something.
+          for (const inner of nestedZips) out.push(inner);
         }
-      } catch(_) {}
+      }
+      try { console.log('[ZipExpand]', f.name, '→', extracted, 'entr' + (extracted === 1 ? 'y' : 'ies'), 'depth=' + _depth); } catch(_) {}
+      // rc2.75.2: surface empty-zip case so the user knows the upload was seen but contained nothing.
+      if (extracted === 0 && _depth === 0) {
+        try { if (typeof toastFn === 'function') toastFn('⚠️ ' + f.name + ' is an empty zip — no files to extract', 'warning', 5000); } catch(_) {}
+      } else if (_depth === 0) {
+        try { if (typeof toastFn === 'function') toastFn('📦 Unpacked ' + extracted + ' file' + (extracted === 1 ? '' : 's') + ' from ' + f.name, 'success', 3500); } catch(_) {}
+      }
     } catch (zipErr) {
       console.warn('[ZipExpand] Failed to read', f.name, ':', zipErr?.message || zipErr);
-      // Keep the original zip file — let the existing error path surface the failure
-      out.push(f);
+      // rc2.75.2: corrupted/encrypted-zip case — surface a clear error toast so the
+      // FC knows why their upload silently produced no images, instead of letting
+      // it fall through to a confusing Gemini MIME-rejection downstream.
+      if (_depth === 0) {
+        try {
+          if (typeof toastFn === 'function') {
+            const msg = String(zipErr?.message || zipErr || '').toLowerCase();
+            const isEncrypted = msg.includes('encrypt') || msg.includes('password');
+            toastFn(
+              isEncrypted
+                ? '🔒 ' + f.name + ' is password-protected — please unzip first then re-upload'
+                : '⚠️ Could not read zip ' + f.name + ' (' + (zipErr?.message || 'unknown').slice(0, 80) + ')',
+              'error', 7000
+            );
+          }
+        } catch(_) {}
+      }
+      // Drop the original zip file from the output — pushing it back would surface
+      // a second, more confusing error downstream (Gemini "Unsupported MIME type").
     }
   }
   return out;
@@ -1071,6 +1111,24 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.4.0-rc2.75.2',
+    date: '2026-05-19',
+    name: 'rc2.75.2 smoke-test follow-ups: handoff orphan removed, Import await/scope, ZIP edge cases',
+    sections: [
+      {
+        heading: 'Five bugs found and fixed in proactive smoke test after rc2.75.1 shipped',
+        items: [
+          'Fix #1 — CROSS-BATCH HANDOFF ORPHAN RULE LEAK: rc2.75.1 rolled back rules 9+10 from the main EXTRACT_PROMPT, but the EXACT same orphan-continuation directive ("If any image in this batch is a CONTINUATION PAGE… MERGE its data into the matching policy above… DO NOT emit a phantom new policy from a continuation page.") was STILL embedded in the priorBatchesSummary text block that gets pushed to the AI on every batch after batch 1. This meant the regression the user reported — premium / SA being dropped on legitimate standalone policies — was still active for batches 2+ of any multi-batch upload. The priorBatchesSummary text now contains ONLY dedup guidance ("avoid emitting a duplicate entry if you see the exact same policy").',
+          'Fix #2 — IMPORT BUTTON SWALLOWS ASYNC ERRORS: _handleAcceptImpl was calling onAccept(standalone) without await. Because onAccept (defined on the parent at line 48739) is async and does the actual policy save + Drive sync, any rejection from that path resolved _handleAcceptImpl before the save finished — meaning the rc2.74 try/catch error toast we added in handleAccept never triggered for save-time failures, and the busy state flipped back to false prematurely. Now awaited so onAccept rejections surface as "Import failed: <reason>" toasts.',
+          'Fix #3 — ZIP UNPACKER EDGE CASES: expandZipFiles silently produced 0 files for empty zips (no toast, looked like nothing happened to the user), silently fell through corrupted/password-protected zips (the original zip got pushed back into the queue and Gemini rejected it with "Unsupported MIME type" — confusing error chain), and didn\'t handle nested zips at all. Hardened: empty-zip and corrupted-zip cases now toast a clear error; password-protected zips get a "🔒 unzip first then re-upload" hint; nested zips are now recursed up to depth=2; Windows-style backslash path separators are now normalised when extracting filenames.',
+          'Fix #4 — reconcileExtractedSourceForClient ReferenceError on Import (USER-REPORTED): pressing Import 6 Policies threw "Uncaught (in promise) ReferenceError: reconcileExtractedSourceForClient is not defined at onAccept" in DevTools. The reconciliation helper was defined inside the App() component (line 26384) but called from inside Policies() (line 48849) — they\'re sibling components, so the closure wasn\'t in scope. Synchronous ReferenceErrors bypass .catch(), so the surrounding error handler never fired. This bug was probably pre-existing all the way back to whenever the call was added — only surfaced now because Fix #2 above (await onAccept) lets ReferenceErrors propagate up to the user-visible toast. Fixed by exposing reconcileExtractedSourceForClient through AppCtx and destructuring it inside Policies().',
+          'Fix #5 — DISABLE IMPORT WHILE EXTRACTION RUNNING: in normal multi-batch flow the modal only opens after the final batch (by design — line 47266 comment), but SW-recovery and partial-failure paths can flush early. Added a defensive guard: when scanProgress.pctComplete < 100 the Import button shows "Wait for batches…" and is disabled, and a "⏳ Still extracting batch X/Y" hint appears in the footer. The FC can no longer accidentally import a partial result.',
+          'NET: rc2.75.2 should fix the $0-premium / dropped-SA regression on all multi-batch uploads. The orphan rule is now fully gone from every prompt path. Import errors will reliably surface. ZIP UX is harder to silently confuse. Import is locked during extraction.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.4.0-rc2.75.1',
     date: '2026-05-19',
@@ -27075,7 +27133,7 @@ function App() {
     try { window.dispatchEvent(new Event('policylens-clients-changed')); } catch(_) {}
   };
 
-  const ctx = {policies,repo,apiKey,clientName,clientProfile,savePolicy,savePolicyForClient,deletePolicy,restoreLastUndo,saveRepo,deleteRepo,refreshRepo,repoSource,saveApiKey,saveClientName,saveProfile,applyProfileHintsForClient,mergeClientIntoClient,tab,setTab,presentMode,setPresentMode,showChangelog,setShowChangelog,houseDefaults,saveHouseDefaults,tierDefinitions,saveTierDefinitions,runCloudSync:()=>runCloudSyncRef.current?.({force:true}),driveState,setDriveState,activeClientId,switchClient,destroyClient,isAdmin,openPaletteForClients,openCommandPalette:()=>{setPaletteSeed('');setPaletteOpen(true);}};
+  const ctx = {policies,repo,apiKey,clientName,clientProfile,savePolicy,savePolicyForClient,deletePolicy,restoreLastUndo,saveRepo,deleteRepo,refreshRepo,repoSource,saveApiKey,saveClientName,saveProfile,applyProfileHintsForClient,mergeClientIntoClient,tab,setTab,presentMode,setPresentMode,showChangelog,setShowChangelog,houseDefaults,saveHouseDefaults,tierDefinitions,saveTierDefinitions,runCloudSync:()=>runCloudSyncRef.current?.({force:true}),driveState,setDriveState,activeClientId,switchClient,destroyClient,isAdmin,openPaletteForClients,openCommandPalette:()=>{setPaletteSeed('');setPaletteOpen(true);},reconcileExtractedSourceForClient};
 
   if(loading) {
     if (_isOAuthReturn) return <OAuthReturnLoader />;
@@ -41535,7 +41593,13 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
 
     try { sessionStorage.removeItem('policylens_pendingExtract'); } catch(e){}
     emitExtractionLedger({ stage:'sync', label:'Import queued', level:'info', detail:standalone.length + ' polic' + (standalone.length === 1 ? 'y' : 'ies') + ' queued for save/sync' });
-    onAccept(standalone);
+    // rc2.75.2: await onAccept so async errors propagate to the try/catch in
+    // handleAccept. Without the await, an onAccept rejection would resolve
+    // _handleAcceptImpl successfully, hide the error from the user, and
+    // leave the busy-state to flip back to false before the save actually
+    // finished — making the button look like it had succeeded when it
+    // hadn't.
+    await onAccept(standalone);
   };
 
   // rc2.74: handleAccept wrapper — surfaces errors so the Import button
@@ -42559,11 +42623,26 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
         {/* v2.4.0-rc1.22: Sticky footer strip — actions always visible
             even when policy cards overflow vertically. */}
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'14px 22px',borderTop:'1px solid var(--border)',background:'var(--bg2)',flexShrink:0}}>
-          <div style={{fontSize:12,color:'var(--text2)'}}>{items.filter(it=>it._selected).length} of {items.length} policies selected</div>
+          <div style={{fontSize:12,color:'var(--text2)'}}>
+            {items.filter(it=>it._selected).length} of {items.length} policies selected
+            {/* rc2.75.2: warn the FC if extraction is still running. The modal
+                normally only opens after the final batch, but SW-recovery and
+                partial-failure paths can flush early. Without this hint the FC
+                could press Import mid-extraction and miss policies. */}
+            {scanProgress && scanProgress.pctComplete != null && scanProgress.pctComplete < 100 && (
+              <span style={{marginLeft:8,fontSize:10,color:'var(--gold)',fontWeight:600}}>
+                ⏳ Still extracting batch {scanProgress.batch}/{scanProgress.totalBatches} — import will be locked until all batches finish
+              </span>
+            )}
+          </div>
           <div style={{display:'flex',gap:8}}>
             <button className="btn-secondary" onClick={onClose}>Cancel</button>
-            <button className="btn-primary" onClick={handleAccept} disabled={items.filter(it=>it._selected).length===0 || importBusy}>
-              {importBusy ? 'Importing...' : 'Import ' + items.filter(it=>it._selected).length + ' Policies'}
+            <button className="btn-primary" onClick={handleAccept} disabled={items.filter(it=>it._selected).length===0 || importBusy || (scanProgress && scanProgress.pctComplete != null && scanProgress.pctComplete < 100)}>
+              {importBusy
+                ? 'Importing...'
+                : (scanProgress && scanProgress.pctComplete != null && scanProgress.pctComplete < 100)
+                  ? 'Wait for batches…'
+                  : 'Import ' + items.filter(it=>it._selected).length + ' Policies'}
             </button>
           </div>
         </div>
@@ -42721,7 +42800,7 @@ class ErrorBoundary extends React.Component {
 }
 
 function Policies() {
-  const {policies,savePolicy,savePolicyForClient,deletePolicy,repo,apiKey,saveRepo,clientProfile,saveProfile,applyProfileHintsForClient,activeClientId,clientName,switchClient,setTab,tierDefinitions} = useContext(AppCtx);
+  const {policies,savePolicy,savePolicyForClient,deletePolicy,repo,apiKey,saveRepo,clientProfile,saveProfile,applyProfileHintsForClient,activeClientId,clientName,switchClient,setTab,tierDefinitions,reconcileExtractedSourceForClient} = useContext(AppCtx);
   const isMobile = useViewportIsMobile();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -46354,14 +46433,15 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
 
         // rc2.75: CROSS-BATCH CONTEXT HANDOFF — pass a compact summary of
         // policies already identified in earlier batches to this batch's AI
-        // call. Helps the AI: (a) avoid duplicating the same policy, (b)
-        // merge continuation pages (fund allocations, cash value tables
-        // etc.) into the correct parent policy. Capped at 30 most-recent
-        // policies to keep prompt size predictable.
+        // call so it can detect and skip duplicates if the same policy
+        // re-appears (e.g. same screenshot in two batches).
         // rc2.75 hotfix: correct accumulator name is `allExtracted` (not `allPols`).
-        // Previous version threw "allPols is not defined" on batch 2+, which cascaded
-        // into AI calls without context AND made the import flow surface a confusing
-        // pipeline-bug toast.
+        // rc2.75.2 hotfix: removed the orphan-continuation directive text that
+        // told the AI to merge "continuation pages" into prior policies. That
+        // directive was rolled back from the main EXTRACT_PROMPT in rc2.75.1
+        // but the same text was still leaking into batches 2+ via this
+        // handoff, causing the AI to drop premium / SA fields on legitimate
+        // standalone policies it (mis)classified as continuation pages.
         let priorBatchesSummary = '';
         if (b > 0 && Array.isArray(allExtracted) && allExtracted.length > 0) {
           const summary = allExtracted.slice(-30).map((p, i) => {
@@ -46372,7 +46452,7 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
             const cat = String(p.category || '').trim();
             return (i + 1) + '. ' + insurer + ' — ' + product + (polNo ? ' (#' + polNo + ')' : '') + (owner ? ' [' + owner + ']' : '') + (cat ? ' {' + cat + '}' : '');
           }).join('\n');
-          priorBatchesSummary = '\n═══ POLICIES ALREADY IDENTIFIED IN EARLIER BATCHES ═══\n' + summary + '\n═══ END EARLIER BATCHES ═══\n\nIf any image in this batch is a CONTINUATION PAGE (fund allocations / cash value table / premium schedule / benefit table with NO clear policy header), MERGE its data into the matching policy above by reusing the SAME productName + policyNumber. DO NOT emit a phantom new policy from a continuation page.\n';
+          priorBatchesSummary = '\n═══ POLICIES ALREADY IDENTIFIED IN EARLIER BATCHES (for reference / dedup only) ═══\n' + summary + '\n═══ END EARLIER BATCHES ═══\n\nThe list above is provided so you can avoid emitting a duplicate entry if you see the exact same policy in this batch. Extract every policy you see in this batch normally — do NOT skip a policy just because it looks similar to one above unless the policyNumber matches exactly.\n';
         }
         const arr = await extractBatch(batches[b], precomputedRawText, priorBatchesSummary);
         if(arr.length === 0 && b === 0 && batches.length === 1) {

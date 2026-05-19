@@ -1,4 +1,4 @@
-const SW_VERSION = 'v2.4.0-rc2.75.1-hotfix-allpols-orphan-rollback';
+const SW_VERSION = 'v2.4.0-rc2.75.2-hotfix-handoff-orphan-removed';
 const DB_NAME = 'PolicyLensSW';
 const DB_VERSION = 1;
 const SESSION_STORE = 'sessions';
