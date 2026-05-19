@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.9-portfolio-summary-hardening';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.10-isp-rider-audit';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -743,9 +743,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.75.9';
+const APP_VERSION = 'v2.4.0-rc2.75.10';
 const APP_VERSION_DATE = '2026-05-20';
-const APP_VERSION_NAME = 'rc2.75.9 Portfolio-summary hardening (Gerald PDF smoke test)';
+const APP_VERSION_NAME = 'rc2.75.10 AIA ISP-rider polno stem audit + warning chips';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1350,6 +1350,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.75.10',
+  date: '2026-05-20',
+  name: 'rc2.75.10 AIA ISP-rider polno stem audit + warning chips in review modal',
+  sections: [{
+    heading: 'Follow-up from the Gerald smoke test: explicit warnings when AIA ISP + rider pairing looks broken',
+    items: ['CONTEXT: AIA codes ISP base policies with an "H"-prefix policy number (AIA HealthShield Gold Max → H________) and the matching ISP rider with an "E"-prefix sharing the SAME trailing digits (AIA Max VitalHealth / Max VitalCare → E________). A rider can only attach to one specific base, so when the stems agree (e.g. H235278063 + E235278063) it\'s a valid pair, and when they don\'t (e.g. H240198109 + E234226650) the FC almost certainly has either a typo or the rows belong to two different insureds. rc2.75.9 stopped FORCE-PAIRING in this case but didn\'t actively flag it for the FC — so a stem-mismatch could still slip through review unnoticed.', 'FIX — Cross-policy audit pass in dedupePolicies. After all per-policy enrichment and merging completes, a new audit scans the final array for AIA Gold Max bases (insurer=AIA, productName matches /healthshield\\s*gold\\s*max/, policyNumber starts with H) and AIA VitalHealth/VitalCare riders (productName matches /max\\s+(vital\\s*health|vital\\s*care)/, policyNumber starts with E). For each rider:', '   (a) If a base with matching policy-number stem exists AND insured names agree → annotate rider with _parentPolicyNumber and base with _attachedRiderNumbers (no warning, clean pair).', '   (b) If stems match BUT insured names differ → push high-severity warning "isp-rider-insured-mismatch" on BOTH rider and base. A rider cannot legally attach to a different life\'s base — one side has the wrong Insured label and the FC must reconcile before importing.', '   (c) If NO base with a matching stem exists → push medium-severity warning "isp-rider-stem-orphan" on the rider. Either the matching base isn\'t in this upload (rider belongs to a separate person whose ISP wasn\'t included), or the polno has a typo.', 'FIX — Warning chips render inline in BulkVerifyModal next to the existing merge-conflict and duplicate chips. High-severity warnings render in red, medium in gold. Tooltip shows the full warning message so the FC can hover and see the explanation without leaving the row. Doesn\'t block import (the FC can still tick the row through) — just makes the structural issue impossible to miss.', 'BONUS — Aggregate-row badge from rc2.75.9 now ALSO renders as a "📊 Aggregate row" chip with a tooltip explaining why the row was pre-unchecked. Previously the row just appeared unticked without explanation, which looked like a missed import.', 'NET: any AIA ISP / rider combination from a portfolio summary now gets explicit pairing diagnostics in the review modal. Stem mismatches, orphan riders, and cross-insured pairings all surface as red/gold chips. The FC can either fix the source data and re-extract, or accept the warning and import anyway — but they never silently get a wrong ISP-rider relationship in their saved policies.']
+  }]
+}, {
   version: 'v2.4.0-rc2.75.9',
   date: '2026-05-20',
   name: 'rc2.75.9 Portfolio-summary hardening (Gerald PDF smoke test)',
@@ -60176,7 +60184,30 @@ function BulkVerifyModal({
         border: '1px solid rgba(239,83,80,.25)'
       },
       title: "Tap to see conflicting fields"
-    }, "\u26A0\uFE0F ", item._mergeConflicts.length, " conflict", item._mergeConflicts.length > 1 ? 's' : ''), (item._mergedFrom > 1 || item._mergedFromPartial) && /*#__PURE__*/React.createElement("span", {
+    }, "\u26A0\uFE0F ", item._mergeConflicts.length, " conflict", item._mergeConflicts.length > 1 ? 's' : ''), Array.isArray(item._warningFlags) && item._warningFlags.length > 0 && item._warningFlags.map((w, wi) => /*#__PURE__*/React.createElement("span", {
+      key: wi,
+      title: w?.message || 'Structural warning',
+      style: {
+        fontSize: 8,
+        padding: '1px 5px',
+        borderRadius: 3,
+        background: w?.level === 'high' ? 'rgba(239,83,80,.1)' : 'rgba(218,165,32,.1)',
+        color: w?.level === 'high' ? 'var(--red)' : 'var(--gold)',
+        border: '1px solid ' + (w?.level === 'high' ? 'rgba(239,83,80,.25)' : 'rgba(218,165,32,.25)'),
+        cursor: 'help'
+      }
+    }, "\u26A0 ", w?.code === 'isp-rider-insured-mismatch' ? 'ISP rider Insured mismatch' : w?.code === 'isp-rider-stem-orphan' ? 'Rider has no base in import' : w?.code || 'Warning')), item._aggregateRow && /*#__PURE__*/React.createElement("span", {
+      title: item._aggregateReason || 'Looks like a Grand Total / category-band row, not a real policy.',
+      style: {
+        fontSize: 8,
+        padding: '1px 5px',
+        borderRadius: 3,
+        background: 'rgba(91,168,160,.08)',
+        color: 'var(--text3)',
+        border: '1px solid var(--border)',
+        cursor: 'help'
+      }
+    }, "\uD83D\uDCCA Aggregate row"), (item._mergedFrom > 1 || item._mergedFromPartial) && /*#__PURE__*/React.createElement("span", {
       title: 'Combined from ' + (item._mergedFrom || 2) + ' extracted entries' + (item._mergedFromPartial ? ' (at least one partial page)' : ''),
       style: {
         fontSize: 8,
@@ -63434,6 +63465,82 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
       lastStrongIndex = sequenceOut.length - 1;
     }
     if (pendingWeak.length > 0) sequenceOut.push(...pendingWeak);
+
+    // rc2.75.10: AIA HealthShield Gold Max + Max VitalHealth / VitalCare rider
+    // pairing audit. AIA's convention is to code base ISPs with an "H"-prefix
+    // policy number (H________) and the matching ISP rider with an "E"-prefix
+    // policy number sharing the SAME trailing digits (E________). When the
+    // stems differ, the FC almost certainly has a typo in one of them OR the
+    // rows belong to two different insureds. Either way the FC should be
+    // warned BEFORE they import — silently force-pairing produces wrong
+    // analytics downstream. Same applies if the "Insured" remark names
+    // differ between a matched base and rider.
+    try {
+      const stemOf = polno => {
+        const s = String(polno || '').trim();
+        if (!s) return '';
+        // Strip the AIA letter prefix (H/E/L/P) but only when there's exactly
+        // one letter at the front of a numeric string — preserves non-AIA
+        // policy numbers verbatim.
+        const m = s.match(/^([A-Za-z])(\d{6,})$/);
+        return m ? m[2] : s;
+      };
+      const looksLikeAiaBaseISP = p => /^aia$/i.test(String(p.insurer || '').trim()) && /healthshield\s*gold\s*max/i.test(String(p.productName || p.policyName || '')) && /^h/i.test(String(p.policyNumber || '').trim());
+      const looksLikeAiaRider = p => /^aia$/i.test(String(p.insurer || '').trim()) && /max\s+(vital\s*health|vital\s*care)/i.test(String(p.productName || p.policyName || '')) && /^e/i.test(String(p.policyNumber || '').trim());
+      const bases = sequenceOut.filter(looksLikeAiaBaseISP);
+      const riders = sequenceOut.filter(looksLikeAiaRider);
+      if (bases.length > 0 && riders.length > 0) {
+        const pushWarn = (p, warn) => {
+          if (!p) return;
+          p._warningFlags = Array.isArray(p._warningFlags) ? p._warningFlags : [];
+          // Don't duplicate the same warning if rerun
+          if (!p._warningFlags.some(w => (w && w.code) === (warn && warn.code))) {
+            p._warningFlags.push(warn);
+          }
+        };
+        for (const rider of riders) {
+          const rStem = stemOf(rider.policyNumber);
+          const rInsured = String(rider.lifeInsured || '').trim().toLowerCase();
+          // Find base candidates with matching stem
+          const exactStemBase = bases.find(b => stemOf(b.policyNumber) === rStem && rStem.length >= 6);
+          if (exactStemBase) {
+            // Stems match — check insured name agreement
+            const bInsured = String(exactStemBase.lifeInsured || '').trim().toLowerCase();
+            if (rInsured && bInsured && rInsured !== bInsured) {
+              pushWarn(rider, {
+                code: 'isp-rider-insured-mismatch',
+                level: 'high',
+                message: 'ISP rider polno matches base ' + exactStemBase.policyNumber + ' but Insured names differ (rider=' + rider.lifeInsured + ' vs base=' + exactStemBase.lifeInsured + '). A rider cannot attach to a different life\'s base — verify which side has the wrong Insured label.'
+              });
+              pushWarn(exactStemBase, {
+                code: 'isp-rider-insured-mismatch',
+                level: 'high',
+                message: 'Matched ISP rider ' + rider.policyNumber + ' has a different Insured (' + rider.lifeInsured + ') than this base (' + exactStemBase.lifeInsured + '). Verify the rider\'s Insured label.'
+              });
+            } else {
+              // Stems + insured both match — annotate the pair for later UI use
+              rider._parentPolicyNumber = exactStemBase.policyNumber;
+              if (!exactStemBase._attachedRiderNumbers) exactStemBase._attachedRiderNumbers = [];
+              if (!exactStemBase._attachedRiderNumbers.includes(rider.policyNumber)) {
+                exactStemBase._attachedRiderNumbers.push(rider.policyNumber);
+              }
+            }
+          } else {
+            // No base with a matching stem — flag the rider as orphan
+            pushWarn(rider, {
+              code: 'isp-rider-stem-orphan',
+              level: 'medium',
+              message: 'AIA Max VitalHealth/VitalCare rider with no matching Gold Max base in this import (rider polno ' + rider.policyNumber + ', stem ' + rStem + '). Verify it\'s for a separate person whose base ISP isn\'t in this document, or check the polno for a typo.'
+            });
+          }
+        }
+        // Also flag bases that have NO rider at all when one is expected.
+        // Skip this check — most Gold Max plans don't carry a VitalHealth
+        // rider, and warning every "base-only" ISP would be noise.
+      }
+    } catch (auditErr) {
+      console.warn('[Dedupe] ISP-rider audit failed (non-fatal):', auditErr?.message || auditErr);
+    }
     const removed = before - sequenceOut.length;
     if (removed > 0) console.log('[Dedupe] Merged ' + removed + ' duplicates (' + before + ' → ' + sequenceOut.length + ')');
     return sequenceOut;
