@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.73-section-titles-headers-inferences';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.74-zip-unpack-import-error-surface';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -78,6 +78,11 @@ if ('serviceWorker' in navigator) {
 <script>try{pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}catch(e){}</script>
 <script crossorigin="anonymous" src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script crossorigin="anonymous" src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<!-- rc2.74: JSZip for client-side .zip unpacking. WhatsApp + iOS Files commonly
+     package screenshots into ZIPs which Gemini cannot accept directly
+     (rejects application/x-zip-compressed). We unpack on the client before
+     queueing the constituent images for extraction. -->
+<script crossorigin="anonymous" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <!-- Gemini handles PDFs natively — no pdf.js needed -->
 <script>
 // Polyfill navigator.locks for older Android WebViews that don't support it
@@ -728,10 +733,89 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.73';
+const APP_VERSION = 'v2.4.0-rc2.74';
 const APP_VERSION_DATE = '2026-05-19';
-const APP_VERSION_NAME = 'Section-title filter + header-row reject + legacy insurer inference (PrimeGold/ReadyBuilder/etc)';
+const APP_VERSION_NAME = 'Client-side ZIP unpacking + Import button error surfacing + busy state';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
+
+// ═══════════════════════════════════════════════════════════════
+// rc2.74: ZIP FILE EXPANSION
+// ───────────────────────────────────────────────────────────────
+// WhatsApp ("WhatsApp Unknown ... .zip"), iOS Files, and Android Files
+// commonly bundle a batch of photos into a single .zip when the user
+// long-presses "Share". Gemini cannot accept application/zip /
+// application/x-zip-compressed payloads — it returns 400 Unsupported
+// MIME type. Pre-process zips on the client: read the archive, extract
+// the constituent image / PDF / xlsx files, and return them as plain
+// File objects so the existing staging + batching pipeline can take
+// them.
+//
+// Pass-through for non-zip inputs (single function for all entry points).
+// Filters out hidden / metadata entries (__MACOSX/, .DS_Store, leading-dot)
+// that pollute the queue without being real policy documents.
+async function expandZipFiles(files) {
+  if (!Array.isArray(files) && !files?.length) return files || [];
+  const arr = Array.isArray(files) ? files.slice() : Array.from(files);
+  if (typeof JSZip === 'undefined') {
+    // Library not loaded — pass through. Will fail downstream with the
+    // current MIME-rejection error, same as before this rc.
+    return arr;
+  }
+  const out = [];
+  for (const f of arr) {
+    const name = String(f?.name || '').toLowerCase();
+    const type = String(f?.type || '').toLowerCase();
+    const looksLikeZip = name.endsWith('.zip')
+      || type === 'application/zip'
+      || type === 'application/x-zip-compressed'
+      || type === 'application/x-compressed';
+    if (!looksLikeZip) { out.push(f); continue; }
+    try {
+      const buf = await f.arrayBuffer();
+      const zip = await JSZip.loadAsync(buf);
+      let extracted = 0;
+      for (const entryName of Object.keys(zip.files)) {
+        const entry = zip.files[entryName];
+        if (entry.dir) continue;
+        // Skip metadata / hidden files
+        if (/^__MACOSX\//.test(entryName)) continue;
+        if (/(^|\/)\.[^/]+$/.test(entryName)) continue;  // dotfiles
+        const blob = await entry.async('blob');
+        const baseName = entryName.split('/').pop() || entryName;
+        // Infer MIME from extension. Browsers' Blob constructor doesn't
+        // auto-detect; the staging code routes by file.type so we set it.
+        const ext = (baseName.match(/\.([^.]+)$/) || [, ''])[1].toLowerCase();
+        const mimeMap = {
+          jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
+          gif: 'image/gif', webp: 'image/webp', heic: 'image/heic',
+          pdf: 'application/pdf',
+          xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          xls: 'application/vnd.ms-excel', csv: 'text/csv',
+          doc: 'application/msword',
+          docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          html: 'text/html', htm: 'text/html', txt: 'text/plain', rtf: 'application/rtf',
+        };
+        const mime = mimeMap[ext] || blob.type || 'application/octet-stream';
+        const extractedFile = new File([blob], baseName, { type: mime, lastModified: entry.date?.getTime() || f.lastModified || Date.now() });
+        out.push(extractedFile);
+        extracted++;
+      }
+      try { console.log('[ZipExpand]', f.name, '→', extracted, 'files unpacked'); } catch(_) {}
+      try {
+        if (typeof window !== 'undefined' && extracted > 0) {
+          // Polite toast — only fires when we successfully unpack at least one file.
+          const toastFn = window.__policylensToast;
+          if (typeof toastFn === 'function') toastFn('📦 Unpacked ' + extracted + ' file' + (extracted === 1 ? '' : 's') + ' from ' + f.name, 'success', 3500);
+        }
+      } catch(_) {}
+    } catch (zipErr) {
+      console.warn('[ZipExpand] Failed to read', f.name, ':', zipErr?.message || zipErr);
+      // Keep the original zip file — let the existing error path surface the failure
+      out.push(f);
+    }
+  }
+  return out;
+}
 
 // ═══════════════════════════════════════════════════════════════
 // MODULE: DESIGN_SYSTEM_V2 — token foundation for the v2.4.0 revamp
@@ -987,6 +1071,36 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.4.0-rc2.74',
+    date: '2026-05-19',
+    name: 'Client-side ZIP unpacking + Import button error surfacing + busy state',
+    sections: [
+      {
+        heading: 'ZIP file upload support',
+        items: [
+          'WhatsApp / iOS Files / Android Files commonly bundle batches of photos as a single .zip when the user long-presses Share. Gemini cannot accept application/zip / application/x-zip-compressed payloads and returns 400 Unsupported MIME type, killing the entire extraction batch.',
+          'Added JSZip (cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js) to the page scripts. New helper expandZipFiles(files) detects zip inputs by extension or MIME, reads the archive client-side, and returns the constituent images / PDFs / xlsx as plain File objects with proper MIME types inferred from extension. Hidden/metadata entries (__MACOSX/, .DS_Store) are filtered.',
+          'Wired expandZipFiles into all three upload entry points: drag-and-drop, clipboard paste, and the file-picker input. User now drops a zip and sees a toast "Unpacked N files from <zipname>" plus the constituent images appearing in the staged-files strip.'
+        ]
+      },
+      {
+        heading: 'Import button stuck — error surfacing fix',
+        items: [
+          'The "Import N Policies" button on the Review modal could silently hang when the import handler hit an exception (IndexedDB write failure, schema mismatch, network error during sync). No visible feedback, no toast, button appeared unresponsive.',
+          'Fixed by wrapping the import logic (renamed to _handleAcceptImpl) in a try/catch that toasts the error message and re-throws. Added a busy state (importBusy) that disables the button during the import and shows "Importing..." text. If something throws, the button re-enables so the user can retry. Errors now also log to the console with [Import] prefix.'
+        ]
+      },
+      {
+        heading: 'Extraction batching — answering the FC question',
+        items: [
+          'For the record (no code change here, just clarification): the current extraction pipeline processes batches STRICTLY SEQUENTIALLY. For each batch: (1) all files in the batch are fully prepared (file encoding + content blocks + prompt assembly) → (2) the AI is called with all those blocks → (3) result is parsed + deduped → (4) only then does the next batch start.',
+          'Photo ordering safeguards already in place: (a) photos are sorted by file.lastModified before batching, (b) time-grouped into "shots" with <=15s gap = same shot, (c) perceptual-hash similarity merging across time groups for visually-similar paper, (d) cross-batch merge after all batches complete (by policy number, insurer+product match).',
+          'The user concern about cross-batch correlation IS valid in one specific case: if a multi-page policy has page-1 in batch N and page-2 in batch N+1, and page-2 lacks the policy number or insurer-name marker, the cross-batch merge may not link them. The mitigations above usually keep related pages together (time-grouping is the strongest), but FCs uploading deliberately-scrambled photo bundles can defeat this. Recommendation: name photos sequentially before sharing, OR upload one policy at a time.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.4.0-rc2.73',
     date: '2026-05-19',
@@ -4331,6 +4445,9 @@ function toast(message, type='success', duration=3500) {
   const t = {id, message, type, duration};
   _toastQueue.push(t);
   _toastListeners.forEach(fn => fn([..._toastQueue]));
+  // rc2.74: expose toast for module-scope helpers (expandZipFiles etc.) that
+  // can't reach the function via lexical scope.
+  try { if (typeof window !== 'undefined') window.__policylensToast = toast; } catch(_) {}
   setTimeout(() => {
     const idx = _toastQueue.findIndex(x => x.id === id);
     if(idx >= 0) { _toastQueue[idx] = {..._toastQueue[idx], exiting:true}; _toastListeners.forEach(fn => fn([..._toastQueue])); }
@@ -33466,23 +33583,30 @@ function DropZone({onFiles, label, active}) {
   // Paste handler — attach to window when active
   useEffect(() => {
     if(!active) return;
-    const handler = (e) => {
+    const handler = async (e) => {
       const items = e.clipboardData?.items;
       if(!items) return;
       const files = [];
       for(const item of items) {
         if(item.kind==='file') files.push(item.getAsFile());
       }
-      if(files.length) { e.preventDefault(); setStaged(prev=>[...prev,...files.map(f=>({file:f,preview:f.type.startsWith('image/')?URL.createObjectURL(f):null}))].slice(0,200)); }
+      if(!files.length) return;
+      e.preventDefault();
+      // rc2.74: expand any .zip files into their constituent images / PDFs
+      const expanded = await expandZipFiles(files);
+      setStaged(prev=>[...prev,...expanded.map(f=>({file:f,preview:f.type.startsWith('image/')?URL.createObjectURL(f):null}))].slice(0,200));
     };
     window.addEventListener('paste', handler);
     return () => window.removeEventListener('paste', handler);
   }, [active]);
 
-  const onDrop = (e) => {
+  const onDrop = async (e) => {
     e.preventDefault(); setDragOver(false);
     const files = Array.from(e.dataTransfer.files);
-    if(files.length) setStaged(prev=>[...prev,...files.map(f=>({file:f,preview:f.type.startsWith('image/')?URL.createObjectURL(f):null}))].slice(0,200));
+    if(!files.length) return;
+    // rc2.74: expand any .zip files into their constituent images / PDFs
+    const expanded = await expandZipFiles(files);
+    setStaged(prev=>[...prev,...expanded.map(f=>({file:f,preview:f.type.startsWith('image/')?URL.createObjectURL(f):null}))].slice(0,200));
   };
   const removeStaged = (i) => { setStaged(prev=>{const n=[...prev];if(n[i].preview)URL.revokeObjectURL(n[i].preview);n.splice(i,1);return n;}); };
   const clearStaged = () => { staged.forEach(s=>{if(s.preview)URL.revokeObjectURL(s.preview)}); setStaged([]); };
@@ -40884,7 +41008,13 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
   // compact to full-detail without changing the global view mode.
   const toggleExpanded = (idx) => setItems(prev => prev.map(it => it._idx===idx ? {...it, _expanded: !it._expanded} : it));
 
-  const handleAccept = async () => {
+  // rc2.74: wrap the whole import handler in try/catch + log progress so
+  // failures surface to the user (toast + console) instead of the button
+  // silently appearing stuck. Previously an unhandled IndexedDB write
+  // failure or schema validation error left the modal frozen with no
+  // feedback. The button now also shows a busy state during the import
+  // and gets re-enabled if something throws.
+  const _handleAcceptImpl = async () => {
     const standalone = [];
     const ilpMerges = {}; // {policyId: [fund1, fund2, ...]}
 
@@ -41090,6 +41220,29 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
     try { sessionStorage.removeItem('policylens_pendingExtract'); } catch(e){}
     emitExtractionLedger({ stage:'sync', label:'Import queued', level:'info', detail:standalone.length + ' polic' + (standalone.length === 1 ? 'y' : 'ies') + ' queued for save/sync' });
     onAccept(standalone);
+  };
+
+  // rc2.74: handleAccept wrapper — surfaces errors so the Import button
+  // never appears stuck. State + try/catch in the outer function.
+  const [importBusy, setImportBusy] = useState(false);
+  const handleAccept = async () => {
+    if (importBusy) return;
+    setImportBusy(true);
+    const selectedCount = items.filter(it => it._selected).length;
+    try {
+      console.log('[Import] Starting import of ' + selectedCount + ' selected polic' + (selectedCount === 1 ? 'y' : 'ies'));
+      await _handleAcceptImpl();
+      console.log('[Import] handleAccept completed successfully');
+    } catch (err) {
+      console.error('[Import] FAILED:', err);
+      try {
+        toast('Import failed: ' + (err?.message || String(err)).slice(0, 200), 'error', 8000);
+      } catch(_) {}
+      // Re-throw so any outer error boundary catches it too
+      throw err;
+    } finally {
+      setImportBusy(false);
+    }
   };
 
   // Compute counts for the header subtitle
@@ -42093,8 +42246,8 @@ function BulkVerifyModal({extracted, repo, policies:existingPolicies, onSavePoli
           <div style={{fontSize:12,color:'var(--text2)'}}>{items.filter(it=>it._selected).length} of {items.length} policies selected</div>
           <div style={{display:'flex',gap:8}}>
             <button className="btn-secondary" onClick={onClose}>Cancel</button>
-            <button className="btn-primary" onClick={handleAccept} disabled={items.filter(it=>it._selected).length===0}>
-              Import {items.filter(it=>it._selected).length} Policies
+            <button className="btn-primary" onClick={handleAccept} disabled={items.filter(it=>it._selected).length===0 || importBusy}>
+              {importBusy ? 'Importing...' : 'Import ' + items.filter(it=>it._selected).length + ' Policies'}
             </button>
           </div>
         </div>
@@ -43722,8 +43875,11 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
   // ── Stage camera photos ──
   const stagePhotos = async (files) => {
     if(!files||!files.length) return;
+    // rc2.74: expand any .zip files FIRST — WhatsApp/iOS often share photo
+    // batches as a single zip which Gemini cannot accept directly.
+    const unzipped = await expandZipFiles(Array.from(files));
     // ── COST OPTIMIZATION: downscale large images before staging ──
-    const processed = await preprocessImageFiles(Array.from(files));
+    const processed = await preprocessImageFiles(unzipped);
     // ── v14.3 C1: IMAGE QUALITY TRIAGE (non-blocking) ──
     triageAllImages(processed).catch(() => {});
     // ── v14.4 FIX 4: REGION MASKING (non-blocking) ──
