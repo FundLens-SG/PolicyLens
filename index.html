@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.2-hotfix-handoff-orphan-removed';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.3-hotfix-funds-orphan-merge';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -743,9 +743,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.75.2';
+const APP_VERSION = 'v2.4.0-rc2.75.3';
 const APP_VERSION_DATE = '2026-05-19';
-const APP_VERSION_NAME = 'rc2.75.2 hotfix: cross-batch handoff orphan rule fully removed';
+const APP_VERSION_NAME = 'rc2.75.3 hotfix: funds-orphan extraction fix (currency-in-name detection + fund-allocation guard)';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1350,6 +1350,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.75.3',
+  date: '2026-05-19',
+  name: 'rc2.75.3 funds-orphan fix: mobile-app Funds tab pages now merge into parent policy',
+  sections: [{
+    heading: 'User-reported: AIA mobile app screenshots produced "AIAILP—SGD 142,939.26" phantom policies',
+    items: ['CONTEXT: User uploaded a WhatsApp zip of 36 phone screenshots from the AIA Singapore mobile app. Each policy is shown across multiple tabs (Details / Premium / Coverage / Funds / Policy Value / Others). The Details tab page has the product name ("ACHIEVER ACCUMULATOR", "AIA PLATINUM RETIREMENT ELITE") + policy number + premium. The Funds tab page shows ONLY a donut chart with "Total fund value: SGD X" + fund names + percentages — no product name, no premium, no inception date. After rc2.75.1/rc2.75.2 rolled back the broad orphan-continuation prompt rule (which was dropping premium/SA on legitimate standalone policies), the AI started emitting these Funds-only pages as phantom policies with synthesized productName like "AIAILP—SGD 142,939.26" — i.e. it embedded the cash value into the name because the name field can\'t be empty.', 'FIX #1 — PROMPT TIGHTENING (prevention): Added an explicit anti-pollution rule to EXTRACT_PROMPT: "NEVER embed a currency amount in productName. Synthesized-style names like ‘AIAILP—SGD 142,939.26’ are FORBIDDEN. If you can read the cash value but cannot read a real marketed product name, return productName=\'\' (empty string) and put the cash value in cashValue." Also added a NARROW funds-only continuation rule that\'s much tighter than the rolled-back version: it only applies to pages with NO product name, NO premium, NO sum assured, NO inception, NO policy number — i.e. pure mobile-app Funds tabs. Crucially the rule now says "premium/SA are NOT VISIBLE on this page, leave them null — returning 0 implies the source said 0, which is wrong" so the AI never fabricates $0 premium on these pages, fixing the regression that caused the rc2.75 rollback in the first place.', 'FIX #2 — POST-EXTRACTION MERGER (correction): Even with prompt tightening, the AI sometimes still emits synthesized names. Extended the dedupePolicies sequential-partial merger to detect them: added containsCurrencyAmountInName() that catches "SGD X", "USD X", "$X", "(SGD X)" and "— Account N" patterns. Anything matching is treated as a weak/continuation page, so the sequential merger glues its cashValue + fundAllocations onto the most recent strong parent policy from the same insurer in the same upload sequence. A guard prevents two different fund-orphans (e.g. for Achiever Accumulator AND Platinum Retirement Elite) from both being merged into the first parent: if the orphan\'s fund holdings don\'t overlap with what the base already has, the merge is skipped and the orphan waits for the next compatible strong parent.', 'NET RESULT: Re-uploading the same WhatsApp zip should now produce a clean 2-policy result for the AIA ILPs ("Achiever Accumulator" U121729626 with its SGD 53,464.65 + funds, and "Platinum Retirement Elite" U126440858 with its SGD 142,939.26 + funds) instead of the 4-phantom-entry mess shown in the user\'s screenshot. The iFAST Unit Trust entries should keep their proper fund names ("Allianz Global High Payout AM SGD", "First Sentier Bridge ADIS") without the synthetic "— Account 1 (SGD X)" trailer.']
+  }]
+}, {
   version: 'v2.4.0-rc2.75.2',
   date: '2026-05-19',
   name: 'rc2.75.2 smoke-test follow-ups: handoff orphan removed, Import await/scope, ZIP edge cases',
@@ -61388,6 +61396,20 @@ productName must be the SPECIFIC marketed product name as written in the documen
 
 PRODUCT NAME POLLUTION — NEVER include the following in productName or policyName: document metadata such as "as of [date]", "currency in SGD", "SGFinDex", "SGFinDex Report", reference/report codes, document dates, page numbers, or any text that looks like a footer, header, or timestamp. These are document artifacts, not policy names. If the only text visible on a page is metadata like "as of 30 Mar 2026, currency in SGD,..." — this is a document header, extract zero policies from it unless other policy fields are visible on that same page.
 
+PRODUCT NAME POLLUTION — CURRENCY AMOUNTS (rc2.75.3, CRITICAL): NEVER embed a currency amount in productName. The following synthesized-style names are FORBIDDEN and must NEVER be returned:
+- "AIAILP—SGD 53,464.65", "AIAILP — SGD 142,939.26", "<INSURER>ILP—SGD <amount>"
+- "Allianz Global High Payout AM SGD — Account 1 (SGD 28,502.22)" with the (SGD X) suffix
+- "First Sentier Bridge ADISSGD— Account 1 (SGD 39,848.26)" with the (SGD X) suffix
+- ANY productName that contains a "SGD <number>", "USD <number>", "$<number>", or "(SGD <number>)" fragment
+Currency amounts belong in cashValue, totalFundValue, premiumAmount, or fdPrincipal — NEVER in productName. If you can read the cash value but cannot read a real marketed product name, return productName='' (empty string) and put the cash value in cashValue. The FC will fill the product name during review. An empty productName is ALWAYS preferable to a synthesized name containing a dollar amount.
+
+FUNDS-ONLY / SUB-TAB CONTINUATION PAGES (rc2.75.3, NARROW RULE): Mobile insurance apps (AIA Singapore, Prudential UK, Manulife, etc.) often show a policy across multiple tabs: "Details", "Premium", "Coverage", "Funds", "Policy Value", "Others". The Funds tab typically shows ONLY a donut chart with "Total fund value: SGD X", fund names with allocation percentages, units, bid prices, and last priced dates. It does NOT show the product name, premium amount, sum assured, inception date, policy number, or product class — those live on the Details/Premium/Coverage tabs. When you encounter such a Funds-only page:
+1. Do NOT synthesize a productName from the visible cash value (no "AIAILP—SGD <X>").
+2. Do NOT fabricate premiumAmount=0, sumAssured=0, or inception=null on the funds-only page — those fields are simply NOT VISIBLE on this page. Leave them null. Returning 0 implies "the source said 0", which is wrong.
+3. Capture cashValue, fundAllocations[], and the insurer (from app branding). Set productName='' (empty string).
+4. If the surrounding upload sequence contains a policy header page from the same insurer (same upload, same person), the cross-batch merge step will glue this funds breakdown onto that parent policy. You do NOT need to manually merge — return the funds-only entry with empty productName and the post-processor handles it.
+5. This rule applies ONLY to pages where productName is genuinely not visible AND fund holdings ARE visible AND no premium/SA/inception is on the page. For any normal policy page that has a product name plus a funds breakdown, extract normally — fund allocations and product name belong on the same entry.
+
 CORE: insurer, productName, policyName, policyNumber, category (protection/savings/health/investment/retirement/maternity/cash_investments/other_assets), subType (Term Life/Whole Life/Universal Life (UL)/Indexed UL (IUL)/Variable UL (VUL)/Critical Illness/Personal Accident/Disability Income/Long-term Care/Endowment/Lifetime Endowment/Education Plan/Short-term Endowment/Integrated Shield Plan/Hospital Income/CareShield Life Supplement/ElderShield 300/ElderShield 400/ILP (Protection)/ILP (Investment)/Unit Trust/Retirement/Annuity/Maternity Coverage/Fixed Deposit/T-bill/Singapore Savings Bond/Corporate Bond/Money Market/Property/Stocks\/Equities/Gold\/Precious Metals/Fixed Coupon Note (FCN)/Equity Linked Note (ELN)/Options\/Futures/Cryptocurrency/Other), currency (default SGD), sumAssured (number), premiumAmount (number — the premium AS PAID, at whatever frequency it is billed. Do NOT convert or normalize. If document shows "$1,000 Monthly", return premiumAmount=1000. If document shows "$12,000 Annually", return premiumAmount=12000. If document shows "$50,000 Single Premium", return premiumAmount=50000. The frequency is captured in the separate premFrequency field below — NEVER multiply or divide the amount to match a different period), premFrequency (annual/monthly/single/unknown — MUST match the exact period of the premiumAmount value above. Singlife/SGFinDex portfolio reports have a "How Often You Pay" column — copy that verbatim: Monthly→monthly, Annually→annual, "Single Premium"→single. If unclear, use unknown), premiumStructure (Single Premium/Regular Premium/Limited Pay/Flexible Premium), paymentMethod (Cash/MediSave/SRS/MediSave+Cash/CPF OA/CPF SA)
 IMPORTANT: If document mentions CPFIS-OA, CPF-IS or CPF Investment Scheme, set paymentMethod to "CPF OA" or "CPF SA" accordingly. Standalone fund holdings (e.g. "Allianz Global High Payout", "First Sentier Bridge") without an insurance wrapper are category:investment, subType:"Unit Trust". If it mentions CPFIS, still category:investment subType:"Unit Trust".
 
@@ -62910,9 +62932,33 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
     // riders, values, fund tables, premiums, or charges and have no
     // usable policy number/product identity of their own.
     const weakNamePatterns = [/^$/, /^policy$/, /^policy\s*(page|details?|schedule|summary|statement|values?)$/, /^(page|schedule|summary|statement|values?|premium|premiums|charges?|benefits?|riders?)$/, /^(fund|funds|fund allocation|fund allocations|investment allocation|investment allocations)$/, /^investment[- ]linked policy$/, /^life insurance policy$/, /^whole life plan$/, /^term life (plan|insurance)$/, /^insurance plan$/, /^ilp$/, /^annuity plan$/, /^endowment plan$/];
+    // rc2.75.3: regex that catches the AI's synthesized "<insurer><type> — SGD <amount>"
+    // pattern emitted when the source is a mobile-app Funds tab with no real product
+    // name visible. Examples:
+    //   "AIAILP—SGD 142,939.26"
+    //   "AIA ILP — SGD 53,464.65"
+    //   "Allianz Global High Payout AM SGD — Account 1 (SGD 28,502.22)"
+    //   "First Sentier Bridge ADISSGD— Account 1 (SGD 39,848.26)"
+    //   "Account 1 (SGD 8,705.00)"
+    // The prompt now forbids this format from rc2.75.3 onwards, but the dedupe
+    // sanitiser handles legacy AI responses and the occasional miss.
+    const containsCurrencyAmountInName = name => {
+      const s = String(name || '');
+      if (!s) return false;
+      // "SGD 142,939.26" / "USD $1,234" / "(SGD 28,502.22)" etc.
+      if (/\b(sgd|usd|eur|gbp|hkd|jpy|cny|aud|myr|idr|thb)\b\s*\$?\s*[0-9][0-9,]*(\.[0-9]+)?/i.test(s)) return true;
+      // Bare "$1,234.56" amount embedded in name
+      if (/\$\s*[0-9][0-9,]*(\.[0-9]+)?\b/.test(s)) return true;
+      // "Account 1" / "Account 2" trailer (iFAST-style synthesized name)
+      if (/—\s*account\s*\d/i.test(s)) return true;
+      return false;
+    };
     const isWeakContinuationName = name => {
       const n = (name || '').toString().toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').replace(/\s+/g, ' ').trim();
-      return weakNamePatterns.some(rx => rx.test(n));
+      if (weakNamePatterns.some(rx => rx.test(n))) return true;
+      // rc2.75.3: catch AI-synthesized currency-amount-in-name (fund-orphan pattern)
+      if (containsCurrencyAmountInName(name)) return true;
+      return false;
     };
     const hasContinuationPayload = p => {
       if (!p || typeof p !== 'object') return false;
@@ -62946,6 +62992,26 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
         const partName = normalizeProductForDedup(partNameRaw);
         if (baseName && partName && !(baseName.includes(partName) || partName.includes(baseName))) {
           if (Math.abs(baseName.length - partName.length) > 3 || levenshtein(baseName, partName) > 2) return false;
+        }
+      }
+      // rc2.75.3: prevent a fund-orphan from being glued onto a parent that
+      // ALREADY has its own fundAllocations from a previous merge. Two
+      // sibling AIA ILP policies (Achiever Accumulator + Platinum Retirement
+      // Elite) each have their own funds-only orphan page; without this
+      // guard both orphans would merge into the first strong AIA policy and
+      // the second would silently lose its fund holdings.
+      const partialIsFundOrphan = Array.isArray(partial.fundAllocations) && partial.fundAllocations.length > 0;
+      const baseAlreadyHasFunds = Array.isArray(base.fundAllocations) && base.fundAllocations.length > 0;
+      if (partialIsFundOrphan && baseAlreadyHasFunds) {
+        // Check fund name overlap: if the orphan's funds are DIFFERENT from
+        // what the base already has, they're for a different parent policy.
+        const baseFundNames = new Set(base.fundAllocations.map(f => String(f?.fundName || '').toLowerCase().replace(/[^a-z0-9]/g, '')));
+        const partFundNames = (partial.fundAllocations || []).map(f => String(f?.fundName || '').toLowerCase().replace(/[^a-z0-9]/g, ''));
+        const overlap = partFundNames.filter(n => n && baseFundNames.has(n)).length;
+        if (overlap === 0) {
+          // No fund overlap at all → these are different parent policies.
+          // Leave the orphan as-is so a later strong policy can pick it up.
+          return false;
         }
       }
       return hasContinuationPayload(partial);

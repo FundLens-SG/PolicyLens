@@ -1,4 +1,4 @@
-const SW_VERSION = 'v2.4.0-rc2.75.2-hotfix-handoff-orphan-removed';
+const SW_VERSION = 'v2.4.0-rc2.75.3-hotfix-funds-orphan-merge';
 const DB_NAME = 'PolicyLensSW';
 const DB_VERSION = 1;
 const SESSION_STORE = 'sessions';
