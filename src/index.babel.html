@@ -48195,26 +48195,28 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
                 background + primary text, matching the chips that
                 appear inline on each policy row. Status badges retain
                 semantic colors (success/warn/danger/neutral). */}
-            <div style={{display:'flex',flexWrap:'wrap',alignItems:'center',gap:14,padding:'12px 16px',background:'var(--bg2)',border:`1px solid ${T_V2.border}`,borderRadius:T_V2.radius||14,marginBottom:T_V2.sectionGap||28,fontFamily:T_V2.sansFamily}}>
-              <span style={{fontSize:11,fontWeight:600,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.04em'}}>Rider legend</span>
+            {/* rc2.75: tightened legend — 8 rider codes + 4 status pills was wrapping
+                ugly with full labels. Now uses code-only chips with full label on hover
+                (title attribute). Section headers and chips align cleanly on one row
+                on typical FC monitors (>=1280px); still wraps gracefully on mobile. */}
+            <div style={{display:'flex',flexWrap:'wrap',alignItems:'center',gap:8,padding:'10px 14px',background:'var(--bg2)',border:`1px solid ${T_V2.border}`,borderRadius:T_V2.radius||14,marginBottom:T_V2.sectionGap||28,fontFamily:T_V2.sansFamily}}>
+              <span style={{fontSize:10.5,fontWeight:600,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.05em'}}>Riders</span>
               {POLICY_BADGES.map(b => (
-                <span key={b.code} style={{display:'inline-flex',alignItems:'center',gap:6,fontSize:11.5,color:'var(--text3)'}}>
-                  <span style={{
-                    padding:'2px 8px',borderRadius:999,fontWeight:600,fontSize:10,lineHeight:1.4,
-                    background:'var(--gold-dim)',color:'var(--gold)',
-                  }}>{b.code}</span>
-                  <span style={{color:'var(--text2)'}}>{b.label}</span>
-                </span>
+                <span key={b.code} title={b.label} style={{
+                  padding:'2px 7px',borderRadius:999,fontWeight:600,fontSize:10,lineHeight:1.4,
+                  background:'var(--gold-dim)',color:'var(--gold)',cursor:'help',
+                }}>{b.code}</span>
               ))}
-              <span style={{width:1,height:14,background:T_V2.border,margin:'0 4px'}} />
-              <span style={{fontSize:11,fontWeight:600,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.04em'}}>Status</span>
+              <span style={{width:1,height:14,background:T_V2.border,margin:'0 6px'}} />
+              <span style={{fontSize:10.5,fontWeight:600,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.05em'}}>Status</span>
               {STATUS_BADGES.map(s => (
                 <span key={s.code} style={{
-                  padding:'2px 8px',borderRadius:999,fontWeight:600,fontSize:10,lineHeight:1.4,
+                  padding:'2px 7px',borderRadius:999,fontWeight:600,fontSize:10,lineHeight:1.4,
                   background:`color-mix(in oklch, ${s.color} 16%, transparent)`,
                   color:s.color,
                 }}>{s.label}</span>
               ))}
+              <span style={{marginLeft:'auto',fontSize:10,color:'var(--text3)',fontStyle:'italic'}}>Hover a code for full name</span>
             </div>
             {/* ═══ INSURANCE ═══ */}
             {hasInsurance && (<>
