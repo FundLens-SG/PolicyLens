@@ -1,4 +1,4 @@
-const SW_VERSION = 'v2.4.0-rc2.75.8-lumpsum-pa-ci-override';
+const SW_VERSION = 'v2.4.0-rc2.75.9-portfolio-summary-hardening';
 const DB_NAME = 'PolicyLensSW';
 const DB_VERSION = 1;
 const SESSION_STORE = 'sessions';

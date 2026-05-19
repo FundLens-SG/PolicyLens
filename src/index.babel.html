@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.8-lumpsum-pa-ci-override';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.9-portfolio-summary-hardening';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -733,9 +733,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.75.8';
+const APP_VERSION = 'v2.4.0-rc2.75.9';
 const APP_VERSION_DATE = '2026-05-20';
-const APP_VERSION_NAME = 'rc2.75.8 AllenWu smoke test: Lump Sum detection + PA/CI override + corpus split';
+const APP_VERSION_NAME = 'rc2.75.9 Portfolio-summary hardening (Gerald PDF smoke test)';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1111,6 +1111,32 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.4.0-rc2.75.9',
+    date: '2026-05-20',
+    name: 'rc2.75.9 Portfolio-summary hardening (Gerald PDF smoke test)',
+    sections: [
+      {
+        heading: 'Static-analysis smoke test of Gerald.xlsx.pdf — 11 predicted extraction failures, 7 fixed defensively',
+        items: [
+          'CONTEXT: FC sent a Financial Portfolio Summary PDF for Gerald Wong Chee Mun — a tabular layout with 8 policies across multiple insureds (Gerald + Liw Sow Hing implied via Remarks), columns for Death Benefit / ADB / CI / ECI / TPD / Monthly Premium / Yearly Premium / Remarks, and category bands (Protection / Medical / Accidental / Savings & Investment) plus a "Grand Total" footer row. This is the canonical SG-FC portfolio-summary format and surfaces a cluster of consistent extraction failure modes that aren\'t obvious until you walk through a real example row by row.',
+          'BUG #1 — "Grand Total" row extracted as a phantom policy. The footer row sums all Death / ADB / CI / ECI / TPD / Monthly / Yearly columns. AI risk: emit it as a JSON object with insurer=blank, productName="Grand Total", premiumAmount=660.51, sumAssured=1360000. Fix: NEW post-extraction sanitizer isPortfolioAggregateRow() detects names matching /^(grand\\s+total|total|subtotal|sub[- ]total|all\\s+total|sum\\s+total|aggregate|portfolio\\s+total)$/i and marks the entry with _aggregateRow=true + _selected=false so it ships into review unchecked with an explanatory reason ("Looks like a Grand Total / Subtotal / empty category-band row — not a real policy"). FC can manually re-tick if it was a real policy they want to keep.',
+          'BUG #2 — Empty "Savings & Investment" category band with $4,014.84 in the Yearly column gets emitted as a phantom Savings policy. That $4,014.84 is actually the column TOTAL spilled into the empty band row, not a savings premium. Same sanitizer above catches it: names matching /^(savings\\s*[&+]?\\s*investment|protection|medical|accident(al)?|health\\s*[&+]?\\s*medical|investments?|cash\\s+investments?|travel)$/i WITH no insurer AND no policy number → flagged as aggregate.',
+          'BUG #3 — Premium column confusion. Gerald\'s table has both Monthly Premium and Yearly Premium columns; some rows fill one, some fill the other. AI risk: read the Yearly value but tag as monthly (or vice versa) → premium off by 12×. Fix: EXTRACT_PROMPT now has explicit "PREMIUM COLUMN DISCIPLINE" rule: read whichever column has a value, set premFrequency to match that column, NEVER convert between them. Called out specifically as "the single most common portfolio-summary extraction bug".',
+          'BUG #4 — Accidental Death column read as the Death Benefit / sumAssured. AIA Solitaire Personal Accident has Total (Death Benefit)="-" but Accidental Death=$750,000. AI risk: extract sumAssured=$750k instead of addSA=$750k, which makes the policy look like a $750k life cover. Fix: EXTRACT_PROMPT now explicitly says PA-only policies put their cover in addSA, not sumAssured.',
+          'BUG #5 — Multi-insured routing. Row 4 (AIA Max VitalCare) has "Insured: Liw Sow Hing" in Remarks while the page header names Gerald. The policy belongs to Liw, not Gerald. AI risk: extract policyOwner=Gerald, lifeInsured=Gerald and PolicyOwnerRoutingModal never surfaces. Fix: EXTRACT_PROMPT now has a "PER-ROW REMARKS CONTAIN ROUTING SIGNALS" rule: "Insured: <person>" in Remarks → set lifeInsured=<that person>, policyOwner=document-header-name. The existing PolicyOwnerRoutingModal then prompts the FC to route the policy to a different family-member client.',
+          'BUG #6 — ISP + Rider polno stem pairing across different insureds. Gerald\'s table has AIA HealthShield Gold Max A (H235278063) paired with AIA Max VitalCare (E235278063) — same trailing stem, valid pairing. But Gold Max B (H240198109) and AIA MAX VitalHealth B (E234226650) have DIFFERENT stems — they belong to different insureds, NOT each other. AI risk: force-pair by proximity, attaching the wrong rider to the wrong base. Fix: EXTRACT_PROMPT now says "When the stems match, set parentPolicyNumber; when stems DON\'T match, keep them as separate standalone policies — DO NOT force-pair."',
+          'BUG #7 — Per-row Remarks parsing for ISP metadata. The Remarks column contains structured fields like "Coverage: Standard room in Private Hosp", "Medisave: $600", "Co-pay: 5% (Capped 3K)", "Acc Medical Reimbursement: $5000", "TCM/Chiro: $1250", "Hospital Income: $350/Daily", "Coverage Till Age 75". AI risk: dump the whole multi-line cell into notes and lose the structured fields. Fix: EXTRACT_PROMPT now lists every common Remarks pattern with the target field it maps to (ispClass / paymentMethod / ispCoinsurance / ispCoInsCap / accMedical / tcmReimb / etc.).',
+          'NOT YET FIXED (out-of-scope, requires more design work):',
+          '• AIA Complete Critical Cover has Death=$10k + CI=$100k — should classify as CI not Term Life. The PA/CI rule from rc2.75.8 already handles the PA case; need an equivalent "Death < 10% of CI → CI not Term Life" rule but it\'s ambiguous (some real Term policies have low SA).',
+          '• Document-owner DOB extraction (26 Apr 1976 in the header) should populate clientProfile.dob if no other DOB source exists.',
+          '• AIA Health CashPlus subType should resolve to "Hospital Income" with dailyRate=$350, weeklyRate=$400. Corpus has the category but the subType-from-remarks parser doesn\'t exist yet.',
+          '• Premium of $312.42/mo on a Term Life with $1.35M cover gives premium-ratio of $3,749/yr — sanity-check that ratio is plausible (≈0.28% of SA — typical for term).',
+          'NET: rc2.75.9 adds 7 defensive layers for FC portfolio-summary PDFs. The aggregate-row sanitizer is the highest-impact catch — it stops phantom Grand Total / category-band policies from polluting the review modal, which used to require the FC to manually uncheck every spurious row.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.4.0-rc2.75.8',
     date: '2026-05-20',
@@ -5941,6 +5967,28 @@ function ensureDocumentTriageObject(policy = {}, existingPolicies = []) {
 //     illness). This catches both AI mis-classifications AND a stale corpus
 //     entry (e.g. PRU Active Protect listed as PA in the PPF register but
 //     actually being a CI multi-claim term plan per the source document).
+// rc2.75.9: detect Grand-Total / Subtotal / category-band aggregate rows that
+// the AI sometimes emits as phantom policies from FC portfolio-summary tables.
+// Returns true if the policy should be dropped (not a real policy).
+function isPortfolioAggregateRow(policy) {
+  if (!policy || typeof policy !== 'object') return false;
+  const name = String(policy.productName || policy.policyName || '').trim();
+  if (!name) return false;
+  // Exact matches for common total-row labels
+  const aggregateNames = /^(grand\s+total|total|subtotal|sub[- ]total|all\s+total|sum\s+total|aggregate(\s+total)?|portfolio\s+total)$/i;
+  if (aggregateNames.test(name)) return true;
+  // Category-band rows that ended up as phantom policies (no insurer + no policy number
+  // + name is a known category label + has some random numeric in premium/SA from the row's
+  // total cell). Common offenders: "Savings & Investment", "Protection", "Medical".
+  const isCategoryBand = /^(savings\s*[&+]?\s*investment|protection|medical|accident(al)?|health\s*[&+]?\s*medical|insurance|investments?|cash\s+investments?|travel)$/i.test(name);
+  if (isCategoryBand) {
+    const hasNoInsurer = !String(policy.insurer || '').trim();
+    const hasNoPolicyNumber = !String(policy.policyNumber || '').trim();
+    if (hasNoInsurer && hasNoPolicyNumber) return true;
+  }
+  return false;
+}
+
 function smartOverridePolicyFromText(policy) {
   if (!policy || typeof policy !== 'object') return policy;
   const text = [
@@ -5997,6 +6045,15 @@ function enhanceExtractedPolicyIntelligence(policy = {}, existingPolicies = []) 
   // rc2e.47: title-case ALL-CAPS person-name fields BEFORE downstream
   // fingerprinting / evidence so every consumer sees clean values.
   const seed = _normalizePersonNameFields({ ...(policy || {}) });
+  // rc2.75.9: tag aggregate / category-band rows so the review modal can
+  // hide them by default. We don't outright drop the entry — the FC may
+  // still want to see what the AI thought was a row — but we mark
+  // _aggregateRow=true so downstream dedupe / display logic can suppress.
+  if (isPortfolioAggregateRow(seed)) {
+    seed._aggregateRow = true;
+    seed._selected = false;
+    seed._aggregateReason = 'Looks like a Grand Total / Subtotal / empty category-band row from a portfolio summary — not a real policy.';
+  }
   // rc2.75.8: smart override runs BEFORE evidence ensures, so the evidence
   // map captures the corrected subType / premiumStructure values.
   const overridden = smartOverridePolicyFromText(seed);
@@ -44202,6 +44259,40 @@ A Personal Accident (PA) plan pays out ONLY for injuries from accidents — neve
 - Multi-claim CI / Multi-pay CI / Multi-stage CI
 - Any rider with type='ci' or type='eci' carrying a non-zero sumAssured
 …then the policy CANNOT be Personal Accident. Classify as subType='Critical Illness' (or 'Early Critical Illness' if the document leads with ECI). This rule overrides any product-name pattern match — a product named "PRUActive Protect Multi-Claim" with explicit CI coverage is a Critical Illness policy, not Personal Accident, regardless of what the name suggests.
+
+═══ FC PORTFOLIO SUMMARY TABLES — READ CAREFULLY (rc2.75.9) ═══
+Many SG FCs prepare a single "Financial Portfolio Summary" PDF/spreadsheet that tabulates every policy across all clients in a household. They look like:
+  Company & Policy Number | Total (Death Benefit) | Accidental Death | Critical Illness (CI) | Early CI (ECI) | Total & Perm Disability (TPD) | Monthly Premium | Yearly Premium | Remarks
+Each policy is one row. The header has CATEGORY bands (Protection / Medical / Accidental / Savings & Investment) which are decorative grouping labels, not policies.
+
+CRITICAL extraction rules for these tables:
+
+1. SKIP THE TOTAL ROWS. A row whose first cell is "Grand Total", "Total", "Subtotal", "All Total", or empty AND the numeric columns sum the entries above is an aggregate — NOT a policy. Do NOT emit a JSON object for it. Same for column-totals labelled "Yearly", "Monthly", etc. at the bottom.
+
+2. SKIP EMPTY CATEGORY ROWS. A row with only a category name in the leftmost margin ("Savings & Investment", "Travel", "Cash Investments") and dashes/blanks in all amount columns is a section header, not a policy. If subsequent rows under that band have actual policy data, extract those; the band itself is not a policy.
+
+3. PREMIUM COLUMN DISCIPLINE. The table has BOTH "Monthly Premium" and "Yearly Premium" columns. For each row:
+   - Read whichever column is populated (the other will be "-" or blank).
+   - If Monthly column has a value: premiumAmount=<value>, premFrequency='monthly'.
+   - If Yearly column has a value: premiumAmount=<value>, premFrequency='annual'.
+   - NEVER multiply/divide between columns. Do NOT report the Monthly value with premFrequency='annual' or vice versa — this 12× the FC's actual premium and is the single most common portfolio-summary extraction bug.
+
+4. ACCIDENTAL DEATH COLUMN ≠ DEATH BENEFIT COLUMN. The "Accidental Death" column is the ADB rider/policy amount. PA-only policies (subType: Personal Accident) put their cover amount HERE, with "Total (Death Benefit)" left as "-". When you see a row with "Total (Death Benefit) = -" but "Accidental Death = $X" populated, the policy is Personal Accident with addSA=X (NOT sumAssured=X).
+
+5. PER-ROW REMARKS CONTAIN ROUTING SIGNALS. The Remarks column on these tables typically holds:
+   - "Insured: <person name>" — if this name differs from the document owner shown in the page header (Name: <X>, DOB: <Y>), the policy belongs to that OTHER person. Set lifeInsured=<remarks name>, policyOwner=<document header name>. The PolicyOwnerRoutingModal will then route the policy to the correct family member.
+   - "Coverage: Standard room in Private Hospital" / "A Ward and below" / "Restructured" → ispClass / ispWardType.
+   - "Medisave: $X" → paymentMethod='MediSave' (or 'MediSave+Cash' if cash premium also present).
+   - "Co-pay : 5% (Capped 3K)" → ispCoinsurance=5, ispCoInsCap=3000.
+   - "Acc Medical Reimbursement: $X" → accMedical=X. "TCM/Chiro: $X" → tcmReimb=X.
+   - "Hospital Income: $X/Daily; Weekly Income: $Y/Weekly" → subType='Hospital Income' with daily/weekly rates in notes.
+   - "Coverage Till Age X" → coverageEndAge or premEndAge depending on context.
+
+6. ISP + RIDER POLICY-NUMBER STEMS. AIA ISP rows often appear in pairs: a Hospital-prefix base policy (H________) + an Enhancer-prefix rider (E________) with the SAME trailing digits. Example: AIA HealthShield Gold Max A (H235278063) + AIA Max VitalCare (E235278063). When the stems match, set the rider's parentPolicyNumber to the base policy's number. When the stems DON'T match (e.g. H240198109 paired with E234226650 elsewhere in the same document), they belong to different insureds — keep them as separate standalone policies and DO NOT force-pair. Force-pairing across different insureds corrupts both records.
+
+7. NOT EVERY ROW IS GERALD'S. The page header naming "Gerald Wong Chee Mun" identifies the document owner, but individual rows may be insured on family members (spouse, child, parent). Always read the per-row "Insured: <X>" from Remarks — if absent, default the row to the document owner; if present and different, that policy is for the other person.
+
+═══ END PORTFOLIO SUMMARY RULES ═══
 
 PAYMENT METHODS: Any insurance policy can be paid via Cash, CPF OA, CPF SA, or SRS. Look for clues:
 - "CPF Ordinary Account" / "CPFIS-OA" / "CPF OA" → paymentMethod:"CPF OA"
