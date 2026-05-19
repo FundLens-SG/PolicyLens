@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.7-spreadsheet-premium-detection';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.8-lumpsum-pa-ci-override';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const canRegister = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -733,9 +733,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.75.7';
+const APP_VERSION = 'v2.4.0-rc2.75.8';
 const APP_VERSION_DATE = '2026-05-20';
-const APP_VERSION_NAME = 'rc2.75.7 Spreadsheet-aware preprocessing + Premium-not-detected verify badge';
+const APP_VERSION_NAME = 'rc2.75.8 AllenWu smoke test: Lump Sum detection + PA/CI override + corpus split';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1111,6 +1111,21 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.4.0-rc2.75.8',
+    date: '2026-05-20',
+    name: 'rc2.75.8 AllenWu smoke test — Lump Sum + PA/CI override fixes',
+    sections: [
+      {
+        heading: 'Two bugs surfaced from the AllenWu / Portfolio Nov 2024 screenshot smoke test',
+        items: [
+          'BUG #1 — "Lump Sum $20,000" on CPF OA Investment was NOT detected as Single Premium. The source clearly labelled "Lump Sum $20,000" but extraction emitted it as a regular policy with no premiumStructure. FC then sees a CPF OA Investment with $0 annual premium and no "Single Premium" caption, which makes it look like a recurring-contribution policy. Three-layer fix: (1) EXTRACT_PROMPT now lists "Lump Sum", "One-time investment/contribution/premium", "Single contribution", "Initial capital", and CPF OA Investments / CPFIS-OA / SRS positions as explicit triggers for premiumStructure=\'Single Premium\' + premSingle=true + premFrequency=\'single\'. (2) Post-extraction smartOverridePolicyFromText() scans notes/description/policyName/extractionNotes for the same markers and flips structure fields if the AI missed them — but only when the policy has no explicit recurring-premium marker, so we never override a Regular Premium that the AI deliberately emitted. (3) Confidence flag attached so the FC sees "Lump Sum marker detected — flipped to Single Premium" in the review modal.',
+          'BUG #2 — "PRUActive Protect Multi-Claim" was classified as Personal Accident, but the source document explicitly states "$200,000 CI coverage / $100,000 ECI Coverage" — and a PA plan can NEVER carry CI coverage by definition. Root cause: the PPF Register text under Prudential lists a product called "PRUActive Protect" under the Personal Accident category, and the corpus inherited that classification via the deep-research-2026-05-17 pass with aliases ["PRUActive Protect", "PAP"]. When the FC\'s actual policy (a CI multi-claim term plan, name closely related) hits the matcher, it lands on the PA entry. Three-layer fix: (1) NEW corpus entry "PRUActive Protect Multi-Claim" → category:protection, subType:Critical Illness, aliases include "PRUActive Protect" (front-runs the PA entry on alias matching). (2) Kept the original "PRU Active Protect" PA entry for backwards compatibility but removed the conflicting "PRUActive Protect" alias from it so the CI variant wins. (3) HARD RULE in EXTRACT_PROMPT: "A PA plan pays out ONLY for injuries from accidents — if the policy text mentions ANY CI / ECI / crisis cover amount, classify as Critical Illness regardless of name." (4) Post-extraction smart override: any subType=\'Personal Accident\' with a non-zero CI/ECI rider OR explicit CI/ECI coverage amount in the text gets reclassified to Critical Illness. The override is defensive — catches both AI mis-classifications AND stale corpus mappings.',
+          'Corpus rebuilt: 3211 products total (was 3210), one new explicit CI variant. Anomaly detector still passes 72/72 (unchanged baseline).'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.4.0-rc2.75.7',
     date: '2026-05-20',
@@ -5912,11 +5927,80 @@ function ensureDocumentTriageObject(policy = {}, existingPolicies = []) {
   return classifyPolicyDocumentTriage(policy, existingPolicies);
 }
 
+// rc2.75.8: post-extraction smart override — catches two classes of AI miss
+// that are robust to correct from extracted text alone.
+//
+// (1) "Lump Sum $X" / "one-time investment of $X" / "single contribution of $X"
+//     markers anywhere in the policy text → set premiumStructure='Single Premium',
+//     premSingle=true, premFrequency='single'. The AI sometimes returns the lump
+//     sum amount in premiumAmount but forgets to flip the structure fields.
+//
+// (2) Personal Accident classification when the SAME document carries an
+//     explicit CI / ECI coverage amount → reclassify as Critical Illness. A PA
+//     plan cannot have CI coverage (PA pays only on accidental injury, never on
+//     illness). This catches both AI mis-classifications AND a stale corpus
+//     entry (e.g. PRU Active Protect listed as PA in the PPF register but
+//     actually being a CI multi-claim term plan per the source document).
+function smartOverridePolicyFromText(policy) {
+  if (!policy || typeof policy !== 'object') return policy;
+  const text = [
+    policy.notes,
+    policy.userRemarks,
+    policy.description,
+    policy.policyName,
+    policy.productName,
+    policy.extractionNotes,
+    policy.coverageNotes,
+  ].filter(Boolean).join(' \n ');
+  if (!text) return policy;
+  const lower = text.toLowerCase();
+  // Lump Sum / one-time premium detection
+  const lumpRe = /\b(lump\s*sum|one[- ]time\s+(investment|contribution|premium|deployment|deposit)|single\s+contribution|one\s+off\s+premium)\b/i;
+  if (lumpRe.test(text) && !policy.premSingle && policy.premiumStructure !== 'Single Premium') {
+    // Don't override Regular Premium that the AI explicitly emitted — only fill the gap when structure is empty/unknown.
+    const struct = String(policy.premiumStructure || '').toLowerCase();
+    const recurringMarker = struct.includes('regular') || struct.includes('limited') || struct.includes('flexible') ||
+                            policy.premFrequency === 'monthly' || policy.premFrequency === 'annual';
+    if (!recurringMarker) {
+      policy.premSingle = true;
+      policy.premiumStructure = 'Single Premium';
+      if (!policy.premFrequency || policy.premFrequency === 'unknown') policy.premFrequency = 'single';
+      policy._smartOverrideApplied = (policy._smartOverrideApplied || []).concat([{ reason: 'Lump Sum marker detected — flipped to Single Premium' }]);
+    }
+  }
+  // PA misclassification override — CI coverage signal beats PA classification
+  if (policy.subType === 'Personal Accident') {
+    const riders = Array.isArray(policy.riders) ? policy.riders : [];
+    const hasCiRider = riders.some(r => {
+      const t = String(r?.type || '').toLowerCase();
+      const sa = parseFloat(r?.sa) || 0;
+      return (t === 'ci' || t === 'eci') && sa > 0;
+    });
+    // Look for explicit CI / ECI coverage amount mentions in the text — $ amount within ~30 chars of "CI" / "Critical Illness" / "ECI" / "Early CI"
+    const ciTextMarker = /\$\s*[0-9,]+(?:\.[0-9]+)?\s*(k|m)?\s*(?:CI|Critical Illness|critical-illness|critical illness|crisis cover|crisis benefit)\b/i.test(text) ||
+                         /\b(?:CI|Critical Illness|critical illness|crisis cover|crisis benefit)\b[^.]*\$\s*[0-9,]+(?:\.[0-9]+)?\s*(k|m)?/i.test(text) ||
+                         /\b(?:ECI|Early CI|early critical illness)\b[^.]*\$\s*[0-9,]+(?:\.[0-9]+)?\s*(k|m)?/i.test(text);
+    const aiClassifiedCiSA = parseFloat(policy.ciSumAssured || policy.criticalIllnessSA || 0);
+    if (hasCiRider || ciTextMarker || aiClassifiedCiSA > 0) {
+      // PA cannot carry CI coverage — reclassify.
+      policy.subType = 'Critical Illness';
+      policy.category = 'protection';
+      policy._smartOverrideApplied = (policy._smartOverrideApplied || []).concat([{
+        reason: 'PA classification overridden — document carries explicit CI/ECI coverage which a PA plan cannot have'
+      }]);
+    }
+  }
+  return policy;
+}
+
 function enhanceExtractedPolicyIntelligence(policy = {}, existingPolicies = []) {
   // rc2e.47: title-case ALL-CAPS person-name fields BEFORE downstream
   // fingerprinting / evidence so every consumer sees clean values.
   const seed = _normalizePersonNameFields({ ...(policy || {}) });
-  const next = ensurePolicyFieldEvidence(seed, { source: 'ai-review-intelligence' });
+  // rc2.75.8: smart override runs BEFORE evidence ensures, so the evidence
+  // map captures the corrected subType / premiumStructure values.
+  const overridden = smartOverridePolicyFromText(seed);
+  const next = ensurePolicyFieldEvidence(overridden, { source: 'ai-review-intelligence' });
   next.documentType = normalizeDocumentTriageType(next.documentType) || next.documentType || null;
   next._policyFingerprint = next._policyFingerprint || buildPolicyIdentityFingerprint(next);
   next._documentTriage = ensureDocumentTriageObject(next, existingPolicies);
@@ -44101,6 +44185,23 @@ If you cannot identify the platform from the document (rare for SG portfolio rep
 ALWAYS populate fundAllocations for Unit Trusts. The fund name IS the productName for a single-fund UT. For multi-fund baskets, list each fund separately. Empty fundAllocations on a Unit Trust is a bug — every UT holds at least one underlying fund.
 
 ═══ END UNIT TRUST RULES ═══
+
+═══ SINGLE PREMIUM DETECTION (rc2.75.8) ═══
+Words that MUST trigger premiumStructure='Single Premium' + premSingle=true + premFrequency='single':
+- "Lump Sum $X" / "Lump sum of $X" / "$X lump sum"
+- "One-time investment of $X" / "one-time premium $X" / "one-off premium"
+- "Single contribution $X" / "single deposit $X"
+- "Initial capital $X" (for ILP / Investment policies)
+- "Top-up $X" for SRS / CPFIS positions where there's no recurring premium amount
+For CPF OA Investments / CPFIS-OA / CPFIS-SA / SRS positions specifically: even if the source doesn't say "Lump Sum" explicitly, these are by convention deployed in lump sums — default to Single Premium UNLESS the source mentions a recurring monthly/annual contribution.
+
+═══ PERSONAL ACCIDENT vs CRITICAL ILLNESS — HARD RULE (rc2.75.8) ═══
+A Personal Accident (PA) plan pays out ONLY for injuries from accidents — never for illness. If the policy text mentions ANY of:
+- "$X CI coverage" / "$X Critical Illness" / "$X crisis cover" / "$X Crisis Benefit"
+- "$X ECI coverage" / "$X Early CI" / "$X Early Critical Illness"
+- Multi-claim CI / Multi-pay CI / Multi-stage CI
+- Any rider with type='ci' or type='eci' carrying a non-zero sumAssured
+…then the policy CANNOT be Personal Accident. Classify as subType='Critical Illness' (or 'Early Critical Illness' if the document leads with ECI). This rule overrides any product-name pattern match — a product named "PRUActive Protect Multi-Claim" with explicit CI coverage is a Critical Illness policy, not Personal Accident, regardless of what the name suggests.
 
 PAYMENT METHODS: Any insurance policy can be paid via Cash, CPF OA, CPF SA, or SRS. Look for clues:
 - "CPF Ordinary Account" / "CPFIS-OA" / "CPF OA" → paymentMethod:"CPF OA"

@@ -787,10 +787,23 @@
     "category": "protection",
     "subType": "Personal Accident",
     "aliases": [
-      "PRUActive Protect",
       "PAP"
     ],
-    "source": "deep-research-2026-05-17"
+    "source": "deep-research-2026-05-17 (PPF register lists this name under PA category; the FC-reported Multi-Claim variant is a separate CI product captured below)"
+  },
+  {
+    "insurer": "Prudential",
+    "productName": "PRUActive Protect Multi-Claim",
+    "category": "protection",
+    "subType": "Critical Illness",
+    "aliases": [
+      "PRUActive Protect",
+      "PRUActive Protect Multi Claim",
+      "PRU Active Protect Multi-Claim",
+      "PRUActive Multi-Claim Protect",
+      "PruActive Protect Multi-Claim"
+    ],
+    "source": "FC-report-2026-05-20 (Allen Wu portfolio screenshot — explicit $200k CI / $100k ECI coverage on this policy proves CI classification; PA cannot carry CI coverage)"
   },
   {
     "insurer": "Prudential",
