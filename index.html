@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.16-drive-email-visibility';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.17-live-discovery-and-menu-clip';
 // rc2.75.13: STALE SERVICE WORKER SELF-HEAL.
 // Background — FCs were hitting "Network Error — API calls are being blocked"
 // across Firefox/Edge/Chrome simultaneously. Console showed the OLD SW
@@ -866,9 +866,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.75.16';
+const APP_VERSION = 'v2.4.0-rc2.75.17';
 const APP_VERSION_DATE = '2026-05-20';
-const APP_VERSION_NAME = 'rc2.75.16 Drive Sync visibility — connected Google email surfaced in chrome';
+const APP_VERSION_NAME = 'rc2.75.17 Live Drive directory sync + mobile dropdown menu clipping fix';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1473,6 +1473,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.75.17',
+  date: '2026-05-20',
+  name: 'rc2.75.17 Live Drive directory sync + mobile dropdown menu clipping fix',
+  sections: [{
+    heading: 'FC report — clients made on phone weren\'t appearing on desktop until "Find clients in Drive" was clicked manually; the Settings overflow menu was clipped on the left edge of the viewport on mobile',
+    items: ['BUG #1 — LIVE DRIVE DISCOVERY MISSING. Discover-Drive-clients ran ONCE per page session (via the _postConnectDiscoveryRan flag) on boot. New clients created on another device never appeared until the FC reloaded the tab OR manually clicked Settings → Drive Sync → ⋯ → "Find clients in Drive". User said "i need to manually sync in settings... is it advisable to build a live sync for this? (it used to have i believe)". Yes, fixed.', 'FIX — Periodic re-discovery every 5 minutes. The same runDiscoveryAndPurge() that boots once now also fires on a 5-minute interval AND on tab visibility-return (when the FC switches back to the PolicyLens tab after >60s away — catches "I made a client on my phone, switched to desktop tab" within seconds). The legacy one-shot post-connect call site is unchanged; new periodic + visibility paths set opts.force=true to bypass the once-per-session flag.', 'FIX — When the periodic scan actually finds NEW clients (summary.added > 0), surfaces a soft success toast "Synced N new client(s) from Drive". Boot scan stays silent so the FC doesn\'t see a noisy toast on every page load. Skipped if the document is hidden (no API quota burn on backgrounded tabs).', 'BUG #2 — DRIVE SYNC OVERFLOW MENU CLIPPED ON MOBILE. Screenshot showed the Settings Drive Sync card\'s "⋯" overflow menu rendering with the first character of each option missing ("ull latest" / "ish this device" instead of "Pull latest" / "Push this device"). Root cause: menu positioned with `position:absolute; right:0; minWidth:240`. When trigger sits in the middle of the screen on a narrow phone, the menu extends LEFT past the viewport edge by ~12-20px.', 'FIX — Mobile-aware anchor: on phones (useViewportIsMobile=true) the menu now uses `left:0` instead of `right:0` so it extends RIGHT from the trigger into the visible area. Desktop keeps the original right-anchor. maxWidth: calc(100vw - 32px) added as belt-and-braces so future regressions can\'t clip.', 'BUG #3 — SAME MENU CLIPPING ON Clients tab "+ New Client" DROPDOWN. openNewClientMenu() computed `right: window.innerWidth - rect.right` which produced negative-left overhang when the "+" button sat near viewport center on a narrow phone. Same class as Bug #2.', 'FIX — Replaced right-anchor with clamped left-anchor: `left = max(12, min(rect.left, viewportWidth - 240 - 12))`. Menu always stays at least 12px from both edges regardless of where the trigger sits. Applied maxWidth: calc(100vw - 24px) to the menu container.', 'BUG #4 — SAME ON POLICIES TAB "📄 Scan documents" DROPDOWN. Identical position:absolute right:0 pattern. Fixed same way.', 'AUDITED — also reviewed: SyncStatusPill dropdown (already clamped with min(300px, calc(100vw - 20px)) in rc2.75.11), tier picker popup (140px wide, clip risk only on <360px phones — left as-is for now). Other tabs (Profile, Dashboard, Repo, Review, Report) audited via static analysis — no other dropdown-clipping instances found that affect FCs at 375px.', 'NET — Cross-device Drive sync now feels live without manual intervention. Mobile dropdown menus stay inside the viewport. The remaining "manual sync" path via Settings is still there for FCs who want explicit control.']
+  }]
+}, {
   version: 'v2.4.0-rc2.75.16',
   date: '2026-05-20',
   name: 'rc2.75.16 Drive Sync visibility — connected Google email surfaced in chrome + hub login_hint',
@@ -28592,11 +28600,16 @@ function App() {
     // v2.3.0-rc2c.4d: Check current status immediately AND subscribe to future changes.
     // Catches the case where Drive connected (e.g. token refresh) while loading was true
     // and the event fired before the listener was attached.
-    const runDiscoveryAndPurge = async () => {
-      if (_postConnectDiscoveryRan) return;
+    const runDiscoveryAndPurge = async opts => {
+      // rc2.75.17: opts.force allows the periodic re-scan to fire even after
+      // the one-shot _postConnectDiscoveryRan flag has been set. Without
+      // force, the legacy boot/status-change call sites still only run once
+      // per session (no behaviour change for them).
+      if (_postConnectDiscoveryRan && !(opts && opts.force)) return;
       if (getDriveStatus() !== 'connected' || isDriveLocalOnly()) return;
       _postConnectDiscoveryRan = true;
-      console.log('[Discovery] Post-connect scan triggered');
+      const reason = opts?.reason || 'post-connect';
+      console.log('[Discovery] Scan triggered:', reason);
       setDriveStartupSyncInFlight(true);
       try {
         const result = await discoverDriveClients();
@@ -28605,16 +28618,80 @@ function App() {
         const summary = await applyDriveDirectorySync(result, {
           silent: true
         });
-        if (summary.added || summary.refreshed || summary.reconciled || summary.purged || summary.tombstoned) console.log('[Discovery] Post-connect directory sync:', summary);
+        if (summary.added || summary.refreshed || summary.reconciled || summary.purged || summary.tombstoned) {
+          console.log('[Discovery] Directory sync (' + reason + '):', summary);
+          // rc2.75.17: when a periodic scan actually finds NEW clients, surface
+          // a soft toast so the FC knows their cross-device data just arrived.
+          // Skip toast on first-mount scan (silent already) and on no-op runs.
+          if (reason !== 'post-connect' && summary.added > 0) {
+            try {
+              toast('Synced ' + summary.added + ' new client' + (summary.added === 1 ? '' : 's') + ' from Drive', 'success', 3500);
+            } catch (_) {}
+          }
+        }
       } catch (e) {
-        console.warn('[Discovery] Post-connect scan failed:', e.message);
+        console.warn('[Discovery] Scan failed (' + reason + '):', e.message);
       } finally {
         setDriveStartupSyncInFlight(false);
       }
     };
     runAfterFirstPaint(runDiscoveryAndPurge, 600);
     const unsub = onDriveStatusChange(runDiscoveryAndPurge);
-    return unsub;
+
+    // rc2.75.17: PERIODIC RE-DISCOVERY. FC reported having to manually click
+    // "Find clients in Drive" to pull clients created on another device.
+    // The legacy code only ran discovery ONCE per session (the
+    // _postConnectDiscoveryRan flag), so new clients made on the phone never
+    // appeared on the desktop without a full reload. Now we re-scan every
+    // 5 minutes when (a) Drive is connected, (b) the tab is visible (don't
+    // burn API quota on a backgrounded tab), and (c) no Drive write is in
+    // flight. New clients land in IndexedDB silently and the active client
+    // list updates via the existing dbPut → React state path.
+    const PERIODIC_DISCOVERY_MS = 5 * 60 * 1000; // 5 minutes
+    const periodicTick = () => {
+      try {
+        if (document.visibilityState && document.visibilityState !== 'visible') return;
+        if (getDriveStatus() !== 'connected' || isDriveLocalOnly()) return;
+        if (_driveSyncInFlight) return;
+        runDiscoveryAndPurge({
+          force: true,
+          reason: 'periodic-5m'
+        });
+      } catch (e) {
+        console.warn('[Discovery] Periodic tick threw:', e?.message || e);
+      }
+    };
+    const periodicId = setInterval(periodicTick, PERIODIC_DISCOVERY_MS);
+
+    // rc2.75.17: also re-scan when the FC returns to the tab after >60s away.
+    // Catches the "I made a client on my phone, switched to desktop tab"
+    // case more aggressively than a 5-minute interval would.
+    let lastHiddenAt = 0;
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        lastHiddenAt = Date.now();
+        return;
+      }
+      if (document.visibilityState === 'visible' && lastHiddenAt > 0) {
+        const awayMs = Date.now() - lastHiddenAt;
+        lastHiddenAt = 0;
+        if (awayMs >= 60 * 1000) {
+          if (getDriveStatus() !== 'connected' || isDriveLocalOnly()) return;
+          runDiscoveryAndPurge({
+            force: true,
+            reason: 'visibility-return-after-' + Math.round(awayMs / 1000) + 's'
+          });
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      try {
+        unsub();
+      } catch (_) {}
+      clearInterval(periodicId);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
   }, [loading]);
 
   // v2.3.0-rc2c.4b: Auto-pull safety net — if active client has 0 policies, pull from Drive.
@@ -35460,9 +35537,20 @@ function ClientsTab() {
   const openNewClientMenu = () => {
     const rect = newClientBtnRef.current?.getBoundingClientRect();
     if (rect) {
+      // rc2.75.17: anchor with LEFT instead of RIGHT and clamp so the menu
+      // can never overflow the viewport horizontally. The previous code
+      // used `right: window.innerWidth - rect.right` which works when the
+      // trigger sits near the right edge but produces a negative-left
+      // overhang when the trigger sits in the middle of the screen on a
+      // narrow phone — the menu clipped on the LEFT (same bug pattern that
+      // the Settings Drive Sync overflow menu hit).
+      const MENU_WIDTH = 240;
+      const PADDING = 12;
+      const vw = window.innerWidth || 360;
+      const clampedLeft = Math.max(PADDING, Math.min(rect.left, vw - MENU_WIDTH - PADDING));
       setNewClientMenuPos({
         top: rect.bottom + 6,
-        right: Math.max(8, window.innerWidth - rect.right)
+        left: clampedLeft
       });
     }
     setNewClientMenuOpen(o => !o);
@@ -36907,13 +36995,16 @@ function ClientsTab() {
     style: {
       position: 'fixed',
       top: newClientMenuPos.top + 'px',
-      right: newClientMenuPos.right + 'px',
+      // rc2.75.17: switched from right-anchor to clamped left-anchor.
+      // See openNewClientMenu() for the clamp math.
+      left: newClientMenuPos.left + 'px',
       zIndex: 9999,
       background: 'var(--bg)',
       border: '1px solid var(--border)',
       borderRadius: 14,
       padding: 6,
       minWidth: 240,
+      maxWidth: 'calc(100vw - 24px)',
       boxShadow: '0 10px 28px rgba(60,40,20,0.18)'
     }
   }, [['✎', 'Enter manually', 'Type a client name and save', () => {
@@ -66859,13 +66950,24 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
     style: {
       position: 'absolute',
       top: 'calc(100% + 6px)',
-      right: 0,
       zIndex: 60,
+      // rc2.75.17: same fix as the Settings Drive Sync overflow menu —
+      // on mobile anchor LEFT (extends right) so we don't clip on the
+      // viewport left edge; on desktop anchor RIGHT (hugs the trigger,
+      // expected behavior). maxWidth clamps as belt-and-braces.
+      ...(_viewportIsMobile ? {
+        left: 0,
+        right: 'auto'
+      } : {
+        right: 0,
+        left: 'auto'
+      }),
       background: 'var(--bg)',
       border: `1px solid ${T_V2.border}`,
       borderRadius: T_V2.radius || 14,
       padding: 6,
       minWidth: 220,
+      maxWidth: 'calc(100vw - 24px)',
       boxShadow: '0 10px 28px rgba(60,40,20,0.12)',
       fontFamily: T_V2.sansFamily
     }
@@ -85390,6 +85492,15 @@ function DriveConnectionCard() {
   // v2.4.0-rc1.40: secondary actions overflow + heads-up tooltip
   const [moreOpen, setMoreOpen] = useState(false);
   const [tipOpen, setTipOpen] = useState(false);
+  // rc2.75.17: the overflow menu anchored to the "⋯" button with right:0
+  // extends LEFT from the trigger. On narrow phones the trigger sits in the
+  // middle of the card, so a 240px-wide menu extends past the LEFT edge of
+  // the viewport — clipping the first character of each item ("ull latest"
+  // instead of "Pull latest" etc.). On mobile we flip the anchor to left:0
+  // so the menu extends RIGHT from the trigger and stays on-screen. The
+  // mobile screen is narrow enough that a 240px menu starting at the
+  // trigger's left edge still fits comfortably.
+  const isMobile = useViewportIsMobile();
 
   // Subscribe to driveClient status changes
   useEffect(() => {
@@ -85788,13 +85899,26 @@ function DriveConnectionCard() {
     style: {
       position: 'absolute',
       top: 'calc(100% + 6px)',
-      right: 0,
       zIndex: 60,
+      // rc2.75.17: mobile anchors LEFT (menu extends right from trigger
+      // into visible area); desktop keeps RIGHT-anchor (menu hugs the
+      // right edge of the card, which is desktop's expected behavior).
+      ...(isMobile ? {
+        left: 0,
+        right: 'auto'
+      } : {
+        right: 0,
+        left: 'auto'
+      }),
       background: 'var(--bg)',
       border: '1px solid ' + T_V2.border,
       borderRadius: T_V2.radius || 14,
       padding: 6,
+      // rc2.75.17: never overflow the viewport horizontally — clamp
+      // the menu's width so a long trigger position can't push the
+      // menu off-screen even if the isMobile branch is wrong.
       minWidth: 240,
+      maxWidth: 'calc(100vw - 32px)',
       boxShadow: '0 10px 28px rgba(60,40,20,0.12)',
       fontFamily: T_V2.sansFamily
     }
