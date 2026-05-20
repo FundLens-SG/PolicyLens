@@ -1,4 +1,4 @@
-const SW_VERSION = 'v2.4.0-rc2.75.14-sw-cache-bust';
+const SW_VERSION = 'v2.4.0-rc2.75.15-drive-sync-robustness';
 const DB_NAME = 'PolicyLensSW';
 const DB_VERSION = 1;
 const SESSION_STORE = 'sessions';

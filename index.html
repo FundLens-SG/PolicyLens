@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.14-sw-cache-bust';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.15-drive-sync-robustness';
 // rc2.75.13: STALE SERVICE WORKER SELF-HEAL.
 // Background — FCs were hitting "Network Error — API calls are being blocked"
 // across Firefox/Edge/Chrome simultaneously. Console showed the OLD SW
@@ -154,6 +154,44 @@ if ('serviceWorker' in navigator) {
     }
   });
 }
+
+// rc2.75.15: post-reconnect handshake. When the FC clicks "Switch Google
+// Account" in DriveReconnectBar, driveClient.reconnectGoogleDrive() launches
+// Google OAuth with redirectTo=<current URL>?_drive_reconnected=<ts>. On
+// return, this handler strips the marker and toasts success so the FC sees
+// confirmation their re-grant landed. Also kicks the in-page refresh so the
+// new provider_token gets seeded into drive_tokens immediately.
+(function policylensHandleDriveReconnectReturn() {
+  try {
+    const url = new URL(window.location.href);
+    const reconnectAt = url.searchParams.get('_drive_reconnected');
+    if (!reconnectAt) return;
+    url.searchParams.delete('_drive_reconnected');
+    // Replace history state so the marker doesn't persist on bookmark / back-button.
+    try { window.history.replaceState({}, document.title, url.href); } catch(_) {}
+    // Wait for window._user + Supabase client to be ready, then trigger a
+    // refresh to seed the new tokens and surface any lingering mismatch.
+    const tryToast = (n) => {
+      if (n > 12) return; // give up after ~6s
+      const sb = window._SB || (typeof getSB === 'function' ? getSB() : null);
+      if (!sb || !window._user) { setTimeout(() => tryToast(n + 1), 500); return; }
+      try {
+        if (typeof window.__policylensToast === 'function') {
+          window.__policylensToast('✅ Drive account reconnected. Syncing now…', 'success', 4000);
+        }
+      } catch(_) {}
+      // Clear any stale mismatch banner; the next refresh will re-fire it if Google still reports a mismatch.
+      try { window.__policylensDriveMismatch = null; window.dispatchEvent(new CustomEvent('policylens-drive-mismatch', { detail: null })); } catch(_) {}
+      // Trigger a refresh so drive_tokens gets seeded with the freshly-issued refresh_token.
+      try {
+        if (typeof _refreshDriveTokenViaEdgeFn === 'function') _refreshDriveTokenViaEdgeFn().catch(() => {});
+      } catch(_) {}
+    };
+    setTimeout(() => tryToast(0), 500);
+  } catch (e) {
+    console.warn('[Drive] reconnect-return handler threw:', e?.message || e);
+  }
+})();
 </script>
 <script crossorigin="anonymous" src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script crossorigin="anonymous" src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
@@ -828,9 +866,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.75.14';
+const APP_VERSION = 'v2.4.0-rc2.75.15';
 const APP_VERSION_DATE = '2026-05-20';
-const APP_VERSION_NAME = 'rc2.75.14 SW cache-bust + Cloudflare no-cache headers (fix Update-now loop)';
+const APP_VERSION_NAME = 'rc2.75.15 Drive Sync robustness — direct OAuth reconnect + mismatch banner + login_hint';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1435,6 +1473,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.75.15',
+  date: '2026-05-20',
+  name: 'rc2.75.15 Drive Sync robustness — direct OAuth re-grant + persistent mismatch banner',
+  sections: [{
+    heading: 'FCs reported recurring Drive Sync issues when logging in from different browsers / browsers with other Google profiles, even with the correct CKGTools account',
+    items: ['FAILURE-MODE AUDIT — Mapped every Drive auth code path. Identified 8 failure modes; the high-frequency ones causing the reported FC pain: (a) browser has multiple Google accounts, default isn\'t the CKGTools-authenticated one, picker picks the wrong account on re-grant; (b) FC switched default Google account between visits, Edge Function detects refresh_token belongs to a different Google email than hub_email (mismatch=true), the dismissable toast disappears in 8s and FCs miss it; (c) Drive scope revoked from Google Account settings → refresh_token invalid → unclear recovery path; (d) "Reconnect" button bounced to the hub which uses `prompt=select_account` WITHOUT `consent` or `login_hint`, so the picker may not re-issue a refresh_token AND the FC could pick the wrong account again.', 'FIX #1 — DIRECT OAUTH RE-GRANT in PolicyLens. New driveClient.reconnectGoogleDrive() bypasses the hub redirect. Calls supabase.auth.signInWithOAuth({provider:"google"}) directly from PolicyLens with: prompt:"consent select_account" (forces Google to show the picker AND require fresh consent so a new refresh_token is issued), access_type:"offline", login_hint:<window._user.email> (pre-selects the CKGTools-authenticated Google account so the FC can\'t accidentally pick a different one), include_granted_scopes:"true" (preserves other previously-granted scopes). redirectTo is the current PolicyLens URL with a "_drive_reconnected" marker so the FC returns to where they were instead of the hub home.', 'FIX #2 — PERSISTENT MISMATCH BANNER. The DriveReconnectBar now surfaces account-mismatch as a DISTINCT RED variant (vs the regular disconnect gold variant). Banner shows: "CKGTools is signed in as [hub email] but Drive is authenticated as [google email]. Click Reconnect Drive — Google will show the account picker; choose [hub email] to fix." Button label switches to "Switch Google Account" so the action is unambiguous. _surfaceGoogleCoreMismatch() now dispatches a window event AND sets window.__policylensDriveMismatch so the banner re-renders on every mismatch detection, not just the throttled one-toast-per-10-minutes path the old code had.', 'FIX #3 — POST-RECONNECT HANDSHAKE. After OAuth completes and Google redirects back to PolicyLens with ?_drive_reconnected=<timestamp>, a new boot-time handler strips the marker, toasts "✅ Drive account reconnected. Syncing now…", clears the in-memory mismatch state, and triggers an immediate _refreshDriveTokenViaEdgeFn() to seed the freshly-issued refresh_token. FC sees confirmation + the sync indicator goes green within seconds instead of waiting for the next periodic refresh.', 'FIX #4 — MISMATCH-AWARE CLEANUP. When the Edge Function returns mismatch:false on a successful refresh, the in-memory mismatch state + persistent window flag are both cleared via a dispatched event. The banner disappears automatically as soon as the FC fixes their Drive grant — no manual reload needed.', 'WHAT THIS FIXES FOR FCs — (a) FC on Firefox after using Chrome: clicks "Reconnect Drive" → Google picker shows their CKGTools email pre-selected via login_hint → consent screen → returns to PolicyLens with fresh refresh_token, syncing. (b) FC whose Chrome default is not their CKGTools account: clicks "Switch Google Account" on the red banner → Google picker forces selection with CKGTools email highlighted → re-consent → fresh refresh_token → syncing. (c) FC who revoked Drive months ago: refresh fails with refresh_token_invalid → banner shows disconnect state → "Reconnect Drive" → full re-grant.', 'NOT IN THIS RC (out-of-scope follow-ups) — The hub\'s signInWithGoogle() in ckgtools/src/lib/auth.ts could also accept a login_hint parameter, which would let the hub home page (accessed via ?reconnect=drive) trigger the same forced-consent flow. Today PolicyLens triggers it directly. If other tools (FundLens, AutoDial) hit the same issue, factoring login_hint into the hub auth helper would let them all share the fix. Also: a server-side audit_log query surfacing "mismatch detected N times in last 7d for user X" would help spot which FCs are hitting this most often.']
+  }]
+}, {
   version: 'v2.4.0-rc2.75.14',
   date: '2026-05-20',
   name: 'rc2.75.14 SW cache-bust + Cloudflare no-cache headers (fixes Update-now loop)',
@@ -25016,13 +25062,34 @@ async function _seedDriveTokensIfNeeded() {
 }
 function _surfaceGoogleCoreMismatch(status) {
   if (!status || !status.mismatch) return;
+  // rc2.75.15: route mismatch detection to the persistent DriveReconnectBar
+  // banner (red variant) AS WELL AS the legacy throttled toast. The banner
+  // surfaces on every page render until the FC clicks "Switch Google
+  // Account" and completes the OAuth re-grant — toasts alone are too easy
+  // to miss / dismiss when the FC is mid-flow.
+  const detail = {
+    mismatch: true,
+    google_email: status.googleEmail || status.google_email || null,
+    hub_email: status.hubEmail || status.hub_email || status.actingAsMainEmail || null,
+    at: Date.now()
+  };
+  try {
+    window.__policylensDriveMismatch = detail;
+  } catch (_) {}
+  try {
+    window.dispatchEvent(new CustomEvent('policylens-drive-mismatch', {
+      detail
+    }));
+  } catch (_) {}
+  // Throttled toast — keeps the legacy notification too for users who
+  // missed the banner.
   const now = Date.now();
   if (window.__policylensGoogleMismatchWarnedAt && now - window.__policylensGoogleMismatchWarnedAt < 10 * 60 * 1000) return;
   window.__policylensGoogleMismatchWarnedAt = now;
-  const google = status.googleEmail || 'another Google account';
-  const hub = status.hubEmail || status.actingAsMainEmail || 'your CKGTools account';
+  const google = detail.google_email || 'another Google account';
+  const hub = detail.hub_email || 'your CKGTools account';
   try {
-    toast('Drive is connected as ' + google + ', while CKGTools expects ' + hub + '. Reconnect from the right Google account if Drive folders look wrong.', 'warning', 8000);
+    toast('Drive is connected as ' + google + ', while CKGTools expects ' + hub + '. See the red banner at the top of the page — click "Switch Google Account" to fix.', 'warning', 10000);
   } catch (_) {
     console.warn('[Drive] Google account mismatch:', status);
   }
@@ -25061,6 +25128,17 @@ async function _refreshDriveTokenViaEdgeFn() {
       console.warn('[Drive] refresh blocked: Google account does not match CKGTools session');
       return null;
     }
+    // rc2.75.15: clear the persistent mismatch banner when a refresh succeeds
+    // without a mismatch flag — means the FC has re-granted Drive with the
+    // correct Google account.
+    try {
+      if (window.__policylensDriveMismatch) {
+        window.__policylensDriveMismatch = null;
+        window.dispatchEvent(new CustomEvent('policylens-drive-mismatch', {
+          detail: null
+        }));
+      }
+    } catch (_) {}
     _driveRefreshBlockedReason = null;
     _driveTokenExpiresAt = Date.now() + (data.expires_in || 3599) * 1000;
     return data.access_token;
@@ -25285,6 +25363,83 @@ const driveClient = {
     console.log('[Drive] Redirecting to ckgtools hub for sign-in');
     window.location.href = '/';
     return new Promise(() => {});
+  },
+  // ── reconnectGoogleDrive: rc2.75.15 — direct in-page OAuth re-grant ──
+  // Triggers Google OAuth FROM PolicyLens (no hub bounce) with the right
+  // flags to fix the "wrong Google account / stale Drive scope" class of
+  // bug FCs hit when:
+  //   - Their browser's default Google profile differs from the CKGTools-
+  //     authenticated email (multi-Google-profile browsers — common)
+  //   - They previously granted Drive but Google later revoked the
+  //     refresh_token (180-day inactive cap, or user revoked from Google
+  //     Account → Security → Third-party apps)
+  //   - The stored refresh_token is for a different Google email than the
+  //     hub session (mismatch state)
+  // Key flags:
+  //   - prompt: 'consent select_account' — ALWAYS show Google's picker
+  //     AND force re-consent so a fresh refresh_token is issued. Without
+  //     consent the picker may not re-issue a refresh_token.
+  //   - access_type: 'offline' — required for refresh_token issuance
+  //   - login_hint: window._user.email — pre-selects the correct Google
+  //     account in the picker (saves a click + prevents wrong-account
+  //     mistakes). Hub email is used as the hint since that's the
+  //     authoritative identity per CKGTools' pre-invite model.
+  //   - redirectTo: current PolicyLens URL — user returns to where they
+  //     started instead of the hub home page.
+  async reconnectGoogleDrive(opts) {
+    const sb = window._SB || (typeof getSB === 'function' ? getSB() : null);
+    if (!sb || !sb.auth?.signInWithOAuth) {
+      console.warn('[Drive] reconnectGoogleDrive: Supabase client not available, falling back to hub redirect');
+      window.location.href = '/';
+      return new Promise(() => {});
+    }
+    const expectedEmail = (window._user?.email || window._user?.user_metadata?.email || '').trim();
+    const redirectUrl = (() => {
+      try {
+        const u = new URL(window.location.href);
+        // Strip any reconnect-flow markers so we don't loop on return
+        u.searchParams.delete('_drive_reconnect');
+        u.searchParams.delete('_force');
+        // Mark that we just completed a reconnect — useful for showing a success toast on return
+        u.searchParams.set('_drive_reconnected', String(Date.now()));
+        return u.href;
+      } catch (_) {
+        return window.location.href;
+      }
+    })();
+    console.log('[Drive] reconnectGoogleDrive: starting OAuth with hint=' + (expectedEmail || '(none)'));
+    try {
+      const queryParams = {
+        access_type: 'offline',
+        // Force BOTH select_account (picker shows even if only one signed-in
+        // Google account) AND consent (Google must re-issue refresh_token,
+        // and surface scope grant for FC to confirm Drive access).
+        prompt: 'consent select_account',
+        // include_granted_scopes preserves prior grants — without it, a
+        // re-consent would lose other previously-granted scopes on this user.
+        include_granted_scopes: 'true'
+      };
+      if (expectedEmail) queryParams.login_hint = expectedEmail;
+      const {
+        error
+      } = await sb.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          scopes: 'https://www.googleapis.com/auth/drive.file',
+          queryParams,
+          redirectTo: redirectUrl
+        }
+      });
+      if (error) {
+        console.warn('[Drive] reconnectGoogleDrive: OAuth init failed:', error.message);
+        // Fallback to hub redirect — hub will at least get them through sign-in
+        window.location.href = '/';
+      }
+    } catch (e) {
+      console.warn('[Drive] reconnectGoogleDrive: threw:', e?.message || e);
+      window.location.href = '/';
+    }
+    return new Promise(() => {}); // page is navigating away
   },
   // ── signOut: clear local Drive state. The hub owns sign-out. ──
   async signOut() {
@@ -34507,60 +34662,136 @@ function DriveReconnectBar() {
   } = useContext(AppCtx);
   const [, force] = useState(0);
   const [busy, setBusy] = useState(false);
+  // rc2.75.15: detect account-mismatch as a distinct state. When the Edge
+  // Function detects the stored refresh_token belongs to a Google account
+  // that differs from the hub user's email, the in-page _driveRefreshBlockedReason
+  // ref flips to 'account-mismatch'. We surface this with a clearly different
+  // message + a different fix path (force-consent OAuth re-grant with
+  // login_hint of the hub email) than a normal disconnect.
+  const [mismatchInfo, setMismatchInfo] = useState(() => typeof window !== 'undefined' && window.__policylensDriveMismatch || null);
   useEffect(() => {
     const unsub = driveClient.onStatusChange(() => force(n => n + 1));
-    return unsub;
+    const onMismatch = e => setMismatchInfo(e?.detail || typeof window !== 'undefined' && window.__policylensDriveMismatch || null);
+    try {
+      window.addEventListener('policylens-drive-mismatch', onMismatch);
+    } catch (_) {}
+    return () => {
+      try {
+        unsub();
+      } catch (_) {}
+      try {
+        window.removeEventListener('policylens-drive-mismatch', onMismatch);
+      } catch (_) {}
+    };
   }, []);
   const status = getDriveStatus();
   const checking = status === 'checking' || _driveStartupSyncInFlight;
-  if (status === 'connected') return null;
+  const isMismatch = !!mismatchInfo && status !== 'connected' && (_driveRefreshBlockedReason === 'account-mismatch' || !!mismatchInfo.mismatch);
+  const hubEmail = typeof window !== 'undefined' && (window._user?.email || window._user?.user_metadata?.email) || '';
+  // rc2.75.15: choose the most powerful reconnect path. For account-mismatch
+  // and disconnected states, use the new direct OAuth re-grant
+  // (driveClient.reconnectGoogleDrive) which forces Google's account picker
+  // + re-consent + passes login_hint of the hub email. For the unusual
+  // case where no prior connection intent exists OR reconnectGoogleDrive
+  // isn't available, fall back to the hub-redirect signInInteractive.
+  const triggerReconnect = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      if (typeof driveClient.reconnectGoogleDrive === 'function') {
+        await driveClient.reconnectGoogleDrive({
+          returnTab: tab
+        });
+      } else {
+        await driveClient.signInInteractive({
+          returnTab: tab
+        });
+      }
+    } catch (e) {
+      console.warn('[DriveReconnectBar] reconnect failed:', e?.message || e);
+      setBusy(false);
+    }
+  };
+  if (status === 'connected' && !isMismatch) return null;
   if (isDriveLocalOnly()) return null;
-  if (!hasPriorDriveConnectionIntent()) return null;
+  if (!hasPriorDriveConnectionIntent() && !isMismatch) return null;
+  // Two flavours: account-mismatch (red, more alarming) vs regular disconnect (gold).
+  const palette = isMismatch ? {
+    bg: 'color-mix(in oklch, var(--red, #c97b7b) 14%, transparent)',
+    border: 'color-mix(in oklch, var(--red, #c97b7b) 36%, transparent)',
+    accent: 'var(--red, #c97b7b)'
+  } : {
+    bg: 'color-mix(in oklch, var(--gold) 12%, transparent)',
+    border: 'color-mix(in oklch, var(--gold) 28%, transparent)',
+    accent: 'var(--gold)'
+  };
   return /*#__PURE__*/React.createElement("div", {
     style: {
-      background: 'color-mix(in oklch, var(--gold) 12%, transparent)',
-      borderBottom: '1px solid color-mix(in oklch, var(--gold) 28%, transparent)',
+      background: palette.bg,
+      borderBottom: '1px solid ' + palette.border,
       padding: '8px 16px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      gap: 8,
+      gap: 10,
       flexShrink: 0,
       fontSize: 12,
-      color: 'var(--text2)'
+      color: 'var(--text2)',
+      flexWrap: 'wrap'
     }
-  }, /*#__PURE__*/React.createElement("span", null, checking ? 'Checking Google Drive sync - your data is saved locally while PolicyLens reconnects.' : 'Google Drive disconnected - your changes are saving locally only.'), checking ? /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
-      color: 'var(--gold)',
+      minWidth: 0,
+      flex: '1 1 auto'
+    }
+  }, checking ? /*#__PURE__*/React.createElement("span", null, "Checking Google Drive sync \u2014 your data is saved locally while PolicyLens reconnects.") : isMismatch ? /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("strong", {
+    style: {
+      color: palette.accent
+    }
+  }, "\u26A0 Wrong Google account for Drive sync."), ' ', "CKGTools is signed in as ", /*#__PURE__*/React.createElement("code", {
+    style: {
+      fontFamily: 'ui-monospace, monospace',
+      fontSize: 11,
+      background: 'rgba(0,0,0,.18)',
+      padding: '1px 5px',
+      borderRadius: 3
+    }
+  }, hubEmail || '(unknown)'), mismatchInfo?.google_email && /*#__PURE__*/React.createElement(React.Fragment, null, " but Drive is authenticated as ", /*#__PURE__*/React.createElement("code", {
+    style: {
+      fontFamily: 'ui-monospace, monospace',
+      fontSize: 11,
+      background: 'rgba(0,0,0,.18)',
+      padding: '1px 5px',
+      borderRadius: 3
+    }
+  }, mismatchInfo.google_email)), ". Click ", /*#__PURE__*/React.createElement("em", null, "Reconnect Drive"), " below \u2014 you'll see Google's account picker and need to choose ", /*#__PURE__*/React.createElement("strong", null, hubEmail || 'your CKGTools account'), ".") : /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("strong", {
+    style: {
+      color: palette.accent
+    }
+  }, "Google Drive disconnected."), ' ', "Your changes are saving locally only. Click ", /*#__PURE__*/React.createElement("em", null, "Reconnect Drive"), " \u2014 Google will show the account picker; choose ", /*#__PURE__*/React.createElement("strong", null, hubEmail || 'your CKGTools account'), " to restore sync.")), checking ? /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: palette.accent,
       fontSize: 11,
       fontWeight: 700,
       whiteSpace: 'nowrap'
     }
-  }, "Syncing...") : /*#__PURE__*/React.createElement("button", {
-    onClick: async () => {
-      setBusy(true);
-      try {
-        await driveClient.signInInteractive({
-          returnTab: tab
-        });
-      } catch (e) {
-        setBusy(false);
-      }
-    },
+  }, "Syncing\u2026") : /*#__PURE__*/React.createElement("button", {
+    onClick: triggerReconnect,
     disabled: busy,
     style: {
-      background: 'var(--gold)',
+      background: palette.accent,
       color: '#fff',
       border: 'none',
       borderRadius: 14,
-      padding: '4px 14px',
+      padding: '6px 14px',
       fontSize: 11,
-      fontWeight: 600,
+      fontWeight: 700,
       cursor: busy ? 'not-allowed' : 'pointer',
       flexShrink: 0,
-      opacity: busy ? .6 : 1
+      opacity: busy ? .6 : 1,
+      minHeight: 32
     }
-  }, busy ? 'Reconnecting...' : 'Reconnect'));
+  }, busy ? 'Reconnecting…' : isMismatch ? 'Switch Google Account' : 'Reconnect Drive'));
 }
 
 // ── v2.2.0-beta: Drive conflict resolution modal ──
