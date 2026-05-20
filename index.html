@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.20-maturity-tabs-and-returns-override';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.21-retirement-par-wl-ul-toggle-wl-bi-snapshots';
 // rc2.75.13: STALE SERVICE WORKER SELF-HEAL.
 // Background — FCs were hitting "Network Error — API calls are being blocked"
 // across Firefox/Edge/Chrome simultaneously. Console showed the OLD SW
@@ -866,9 +866,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.75.20';
+const APP_VERSION = 'v2.4.0-rc2.75.21';
 const APP_VERSION_DATE = '2026-05-21';
-const APP_VERSION_NAME = 'rc2.75.20 Maturity-value tabs (A1) + ILP returns override (B1) + multi-scenario BI capture';
+const APP_VERSION_NAME = 'rc2.75.21 Retirement Par WL tabs + UL crediting toggle + WL BI snapshots';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1473,6 +1473,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.75.21',
+  date: '2026-05-21',
+  name: 'rc2.75.21 Retirement Par WL tabs + UL crediting Project-with toggle + Whole Life BI CV snapshots',
+  sections: [{
+    heading: 'Cross-product-type sweep — apply rc2.75.20 A1 source-of-truth pattern to three more friction surfaces surfaced by the Claude in Chrome deep-test',
+    items: ['RETIREMENT PAR WL — Tabbed Maturity Sum on the Annuity / Income panel. Previously a single "Maturity Sum ($)" input that flattened guaranteed and non-guaranteed bonuses into one number. Now: same A1 pattern as Endowment. Quick estimate tab shows the single retMaturitySum field; BI document values tab shows endGuaranteedCV + endNonGuarBonus inputs that auto-sum into retMaturitySum on edit (so downstream IRR / payback math is unchanged). When the Guaranteed Maturity / Non-Guar Bonus inputs are filled and the BI total differs from the existing single-estimate value, the BI tab surfaces an orange caption explaining the sync, with a button to revert. Works for AIA Gen3, Manulife Signature Income, NTUC RetireReady, and similar par WL retirement plans where the BI shows a guaranteed + non-guaranteed terminal sum.', 'UL/IUL/VUL CREDITING RATES — Explicit "Project with" toggle for the Current vs Guaranteed rate. Previously both rates lived as side-by-side inputs without any visible indicator of which one drove downstream CV / death benefit projections. Now: a small toggle in the section header lets the FC switch between "⚡ Current" (illustration rate, default) and "⚡ Guaranteed floor" (contractual minimum, used for stress-testing). The selected rate gets a gold/green border + "⚡ drives projections" caption; the other rate stays editable but greyed-out as context. _ulProjectionMode flag stored on the policy for cross-session persistence. Downstream UL projection math is unchanged in this RC (we surfaced the choice; consuming code still uses creditingRates.current — that wiring can come in a follow-up).', 'WHOLE LIFE BI CV SNAPSHOTS — Optional disclosure under the Surrender Value panel for par WL. Previously, the FC could only enter "Current Surrender Value" + "Est. Yield" and let the form project forward. The BI document typically shows guaranteed + non-guaranteed CV at specific anchor ages (commonly 65, 80, 99), and FCs had no place to capture those numbers for cross-checking. Now: an "+ Add BI snapshot" button reveals a row-based UI where each snapshot has Age / Guaranteed CV / Non-Guar Bonus inputs plus a computed "Total / IRR" cell. Implied yield is computed via IRR over the premium cashflow series so the FC can sanity-check against the Est. Yield % field. Multiple snapshots supported (add as many as the BI shows). Backed by new form.wlBiSnapshots = [{age, guar, nonGuar}] array; schema extended with matching responseSchema entry so AI extraction can populate it when BI tables are visible.', 'EXTRACT_PROMPT — wlBiSnapshots added to the per-policy field list with explicit description: "For par Whole Life policies, capture CV projections at specific ages from the BI document. Common ages: 65, 80, 99. Each entry: {age, guar, nonGuar}. Skip if no BI projection table is visible."', 'DEFAULTS — form.wlBiSnapshots starts as [] (collapsed empty state); form._ulProjectionMode defaults to "current" (preserves existing rc2.75.20 behaviour where the Current rate drives projections). Both are backward-compatible: missing fields on legacy saved policies use the defaults; no migration needed.', 'WHY: rc2.75.20 solved the maturity-vs-BI source-of-truth question for the Endowment surface and the silent-overwrite question for ILP fund returns. The Claude in Chrome deep-test on production confirmed the patterns worked there, AND surfaced three more places they could productively apply: Retirement Par WL (same maturity sum confusion as endowment, different panel), UL crediting (same illustrated-vs-guaranteed question, but rates not maturity values), and Whole Life BI snapshots (cross-check between yield-projection and document table). All three ride on the same insight — one authoritative source visible at a time, the other accessible via an obvious one-click toggle.']
+  }]
+}, {
   version: 'v2.4.0-rc2.75.20',
   date: '2026-05-21',
   name: 'rc2.75.20 Maturity-value tabs (A1) + ILP returns override (B1) + multi-scenario BI capture',
@@ -40038,6 +40046,32 @@ const POLICY_EXTRACTION_SCHEMA = {
         nullable: true,
         description: 'Non-guaranteed bonus from the LOWER (3.0%) scenario, when BI projects both 3% and 4.25%. Leave null if only one scenario is shown.'
       },
+      // rc2.75.21 #3: par WL BI document CV projections at specific ages
+      wlBiSnapshots: {
+        type: 'ARRAY',
+        nullable: true,
+        description: 'OPTIONAL. For par Whole Life policies (subType="Whole Life"), capture CV projections at specific ages from the BI document. Common ages: 65, 80, 99. Each entry: {age, guar, nonGuar}. Skip if no BI projection table is visible.',
+        items: {
+          type: 'OBJECT',
+          properties: {
+            age: {
+              type: 'INTEGER',
+              description: 'Age the projection applies to (e.g. 65)'
+            },
+            guar: {
+              type: 'NUMBER',
+              nullable: true,
+              description: 'Guaranteed CV at that age'
+            },
+            nonGuar: {
+              type: 'NUMBER',
+              nullable: true,
+              description: 'Non-guaranteed bonus at that age (4.25% scenario)'
+            }
+          },
+          required: ['age']
+        }
+      },
       // ── ILP granular (per-fund details beyond fundAllocations) ──
       ilpBidOfferSpread: {
         type: 'NUMBER',
@@ -70433,10 +70467,15 @@ function PolicyFormModal({
       endYield: '4',
       endGuaranteedCV: '',
       endNonGuarBonus: '',
+      endNonGuarPessimistic: '',
       endHasCashBenefit: false,
       endCashBenefit: '',
       endCashBenefitStartYr: '',
       endCashBenefitEndYr: '',
+      // Whole Life BI snapshots (rc2.75.21 #3) — array of {age, guar, nonGuar}
+      wlBiSnapshots: [],
+      // UL projection mode (rc2.75.21 #2) — 'current' or 'guaranteed'
+      _ulProjectionMode: 'current',
       diMonthlyBenefit: '',
       defermentMths: '3',
       diBenefitAge: '65',
@@ -72430,19 +72469,210 @@ function PolicyFormModal({
         gap: 8,
         marginBottom: 8
       }
-    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-      className: "field"
-    }, /*#__PURE__*/React.createElement("label", null, "Maturity Sum ($)"), /*#__PURE__*/React.createElement("input", {
-      type: "number",
-      value: form.retMaturitySum || '',
-      onChange: e => set('retMaturitySum', e.target.value),
-      placeholder: "0 = fully consumed by payouts"
-    }), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 9,
-        color: 'var(--text3)'
-      }
-    }, "Amount returned at end \xB7 $0 means capital is fully drawn down through payouts"))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", null, (() => {
+      const hasBi = parseFloat(form.endGuaranteedCV) > 0 || parseFloat(form.endNonGuarBonus) > 0;
+      const guar = parseFloat(form.endGuaranteedCV) || 0;
+      const bonus = parseFloat(form.endNonGuarBonus) || 0;
+      const biTotal = guar + bonus;
+      const matSumNum = parseFloat(form.retMaturitySum) || 0;
+      const activeTab = maturityTab;
+      const tabBtn = (id, label, badge) => /*#__PURE__*/React.createElement("button", {
+        type: "button",
+        onClick: () => setMaturityTab(id),
+        style: {
+          padding: '6px 12px',
+          border: 'none',
+          borderBottom: activeTab === id ? '2px solid var(--green2)' : '2px solid transparent',
+          background: 'transparent',
+          color: activeTab === id ? 'var(--green2)' : 'var(--text3)',
+          fontWeight: activeTab === id ? 700 : 500,
+          fontSize: 10,
+          cursor: 'pointer',
+          textTransform: 'uppercase',
+          letterSpacing: '.4px',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 5
+        }
+      }, label, badge && /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 8,
+          padding: '1px 5px',
+          borderRadius: 8,
+          background: 'rgba(91,168,160,.18)',
+          color: 'var(--teal)',
+          textTransform: 'none',
+          letterSpacing: 0,
+          fontWeight: 600
+        }
+      }, badge));
+      return /*#__PURE__*/React.createElement("div", {
+        style: {
+          padding: 0,
+          background: 'color-mix(in oklch, var(--green2) 4%, transparent)',
+          borderRadius: 8,
+          border: '1px solid color-mix(in oklch, var(--green2) 18%, transparent)',
+          overflow: 'hidden'
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: 'flex',
+          borderBottom: '1px solid color-mix(in oklch, var(--green2) 18%, transparent)',
+          background: 'var(--bg2)',
+          padding: '0 6px'
+        }
+      }, tabBtn('estimated', 'Quick estimate', null), tabBtn('bi-document', 'BI document values', hasBi ? 'from BI' : null)), activeTab === 'estimated' && /*#__PURE__*/React.createElement("div", {
+        style: {
+          padding: 10
+        }
+      }, /*#__PURE__*/React.createElement("label", {
+        style: {
+          fontSize: 10,
+          fontWeight: 600,
+          color: 'var(--text3)'
+        }
+      }, "Maturity Sum ($)"), /*#__PURE__*/React.createElement("input", {
+        type: "number",
+        value: form.retMaturitySum || '',
+        onChange: e => set('retMaturitySum', e.target.value),
+        placeholder: "0 = fully consumed by payouts"
+      }), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 9,
+          color: 'var(--text3)'
+        }
+      }, "Amount returned at end \xB7 $0 means capital is fully drawn down through payouts"), hasBi && /*#__PURE__*/React.createElement("div", {
+        style: {
+          marginTop: 8,
+          padding: '6px 8px',
+          background: 'var(--bg2)',
+          borderRadius: 5,
+          fontSize: 10,
+          color: 'var(--text3)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 6
+        }
+      }, /*#__PURE__*/React.createElement("span", null, "BI document shows: ", /*#__PURE__*/React.createElement("strong", {
+        style: {
+          color: 'var(--text2)'
+        }
+      }, "$", biTotal.toLocaleString()), " (", guar.toLocaleString(), " guar + ", bonus.toLocaleString(), " non-guar)"), /*#__PURE__*/React.createElement("button", {
+        type: "button",
+        onClick: () => setMaturityTab('bi-document'),
+        style: {
+          fontSize: 9,
+          padding: '2px 8px',
+          background: 'transparent',
+          border: '1px solid var(--border)',
+          borderRadius: 4,
+          color: 'var(--teal)',
+          cursor: 'pointer',
+          fontWeight: 600
+        }
+      }, "Use BI \u2192"))), activeTab === 'bi-document' && /*#__PURE__*/React.createElement("div", {
+        style: {
+          padding: 10
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 9,
+          fontWeight: 700,
+          color: 'var(--blue2)',
+          textTransform: 'uppercase',
+          letterSpacing: '.5px',
+          marginBottom: 6
+        }
+      }, "BI Document Values"), /*#__PURE__*/React.createElement("div", {
+        className: "resp-2col",
+        style: {
+          gap: 6
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        className: "field"
+      }, /*#__PURE__*/React.createElement("label", {
+        style: {
+          fontSize: 10
+        }
+      }, "Guaranteed Maturity ($)"), /*#__PURE__*/React.createElement("input", {
+        type: "number",
+        value: form.endGuaranteedCV || '',
+        onChange: e => {
+          set('endGuaranteedCV', e.target.value);
+          const nb = parseFloat(form.endNonGuarBonus) || 0;
+          set('retMaturitySum', String(Math.round((parseFloat(e.target.value) || 0) + nb)));
+        },
+        placeholder: "from BI",
+        style: {
+          fontSize: 11
+        }
+      })), /*#__PURE__*/React.createElement("div", {
+        className: "field"
+      }, /*#__PURE__*/React.createElement("label", {
+        style: {
+          fontSize: 10
+        }
+      }, "Non-Guar Bonus ($)"), /*#__PURE__*/React.createElement("input", {
+        type: "number",
+        value: form.endNonGuarBonus || '',
+        onChange: e => {
+          set('endNonGuarBonus', e.target.value);
+          const g = parseFloat(form.endGuaranteedCV) || 0;
+          set('retMaturitySum', String(Math.round(g + (parseFloat(e.target.value) || 0))));
+        },
+        placeholder: "4.25% scenario",
+        style: {
+          fontSize: 11
+        }
+      }))), /*#__PURE__*/React.createElement("div", {
+        style: {
+          marginTop: 6,
+          padding: '6px 8px',
+          background: 'var(--bg2)',
+          borderRadius: 5,
+          fontSize: 10,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          color: 'var(--text3)'
+        }
+      }, "Total maturity sum"), /*#__PURE__*/React.createElement("strong", {
+        style: {
+          color: 'var(--blue2)',
+          fontSize: 13
+        }
+      }, "$", biTotal.toLocaleString())), matSumNum > 0 && Math.abs(matSumNum - biTotal) > 1 && /*#__PURE__*/React.createElement("div", {
+        style: {
+          marginTop: 6,
+          padding: '6px 8px',
+          background: 'rgba(245,158,11,.10)',
+          borderRadius: 5,
+          fontSize: 10,
+          color: 'var(--orange)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 6
+        }
+      }, /*#__PURE__*/React.createElement("span", null, "Single estimate was $", matSumNum.toLocaleString(), " \u2014 synced to BI total"), /*#__PURE__*/React.createElement("button", {
+        type: "button",
+        onClick: () => setMaturityTab('estimated'),
+        style: {
+          fontSize: 9,
+          padding: '2px 8px',
+          background: 'transparent',
+          border: '1px solid var(--border)',
+          borderRadius: 4,
+          color: 'var(--text2)',
+          cursor: 'pointer',
+          fontWeight: 600
+        }
+      }, "Use estimate \u2192"))));
+    })()), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
       className: "field"
     }, /*#__PURE__*/React.createElement("label", null, "Yield % p.a.", autoYield && !form.retAccumYield ? ' ⚡' : ''), /*#__PURE__*/React.createElement("input", {
       type: "number",
@@ -76300,14 +76530,67 @@ function PolicyFormModal({
       borderRadius: 10,
       border: '1px solid var(--border)'
     }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 10,
+      flexWrap: 'wrap',
+      gap: 8
+    }
   }, /*#__PURE__*/React.createElement("h4", {
     style: {
       fontSize: 13,
       fontWeight: 600,
-      marginBottom: 10,
-      color: 'var(--blue2)'
+      color: 'var(--blue2)',
+      margin: 0
     }
-  }, isIUL ? 'IUL' : isVUL ? 'VUL' : 'UL', " Specific Fields"), /*#__PURE__*/React.createElement("div", {
+  }, isIUL ? 'IUL' : isVUL ? 'VUL' : 'UL', " Specific Fields"), (isULPlain || form.creditingMechanism === 'fixed') && /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 6,
+      padding: '4px 8px',
+      borderRadius: 6,
+      background: 'var(--bg2)',
+      border: '1px solid var(--border)'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 9,
+      color: 'var(--text3)',
+      textTransform: 'uppercase',
+      letterSpacing: '.4px',
+      fontWeight: 600
+    }
+  }, "Project with:"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => set('_ulProjectionMode', 'current'),
+    style: {
+      fontSize: 10,
+      padding: '2px 8px',
+      borderRadius: 4,
+      border: '1px solid ' + ((form._ulProjectionMode || 'current') === 'current' ? 'var(--gold)' : 'var(--border)'),
+      background: (form._ulProjectionMode || 'current') === 'current' ? 'rgba(201,169,110,.16)' : 'transparent',
+      color: (form._ulProjectionMode || 'current') === 'current' ? 'var(--gold)' : 'var(--text3)',
+      cursor: 'pointer',
+      fontWeight: (form._ulProjectionMode || 'current') === 'current' ? 700 : 500
+    }
+  }, "Current"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => set('_ulProjectionMode', 'guaranteed'),
+    style: {
+      fontSize: 10,
+      padding: '2px 8px',
+      borderRadius: 4,
+      border: '1px solid ' + (form._ulProjectionMode === 'guaranteed' ? 'var(--green2)' : 'var(--border)'),
+      background: form._ulProjectionMode === 'guaranteed' ? 'rgba(45,106,79,.16)' : 'transparent',
+      color: form._ulProjectionMode === 'guaranteed' ? 'var(--green2)' : 'var(--text3)',
+      cursor: 'pointer',
+      fontWeight: form._ulProjectionMode === 'guaranteed' ? 700 : 500
+    }
+  }, "Guaranteed floor"))), /*#__PURE__*/React.createElement("div", {
     className: "grid-3"
   }, /*#__PURE__*/React.createElement("div", {
     className: "field"
@@ -76322,21 +76605,44 @@ function PolicyFormModal({
     value: "indexed"
   }, "Indexed"), /*#__PURE__*/React.createElement("option", {
     value: "client-directed"
-  }, "Client-directed"))), (isULPlain || form.creditingMechanism === 'fixed') && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    className: "field"
-  }, /*#__PURE__*/React.createElement("label", null, "Current Rate (%)"), /*#__PURE__*/React.createElement("input", {
-    type: "number",
-    step: "0.1",
-    value: form.creditingRates?.current || '',
-    onChange: e => setNested('creditingRates', 'current', e.target.value)
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "field"
-  }, /*#__PURE__*/React.createElement("label", null, "Guaranteed Rate (%)"), /*#__PURE__*/React.createElement("input", {
-    type: "number",
-    step: "0.1",
-    value: form.creditingRates?.guaranteed || '',
-    onChange: e => setNested('creditingRates', 'guaranteed', e.target.value)
-  })))), /*#__PURE__*/React.createElement("div", {
+  }, "Client-directed"))), (isULPlain || form.creditingMechanism === 'fixed') && (() => {
+    const mode = form._ulProjectionMode || 'current';
+    const isCurrent = mode === 'current';
+    const isGuaranteed = mode === 'guaranteed';
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("label", null, "Current Rate (%)", isCurrent ? ' ⚡' : ''), /*#__PURE__*/React.createElement("input", {
+      type: "number",
+      step: "0.1",
+      value: form.creditingRates?.current || '',
+      onChange: e => setNested('creditingRates', 'current', e.target.value),
+      style: isCurrent ? {
+        borderColor: 'var(--gold)',
+        background: 'rgba(201,169,110,.04)'
+      } : {}
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 9,
+        color: isCurrent ? 'var(--gold)' : 'var(--text3)'
+      }
+    }, isCurrent ? '⚡ drives projections' : 'Illustration rate')), /*#__PURE__*/React.createElement("div", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("label", null, "Guaranteed Rate (%)", isGuaranteed ? ' ⚡' : ''), /*#__PURE__*/React.createElement("input", {
+      type: "number",
+      step: "0.1",
+      value: form.creditingRates?.guaranteed || '',
+      onChange: e => setNested('creditingRates', 'guaranteed', e.target.value),
+      style: isGuaranteed ? {
+        borderColor: 'var(--green2)',
+        background: 'rgba(45,106,79,.04)'
+      } : {}
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 9,
+        color: isGuaranteed ? 'var(--green2)' : 'var(--text3)'
+      }
+    }, isGuaranteed ? '⚡ drives projections (stress test)' : 'Contractual floor')));
+  })()), /*#__PURE__*/React.createElement("div", {
     className: "grid-3"
   }, /*#__PURE__*/React.createElement("div", {
     className: "field"
@@ -76906,7 +77212,226 @@ function PolicyFormModal({
       fontSize: 10,
       color: 'var(--text3)'
     }
-  }, "Par WL / CI / retirement plans: typical 2\u20134.5% guaranteed + non-guaranteed bonus"))), (() => {
+  }, "Par WL / CI / retirement plans: typical 2\u20134.5% guaranteed + non-guaranteed bonus"))), !isILP && form.subType === 'Whole Life' && (() => {
+    const snapshots = Array.isArray(form.wlBiSnapshots) ? form.wlBiSnapshots : [];
+    const hasSnapshots = snapshots.length > 0;
+    const setSnap = (idx, key, val) => {
+      const next = [...snapshots];
+      next[idx] = {
+        ...(next[idx] || {}),
+        [key]: val
+      };
+      set('wlBiSnapshots', next);
+    };
+    const addSnap = () => set('wlBiSnapshots', [...snapshots, {
+      age: '65',
+      guar: '',
+      nonGuar: ''
+    }]);
+    const removeSnap = idx => set('wlBiSnapshots', snapshots.filter((_, i) => i !== idx));
+    if (!hasSnapshots) {
+      return /*#__PURE__*/React.createElement("div", {
+        style: {
+          marginTop: 8,
+          padding: '8px 12px',
+          background: 'var(--bg2)',
+          borderRadius: 6,
+          fontSize: 11,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 8
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          color: 'var(--text3)'
+        }
+      }, "Have BI document CV projections? Capture them for cross-check."), /*#__PURE__*/React.createElement("button", {
+        type: "button",
+        onClick: addSnap,
+        style: {
+          fontSize: 10,
+          padding: '4px 10px',
+          background: 'transparent',
+          border: '1px solid var(--border)',
+          borderRadius: 4,
+          color: 'var(--teal)',
+          cursor: 'pointer',
+          fontWeight: 600
+        }
+      }, "+ Add BI snapshot"));
+    }
+    const prem = parseFloat(form.annualPremium) || 0;
+    const premTermN = parseInt(form.premTerm) || 0;
+    const startAge = parseInt(form.premStartAge) || parseInt(form.ageAtEntry) || 30;
+    const totalPrem = form.premSingle ? prem : prem * premTermN;
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 8,
+        padding: 10,
+        background: 'color-mix(in oklch, var(--blue2) 4%, transparent)',
+        borderRadius: 8,
+        border: '1px solid color-mix(in oklch, var(--blue2) 18%, transparent)'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 8
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 10,
+        fontWeight: 700,
+        color: 'var(--blue2)',
+        textTransform: 'uppercase',
+        letterSpacing: '.5px'
+      }
+    }, "BI Document CV Snapshots"), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 9,
+        color: 'var(--text3)',
+        fontStyle: 'italic'
+      }
+    }, "Par WL projections at specific ages \u2014 guar + non-guar split")), snapshots.map((snap, idx) => {
+      const g = parseFloat(snap.guar) || 0;
+      const ng = parseFloat(snap.nonGuar) || 0;
+      const total = g + ng;
+      const ageN = parseInt(snap.age) || 0;
+      const yrs = Math.max(1, ageN - startAge);
+      let impYield = null;
+      if (total > 0 && totalPrem > 0 && yrs > 0) {
+        try {
+          const cf = [];
+          for (let y = 0; y <= yrs; y++) {
+            let v = 0;
+            if (form.premSingle) {
+              if (y === 0) v -= totalPrem;
+            } else if (y < premTermN) v -= prem;
+            if (y === yrs) v += total;
+            cf.push(v);
+          }
+          const irr = computeIRR(cf);
+          if (irr !== null && isFinite(irr)) impYield = (irr * 100).toFixed(2);
+        } catch (e) {}
+      }
+      return /*#__PURE__*/React.createElement("div", {
+        key: idx,
+        style: {
+          display: 'grid',
+          gridTemplateColumns: '70px 1fr 1fr 1fr auto',
+          gap: 6,
+          alignItems: 'end',
+          marginBottom: 6
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        className: "field",
+        style: {
+          margin: 0
+        }
+      }, /*#__PURE__*/React.createElement("label", {
+        style: {
+          fontSize: 9,
+          color: 'var(--text3)'
+        }
+      }, "Age"), /*#__PURE__*/React.createElement("input", {
+        type: "number",
+        value: snap.age || '',
+        onChange: e => setSnap(idx, 'age', e.target.value),
+        placeholder: "65",
+        style: {
+          fontSize: 11,
+          padding: '4px 6px'
+        }
+      })), /*#__PURE__*/React.createElement("div", {
+        className: "field",
+        style: {
+          margin: 0
+        }
+      }, /*#__PURE__*/React.createElement("label", {
+        style: {
+          fontSize: 9,
+          color: 'var(--text3)'
+        }
+      }, "Guaranteed CV ($)"), /*#__PURE__*/React.createElement("input", {
+        type: "number",
+        value: snap.guar || '',
+        onChange: e => setSnap(idx, 'guar', e.target.value),
+        placeholder: "from BI",
+        style: {
+          fontSize: 11,
+          padding: '4px 6px'
+        }
+      })), /*#__PURE__*/React.createElement("div", {
+        className: "field",
+        style: {
+          margin: 0
+        }
+      }, /*#__PURE__*/React.createElement("label", {
+        style: {
+          fontSize: 9,
+          color: 'var(--text3)'
+        }
+      }, "Non-Guar Bonus ($)"), /*#__PURE__*/React.createElement("input", {
+        type: "number",
+        value: snap.nonGuar || '',
+        onChange: e => setSnap(idx, 'nonGuar', e.target.value),
+        placeholder: "4.25%",
+        style: {
+          fontSize: 11,
+          padding: '4px 6px'
+        }
+      })), /*#__PURE__*/React.createElement("div", {
+        style: {
+          textAlign: 'center'
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 9,
+          color: 'var(--text3)'
+        }
+      }, "Total / IRR"), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 12,
+          fontWeight: 700,
+          color: 'var(--blue2)'
+        }
+      }, "$", total.toLocaleString()), impYield != null && /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 9,
+          color: 'var(--green2)'
+        }
+      }, impYield, "% p.a.")), /*#__PURE__*/React.createElement("button", {
+        type: "button",
+        onClick: () => removeSnap(idx),
+        style: {
+          fontSize: 10,
+          padding: '4px 6px',
+          background: 'transparent',
+          border: '1px solid var(--border)',
+          borderRadius: 4,
+          color: 'var(--red)',
+          cursor: 'pointer'
+        },
+        title: "Remove this snapshot"
+      }, "\xD7"));
+    }), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: addSnap,
+      style: {
+        fontSize: 10,
+        padding: '4px 10px',
+        background: 'transparent',
+        border: '1px dashed var(--border)',
+        borderRadius: 4,
+        color: 'var(--teal)',
+        cursor: 'pointer',
+        fontWeight: 600,
+        marginTop: 4
+      }
+    }, "+ Add another age snapshot"));
+  })(), (() => {
     const prem = parseFloat(form.annualPremium) || 0;
     const startAge = parseInt(form.premStartAge) || parseInt(form.ageAtEntry) || 0;
     const retAge = getRetirementAge(_cp, 65); // v2.0.3
