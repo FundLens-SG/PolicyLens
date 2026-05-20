@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.22-audit-bug-fixes-and-spi-section';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.23-dashboard-deps-review-button-fixes';
 // rc2.75.13: STALE SERVICE WORKER SELF-HEAL.
 // Background — FCs were hitting "Network Error — API calls are being blocked"
 // across Firefox/Edge/Chrome simultaneously. Console showed the OLD SW
@@ -866,9 +866,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.75.22';
+const APP_VERSION = 'v2.4.0-rc2.75.23';
 const APP_VERSION_DATE = '2026-05-21';
-const APP_VERSION_NAME = 'rc2.75.22 Audit fixes — endYield sync, SPI section, UL projection wiring + 8 more';
+const APP_VERSION_NAME = 'rc2.75.23 Per-tab diagnostic fixes — Dashboard reactivity + Review button';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1473,6 +1473,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.75.23',
+  date: '2026-05-21',
+  name: 'rc2.75.23 Per-tab diagnostic — Dashboard houseDefaults reactivity + Review button disabled state',
+  sections: [{
+    heading: 'A second-pass audit across non-PolicyFormModal tabs surfaced two verified bugs (other audit claims were checked and dismissed as false positives — see commit message for the dismissal list).',
+    items: ['FIX (Medium, reactivity) — Dashboard retirementLite useMemo now includes houseDefaults in its dependency array. Previously, when an FC edited firm-level Settings (inflation rate, CPF scheme, CPF plan, CPF start age), the Dashboard retirement-income chart kept using the OLD values from closure until something else (profile / policy edit) retriggered the memo. Now the chart updates immediately when Settings change.', 'FIX (Low, UX) — Review tab "Mark reviewed" button now visually disables (opacity 0.5, cursor not-allowed, label "✓ Reviewed") when the item.status === \'approved\'. Reachable via the "Show all" filter. Previously the button looked active and clicking did a silent no-op, confusing FCs who thought it didn\'t work.', 'DISMISSED (audit false positives, verified against source): #2 Clients tier-filter selection bleed (code correctly intersects selectedStates through visibleStates at line 30563), #3 Profile globalAssumptions not syncing to Dashboard (Dashboard reads via getRetirementAge / getInflationPct helpers which check clientProfile.globalAssumptions first, line 38555 / 38954), #8 Reset Client Data doesn\'t clear extract_cache (cache is keyed by source-file content hash, so a same-file re-import correctly replays the SAME extracted data regardless of client owner), #1 FX rate manual refresh button already exists in the dashboard (line 40548-40550 in the existing currency refresh path).', 'NET: rc2.75.20-22 closed every verified A1/B1 source-of-truth issue; rc2.75.23 closes the two non-form-modal items the per-tab static audit produced after eliminating false positives. The audit-claimed 15 items reduced to 2 real ones — a healthy signal that the rc2.75.20 → 23 sweep has caught most of the gaps.']
+  }]
+}, {
   version: 'v2.4.0-rc2.75.22',
   date: '2026-05-21',
   name: 'rc2.75.22 Audit-driven fixes — yield-field sync, SPI cash-management section, UL projection wiring, multi-scenario parity + 7 more',
@@ -49268,17 +49276,19 @@ function ReviewInboxTab() {
       }
     }, "Open policy"), /*#__PURE__*/React.createElement("button", {
       onClick: () => handlePrimary(item),
+      disabled: item.status === 'approved',
       style: {
         fontSize: 11,
         borderRadius: 8,
         border: '1px solid ' + tone.border,
-        background: tone.bg,
-        color: tone.color,
+        background: item.status === 'approved' ? 'var(--bg2)' : tone.bg,
+        color: item.status === 'approved' ? 'var(--text3)' : tone.color,
         padding: '6px 10px',
         fontWeight: 800,
-        cursor: 'pointer'
+        cursor: item.status === 'approved' ? 'not-allowed' : 'pointer',
+        opacity: item.status === 'approved' ? 0.5 : 1
       }
-    }, item.type === 'stale_extraction_mismatch' ? 'Restore' : item.action === 'retry_sync' ? 'Retry sync' : 'Mark reviewed')));
+    }, item.status === 'approved' ? '✓ Reviewed' : item.type === 'stale_extraction_mismatch' ? 'Restore' : item.action === 'retry_sync' ? 'Retry sync' : 'Mark reviewed')));
   })));
 }
 function ReviewSession({
@@ -51357,7 +51367,11 @@ function Dashboard() {
       cpfScheme,
       cpfStartAge
     };
-  }, [p, cvTimeline, retAge, age, monthlyIncome]);
+    // rc2.75.23: houseDefaults added to deps so firm-level Settings changes (inflation,
+    // cpfScheme, cpfPlan, cpfStartAge) immediately recompute the retirement chart.
+    // Previously these were read from closure without dep tracking, leaving the
+    // chart stale until a profile / policy edit happened to retrigger.
+  }, [p, cvTimeline, retAge, age, monthlyIncome, houseDefaults]);
 
   // ── PUBLISH TO WINDOW CACHE ──
   // The Visual PDF generator (in ReportTab, a different component) needs
