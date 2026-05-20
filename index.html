@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.18-mobile-app-tab-extraction';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.19-policy-form-quick-wins';
 // rc2.75.13: STALE SERVICE WORKER SELF-HEAL.
 // Background — FCs were hitting "Network Error — API calls are being blocked"
 // across Firefox/Edge/Chrome simultaneously. Console showed the OLD SW
@@ -866,9 +866,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.75.18';
+const APP_VERSION = 'v2.4.0-rc2.75.19';
 const APP_VERSION_DATE = '2026-05-21';
-const APP_VERSION_NAME = 'rc2.75.18 Mobile-app multi-tab extraction — sub-tab merge for Premium/Coverage/Policy Value';
+const APP_VERSION_NAME = 'rc2.75.19 Policy form quick wins: age auto-fill, CPF Life + Premium Waiver dropped, % input clip';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1473,6 +1473,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.75.19',
+  date: '2026-05-21',
+  name: 'rc2.75.19 Policy form quick wins — age auto-fill + CPF Life/Premium Waiver dropped + % clip fix',
+  sections: [{
+    heading: 'FC asked for friction reduction in policy add/edit — five direct fixes plus three redesign proposals for follow-up RCs',
+    items: ['FIX #1 — Inception Date now has bidirectional Age-at-Entry sync. Mirrors the existing Maturity Date ↔ Maturity Age pattern. When profile DOB is known: typing the age auto-fills the inception date (DOB + age years), or typing the date computes the age. Date only auto-fills when blank — never overwrites a manually-entered date. "= age 35 at entry (from DOB)" footnote when both sides agree.', 'FIX #2 — "CPF Life" removed from the Retirement sub-type dropdown. PolicyLens already has a built-in CPF Life estimation in the Dashboard retirement engine; letting FCs add CPF Life as a per-policy entry double-counts it. Legacy policies tagged CPF Life still render correctly — just can\'t be selected for new ones.', 'FIX #3 — "Premium Waiver" removed from the Protection sub-type dropdown. Premium Waiver is a RIDER (e.g. AIA Payor Benefit, PRUExtra Waiver) attached to a parent policy, never a standalone product. Was causing mis-classification when extraction emitted waiver-named products. The rider type=\'premium_waiver\' on the parent policy\'s riders[] array is unchanged — only the standalone-product selector option is gone.', 'FIX #4 — Fund allocation % input was clipping the trailing % sign at 3-digit values ("100%"). Widened input 52 → 64px, added explicit horizontal padding 8px, bumped flex gap 3 → 6. % sign now sits cleanly outside the input.', 'FIX #5 — Build-time check: anomaly detector still 72 anomalies (no regression). Schema compatibility: legacy CPF Life + Premium Waiver subTypes still recognised in display + analytics, just not selectable.', 'REDESIGN PROPOSALS deferred to next RC pending user choice:', '  • A. Estimated maturity value vs BI document values — currently both display (top: "$229k @ 3% yield estimated", bottom Advanced: "$350k guaranteed + $20k non-guaranteed = $370k IRR 10.94% per BI"). FC said "shouldn\'t it be either one?" Proposing 3 design options below.', '  • B. Fund-allocations override estimated returns silently — FC keys "estimated return 3%", then adds funds with their own growth rates, and the policy IRR jumps to the fund-weighted yield without an obvious explanation. Proposing 2 design options below.', '  • C. Smoke-test the same patterns on other product types (par WL, endowment limited-pay, retirement income, ILP) — verify the redesigns work across the form.', 'See user-facing chat reply for the design options. Once user picks A1/A2/A3 + B1/B2, I\'ll ship the chosen designs in rc2.75.20.']
+  }]
+}, {
   version: 'v2.4.0-rc2.75.18',
   date: '2026-05-21',
   name: 'rc2.75.18 Mobile-app multi-tab extraction — full Premium/Coverage/PolicyValue continuation',
@@ -3564,21 +3572,26 @@ const CATEGORIES = {
 };
 const SUB_TYPES = {
   // rc2.66: 'Premium Waiver' added to protection. Covers Payer Benefit / Premium Waiver
-  //   riders that waive premiums on payer's Death/TPD/CI events. Distinct from:
-  //     • Disability Income — PAYS monthly income on disability
-  //     • Critical Illness — pays lump sum on CI diagnosis
-  //     • Term Life — pays death benefit
-  //   Premium Waiver riders waive future premiums on multiple triggers (typically
-  //   Death + TPD + CI of the PAYER, not the insured). Common examples:
-  //     AIA Payor Benefit Rider · AIA Payor Benefit Comprehensive (PBC) Rider
-  //     Manulife Critical Care Waiver Rider · PRUExtra Waiver · PRUPayer Cover
-  //     Great Eastern Premium Waiver · HSBC Life Premium Waiver
-  //     Singlife Premium Waiver · China Life Enhanced Payer Benefit Rider
-  protection: ['Term Life', 'Whole Life', 'Universal Life (UL)', 'Indexed UL (IUL)', 'Variable UL (VUL)', 'Critical Illness', 'Early Critical Illness', 'Personal Accident', 'Disability Income', 'Long-term Care', 'ILP (Protection)', 'Premium Waiver'],
+  //   riders that waive premiums on payer's Death/TPD/CI events.
+  // rc2.75.18: 'Premium Waiver' REMOVED from selectable sub-types. It's a RIDER
+  //   that lives on a parent policy (Whole Life, Term Life, Endowment) — never
+  //   a standalone product. FC reported they kept seeing it in the sub-type
+  //   dropdown which led to mis-classification of waiver-named products. The
+  //   value is still RECOGNISED for legacy policies that have it stored, but
+  //   it no longer appears in the picker for new policies — they should be
+  //   added as a rider on the parent product. Rider type='premium_waiver' is
+  //   unchanged in the riders[] array.
+  protection: ['Term Life', 'Whole Life', 'Universal Life (UL)', 'Indexed UL (IUL)', 'Variable UL (VUL)', 'Critical Illness', 'Early Critical Illness', 'Personal Accident', 'Disability Income', 'Long-term Care', 'ILP (Protection)'],
   savings: ['Endowment', 'Lifetime Endowment', 'Education Plan', 'Short-term Endowment'],
   health: ['Integrated Shield Plan', 'Shield Rider', 'Hospital Income', 'CareShield Life / Supplement', 'ElderShield 300', 'ElderShield 400', 'Long-term Care'],
   investment: ['ILP (Investment)', 'Unit Trust', 'Single Premium Investment'],
-  retirement: ['Retirement Income (Par WL)', 'Annuity', 'CPF Life', 'Income Plan', 'Retirement'],
+  // rc2.75.18: 'CPF Life' REMOVED from selectable sub-types. PolicyLens has a
+  //   built-in CPF Life estimation elsewhere (Dashboard retirement engine
+  //   accounts for it without a per-policy entry). Letting FCs add CPF Life
+  //   as a "policy" double-counts it. Legacy policies tagged CPF Life remain
+  //   visible (rendered + classified correctly) but can't be created/edited
+  //   to that sub-type from the picker.
+  retirement: ['Retirement Income (Par WL)', 'Annuity', 'Income Plan', 'Retirement'],
   maternity: ['Maternity Coverage'],
   // rc2.54: cash_investments expanded for brokerage / robo-advisor cash products surfaced
   //   by the 2026-05-17 catalogue research run. "Cash Management" covers Endowus Cash Smart,
@@ -71886,11 +71899,74 @@ function PolicyFormModal({
     className: "field"
   }, /*#__PURE__*/React.createElement("label", null, "Inception Date", /*#__PURE__*/React.createElement(ConfidenceBadge, {
     field: "inceptionDate"
-  })), /*#__PURE__*/React.createElement("input", {
-    type: "date",
-    value: form.inceptionDate,
-    onChange: e => set('inceptionDate', e.target.value)
-  })), /*#__PURE__*/React.createElement("div", {
+  })), (() => {
+    const effDob = getProfileEffectiveDob(_cp);
+    const derivedAge = effDob && form.inceptionDate ? (() => {
+      const ms = new Date(form.inceptionDate).getTime() - effDob.getTime();
+      if (isNaN(ms) || ms <= 0) return '';
+      const yrs = Math.floor(ms / 31557600000);
+      return yrs > 0 && yrs < 100 ? String(yrs) : '';
+    })() : '';
+    const ageVal = form.ageAtEntry != null && form.ageAtEntry !== '' ? String(form.ageAtEntry) : form.premStartAge != null && form.premStartAge !== '' ? String(form.premStartAge) : derivedAge;
+    const handleAgeChange = newAge => {
+      set('ageAtEntry', newAge);
+      set('premStartAge', newAge);
+      if (!newAge) return;
+      const n = parseInt(newAge, 10);
+      if (!n || n < 0 || n > 100) return;
+      if (effDob && !form.inceptionDate) {
+        // Compute inception = DOB + n years. Keep DOB month/day.
+        // Only auto-fill when the date is BLANK so we don't
+        // overwrite a manually-entered date the FC wants to keep.
+        const idt = new Date(effDob);
+        idt.setFullYear(idt.getFullYear() + n);
+        const iso = idt.toISOString().slice(0, 10);
+        set('inceptionDate', iso);
+      }
+    };
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 4,
+        alignItems: 'stretch'
+      }
+    }, /*#__PURE__*/React.createElement("input", {
+      type: "date",
+      value: form.inceptionDate,
+      onChange: e => {
+        set('inceptionDate', e.target.value);
+      },
+      style: {
+        flex: '1 1 auto',
+        minWidth: 0
+      }
+    }), /*#__PURE__*/React.createElement("input", {
+      type: "number",
+      value: ageVal,
+      onChange: e => handleAgeChange(e.target.value),
+      placeholder: "age",
+      title: "Age at entry. With profile DOB known, auto-fills the inception date (DOB + age years) if the date is blank.",
+      min: "0",
+      max: "100",
+      style: {
+        width: 60,
+        fontSize: 11,
+        textAlign: 'center'
+      }
+    })), ageVal && effDob && form.inceptionDate && /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 9,
+        color: 'var(--text3)',
+        marginTop: 2
+      }
+    }, "= age ", ageVal, " at entry (from DOB)"), ageVal && !effDob && /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 9,
+        color: 'var(--orange)',
+        marginTop: 2
+      }
+    }, "No DOB in profile \u2014 age stored, date not auto-filled"));
+  })()), /*#__PURE__*/React.createElement("div", {
     className: "field"
   }, /*#__PURE__*/React.createElement("label", null, "Maturity Date", /*#__PURE__*/React.createElement(ConfidenceBadge, {
     field: "maturityDate"
@@ -77321,24 +77397,30 @@ function FundAllocationEditor({
     style: {
       display: 'flex',
       alignItems: 'center',
-      gap: 3,
+      gap: 6,
       flexShrink: 0
     }
   }, /*#__PURE__*/React.createElement("input", {
     value: a.pct,
     onChange: e => update(i, 'pct', e.target.value),
     placeholder: "%",
-    type: "number",
+    type: "number"
+    // rc2.75.18: widened from 52 → 64px and added explicit horizontal
+    // padding so 3-digit values ("100") don't crowd the trailing %
+    // sign sitting in the sibling span. Also bumped gap 3 → 6.
+    ,
     style: {
-      width: 52,
+      width: 64,
       textAlign: 'center',
       fontSize: 12,
-      fontWeight: 600
+      fontWeight: 600,
+      padding: '4px 8px'
     }
   }), /*#__PURE__*/React.createElement("span", {
     style: {
-      fontSize: 10,
-      color: 'var(--text3)'
+      fontSize: 11,
+      color: 'var(--text3)',
+      fontWeight: 600
     }
   }, "%")), /*#__PURE__*/React.createElement("button", {
     className: "btn-danger btn-sm",
