@@ -25179,6 +25179,65 @@ function App() {
   const [v22MigrationProgress, setV22MigrationProgress] = useState(null);
   const activeClientIdRef = useRef(activeClientId);
   useEffect(() => { activeClientIdRef.current = activeClientId; }, [activeClientId]);
+
+  // Phase 5 (CRMLens bridge): deep-link routing from CRMLens's "PolicyLens →"
+  // chip. CRMLens passes ?clientId=<id> and/or ?policyId=<id> on the URL.
+  // We pre-select that client on first mount once data is ready.
+  //   - clientId 'policylens:<uuid>' → strip the prefix
+  //   - clientId bare uuid → use as-is
+  //   - clientId 'crmlens:...' → not a client id, ignore
+  //   - policyId 'crmlens:<insurer>:<crm-id>' → if a loaded policy has that
+  //     row id, dispatch a highlight event the policy list can listen for
+  // No-op if no params are present, so existing entry paths are unchanged.
+  const pendingDeepLinkRef = useRef(null);
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const wantClientId = (params.get('clientId') || '').trim();
+      const wantPolicyId = (params.get('policyId') || '').trim();
+      if (!wantClientId && !wantPolicyId) return;
+      pendingDeepLinkRef.current = { clientId: wantClientId, policyId: wantPolicyId, applied: false, attempts: 0 };
+      console.log('[DeepLink] Pending deep-link from CRMLens:', { clientId: wantClientId || '(none)', policyId: wantPolicyId || '(none)' });
+    } catch (e) { console.warn('[DeepLink] URL parse failed:', e && e.message); }
+  }, []);
+  useEffect(() => {
+    const pending = pendingDeepLinkRef.current;
+    if (!pending || pending.applied) return;
+    pending.attempts++;
+    if (pending.attempts > 20) {
+      // Give up after ~20 dependency-driven retries to avoid an unbounded
+      // loop. Logs once; advisor can re-click the chip after the page settles.
+      console.warn('[DeepLink] Gave up after 20 retries — target not found in loaded data.');
+      pending.applied = true;
+      return;
+    }
+    // Resolve clientId variants.
+    if (pending.clientId) {
+      let id = pending.clientId;
+      if (id.indexOf('policylens:') === 0) id = id.slice('policylens:'.length);
+      if (id.indexOf('crmlens:') === 0) {
+        // Not a client id — fall through to policyId handling.
+      } else if (id) {
+        setActiveClientId(id);
+        pending.applied = true;
+        console.log('[DeepLink] Activated client from URL:', id);
+        return;
+      }
+    }
+    // policyId path — search loaded policies. If the policy doesn't belong to
+    // the currently-active client, this won't resolve until the right client
+    // is loaded. For Sprint 1 we just highlight if visible; full cross-client
+    // resolution is deferred.
+    if (pending.policyId && Array.isArray(policies)) {
+      const match = policies.find(p => p && p.id === pending.policyId);
+      if (match) {
+        try { window.dispatchEvent(new CustomEvent('policylens-highlight-policy', { detail: { policyId: pending.policyId } })); } catch (_) {}
+        pending.applied = true;
+        console.log('[DeepLink] Highlighted policy:', pending.policyId);
+      }
+    }
+  }, [policies, activeClientId]);
+
   // Phase 7: PolicyLens never returns from an OAuth redirect — the hub does.
   const [_isOAuthReturn] = useState(false);
 
