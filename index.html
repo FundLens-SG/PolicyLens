@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.17-live-discovery-and-menu-clip';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.18-mobile-app-tab-extraction';
 // rc2.75.13: STALE SERVICE WORKER SELF-HEAL.
 // Background — FCs were hitting "Network Error — API calls are being blocked"
 // across Firefox/Edge/Chrome simultaneously. Console showed the OLD SW
@@ -866,9 +866,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.75.17';
-const APP_VERSION_DATE = '2026-05-20';
-const APP_VERSION_NAME = 'rc2.75.17 Live Drive directory sync + mobile dropdown menu clipping fix';
+const APP_VERSION = 'v2.4.0-rc2.75.18';
+const APP_VERSION_DATE = '2026-05-21';
+const APP_VERSION_NAME = 'rc2.75.18 Mobile-app multi-tab extraction — sub-tab merge for Premium/Coverage/Policy Value';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1473,6 +1473,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.75.18',
+  date: '2026-05-21',
+  name: 'rc2.75.18 Mobile-app multi-tab extraction — full Premium/Coverage/PolicyValue continuation',
+  sections: [{
+    heading: 'Static smoke-test of a 146-photo zip (LEE SIEW HONG SHEENA portfolio across AIA / Prudential / Manulife mobile apps) — surfaces a class of bugs the rc2.75.3 funds-orphan rule didn\'t cover',
+    items: ['CONTEXT — FC uploaded 146 phone-camera photos taken in 80 seconds, capturing one client\'s policies across multiple insurer mobile apps. Each policy is shown across 4-5 TABS (Details / Premium / Coverage / Funds / Policy Value / Others). The Details tab has the product name; the OTHER tabs typically don\'t. rc2.75.3 already covered the Funds tab specifically, but Premium / Coverage / Policy Value tabs hit the same continuation pattern and weren\'t handled — they would emit as phantom policies with synthesized names (matching the failure that motivated rc2.75.3 in the first place).', 'FIX #1 — EXPANDED SUB-TAB CONTINUATION RULE to cover PREMIUM, COVERAGE, POLICY VALUE, OTHERS tabs (not just Funds). The prompt now describes each tab\'s typical signals and tells the AI to emit productName=\'\' + capture-what-you-see + let the merge step parent it to the Details tab\'s policy entry.', 'FIX #2 — UNIVERSAL TAB-CONTINUATION SIGNALS for the AI to detect any sub-tab: a tab bar near the top with the "Details / Premium / Coverage / Funds / Policy Value / Others" labels visible, a "Policy detail" header with no product name immediately below, OR a page dominated by ONE kind of data (only funds / only riders / only premium info / only surrender values).', 'FIX #3 — MOBILE-APP CHROME SUPPRESSION. Explicit rule that phone status bar text ("11:54", "29 March", "Tue 19 May", WiFi/battery icons), browser URL bar, tab labels themselves, app navigation buttons, "Google Lens" overlay, and the iOS Home Indicator must NEVER be extracted as policy fields. Phone-clock "29 March" was being mis-extracted as inceptionDate on Coverage-tab photos.', 'FIX #4 — RIDER SECTION RECOGNITION on Coverage tab. AIA mobile app shows a policy\'s coverages + riders as siblingsection blocks each with their own SA / dates: "PERMANENT TOTAL DISABLEMENT", "TCM/CHIROPRACTIC REIMBURSEMENT", "CPWP (TO AGE 100)", "ACHIEVER-CL Major Critical Illness", "TPD ON ACHIEVER", "EARLY CRITICAL PROTECTOR". Each was being emitted as a SEPARATE phantom policy. New rule: when multiple labeled sections appear on a Coverage tab without a clear parent product name on the page, emit ONE entry with riders[] populated, productName=\'\', let the merge step glue to the Details-tab parent.', 'FIX #5 — AIA-SPECIFIC RIDER NAMING. Concrete mappings for the AIA rider name patterns: CPWP / Critical Period Waiver of Premium → premium_waiver; <Name>-CL Major Critical Illness → ci; TPD ON <Name> → tpd; Early Critical Protector → eci; TCM/Chiropractic Reimbursement → acc_tcm; Accidental Reimbursement / Accidental Death+TPD tags on Personal Accident policies are BUILT-IN FEATURES of the PA policy (not separate riders) — keep on parent; Saver Premium is the savings sub-component of an ILP — not a rider.', 'FIX #6 — dedupePolicies weakNamePatterns expanded. Added regex matches for bare mobile-app tab names (details / premium / coverage / policy value / others) and bare rider-section labels (cpwp, *-cl, tpd on *, early critical protector, permanent total disablement, tcm/chiropractic reimbursement, accidental reimbursement, accidental death+tpd, saver premium, hospital income, surrender benefits/value, net asset value, investment value). Any policy emitted with one of these as its productName is now treated as a continuation page by the sequential-partial merger and gets attached to the most-recent compatible strong parent from the same insurer.', 'PREDICTED NET RESULT on the 146-photo zip: instead of ~146 phantom entries (one per photo), the FC should see roughly the actual policy count — about 6-10 real policies for LEE SIEW HONG SHEENA across AIA / Prudential / Manulife / iFAST, each with merged tabs (cashValue from Policy Value tab, fundAllocations from Funds tab, riders[] from Coverage tab, premium info from Premium tab, all attached to the productName+policyNumber from the Details tab).', 'NOT IN THIS RC — The dormant bundle-assembly pipeline (preclassifyImageStructure + assembleImageBundles, flag-gated behind localStorage.policylens_bundlePipeline) is the LONGER-term answer for this batch shape — it keeps each policy\'s 5 tabs in one batch so the AI sees them together rather than split across batches. Re-enabling it broadly would require validating the structural pre-classifier against this exact zip first. Out of scope for this RC.']
+  }]
+}, {
   version: 'v2.4.0-rc2.75.17',
   date: '2026-05-20',
   name: 'rc2.75.17 Live Drive directory sync + mobile dropdown menu clipping fix',
@@ -62701,6 +62709,52 @@ FUNDS-ONLY / SUB-TAB CONTINUATION PAGES (rc2.75.3, NARROW RULE): Mobile insuranc
 4. If the surrounding upload sequence contains a policy header page from the same insurer (same upload, same person), the cross-batch merge step will glue this funds breakdown onto that parent policy. You do NOT need to manually merge — return the funds-only entry with empty productName and the post-processor handles it.
 5. This rule applies ONLY to pages where productName is genuinely not visible AND fund holdings ARE visible AND no premium/SA/inception is on the page. For any normal policy page that has a product name plus a funds breakdown, extract normally — fund allocations and product name belong on the same entry.
 
+═══ MOBILE-APP TAB CONTINUATION (rc2.75.18, EXPANSION) ═══
+The rc2.75.3 rule above applied ONLY to the "Funds" tab. In practice the SAME continuation pattern hits these tabs too, because each tab is its own screen with the product name visible only on the "Details" tab:
+
+(a) PREMIUM TAB — usually shows: total premiums paid to date, payment mode (Annually/Monthly), payment method (Cash/Giro/Autopay), last premium due date, next premium due date. Frequently no productName / policyNumber. Treat as continuation: capture premiumAmount + premFrequency + paymentMethod + premiumEndDate + lastPremiumDueDate, set productName='', let the merge step glue it onto the parent policy from the Details tab.
+
+(b) COVERAGE TAB — usually shows the policy's coverages + riders as labeled sections, e.g.:
+    "PERMANENT TOTAL DISABLEMENT — Sum Assured SGD 150,000 — Effective 24 Mar 2014"
+    "TCM/CHIROPRACTIC REIMBURSEMENT — Sum Assured SGD 500"
+    "ACHIEVER — Sum Assured SGD 50,000"
+    "ACHIEVER-CL Major Critical Illness — Sum Assured SGD 50,000"
+    "TPD ON ACHIEVER Total Permanent Disability"
+    "CPWP (TO AGE 100)" / "EARLY CRITICAL PROTECTOR" / "SAVER PREMIUM" / "Critical Period Waiver of Premium"
+Each section is a RIDER, NOT a separate policy. Emit them ALL as items in the parent policy's riders[] array with the appropriate type (death / tpd / ci / eci / di / accidental / acc_tcm / premium_waiver / other) and the SA shown. If the Details tab isn't in this batch, return ONE entry with productName='', the riders[] populated, and let the merge step attach the riders to the parent extracted from the Details tab elsewhere. DO NOT emit each rider section as its own top-level policy.
+
+(c) POLICY VALUE TAB — usually shows: Surrender benefits / Surrender value (with date), Net asset value (with date), Investment value, contract delivery info. Frequently no productName / policyNumber. Treat as continuation: capture cashValue + surrenderValue + valueAsOf, set productName='', let the merge step glue onto the parent.
+
+(d) OTHERS TAB — varies by insurer (loan info, contact preferences, nominees). Almost never has policy fields. Usually emit zero policies from this page and use any visible names to enrich documentRole / people[] context.
+
+UNIVERSAL TAB-CONTINUATION SIGNALS — you're on a sub-tab when you see ANY of:
+- A tab bar near the top with labels like "Details / Premium / Coverage / Funds / Policy Value / Others" and ONE tab visually highlighted
+- A breadcrumb / back arrow + "Policy detail" header WITHOUT a product name immediately below the header
+- The page content is dominated by ONE kind of data (only funds, only riders, only surrender values, only premium info) and no product name or policy number appears in the active card
+When ANY of these signals are present and the productName is not clearly stated on this page, treat as continuation: capture what's on this page, set productName='' (empty), leave fields you can't see as null (not 0), and let the cross-batch merger handle parenting.
+
+═══ MOBILE-APP CHROME / STATUS BAR SUPPRESSION (rc2.75.18) ═══
+Mobile-app screenshots include phone chrome that is NOT policy content. NEVER extract these as policy fields:
+- iOS/Android status bar text at the very top: "11:54", "09:33", time + date like "Tue 19 May" or "29 March" + signal/WiFi/battery icons
+- Browser URL bar: "pruservices.prudential.com.sg", "mymanulife.com.sg" — these identify the insurer but are NOT policy names
+- Tab labels themselves: "Details", "Premium", "Coverage", "Funds", "Policy Value" — these are UI navigation, NOT policyName values
+- App navigation buttons: "<", "X", "≡", "Done", "▼" hamburger / dropdown chevrons
+- Bottom nav bar: "Home / Policies / Claims / Profile" tab icons
+- "Google Lens" overlay watermark when FC used Lens to capture
+- iOS Home Indicator pill at the very bottom
+A common failure mode is extracting "29 March" (a phone status bar date) as inceptionDate/maturityDate. ALWAYS verify the date came from a labeled field inside the policy content card ("Effective Date:", "Inception Date:", "Maturity Date:", "Cover Start Date:", "Last Priced Date:") before populating any date field.
+
+═══ AIA-SPECIFIC RIDER NAMING (rc2.75.18) ═══
+AIA mobile app shows rider sections with these naming patterns. Map to the riders[] array as follows:
+- "CPWP" or "Critical Period Waiver of Premium" → type:'premium_waiver', riderName:'CPWP'
+- "TPD ON <ProductName>" or "Total Permanent Disability" → type:'tpd'
+- "<ProductName>-CL" with "Major Critical Illness" label → type:'ci', riderName:'CL Critical Illness'
+- "Early Critical Protector" or "ECP" → type:'eci'
+- "Accidental Reimbursement" / "Accidental Death+TPD" — these are SUB-FEATURE TAGS on Personal Accident policies (e.g. AIA Solitaire PA shows them as tags under the product name). DO NOT create separate riders for them — the main PA policy already covers ADB+TPD+TCM as built-in features. Just set subType='Personal Accident' on the parent.
+- "TCM/Chiropractic Reimbursement" → type:'acc_tcm'
+- "Hospital Income" → type:'other', riderName:'Hospital Income'
+- "Saver Premium" → not a rider, it's the savings sub-component of an ILP — leave on the parent, do not extract separately
+
 CORE: insurer, productName, policyName, policyNumber, category (protection/savings/health/investment/retirement/maternity/cash_investments/other_assets), subType (Term Life/Whole Life/Universal Life (UL)/Indexed UL (IUL)/Variable UL (VUL)/Critical Illness/Personal Accident/Disability Income/Long-term Care/Endowment/Lifetime Endowment/Education Plan/Short-term Endowment/Integrated Shield Plan/Hospital Income/CareShield Life Supplement/ElderShield 300/ElderShield 400/ILP (Protection)/ILP (Investment)/Unit Trust/Retirement/Annuity/Maternity Coverage/Fixed Deposit/T-bill/Singapore Savings Bond/Corporate Bond/Money Market/Property/Stocks\/Equities/Gold\/Precious Metals/Fixed Coupon Note (FCN)/Equity Linked Note (ELN)/Options\/Futures/Cryptocurrency/Other), currency (default SGD), sumAssured (number), premiumAmount (number — the premium AS PAID, at whatever frequency it is billed. Do NOT convert or normalize. If document shows "$1,000 Monthly", return premiumAmount=1000. If document shows "$12,000 Annually", return premiumAmount=12000. If document shows "$50,000 Single Premium", return premiumAmount=50000. The frequency is captured in the separate premFrequency field below — NEVER multiply or divide the amount to match a different period), premFrequency (annual/monthly/single/unknown — MUST match the exact period of the premiumAmount value above. Singlife/SGFinDex portfolio reports have a "How Often You Pay" column — copy that verbatim: Monthly→monthly, Annually→annual, "Single Premium"→single. If unclear, use unknown), premiumStructure (Single Premium/Regular Premium/Limited Pay/Flexible Premium), paymentMethod (Cash/MediSave/SRS/MediSave+Cash/CPF OA/CPF SA)
 IMPORTANT: If document mentions CPFIS-OA, CPF-IS or CPF Investment Scheme, set paymentMethod to "CPF OA" or "CPF SA" accordingly. Standalone fund holdings (e.g. "Allianz Global High Payout", "First Sentier Bridge") without an insurance wrapper are category:investment, subType:"Unit Trust". If it mentions CPFIS, still category:investment subType:"Unit Trust".
 
@@ -64273,7 +64327,18 @@ If you cannot extract ANY policies from the image (blank page, irrelevant photo,
     // compatible preceding policy. This catches pages that only show
     // riders, values, fund tables, premiums, or charges and have no
     // usable policy number/product identity of their own.
-    const weakNamePatterns = [/^$/, /^policy$/, /^policy\s*(page|details?|schedule|summary|statement|values?)$/, /^(page|schedule|summary|statement|values?|premium|premiums|charges?|benefits?|riders?)$/, /^(fund|funds|fund allocation|fund allocations|investment allocation|investment allocations)$/, /^investment[- ]linked policy$/, /^life insurance policy$/, /^whole life plan$/, /^term life (plan|insurance)$/, /^insurance plan$/, /^ilp$/, /^annuity plan$/, /^endowment plan$/];
+    const weakNamePatterns = [/^$/, /^policy$/, /^policy\s*(page|details?|schedule|summary|statement|values?|value)$/, /^(page|schedule|summary|statement|values?|premium|premiums|charges?|benefits?|riders?)$/, /^(fund|funds|fund allocation|fund allocations|investment allocation|investment allocations)$/, /^investment[- ]linked policy$/, /^life insurance policy$/, /^whole life plan$/, /^term life (plan|insurance)$/, /^insurance plan$/, /^ilp$/, /^annuity plan$/, /^endowment plan$/,
+    // rc2.75.18: mobile-app TAB names that the AI sometimes emits as
+    // productName when it can't read a real product name on the current
+    // tab page. "Details" / "Premium" / "Coverage" / "Funds" / "Policy
+    // Value" / "Others" are UI tab labels, never real product names.
+    /^(details|premium|coverage|policy\s*value|others?)$/,
+    // rc2.75.18: bare rider-section labels that appear on AIA Coverage
+    // tab pages — should be RIDERS on the parent policy, not standalone
+    // policies. Catches "CPWP", "Achiever-CL", "TPD on Achiever",
+    // "Early Critical Protector", "PTD" (Permanent Total Disablement),
+    // "TCM/Chiropractic Reimbursement", etc. emitted with no parent name.
+    /^cpwp(\s*\(to\s*age\s*\d+\))?$/, /^[a-z]+-cl(\s+major\s+critical\s+illness)?$/, /^tpd\s+on\s+[a-z0-9]+/, /^early\s+critical\s+protector$/, /^permanent\s+total\s+disablement$/, /^tcm[\s\/]+chiropractic\s+reimbursement$/, /^accidental\s+(reimbursement|death(\+tpd)?)$/, /^saver\s+premium$/, /^hospital\s+income$/, /^surrender\s+(benefits?|value)$/, /^net\s+asset\s+value$/, /^investment\s+value$/];
     // rc2.75.3: regex that catches the AI's synthesized "<insurer><type> — SGD <amount>"
     // pattern emitted when the source is a mobile-app Funds tab with no real product
     // name visible. Examples:
