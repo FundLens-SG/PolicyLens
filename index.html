@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.15-drive-sync-robustness';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.16-drive-email-visibility';
 // rc2.75.13: STALE SERVICE WORKER SELF-HEAL.
 // Background — FCs were hitting "Network Error — API calls are being blocked"
 // across Firefox/Edge/Chrome simultaneously. Console showed the OLD SW
@@ -866,9 +866,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.75.15';
+const APP_VERSION = 'v2.4.0-rc2.75.16';
 const APP_VERSION_DATE = '2026-05-20';
-const APP_VERSION_NAME = 'rc2.75.15 Drive Sync robustness — direct OAuth reconnect + mismatch banner + login_hint';
+const APP_VERSION_NAME = 'rc2.75.16 Drive Sync visibility — connected Google email surfaced in chrome';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1473,6 +1473,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.75.16',
+  date: '2026-05-20',
+  name: 'rc2.75.16 Drive Sync visibility — connected Google email surfaced in chrome + hub login_hint',
+  sections: [{
+    heading: 'Follow-ups #2 and #3 from the Drive Sync sweep — let FCs SEE which Google account they\'re synced to, and let other tools reuse the hub OAuth fix',
+    items: ['NEW — _fetchDriveConnectedEmail() helper calls drive-auth-dev mode=status to read the Google email actually associated with the stored refresh_token, plus the hub email, granted scopes, last_verified_at, and the server-side mismatch flag. Cached in window.__policylensDriveConnectedEmail + dispatched as a policylens-drive-connected-email event so any component can subscribe.', 'NEW — Connected email seeded on Drive boot (right after the initial pingDriveAPI succeeds) AND refreshed alongside the periodic 50-minute token refresh. Always-fresh data without an extra cadence.', 'NEW — DriveStatusChip tooltip now reads "Drive: connected as <google email> — click for Settings" when known. When the chip\'s status maps to "connected" AND a Google email is in cache, the local-part of the email (truncated to 14 chars) renders inline next to the chip text: e.g. "● Drive · john". FCs can spot wrong-account binds from the header at a glance, without opening the Sync Activity dropdown.', 'NEW — Mismatch state in DriveStatusChip overrides the chip\'s color to red (vs the gold "session expired" warn). Removes the visual ambiguity between "you need to reconnect" (gold) and "Drive is connected to the WRONG account" (red).', 'NEW — SyncStatusPill dropdown shows "Connected as: <google email>" prominently at the top in a teal-tinted panel. When mismatched, replaces with a red "Account mismatch" panel showing BOTH the hub email and the Drive Google email, with a hint to use the red banner to fix.', 'NEW (ckgtools repo) — signInWithGoogle() in src/lib/auth.ts now accepts a loginHint parameter that maps to Google OAuth\'s login_hint query param. Pre-selects the account in the picker so FCs with multiple Google accounts don\'t accidentally pick the wrong one. include_granted_scopes is auto-added when forceConsent+loginHint are combined so prior scopes survive the re-consent.', 'NEW (ckgtools repo) — Hub home page (src/home.ts) handles ?reconnect=drive&hint=<email>&return=<tool-url> query params. When a signed-in FC lands at /?reconnect=drive, the hub immediately calls signInWithGoogle({forceConsent:true, loginHint, redirectTo: return}) so they end up back on the original tool with a fresh re-grant. Same-origin + /tools/ path validation on the return URL prevents open-redirect abuse. The hint is only honored if it matches the hub-authenticated email (anti-spoof). Lets FundLens / AutoDial / Report-Builder share the same Drive-reconnect fix that PolicyLens has via direct OAuth — they just redirect to the hub URL with the right params.', 'NEW (ckgtools repo) — sql/34_drive_mismatch_audit.sql adds three owner-readable views on ckgtools-admin: drive_mismatch_summary_7d (FCs hitting Google account mismatches in the last 7d, count + distinct emails + first/last detection), drive_mismatch_summary_30d (same shape, 30-day window for slow-cadence FCs), drive_refresh_failures_30d (failed refreshes split by invalid-token vs upstream-5xx). Owner can query these in Supabase Studio to spot which FCs need outreach. Run once on ckgtools-admin via the SQL editor.', 'NET — Three layers of FC-friendly Drive-account hygiene: (1) the connected email is now visible in the chip and dropdown without any clicks, (2) mismatches show as red across the chip + banner + dropdown rather than a transient toast, (3) the owner has SQL views to monitor mismatch frequency.']
+  }]
+}, {
   version: 'v2.4.0-rc2.75.15',
   date: '2026-05-20',
   name: 'rc2.75.15 Drive Sync robustness — direct OAuth re-grant + persistent mismatch banner',
@@ -25148,6 +25156,73 @@ async function _refreshDriveTokenViaEdgeFn() {
   }
 }
 
+// rc2.75.15: cached "what Google account is the Drive token actually for"
+// state. Populated by _fetchDriveConnectedEmail() which calls drive-auth-dev
+// mode=status. Surfaced in the DriveStatusChip title + SyncStatusPill dropdown
+// so FCs can see at a glance which Google account they're synced to —
+// catches the wrong-Google-account class of bug BEFORE it causes a mismatch
+// at refresh time. Keys:
+//   google: the Google email actually on the stored refresh_token
+//   hub: the CKGTools-authenticated email (== window._user.email)
+//   mismatch: true if the two differ (server-side determination)
+//   verifiedAt: when the Edge Function last verified the Google email
+//   scopes: array of granted OAuth scopes
+//   updatedAt: when this cache was last populated (local)
+let _driveConnectedEmailCache = null;
+async function _fetchDriveConnectedEmail(opts) {
+  try {
+    const s = window._SB || (typeof getSB === 'function' ? getSB() : null);
+    if (!s) return null;
+    const {
+      data,
+      error
+    } = await s.functions.invoke('drive-auth-dev', {
+      body: {
+        mode: 'status'
+      }
+    });
+    if (error) {
+      console.warn('[Drive] _fetchDriveConnectedEmail: Edge Function error:', error.message || error);
+      return null;
+    }
+    if (!data) return null;
+    const cache = {
+      google: data.google_email || '',
+      hub: data.hub_email || window._user?.email || '',
+      connected: !!data.connected,
+      mismatch: !!data.mismatch,
+      scopes: Array.isArray(data.granted_scopes) ? data.granted_scopes : [],
+      verifiedAt: data.last_verified_at || null,
+      lastRefreshAt: data.last_refresh_at || null,
+      updatedAt: Date.now()
+    };
+    _driveConnectedEmailCache = cache;
+    try {
+      window.__policylensDriveConnectedEmail = cache;
+      window.dispatchEvent(new CustomEvent('policylens-drive-connected-email', {
+        detail: cache
+      }));
+    } catch (_) {}
+    // If the server reports mismatch, route through the existing surface so the
+    // red banner appears even if the FC hasn't triggered a refresh yet.
+    if (cache.mismatch) {
+      try {
+        _surfaceGoogleCoreMismatch({
+          mismatch: true,
+          googleEmail: cache.google,
+          hubEmail: cache.hub,
+          google_email: cache.google,
+          hub_email: cache.hub
+        });
+      } catch (_) {}
+    }
+    return cache;
+  } catch (e) {
+    console.warn('[Drive] _fetchDriveConnectedEmail: threw:', e?.message || e);
+    return null;
+  }
+}
+
 // _readDriveTokenFromHubSession — boot-path helper. Reads provider_token
 // directly from the session (fast path, no network), falling back to the
 // Edge Function refresh if absent or about to expire. Returns the access
@@ -29172,6 +29247,13 @@ function App() {
         }).then(() => {
           console.log('[Drive] Boot: connected');
           setDriveStatus('connected');
+          // rc2.75.15: seed the connected-Google-email cache on boot so the
+          // chip tooltip + SyncStatusPill dropdown have it ready. Best-effort
+          // — runs after status is set so a slow Edge Function doesn't gate
+          // the connected indicator.
+          try {
+            if (typeof _fetchDriveConnectedEmail === 'function') _fetchDriveConnectedEmail().catch(() => {});
+          } catch (_) {}
         }).catch(async e => {
           const mapped = mapDriveError(e);
           console.warn('[Drive] Boot: ping/ensureFolder failed:', mapped.kind, '|', mapped.message);
@@ -29228,6 +29310,13 @@ function App() {
         } else {
           console.warn('[Drive] Periodic refresh: failed (no token returned)');
         }
+        // rc2.75.15: refresh the connected-Google-email cache alongside the
+        // periodic token refresh. Lets the DriveStatusChip tooltip + the
+        // SyncStatusPill dropdown stay accurate even on long-lived sessions
+        // where the FC may have re-granted Drive in another tab.
+        try {
+          if (typeof _fetchDriveConnectedEmail === 'function') _fetchDriveConnectedEmail().catch(() => {});
+        } catch (_) {}
       } catch (e) {
         console.warn('[Drive] Periodic refresh threw:', e?.message || e);
       }
@@ -34242,12 +34331,32 @@ function SyncStatusPill({
   const [, force] = useState(0);
   const [open, setOpen] = useState(false);
   const [activity, setActivity] = useState([]);
+  // rc2.75.15: subscribe to the connected-Google-email cache + mismatch event
+  // so the dropdown surfaces "Account: xyz@gmail.com" prominently above the
+  // activity log. FCs can spot wrong-account binds without leaving the
+  // current view.
+  const [connInfo, setConnInfo] = useState(() => typeof window !== 'undefined' && window.__policylensDriveConnectedEmail || null);
+  const [mismatchInfo, setMismatchInfo] = useState(() => typeof window !== 'undefined' && window.__policylensDriveMismatch || null);
   useEffect(() => {
     const h = () => force(n => n + 1);
+    const onEmail = e => setConnInfo(e?.detail || typeof window !== 'undefined' && window.__policylensDriveConnectedEmail || null);
+    const onMismatch = e => setMismatchInfo(e?.detail || null);
     window.addEventListener('policylens-sync-status-change', h);
+    try {
+      window.addEventListener('policylens-drive-connected-email', onEmail);
+    } catch (_) {}
+    try {
+      window.addEventListener('policylens-drive-mismatch', onMismatch);
+    } catch (_) {}
     const iv = setInterval(h, 10000);
     return () => {
       window.removeEventListener('policylens-sync-status-change', h);
+      try {
+        window.removeEventListener('policylens-drive-connected-email', onEmail);
+      } catch (_) {}
+      try {
+        window.removeEventListener('policylens-drive-mismatch', onMismatch);
+      } catch (_) {}
       clearInterval(iv);
     };
   }, []);
@@ -34503,7 +34612,96 @@ function SyncStatusPill({
       fontSize: 14,
       cursor: 'pointer'
     }
-  }, "x")), (syncPhase === 'failed' || driveState?.pendingError) && /*#__PURE__*/React.createElement("div", {
+  }, "x")), (() => {
+    const isMismatch = !!mismatchInfo && (mismatchInfo.mismatch || _driveRefreshBlockedReason === 'account-mismatch');
+    const google = (connInfo?.google || mismatchInfo?.google_email || '').trim();
+    const hub = (connInfo?.hub || mismatchInfo?.hub_email || typeof window !== 'undefined' && window._user?.email || '').trim();
+    if (!hub && !google) return null;
+    if (isMismatch) {
+      return /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 10,
+          color: 'var(--red, #c97b7b)',
+          background: 'rgba(239,83,80,.08)',
+          border: '1px solid rgba(239,83,80,.2)',
+          borderRadius: 7,
+          padding: 7,
+          marginBottom: 8,
+          lineHeight: 1.4
+        }
+      }, /*#__PURE__*/React.createElement("strong", null, "\u26A0 Account mismatch"), hub && /*#__PURE__*/React.createElement("div", {
+        style: {
+          marginTop: 3,
+          color: 'var(--text2)'
+        }
+      }, "CKGTools: ", /*#__PURE__*/React.createElement("code", {
+        style: {
+          fontFamily: 'ui-monospace, monospace',
+          fontSize: 9.5
+        }
+      }, hub)), google && /*#__PURE__*/React.createElement("div", {
+        style: {
+          color: 'var(--text2)'
+        }
+      }, "Drive: ", /*#__PURE__*/React.createElement("code", {
+        style: {
+          fontFamily: 'ui-monospace, monospace',
+          fontSize: 9.5
+        }
+      }, google)), /*#__PURE__*/React.createElement("div", {
+        style: {
+          marginTop: 3,
+          fontSize: 9,
+          color: 'var(--text3)'
+        }
+      }, "Use the red banner at the top to fix."));
+    }
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10,
+        color: 'var(--text2)',
+        background: 'rgba(91,168,160,.06)',
+        border: '1px solid rgba(91,168,160,.18)',
+        borderRadius: 7,
+        padding: 7,
+        marginBottom: 8,
+        lineHeight: 1.4
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontWeight: 700,
+        color: 'var(--teal)',
+        fontSize: 9.5,
+        letterSpacing: '.05em',
+        textTransform: 'uppercase',
+        marginBottom: 3
+      }
+    }, "Connected as"), google ? /*#__PURE__*/React.createElement("code", {
+      style: {
+        fontFamily: 'ui-monospace, monospace',
+        fontSize: 10,
+        wordBreak: 'break-all',
+        color: 'var(--text)'
+      }
+    }, google) : /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: 'var(--text3)',
+        fontStyle: 'italic',
+        fontSize: 9.5
+      }
+    }, "Verifying\u2026"), hub && google && hub !== google && /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 3,
+        fontSize: 9,
+        color: 'var(--text3)'
+      }
+    }, "Hub: ", /*#__PURE__*/React.createElement("code", {
+      style: {
+        fontFamily: 'ui-monospace, monospace',
+        fontSize: 9
+      }
+    }, hub)));
+  })(), (syncPhase === 'failed' || driveState?.pendingError) && /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 10,
       color: 'var(--red)',
@@ -35056,42 +35254,94 @@ function DriveStatusChip() {
     setTab
   } = useContext(AppCtx);
   const [, force] = useState(0);
-  // Subscribe to status changes from the driveClient
+  // rc2.75.15: subscribe to drive-connected-email cache updates so the chip
+  // tooltip reflects the actually-connected Google account, not just the
+  // generic "Drive: connected" line. Also re-renders when a mismatch is
+  // detected so the chip can warn distinctly from a normal disconnect.
+  const [connInfo, setConnInfo] = useState(() => typeof window !== 'undefined' && window.__policylensDriveConnectedEmail || null);
+  const [mismatchInfo, setMismatchInfo] = useState(() => typeof window !== 'undefined' && window.__policylensDriveMismatch || null);
   useEffect(() => {
     const unsub = driveClient.onStatusChange(() => force(n => n + 1));
-    return unsub;
+    const onEmail = e => setConnInfo(e?.detail || typeof window !== 'undefined' && window.__policylensDriveConnectedEmail || null);
+    const onMismatch = e => setMismatchInfo(e?.detail || null);
+    try {
+      window.addEventListener('policylens-drive-connected-email', onEmail);
+    } catch (_) {}
+    try {
+      window.addEventListener('policylens-drive-mismatch', onMismatch);
+    } catch (_) {}
+    return () => {
+      try {
+        unsub();
+      } catch (_) {}
+      try {
+        window.removeEventListener('policylens-drive-connected-email', onEmail);
+      } catch (_) {}
+      try {
+        window.removeEventListener('policylens-drive-mismatch', onMismatch);
+      } catch (_) {}
+    };
   }, []);
   const hidden = driveClient.isLocalOnly();
   const status = driveClient.getStatus();
+  const isMismatch = !!mismatchInfo && (mismatchInfo.mismatch || _driveRefreshBlockedReason === 'account-mismatch');
+  const googleEmail = (connInfo?.google || mismatchInfo?.google_email || '').trim();
+  const hubEmail = (connInfo?.hub || typeof window !== 'undefined' && window._user?.email || '').trim();
+  // Tooltip text — rc2.75.15 surfaces both the hub email and the actually-
+  // connected Google email when known, so FCs can spot wrong-account binds
+  // without opening the Sync Activity dropdown.
+  const buildTitle = () => {
+    if (isMismatch) {
+      const parts = ['⚠ Drive account mismatch'];
+      if (hubEmail) parts.push('CKGTools: ' + hubEmail);
+      if (googleEmail) parts.push('Drive: ' + googleEmail);
+      parts.push('Click to fix in Settings');
+      return parts.join(' — ');
+    }
+    if (status === 'connected') {
+      return googleEmail ? 'Drive: connected as ' + googleEmail + ' — click for Settings' : 'Drive: connected — click for Settings';
+    }
+    if (status === 'reconnect-needed') return 'Drive: session expired — click to reconnect in Settings';
+    return 'Drive: not connected — click to set up in Settings';
+  };
   const map = {
     'disconnected': {
       icon: '○',
       label: 'Drive',
       color: 'var(--text3)',
       bg: 'var(--bg3)',
-      border: 'var(--border)',
-      title: 'Drive: not connected — click to set up in Settings'
+      border: 'var(--border)'
     },
     'connected': {
       icon: '●',
       label: 'Drive',
       color: 'var(--teal)',
       bg: 'rgba(91,168,160,.1)',
-      border: 'rgba(91,168,160,.3)',
-      title: 'Drive: connected (Phase A is dormant — sync wires in v2.1.0-beta)'
+      border: 'rgba(91,168,160,.3)'
     },
     'reconnect-needed': {
       icon: '⚠',
       label: 'Drive',
       color: 'var(--gold)',
       bg: 'var(--gold-dim)',
-      border: 'color-mix(in oklch, var(--gold) 49%, transparent)',
-      title: 'Drive: session expired — click to reconnect in Settings'
+      border: 'color-mix(in oklch, var(--gold) 49%, transparent)'
     }
   };
-  const m = map[status] || map['disconnected'];
+  // rc2.75.15: mismatch overrides the underlying status visual — render red
+  // to distinguish from a "session expired" gold warn.
+  const m = isMismatch ? {
+    icon: '⚠',
+    label: 'Drive',
+    color: 'var(--red, #c97b7b)',
+    bg: 'rgba(239,83,80,.08)',
+    border: 'rgba(239,83,80,.25)'
+  } : map[status] || map['disconnected'];
+  // When connected with a known Google email, render the short local part
+  // inline so FCs see the account at a glance (e.g. "● Drive · john").
+  const localPart = googleEmail ? googleEmail.split('@')[0] : '';
+  const inlineHint = status === 'connected' && !isMismatch && localPart ? ' · ' + localPart.slice(0, 14) : '';
   return React.createElement('span', {
-    title: m.title,
+    title: buildTitle(),
     onClick: hidden ? undefined : () => setTab('settings'),
     style: {
       display: hidden ? 'none' : 'inline-flex',
@@ -35107,7 +35357,7 @@ function DriveStatusChip() {
       flexShrink: 0,
       cursor: hidden ? 'default' : 'pointer'
     }
-  }, m.icon + ' ' + m.label);
+  }, m.icon + ' ' + m.label + inlineHint);
 }
 
 // ── v2.2.0-rc1: Repository subtab wrapper ──
