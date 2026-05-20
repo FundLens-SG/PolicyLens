@@ -1,4 +1,4 @@
-const SW_VERSION = 'v2.4.0-rc2.75.19-policy-form-quick-wins';
+const SW_VERSION = 'v2.4.0-rc2.75.20-maturity-tabs-and-returns-override';
 const DB_NAME = 'PolicyLensSW';
 const DB_VERSION = 1;
 const SESSION_STORE = 'sessions';

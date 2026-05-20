@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.19-policy-form-quick-wins';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.20-maturity-tabs-and-returns-override';
 // rc2.75.13: STALE SERVICE WORKER SELF-HEAL.
 // Background — FCs were hitting "Network Error — API calls are being blocked"
 // across Firefox/Edge/Chrome simultaneously. Console showed the OLD SW
@@ -866,9 +866,9 @@ const {
 } = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.75.19';
+const APP_VERSION = 'v2.4.0-rc2.75.20';
 const APP_VERSION_DATE = '2026-05-21';
-const APP_VERSION_NAME = 'rc2.75.19 Policy form quick wins: age auto-fill, CPF Life + Premium Waiver dropped, % input clip';
+const APP_VERSION_NAME = 'rc2.75.20 Maturity-value tabs (A1) + ILP returns override (B1) + multi-scenario BI capture';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1473,6 +1473,14 @@ function getInitialPolicyLensTab() {
   return 'dashboard';
 }
 const CHANGELOG = [{
+  version: 'v2.4.0-rc2.75.20',
+  date: '2026-05-21',
+  name: 'rc2.75.20 Maturity-value tabs (A1) + ILP returns override (B1) + multi-scenario BI capture',
+  sections: [{
+    heading: 'FC chose A1 + B1 from the rc2.75.19 redesign proposals — these ship the chosen patterns plus multi-scenario BI option (a) and source-flag inference',
+    items: ['A1 — TABBED MATURITY VALUE CARD on Endowment / Savings products. One card with two tabs: "Quick estimate" (yield-based calculator using endEstYield + premium + term) and "BI document values" (guaranteed + non-guaranteed inputs with computed IRR). Only one view is visible at a time — solves the "shouldn\'t it be either one?" complaint from the rc2.75.19 redesign brief. Default tab driven by inferMaturityValueSource(): if endGuaranteedCV/endNonGuarBonus populated → BI tab; otherwise Estimated. Each tab shows the OTHER source\'s value as a small caption with a one-click button to switch — no information lost, just made explicit which is authoritative. Covers all endSubtype variants (Limited Pay / Full Pay / Lifetime Endowment / par WL-style) through the same tabbed card.', 'A1 multi-scenario — SG MAS BI projections typically show BOTH 3.0% (lower) and 4.25% (upper) scenarios. Picked design option (a): UPPER scenario stays primary (endNonGuarBonus, big number), 3% scenario gated behind a tiny "+ Show 3% scenario" link in the BI tab. Clicking the link reveals a compact input for endNonGuarPessimistic (the lower-scenario bonus). No visual clutter when the FC just wants the headline number; full MAS-compliant view available on demand.', 'B1 — ILP RETURNS OVERRIDE TOGGLE. When fundAllocations[] is populated, ilpGrowth + ilpDivYield + ilpMgmtFee become READ-ONLY with explicit "⚡ Computed from N funds" badge and an "Override →" button. Clicking Override flips to "✎ Manual override" mode where the fields become editable and the fund-weighted onSyncWeighted callback STOPS firing (respects _returnOverride flag). Solves the "keys estimated return, then keys funds, returns silently jump" complaint from the rc2.75.19 brief. The mode banner makes the source-of-truth always visible — no more silent overwrites.', 'SOURCE-FLAG INFERENCE — Two pure functions added next to enhanceExtractedPolicyIntelligence: inferMaturityValueSource(p) returns "bi-document" / "estimated" / "none" based on which fields are populated; inferReturnSource(p) returns "fund-weighted" / "manual" based on fundAllocations + _returnOverride. These compute _maturityValueSource and _returnSource hints during extraction. No schema migration needed — they also work as live functions on existing saved policies, so the form\'s maturityTab initializer picks the right default for both freshly-extracted AND historically-saved policies.', 'EXTRACT_PROMPT updated — explicit guidance for SG savings / endowment maturity values: endGuaranteedCV = CONTRACTUAL guaranteed lower bound only (no bonus); endNonGuarBonus = the 4.25% (upper) scenario non-guaranteed bonus; endNonGuarPessimistic = the 3.0% (lower) scenario bonus, leave null when BI only shows one scenario. Tells the AI NOT to collapse the two scenarios into a single average. Schema also extends responseSchema with endNonGuarBonus + endNonGuarPessimistic as NUMBER/nullable fields with the same scenario semantics.', 'WHY: rc2.75.19 surfaced two parallel friction patterns — one for savings products where two competing maturity numbers (estimated vs BI) showed at once, and one for ILPs where typed return assumptions were silently overwritten by fund weighting. Both were "shouldn\'t this be either-or with a clear toggle?" problems. The tabbed UI for maturity and the explicit override banner for ILP both surface the same answer: ONE authoritative view at a time, the other accessible via an obvious one-click toggle. The source-flag inference glue lets the form re-open existing policies with the right default tab without storing redundant denormalised state.']
+  }]
+}, {
   version: 'v2.4.0-rc2.75.19',
   date: '2026-05-21',
   name: 'rc2.75.19 Policy form quick wins — age auto-fill + CPF Life/Premium Waiver dropped + % clip fix',
@@ -4920,6 +4928,32 @@ function smartOverridePolicyFromText(policy) {
   }
   return policy;
 }
+
+// rc2.75.20: pure-function source-flag inference helpers.
+// These let downstream consumers (notably the PolicyFormModal's tab toggle)
+// pick the right default view without storing redundant denormalised flags.
+// They're called inside enhanceExtractedPolicyIntelligence so extraction output
+// already has _maturityValueSource / _returnSource hints, but they also work
+// as live functions on existing saved policies (no migration required).
+function inferMaturityValueSource(p = {}) {
+  // Three states:
+  //   'bi-document' — extractor or FC entered guaranteed/non-guaranteed values from BI
+  //   'estimated'   — only the yield-based estimated maturity is present
+  //   'none'        — neither source available; fall back to estimated default
+  const hasBi = parseFloat(p?.endGuaranteedCV) > 0 || parseFloat(p?.endNonGuarBonus) > 0 || parseFloat(p?.endNonGuarPessimistic) > 0;
+  const hasEstimate = parseFloat(p?.estimatedMaturity) > 0 || parseFloat(p?.endEstYield) > 0;
+  if (hasBi) return 'bi-document';
+  if (hasEstimate) return 'estimated';
+  return 'none';
+}
+function inferReturnSource(p = {}) {
+  // Two states:
+  //   'fund-weighted' — fundAllocations populated; ilpGrowth/ilpDivYield are computed
+  //   'manual'        — user-entered ilpGrowth/ilpDivYield, no funds (or override flag set)
+  const hasFunds = Array.isArray(p?.fundAllocations) && p.fundAllocations.length > 0;
+  if (hasFunds && !p?._returnOverride) return 'fund-weighted';
+  return 'manual';
+}
 function enhanceExtractedPolicyIntelligence(policy = {}, existingPolicies = []) {
   // rc2e.47: title-case ALL-CAPS person-name fields BEFORE downstream
   // fingerprinting / evidence so every consumer sees clean values.
@@ -4943,6 +4977,11 @@ function enhanceExtractedPolicyIntelligence(policy = {}, existingPolicies = []) 
   });
   next.documentType = normalizeDocumentTriageType(next.documentType) || next.documentType || null;
   next._policyFingerprint = next._policyFingerprint || buildPolicyIdentityFingerprint(next);
+  // rc2.75.20: hint downstream views which source-of-truth is authoritative
+  // for maturity values and projected returns. Pure functions of existing
+  // fields — no schema migration needed for existing saved policies.
+  next._maturityValueSource = inferMaturityValueSource(next);
+  next._returnSource = inferReturnSource(next);
   next._documentTriage = ensureDocumentTriageObject(next, existingPolicies);
   if (next._documentTriage?.existingPolicyId && !next._knownPolicyMatch) {
     next._knownPolicyMatch = {
@@ -39983,7 +40022,21 @@ const POLICY_EXTRACTION_SCHEMA = {
       endGuaranteedCV: {
         type: 'NUMBER',
         nullable: true,
-        description: 'Guaranteed cash value at maturity'
+        description: 'Guaranteed cash value at maturity (contractual guarantee only — exclude bonuses)'
+      },
+      // rc2.75.20: SG MAS-compliant BI projections require BOTH 3.0% AND 4.25%
+      // scenarios. Capture the 4.25% scenario non-guaranteed bonus in
+      // endNonGuarBonus (this is the upper bound) and the 3.0% scenario bonus
+      // (lower bound) in endNonGuarPessimistic when both are visible on the BI.
+      endNonGuarBonus: {
+        type: 'NUMBER',
+        nullable: true,
+        description: 'Non-guaranteed bonus at maturity (reversionary + terminal) — use the 4.25% scenario value when BI shows multiple scenarios'
+      },
+      endNonGuarPessimistic: {
+        type: 'NUMBER',
+        nullable: true,
+        description: 'Non-guaranteed bonus from the LOWER (3.0%) scenario, when BI projects both 3% and 4.25%. Leave null if only one scenario is shown.'
       },
       // ── ILP granular (per-fund details beyond fundAllocations) ──
       ilpBidOfferSpread: {
@@ -62890,6 +62943,13 @@ SHORT-TERM ENDOWMENTS (≤3 years, single premium):
 - endYield = expected yield % p.a.
 - endGuaranteedCV = expected maturity sum if given
 
+SAVINGS / ENDOWMENT MATURITY VALUES (par WL, Endowment, Lifetime Endowment, Education, Retirement Income):
+- endGuaranteedCV = the CONTRACTUAL guaranteed maturity benefit (lower bound, no bonus)
+- endNonGuarBonus = non-guaranteed bonus (reversionary + terminal) at the UPPER scenario (typically 4.25% p.a. for SG MAS BI documents)
+- endNonGuarPessimistic = non-guaranteed bonus at the LOWER scenario (typically 3.0% p.a.). Leave null when the BI only shows one scenario.
+- For SG-issued BI/projection documents that show both 3.0% AND 4.25% columns, capture BOTH values to support the FC's MAS-compliant client conversation. Do NOT collapse the two scenarios into a single average.
+- For documents that only show one projected scenario, capture it as endNonGuarBonus and leave endNonGuarPessimistic null.
+
 CLIENT: policyOwner (string — exact name of policy owner/purchaser/proposer shown on the document), lifeInsured (string — exact name of life assured/insured person, may differ from policyOwner), documentOwner (owner/proposer/policyholder traced from the same physical document when the current page is a dependant/life-assured page), documentRole (owner/proposer/main_life_assured/dependant/life_assured_only/unknown), documentGroupId (same-document grouping hint such as policy/proposal/application number or image range), ownerInferenceReason (short reason if owner came from another page of the same document), people (array — every visible owner/proposer/applicant/life assured/dependant with role, DOB/current age, gender, sourceText/sourceImage, confidence, and reason), gender (Male/Female — of life insured), dob (YYYY-MM-DD — of life insured, backward-compatible), policyOwnerDob (YYYY-MM-DD), policyOwnerAge (current age if visible), lifeInsuredDob (YYYY-MM-DD), lifeInsuredAge (current age if visible), ageAtEntry (number — of life insured at cover start), smoker (Non-smoker/Smoker), nationality (SC/PR/Foreigner), occupation
 FAMILY PARTICULARS / DEPENDANT TABLES: If a page has "Particulars of main life assured", "Proposer", "Dependant", "Name", "Date of Birth", "DOB", "Birth Date", or age rows, extract DOB/current age for each named person and always add a people[] entry for that person. Map the DOB/age to policyOwnerDob/policyOwnerAge when the name is the policy owner/proposer, and to lifeInsuredDob/lifeInsuredAge plus dob when the name is the life assured/dependant. If one page only shows a dependant or child/spouse life assured, look at the same physical document/upload sequence for the checked Proposer/Owner/Main Life Assured and fill documentOwner plus policyOwner with that original owner. Do not ignore family DOB rows just because they appear on an application/profile page rather than the policy schedule.
 POLICY OWNER ROUTING: preserve the owner printed on the document. Do NOT replace policyOwner with the active client name. In family scans, different policies may belong to spouse/child/parent clients; keep each policy's actual owner so PolicyLens can route it after extraction. If owner and life insured differ, capture both exactly. Dependant pages are not standalone owner evidence: if the person appears only under a Dependant column, route the policy back to the proposer/owner from the same document and keep that dependant as lifeInsured.
@@ -70652,6 +70712,15 @@ function PolicyFormModal({
   })();
   const hasExtractionInfo = !!(extractionWarnings && (extractionWarnings.lowConfFields && extractionWarnings.lowConfFields.length || extractionWarnings.sanityWarns && extractionWarnings.sanityWarns.length || extractionWarnings.autoFixes && extractionWarnings.autoFixes.length));
   const [extractionInfoCollapsed, setExtractionInfoCollapsed] = useState(false);
+  // rc2.75.20 A1: maturity-value source tab. 'estimated' = use the yield-based
+  // calculator at the top of the maturity card. 'bi-document' = use the
+  // guaranteed + non-guaranteed BI values + computed IRR. Default driven by
+  // inferMaturityValueSource() — see top of file. Pure function of populated
+  // fields, no schema migration needed for existing saved policies.
+  const [maturityTab, setMaturityTab] = useState(() => {
+    const src = typeof inferMaturityValueSource === 'function' ? inferMaturityValueSource(policy) : parseFloat(policy?.endGuaranteedCV) > 0 || parseFloat(policy?.endNonGuarBonus) > 0 ? 'bi-document' : 'estimated';
+    return src === 'bi-document' ? 'bi-document' : 'estimated';
+  });
   const ExtractionInfoBanner = () => {
     if (!hasExtractionInfo) return null;
     const {
@@ -72768,6 +72837,7 @@ function PolicyFormModal({
       color: 'var(--text3)'
     }
   }, "Default: policy end year")))), (() => {
+    // Shared compute for both views
     const prem = parseFloat(form.annualPremium) || 0;
     const premTermN = parseInt(form.premTerm) || 0;
     const startAge = parseInt(form.premStartAge) || parseInt(form.ageAtEntry) || 30;
@@ -72789,17 +72859,63 @@ function PolicyFormModal({
         estimated = Math.round(fvPrem * Math.pow(1 + r, Math.max(0, policyTermN - premTermN)));
       }
     }
-    // Also show derive-pass result if present
     const deriveEstimated = parseFloat(form.estimatedMaturity) || 0;
     const displayVal = estimated > 0 ? estimated : deriveEstimated;
     const derivedMeta = form._derived && form._derived.estimatedMaturity;
+    const guar = parseFloat(form.endGuaranteedCV) || 0;
+    const bonus = parseFloat(form.endNonGuarBonus) || 0;
+    const biTotal = guar + bonus;
+    const hasBi = guar > 0 || bonus > 0;
+    const activeTab = maturityTab;
+    const tabBtn = (id, label, badge) => /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: () => setMaturityTab(id),
+      style: {
+        padding: '8px 14px',
+        border: 'none',
+        borderBottom: activeTab === id ? '2px solid var(--gold)' : '2px solid transparent',
+        background: 'transparent',
+        color: activeTab === id ? 'var(--gold)' : 'var(--text3)',
+        fontWeight: activeTab === id ? 700 : 500,
+        fontSize: 11,
+        cursor: 'pointer',
+        textTransform: 'uppercase',
+        letterSpacing: '.4px',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6
+      }
+    }, label, badge && /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 8,
+        padding: '1px 5px',
+        borderRadius: 8,
+        background: 'rgba(91,168,160,.18)',
+        color: 'var(--teal)',
+        textTransform: 'none',
+        letterSpacing: 0,
+        fontWeight: 600
+      }
+    }, badge));
     return /*#__PURE__*/React.createElement("div", {
       style: {
         marginBottom: 8,
-        padding: 10,
+        padding: 0,
         background: 'color-mix(in oklch, var(--gold) 6%, transparent)',
         borderRadius: 8,
-        border: '1px solid color-mix(in oklch, var(--gold) 21%, transparent)'
+        border: '1px solid color-mix(in oklch, var(--gold) 21%, transparent)',
+        overflow: 'hidden'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        borderBottom: '1px solid color-mix(in oklch, var(--gold) 21%, transparent)',
+        background: 'var(--bg2)',
+        padding: '0 6px'
+      }
+    }, tabBtn('estimated', 'Quick estimate', null), tabBtn('bi-document', 'BI document values', hasBi ? 'from BI' : null)), activeTab === 'estimated' && /*#__PURE__*/React.createElement("div", {
+      style: {
+        padding: 12
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -72854,9 +72970,9 @@ function PolicyFormModal({
         if (estimated > 0) set('estimatedMaturity', String(estimated));
       },
       style: {
-        width: 50,
+        width: 60,
         fontSize: 11,
-        padding: '3px 6px',
+        padding: '4px 8px',
         background: 'var(--bg2)',
         border: '1px solid var(--border)',
         borderRadius: 4,
@@ -72875,163 +72991,250 @@ function PolicyFormModal({
         color: 'var(--text3)',
         marginTop: 2
       }
-    }, "Enter annual premium, premium term, and policy term to estimate"));
-  })(), /*#__PURE__*/React.createElement("details", {
-    style: {
-      marginBottom: 8
-    }
-  }, /*#__PURE__*/React.createElement("summary", {
-    style: {
-      fontSize: 10,
-      fontWeight: 600,
-      color: 'var(--text3)',
-      cursor: 'pointer',
-      padding: '4px 0',
-      userSelect: 'none'
-    }
-  }, "\u25B8 Advanced \u2014 BI document values"), /*#__PURE__*/React.createElement("div", {
-    className: "grid-3",
-    style: {
-      marginTop: 6
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "field"
-  }, /*#__PURE__*/React.createElement("label", null, "Guaranteed Maturity Value ($)"), /*#__PURE__*/React.createElement("input", {
-    type: "number",
-    value: form.endGuaranteedCV || '',
-    onChange: e => set('endGuaranteedCV', e.target.value),
-    placeholder: "from BI / policy schedule"
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 10,
-      color: 'var(--text3)'
-    }
-  }, "Contractual guaranteed amount at maturity")), /*#__PURE__*/React.createElement("div", {
-    className: "field"
-  }, /*#__PURE__*/React.createElement("label", null, "Non-Guaranteed Bonus ($)"), /*#__PURE__*/React.createElement("input", {
-    type: "number",
-    value: form.endNonGuarBonus || '',
-    onChange: e => set('endNonGuarBonus', e.target.value),
-    placeholder: "reversionary + terminal"
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 10,
-      color: 'var(--text3)'
-    }
-  }, "Use these only if you have the BI document")), (() => {
-    const guar = parseFloat(form.endGuaranteedCV) || 0;
-    const bonus = parseFloat(form.endNonGuarBonus) || 0;
-    const total = guar + bonus;
-    // Maturity age depends on sub-type
-    const startAge = parseInt(form.premStartAge) || parseInt(form.ageAtEntry) || 30;
-    const premTermYrs = parseInt(form.premTerm) || 0;
-    let matAge;
-    if (form.endSubtype === 'lifetime') matAge = 99;else if (form.endSubtype === 'fullpay') matAge = startAge + premTermYrs;else matAge = startAge + (parseInt(form.endPolicyTerm) || premTermYrs);
-    const prem = parseFloat(form.annualPremium) || 0;
-    const totalPrem = form.premSingle ? prem : prem * premTermYrs;
-    const yearsToMat = Math.max(1, matAge - startAge);
-    // ── Cash benefit parameters ──
-    const hasCB = !!form.endHasCashBenefit;
-    const annualCB = hasCB ? parseFloat(form.endCashBenefit) || 0 : 0;
-    const cbStart = hasCB ? parseInt(form.endCashBenefitStartYr) || 1 : 0;
-    const cbEnd = hasCB ? parseInt(form.endCashBenefitEndYr) || yearsToMat : 0;
-    const totalCoupons = hasCB ? annualCB * Math.max(0, cbEnd - cbStart + 1) : 0;
-    // ── IRR-based effective yield ──
-    // Full cashflow series for the endowment:
-    //   t=0 ................. -prem (single) OR -prem (first regular payment)
-    //   t=1..premTerm-1 ..... -prem each year (regular premium only)
-    //   t=cbStart..cbEnd .... +annualCB each year (cash benefits)
-    //   t=yearsToMat ........ +total (guaranteed + bonus lump sum)
-    // For single-premium / no-coupon endowments this reduces algebraically
-    // to the old compound formula. For regular-premium endowments with
-    // coupons, the difference can exceed 1 percentage point. See computeIRR
-    // helper at top of file.
-    let effYield = '—';
-    let effYieldNum = null;
-    if ((total > 0 || totalCoupons > 0) && totalPrem > 0 && prem > 0) {
-      const cashflows = [];
-      for (let y = 0; y <= yearsToMat; y++) {
-        let cf = 0;
-        // Premium outflows
-        if (form.premSingle) {
-          if (y === 0) cf -= totalPrem;
-        } else {
-          if (y < premTermYrs) cf -= prem;
-        }
-        // Cash benefit inflows (inclusive of both endpoints)
-        if (hasCB && annualCB > 0 && y >= cbStart && y <= cbEnd) {
-          cf += annualCB;
-        }
-        // Terminal maturity
-        if (y === yearsToMat) cf += total;
-        cashflows.push(cf);
-      }
-      try {
-        const irr = computeIRR(cashflows);
-        if (irr !== null && isFinite(irr)) {
-          effYield = (irr * 100).toFixed(2);
-          effYieldNum = irr * 100;
-        }
-      } catch (e) {
-        console.warn('[Endowment yield] IRR failed:', e);
-      }
-    }
-    return /*#__PURE__*/React.createElement("div", {
+    }, "Enter annual premium, premium term, and policy term to estimate"), hasBi && /*#__PURE__*/React.createElement("div", {
       style: {
+        marginTop: 8,
+        padding: '6px 8px',
         background: 'var(--bg2)',
-        borderRadius: 8,
-        padding: 10,
+        borderRadius: 5,
+        fontSize: 10,
+        color: 'var(--text3)',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: 6
+      }
+    }, /*#__PURE__*/React.createElement("span", null, "BI document also has values: ", /*#__PURE__*/React.createElement("strong", {
+      style: {
+        color: 'var(--text2)'
+      }
+    }, "$", biTotal.toLocaleString())), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: () => setMaturityTab('bi-document'),
+      style: {
+        fontSize: 9,
+        padding: '2px 8px',
+        background: 'transparent',
         border: '1px solid var(--border)',
-        textAlign: 'center'
+        borderRadius: 4,
+        color: 'var(--teal)',
+        cursor: 'pointer',
+        fontWeight: 600
+      }
+    }, "Use BI \u2192"))), activeTab === 'bi-document' && /*#__PURE__*/React.createElement("div", {
+      style: {
+        padding: 12
       }
     }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10,
+        fontWeight: 700,
+        color: 'var(--blue2)',
+        textTransform: 'uppercase',
+        letterSpacing: '.5px',
+        marginBottom: 8
+      }
+    }, "BI Document Values"), /*#__PURE__*/React.createElement("div", {
+      className: "grid-3",
+      style: {
+        marginTop: 6
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("label", null, "Guaranteed Maturity Value ($)"), /*#__PURE__*/React.createElement("input", {
+      type: "number",
+      value: form.endGuaranteedCV || '',
+      onChange: e => set('endGuaranteedCV', e.target.value),
+      placeholder: "from BI / policy schedule"
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10,
+        color: 'var(--text3)'
+      }
+    }, "Contractual guaranteed amount at maturity")), /*#__PURE__*/React.createElement("div", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("label", null, "Non-Guaranteed Bonus ($)"), /*#__PURE__*/React.createElement("input", {
+      type: "number",
+      value: form.endNonGuarBonus || '',
+      onChange: e => set('endNonGuarBonus', e.target.value),
+      placeholder: "reversionary + terminal (4.25% scenario)"
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10,
+        color: 'var(--text3)'
+      }
+    }, "SG BI: capture the 4.25% scenario here"), !form._showPessimistic && /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: () => set('_showPessimistic', true),
+      style: {
+        marginTop: 4,
+        fontSize: 9,
+        padding: '2px 0',
+        background: 'transparent',
+        border: 'none',
+        color: 'var(--teal)',
+        cursor: 'pointer',
+        textDecoration: 'underline'
+      }
+    }, "+ Show 3% scenario"), form._showPessimistic && /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 6,
+        padding: 6,
+        background: 'var(--bg2)',
+        borderRadius: 4,
+        border: '1px solid var(--border)'
+      }
+    }, /*#__PURE__*/React.createElement("label", {
       style: {
         fontSize: 9,
         color: 'var(--text3)',
         textTransform: 'uppercase',
-        marginBottom: 3
+        letterSpacing: '.3px'
       }
-    }, "Total at Maturity (Age ", matAge, ")"), /*#__PURE__*/React.createElement("div", {
+    }, "3% Scenario Bonus ($)"), /*#__PURE__*/React.createElement("input", {
+      type: "number",
+      value: form.endNonGuarPessimistic || '',
+      onChange: e => set('endNonGuarPessimistic', e.target.value),
+      placeholder: "pessimistic projection",
       style: {
-        fontSize: 16,
-        fontWeight: 700,
-        color: 'var(--blue2)'
+        fontSize: 11
       }
-    }, "$", total.toLocaleString()), hasCB && totalCoupons > 0 && /*#__PURE__*/React.createElement("div", {
+    }), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 9,
-        color: 'var(--gold)',
-        marginTop: 1
+        color: 'var(--text3)'
       }
-    }, "+ $", totalCoupons.toLocaleString(), " coupons over yrs ", cbStart, "\u2013", cbEnd), /*#__PURE__*/React.createElement("div", {
+    }, "MAS-required lower scenario"))), (() => {
+      const guarBi = parseFloat(form.endGuaranteedCV) || 0;
+      const bonusBi = parseFloat(form.endNonGuarBonus) || 0;
+      const total = guarBi + bonusBi;
+      // Maturity age depends on sub-type
+      const sAge = parseInt(form.premStartAge) || parseInt(form.ageAtEntry) || 30;
+      const premTermYrs = parseInt(form.premTerm) || 0;
+      let matAge;
+      if (form.endSubtype === 'lifetime') matAge = 99;else if (form.endSubtype === 'fullpay') matAge = sAge + premTermYrs;else matAge = sAge + (parseInt(form.endPolicyTerm) || premTermYrs);
+      const premBi = parseFloat(form.annualPremium) || 0;
+      const totalPrem = form.premSingle ? premBi : premBi * premTermYrs;
+      const yearsToMat = Math.max(1, matAge - sAge);
+      // Cash benefit parameters
+      const hasCB = !!form.endHasCashBenefit;
+      const annualCB = hasCB ? parseFloat(form.endCashBenefit) || 0 : 0;
+      const cbStart = hasCB ? parseInt(form.endCashBenefitStartYr) || 1 : 0;
+      const cbEnd = hasCB ? parseInt(form.endCashBenefitEndYr) || yearsToMat : 0;
+      const totalCoupons = hasCB ? annualCB * Math.max(0, cbEnd - cbStart + 1) : 0;
+      // IRR-based effective yield
+      let effYield = '—';
+      let effYieldNum = null;
+      if ((total > 0 || totalCoupons > 0) && totalPrem > 0 && premBi > 0) {
+        const cashflows = [];
+        for (let y = 0; y <= yearsToMat; y++) {
+          let cf = 0;
+          if (form.premSingle) {
+            if (y === 0) cf -= totalPrem;
+          } else {
+            if (y < premTermYrs) cf -= premBi;
+          }
+          if (hasCB && annualCB > 0 && y >= cbStart && y <= cbEnd) cf += annualCB;
+          if (y === yearsToMat) cf += total;
+          cashflows.push(cf);
+        }
+        try {
+          const irr = computeIRR(cashflows);
+          if (irr !== null && isFinite(irr)) {
+            effYield = (irr * 100).toFixed(2);
+            effYieldNum = irr * 100;
+          }
+        } catch (e) {
+          console.warn('[Endowment yield] IRR failed:', e);
+        }
+      }
+      return /*#__PURE__*/React.createElement("div", {
+        style: {
+          background: 'var(--bg2)',
+          borderRadius: 8,
+          padding: 10,
+          border: '1px solid var(--border)',
+          textAlign: 'center'
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 9,
+          color: 'var(--text3)',
+          textTransform: 'uppercase',
+          marginBottom: 3
+        }
+      }, "Total at Maturity (Age ", matAge, ")"), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 16,
+          fontWeight: 700,
+          color: 'var(--blue2)'
+        }
+      }, "$", total.toLocaleString()), hasCB && totalCoupons > 0 && /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 9,
+          color: 'var(--gold)',
+          marginTop: 1
+        }
+      }, "+ $", totalCoupons.toLocaleString(), " coupons over yrs ", cbStart, "\u2013", cbEnd), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 10,
+          color: effYield !== '—' ? 'var(--green2)' : 'var(--text3)',
+          marginTop: 3,
+          fontWeight: effYield !== '—' ? 600 : 400
+        }
+      }, effYield !== '—' ? 'IRR ~' + effYield + '% p.a.' : 'Enter guaranteed + bonus above'), effYield !== '—' && /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 9,
+          color: 'var(--text3)',
+          marginTop: 1
+        }
+      }, "on $", totalPrem.toLocaleString(), form.premSingle ? ' single prem' : ' prems over ' + premTermYrs + 'yr'), effYieldNum !== null && String(form.endYield) !== effYield && /*#__PURE__*/React.createElement("button", {
+        type: "button",
+        onClick: () => set('endYield', effYield),
+        style: {
+          marginTop: 4,
+          fontSize: 9,
+          padding: '2px 8px',
+          borderRadius: 4,
+          background: 'var(--green2)',
+          color: '#fff',
+          border: 'none',
+          cursor: 'pointer',
+          fontWeight: 600
+        }
+      }, "Use ", effYield, "% as Yield"));
+    })()), canEstimate && displayVal > 0 && /*#__PURE__*/React.createElement("div", {
       style: {
+        marginTop: 8,
+        padding: '6px 8px',
+        background: 'var(--bg2)',
+        borderRadius: 5,
         fontSize: 10,
-        color: effYield !== '—' ? 'var(--green2)' : 'var(--text3)',
-        marginTop: 3,
-        fontWeight: effYield !== '—' ? 600 : 400
-      }
-    }, effYield !== '—' ? 'IRR ~' + effYield + '% p.a.' : 'Enter guaranteed + bonus above'), effYield !== '—' && /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 9,
         color: 'var(--text3)',
-        marginTop: 1
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: 6
       }
-    }, "on $", totalPrem.toLocaleString(), form.premSingle ? ' single prem' : ' prems over ' + premTermYrs + 'yr'), effYieldNum !== null && String(form.endYield) !== effYield && /*#__PURE__*/React.createElement("button", {
-      type: "button",
-      onClick: () => set('endYield', effYield),
+    }, /*#__PURE__*/React.createElement("span", null, "Quick estimate at ", yieldPct, "% yield: ", /*#__PURE__*/React.createElement("strong", {
       style: {
-        marginTop: 4,
+        color: 'var(--text2)'
+      }
+    }, "$", displayVal.toLocaleString())), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: () => setMaturityTab('estimated'),
+      style: {
         fontSize: 9,
         padding: '2px 8px',
+        background: 'transparent',
+        border: '1px solid var(--border)',
         borderRadius: 4,
-        background: 'var(--green2)',
-        color: '#fff',
-        border: 'none',
+        color: '#c9a96e',
         cursor: 'pointer',
         fontWeight: 600
       }
-    }, "Use ", effYield, "% as Yield"));
-  })()))), isRetirement && /*#__PURE__*/React.createElement("div", {
+    }, "Use estimate \u2192"))));
+  })()), isRetirement && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 8,
       padding: 14,
@@ -75825,220 +76028,271 @@ function PolicyFormModal({
     value: form.notes || '',
     onChange: e => set('notes', e.target.value),
     placeholder: "e.g. DBS, OCBC, UOB basket"
-  })))), isILP && /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 8,
-      padding: 14,
-      background: 'var(--bg3)',
-      borderRadius: 10,
-      border: '1px solid var(--border)'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginBottom: 10
-    }
-  }, /*#__PURE__*/React.createElement("h4", {
-    style: {
-      fontSize: 13,
-      fontWeight: 600,
-      color: 'var(--orange)',
-      margin: 0
-    }
-  }, form.subType === 'ILP (Investment)' ? '📊 Investment-Linked Policy' : '🛡 Protection ILP')), /*#__PURE__*/React.createElement("div", {
-    className: "grid-3"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "field"
-  }, /*#__PURE__*/React.createElement("label", null, "Growth % p.a.", (form.fundAllocations || []).length > 0 ? ' ⚡' : '', "  "), /*#__PURE__*/React.createElement("input", {
-    type: "number",
-    step: "0.5",
-    value: form.ilpGrowth || '6',
-    onChange: e => set('ilpGrowth', e.target.value),
-    style: (form.fundAllocations || []).length > 0 ? {
+  })))), isILP && (() => {
+    // rc2.75.20 B1: Auto-weighted IRR override pattern.
+    // When user has populated fundAllocations, the Growth/Dividend/Mgmt Fee
+    // fields are AUTO-COMPUTED (read-only) and clearly marked as such.
+    // FC complaint was: "key estimated returns, then key funds — funds
+    // silently override → super confusing". The override toggle makes the
+    // computed-vs-manual mode explicit: either funds drive the values, or
+    // the user takes control. No silent overwrites either way.
+    const hasFunds = (form.fundAllocations || []).length > 0;
+    const isOverridden = !!form._returnOverride;
+    const fundsDrive = hasFunds && !isOverridden;
+    const fieldStyle = fundsDrive ? {
       borderColor: 'var(--purple)',
-      background: 'rgba(157,138,191,.06)'
-    } : {}
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 10,
-      color: (form.fundAllocations || []).length > 0 ? 'var(--purple)' : 'var(--text3)'
-    }
-  }, (form.fundAllocations || []).length > 0 ? 'Weighted from fund allocations' : 'Fund return before fees')), /*#__PURE__*/React.createElement("div", {
-    className: "field"
-  }, /*#__PURE__*/React.createElement("label", null, "Dividend % p.a.", (form.fundAllocations || []).length > 0 ? ' ⚡' : ''), /*#__PURE__*/React.createElement("input", {
-    type: "number",
-    step: "0.5",
-    value: form.ilpDivYield || '2',
-    onChange: e => set('ilpDivYield', e.target.value),
-    style: (form.fundAllocations || []).length > 0 ? {
-      borderColor: 'var(--purple)',
-      background: 'rgba(157,138,191,.06)'
-    } : {}
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 10,
-      color: (form.fundAllocations || []).length > 0 ? 'var(--purple)' : 'var(--text3)'
-    }
-  }, form.divReinvest ? 'Reinvested into fund value' : 'Paid out as income')), /*#__PURE__*/React.createElement("div", {
-    className: "field"
-  }, /*#__PURE__*/React.createElement("label", null, "Reinvest Dividends?"), /*#__PURE__*/React.createElement("select", {
-    value: form.divReinvest ? 'yes' : 'no',
-    onChange: e => set('divReinvest', e.target.value === 'yes')
-  }, /*#__PURE__*/React.createElement("option", {
-    value: "no"
-  }, "No \u2014 draw down as income"), /*#__PURE__*/React.createElement("option", {
-    value: "yes"
-  }, "Yes \u2014 compound into fund")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 10,
-      color: form.divReinvest ? 'var(--green2)' : '#9d8abf'
-    }
-  }, form.divReinvest ? 'Total yield = Growth + Div − Fee' : 'Growth compounds; Div paid separately')), !form.divReinvest && /*#__PURE__*/React.createElement("div", {
-    className: "field"
-  }, /*#__PURE__*/React.createElement("label", null, "Div. Drawdown"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      gap: 6,
-      marginBottom: 4
-    }
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: () => set('ilpDivDrawFromNow', false),
-    style: {
-      flex: 1,
-      padding: '6px 8px',
-      fontSize: 11,
-      borderRadius: 6,
-      border: '1px solid var(--border)',
-      background: !form.ilpDivDrawFromNow ? 'var(--gold)' : 'var(--bg2)',
-      color: !form.ilpDivDrawFromNow ? 'var(--bg)' : 'var(--text2)',
-      fontWeight: !form.ilpDivDrawFromNow ? 700 : 500,
-      cursor: 'pointer'
-    }
-  }, "Later"), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: () => {
-      set('ilpDivDrawFromNow', true);
-      set('ilpDivDrawdownAge', '');
-    },
-    style: {
-      flex: 1,
-      padding: '6px 8px',
-      fontSize: 11,
-      borderRadius: 6,
-      border: '1px solid var(--border)',
-      background: form.ilpDivDrawFromNow ? 'var(--gold)' : 'var(--bg2)',
-      color: form.ilpDivDrawFromNow ? 'var(--bg)' : 'var(--text2)',
-      fontWeight: form.ilpDivDrawFromNow ? 700 : 500,
-      cursor: 'pointer'
-    }
-  }, "Draw now")), !form.ilpDivDrawFromNow && /*#__PURE__*/React.createElement("input", {
-    type: "number",
-    value: form.ilpDivDrawdownAge || '',
-    onChange: e => set('ilpDivDrawdownAge', e.target.value),
-    placeholder: "Default: retirement age"
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 10,
-      color: form.ilpDivDrawFromNow ? 'var(--green2)' : 'var(--text3)'
-    }
-  }, form.ilpDivDrawFromNow ? 'Dividends flow into cashflow now' : 'When to start drawing dividends')), /*#__PURE__*/React.createElement("div", {
-    className: "field"
-  }, /*#__PURE__*/React.createElement("label", null, "Mgmt Fee % p.a.", (form.fundAllocations || []).length > 0 ? ' ⚡' : ''), /*#__PURE__*/React.createElement("input", {
-    type: "number",
-    step: "0.1",
-    value: form.ilpMgmtFee || '1.5',
-    onChange: e => set('ilpMgmtFee', e.target.value),
-    style: (form.fundAllocations || []).length > 0 ? {
-      borderColor: 'var(--purple)',
-      background: 'rgba(157,138,191,.06)'
-    } : {}
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 10,
-      color: 'var(--red)'
-    }
-  }, "Deducted from fund"))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 8,
-      padding: 10,
-      background: 'var(--bg2)',
-      borderRadius: 8,
-      display: 'flex',
-      gap: 20,
-      flexWrap: 'wrap'
-    }
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 10,
-      color: 'var(--text3)',
-      textTransform: 'uppercase'
-    }
-  }, form.divReinvest ? 'Total Yield (Reinvested)' : 'Unit Price Growth (Net)'), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 16,
-      fontWeight: 700,
-      color: form.divReinvest ? 'var(--gold)' : 'var(--green2)'
-    }
-  }, form.divReinvest ? ilpEffRate.toFixed(2) : Math.max(0, parseFloat(form.ilpGrowth || 6) - parseFloat(form.ilpMgmtFee || 1.5)).toFixed(2), "% p.a."), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 10,
-      color: 'var(--text3)'
-    }
-  }, form.divReinvest ? (form.ilpGrowth || 6) + '% + ' + (form.ilpDivYield || 2) + '% − ' + (form.ilpMgmtFee || 1.5) + '%' : (form.ilpGrowth || 6) + '% − ' + (form.ilpMgmtFee || 1.5) + '%')), !form.divReinvest && parseFloat(form.ilpDivYield || 0) > 0 && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 10,
-      color: 'var(--text3)',
-      textTransform: 'uppercase'
-    }
-  }, "Dividend Income"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 16,
-      fontWeight: 700,
-      color: '#9d8abf'
-    }
-  }, parseFloat(form.ilpDivYield || 0).toFixed(2), "% p.a."), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 10,
-      color: 'var(--text3)'
-    }
-  }, form.ilpDivDrawFromNow ? 'Drawing now (in cashflow)' : 'Paid out from age ' + (form.ilpDivDrawdownAge || 'retirement'))), !form.divReinvest && parseFloat(form.ilpDivYield || 0) > 0 && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 10,
-      color: 'var(--text3)',
-      textTransform: 'uppercase'
-    }
-  }, "Total Return (incl. Div)"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 16,
-      fontWeight: 700,
-      color: 'var(--gold)'
-    }
-  }, ilpEffRate.toFixed(2), "% p.a."), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 10,
-      color: 'var(--text3)'
-    }
-  }, "Growth + Dividend \u2212 Fee")), form.subType === 'ILP (Protection)' && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 10,
-      color: 'var(--text3)',
-      textTransform: 'uppercase'
-    }
-  }, "Protection % of Fund"), /*#__PURE__*/React.createElement("input", {
-    type: "number",
-    value: form.ilpProtPct || '101',
-    onChange: e => set('ilpProtPct', e.target.value),
-    style: {
-      width: 70,
-      fontSize: 14,
-      fontWeight: 600
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 10,
-      color: 'var(--text3)'
-    }
-  }, "Typically 101% \u2014 amend as per policy")))), isUL && /*#__PURE__*/React.createElement("div", {
+      background: 'rgba(157,138,191,.06)',
+      cursor: 'not-allowed'
+    } : {};
+    const fundCount = (form.fundAllocations || []).length;
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 8,
+        padding: 14,
+        background: 'var(--bg3)',
+        borderRadius: 10,
+        border: '1px solid var(--border)'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginBottom: 10,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: 8
+      }
+    }, /*#__PURE__*/React.createElement("h4", {
+      style: {
+        fontSize: 13,
+        fontWeight: 600,
+        color: 'var(--orange)',
+        margin: 0
+      }
+    }, form.subType === 'ILP (Investment)' ? '📊 Investment-Linked Policy' : '🛡 Protection ILP'), hasFunds && /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        padding: '4px 10px',
+        borderRadius: 6,
+        background: fundsDrive ? 'rgba(157,138,191,.12)' : 'rgba(245,158,11,.10)',
+        border: '1px solid ' + (fundsDrive ? 'rgba(157,138,191,.4)' : 'rgba(245,158,11,.35)')
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 10,
+        fontWeight: 700,
+        color: fundsDrive ? 'var(--purple)' : 'var(--orange)',
+        textTransform: 'uppercase',
+        letterSpacing: '.4px'
+      }
+    }, fundsDrive ? '⚡ Computed from ' + fundCount + ' fund' + (fundCount > 1 ? 's' : '') : '✎ Manual override'), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: () => set('_returnOverride', !isOverridden),
+      style: {
+        fontSize: 9,
+        padding: '2px 8px',
+        background: 'transparent',
+        border: '1px solid var(--border)',
+        borderRadius: 4,
+        color: 'var(--text2)',
+        cursor: 'pointer',
+        fontWeight: 600
+      }
+    }, fundsDrive ? 'Override →' : 'Use fund weighting →'))), /*#__PURE__*/React.createElement("div", {
+      className: "grid-3"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("label", null, "Growth % p.a.", fundsDrive ? ' ⚡' : ''), /*#__PURE__*/React.createElement("input", {
+      type: "number",
+      step: "0.5",
+      value: form.ilpGrowth || '6',
+      onChange: e => set('ilpGrowth', e.target.value),
+      readOnly: fundsDrive,
+      style: fieldStyle,
+      title: fundsDrive ? 'Read-only: computed from fund allocations. Click Override to edit.' : ''
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10,
+        color: fundsDrive ? 'var(--purple)' : 'var(--text3)'
+      }
+    }, fundsDrive ? 'Auto from fund mix · not editable' : isOverridden ? 'Manual entry · funds ignored' : 'Fund return before fees')), /*#__PURE__*/React.createElement("div", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("label", null, "Dividend % p.a.", fundsDrive ? ' ⚡' : ''), /*#__PURE__*/React.createElement("input", {
+      type: "number",
+      step: "0.5",
+      value: form.ilpDivYield || '2',
+      onChange: e => set('ilpDivYield', e.target.value),
+      readOnly: fundsDrive,
+      style: fieldStyle,
+      title: fundsDrive ? 'Read-only: computed from fund allocations. Click Override to edit.' : ''
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10,
+        color: fundsDrive ? 'var(--purple)' : 'var(--text3)'
+      }
+    }, fundsDrive ? 'Auto from fund mix' : form.divReinvest ? 'Reinvested into fund value' : 'Paid out as income')), /*#__PURE__*/React.createElement("div", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("label", null, "Reinvest Dividends?"), /*#__PURE__*/React.createElement("select", {
+      value: form.divReinvest ? 'yes' : 'no',
+      onChange: e => set('divReinvest', e.target.value === 'yes')
+    }, /*#__PURE__*/React.createElement("option", {
+      value: "no"
+    }, "No \u2014 draw down as income"), /*#__PURE__*/React.createElement("option", {
+      value: "yes"
+    }, "Yes \u2014 compound into fund")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10,
+        color: form.divReinvest ? 'var(--green2)' : '#9d8abf'
+      }
+    }, form.divReinvest ? 'Total yield = Growth + Div − Fee' : 'Growth compounds; Div paid separately')), !form.divReinvest && /*#__PURE__*/React.createElement("div", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("label", null, "Div. Drawdown"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 6,
+        marginBottom: 4
+      }
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: () => set('ilpDivDrawFromNow', false),
+      style: {
+        flex: 1,
+        padding: '6px 8px',
+        fontSize: 11,
+        borderRadius: 6,
+        border: '1px solid var(--border)',
+        background: !form.ilpDivDrawFromNow ? 'var(--gold)' : 'var(--bg2)',
+        color: !form.ilpDivDrawFromNow ? 'var(--bg)' : 'var(--text2)',
+        fontWeight: !form.ilpDivDrawFromNow ? 700 : 500,
+        cursor: 'pointer'
+      }
+    }, "Later"), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: () => {
+        set('ilpDivDrawFromNow', true);
+        set('ilpDivDrawdownAge', '');
+      },
+      style: {
+        flex: 1,
+        padding: '6px 8px',
+        fontSize: 11,
+        borderRadius: 6,
+        border: '1px solid var(--border)',
+        background: form.ilpDivDrawFromNow ? 'var(--gold)' : 'var(--bg2)',
+        color: form.ilpDivDrawFromNow ? 'var(--bg)' : 'var(--text2)',
+        fontWeight: form.ilpDivDrawFromNow ? 700 : 500,
+        cursor: 'pointer'
+      }
+    }, "Draw now")), !form.ilpDivDrawFromNow && /*#__PURE__*/React.createElement("input", {
+      type: "number",
+      value: form.ilpDivDrawdownAge || '',
+      onChange: e => set('ilpDivDrawdownAge', e.target.value),
+      placeholder: "Default: retirement age"
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10,
+        color: form.ilpDivDrawFromNow ? 'var(--green2)' : 'var(--text3)'
+      }
+    }, form.ilpDivDrawFromNow ? 'Dividends flow into cashflow now' : 'When to start drawing dividends')), /*#__PURE__*/React.createElement("div", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("label", null, "Mgmt Fee % p.a.", fundsDrive ? ' ⚡' : ''), /*#__PURE__*/React.createElement("input", {
+      type: "number",
+      step: "0.1",
+      value: form.ilpMgmtFee || '1.5',
+      onChange: e => set('ilpMgmtFee', e.target.value),
+      readOnly: fundsDrive,
+      style: fundsDrive ? fieldStyle : {},
+      title: fundsDrive ? 'Read-only: computed from fund allocations. Click Override to edit.' : ''
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10,
+        color: fundsDrive ? 'var(--purple)' : 'var(--red)'
+      }
+    }, fundsDrive ? 'Auto from fund mix' : 'Deducted from fund'))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 8,
+        padding: 10,
+        background: 'var(--bg2)',
+        borderRadius: 8,
+        display: 'flex',
+        gap: 20,
+        flexWrap: 'wrap'
+      }
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10,
+        color: 'var(--text3)',
+        textTransform: 'uppercase'
+      }
+    }, form.divReinvest ? 'Total Yield (Reinvested)' : 'Unit Price Growth (Net)'), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 16,
+        fontWeight: 700,
+        color: form.divReinvest ? 'var(--gold)' : 'var(--green2)'
+      }
+    }, form.divReinvest ? ilpEffRate.toFixed(2) : Math.max(0, parseFloat(form.ilpGrowth || 6) - parseFloat(form.ilpMgmtFee || 1.5)).toFixed(2), "% p.a."), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10,
+        color: 'var(--text3)'
+      }
+    }, form.divReinvest ? (form.ilpGrowth || 6) + '% + ' + (form.ilpDivYield || 2) + '% − ' + (form.ilpMgmtFee || 1.5) + '%' : (form.ilpGrowth || 6) + '% − ' + (form.ilpMgmtFee || 1.5) + '%')), !form.divReinvest && parseFloat(form.ilpDivYield || 0) > 0 && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10,
+        color: 'var(--text3)',
+        textTransform: 'uppercase'
+      }
+    }, "Dividend Income"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 16,
+        fontWeight: 700,
+        color: '#9d8abf'
+      }
+    }, parseFloat(form.ilpDivYield || 0).toFixed(2), "% p.a."), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10,
+        color: 'var(--text3)'
+      }
+    }, form.ilpDivDrawFromNow ? 'Drawing now (in cashflow)' : 'Paid out from age ' + (form.ilpDivDrawdownAge || 'retirement'))), !form.divReinvest && parseFloat(form.ilpDivYield || 0) > 0 && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10,
+        color: 'var(--text3)',
+        textTransform: 'uppercase'
+      }
+    }, "Total Return (incl. Div)"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 16,
+        fontWeight: 700,
+        color: 'var(--gold)'
+      }
+    }, ilpEffRate.toFixed(2), "% p.a."), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10,
+        color: 'var(--text3)'
+      }
+    }, "Growth + Dividend \u2212 Fee")), form.subType === 'ILP (Protection)' && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10,
+        color: 'var(--text3)',
+        textTransform: 'uppercase'
+      }
+    }, "Protection % of Fund"), /*#__PURE__*/React.createElement("input", {
+      type: "number",
+      value: form.ilpProtPct || '101',
+      onChange: e => set('ilpProtPct', e.target.value),
+      style: {
+        width: 70,
+        fontSize: 14,
+        fontWeight: 600
+      }
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10,
+        color: 'var(--text3)'
+      }
+    }, "Typically 101% \u2014 amend as per policy"))));
+  })(), isUL && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 8,
       padding: 14,
@@ -76321,7 +76575,8 @@ function PolicyFormModal({
     reinvest: form.divReinvest,
     policyFee: form.ilpMgmtFee || '1.5',
     onSyncWeighted: w => {
-      if ((form.fundAllocations || []).length > 0) {
+      // rc2.75.20 B1: respect explicit manual override — don't silently overwrite
+      if ((form.fundAllocations || []).length > 0 && !form._returnOverride) {
         set('ilpGrowth', w.growth);
         set('ilpDivYield', w.dividend);
       }
