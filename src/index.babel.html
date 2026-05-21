@@ -41,7 +41,7 @@ window.PolicyLensDebug=function(on){try{localStorage.setItem('policylens_debug',
 // Extraction stays in the foreground because long AI requests are not
 // reliable once the browser backgrounds the page.
 // ═══════════════════════════════════════════════════════════════
-const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.23-dashboard-deps-review-button-fixes';
+const POLICYLENS_SW_VERSION = 'v2.4.0-rc2.75.24-policy-register-coverage-totals';
 // rc2.75.13: STALE SERVICE WORKER SELF-HEAL.
 // Background — FCs were hitting "Network Error — API calls are being blocked"
 // across Firefox/Edge/Chrome simultaneously. Console showed the OLD SW
@@ -856,9 +856,9 @@ document.addEventListener('DOMContentLoaded',function(){
 const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext,memo} = React;
 
 // ── APP VERSION (display only — NOT the extraction pipeline version) ──
-const APP_VERSION = 'v2.4.0-rc2.75.23';
+const APP_VERSION = 'v2.4.0-rc2.75.24';
 const APP_VERSION_DATE = '2026-05-21';
-const APP_VERSION_NAME = 'rc2.75.23 Per-tab diagnostic fixes — Dashboard reactivity + Review button';
+const APP_VERSION_NAME = 'rc2.75.24 Policy register: coverage totals strip + short-label Type + no duplicate chip';
 const AUTO_IMPORT_HIGH_CONFIDENCE_EXTRACTIONS = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1234,6 +1234,22 @@ function getInitialPolicyLensTab() {
 }
 
 const CHANGELOG = [
+  {
+    version: 'v2.4.0-rc2.75.24',
+    date: '2026-05-21',
+    name: 'rc2.75.24 Policy register — coverage totals strip + short-label Type column + drop duplicate chip',
+    sections: [
+      {
+        heading: 'FC reviewed the Heather Individual Executive Review PDF and surfaced three policy-register issues: truncated Type column ("Integrated Shie..."), ISP+rider duplicated in the Cover cell, and no aggregate coverage totals across categories. All three fixed in this RC.',
+        items: [
+          'FIX #1 — Coverage totals strip added at the top of the Policy register page (page 5). 8 mini-cards showing Total Death / Total TPD / Total CI / Total ECI / Total DI per mo / Total PA / Hospital plan held / Total Cash Value, each with policy count and color-coded accent stripe. Aggregated via the new module-scope buildPortfolioCoverageTotals(policies) helper. FC sees portfolio coverage at a glance before drilling into the per-category tables.',
+          'FIX #2 — Type column "Integrated Shie..." truncation. The 28mm column couldn\'t fit "Integrated Shield Plan" (22 chars) at the column font size. Added shortSubTypeLabel() module helper that maps all long SG-product subtypes to standard industry abbreviations: Integrated Shield Plan → ISP, Early Critical Illness → Early CI, Disability Income → DI, Universal Life (UL) → UL, Single Premium Investment → SPI, etc. Applied to both Individual and Family review policy registers.',
+          'FIX #3 — ISP+rider duplicate in Cover cell. When sumAssured = 0 AND the coverage breakdown produces exactly one ISP / PA chip, the Individual review previously showed "ISP+rider" as the headline Cover string AND repeated "ISP+rider" as a sub-label chip directly below. Fixed by suppressing the chip rendering when it would exactly duplicate the headline. Family review didn\'t have this duplicate (its Cover cell stays "-" with the chip below) so the family path is unchanged.',
+          'WHY: The Heather PDF made all three issues immediately visible: the Type column read "Integrated Shie..." (truncated), the Cover cell showed "ISP+rider" twice (big + small underneath), and the FC had to scan five rows individually to total up CI / DI / Death across the portfolio. The coverage totals strip is the same insight pattern as the rc2.75.20 A1 "source-of-truth at a glance" idea applied to the report instead of the form.'
+        ]
+      }
+    ]
+  },
   {
     version: 'v2.4.0-rc2.75.23',
     date: '2026-05-21',
@@ -5348,6 +5364,107 @@ function buildPolicyCoverageChips(pol) {
     else if (isPA) chips.push('PA cover');
   }
   return chips;
+}
+
+// rc2.75.24: aggregate per-coverage-type totals across a portfolio.
+// Used by the Policy register PDF page to show Total Death / TPD / CI / ECI /
+// DI / PA / Hospital / CV at a glance before the per-category tables. FC said
+// "the depiction of different coverages isn't really very clear (there should
+// be a total CI, Total Death total ECI total DI etc etc for all categories)."
+// Mirrors the math in buildPolicyCoverageChips but aggregates ACROSS policies
+// rather than producing a per-policy chip list.
+function buildPortfolioCoverageTotals(policies) {
+  const out = {
+    death: 0, tpd: 0, ci: 0, eci: 0, di: 0, pa: 0, cv: 0,
+    hasIsp: false, ispWithRider: false,
+    counts: { death:0, tpd:0, ci:0, eci:0, di:0, pa:0, cv:0, isp:0 }
+  };
+  const num = (v) => {
+    if (v == null || v === '') return 0;
+    if (typeof v === 'number') return isFinite(v) ? v : 0;
+    const cleaned = String(v).replace(/[^0-9.\-]/g, '');
+    const x = parseFloat(cleaned);
+    return isFinite(x) ? x : 0;
+  };
+  (policies || []).forEach(pol => {
+    if (!pol) return;
+    const subLc = String(pol.subType || '').toLowerCase();
+    const isProt = pol.category === 'protection' && !['Personal Accident','Critical Illness'].includes(pol.subType);
+    const isCI = pol.subType === 'Critical Illness';
+    const isECI = pol.subType === 'Early Critical Illness';
+    const isDI = pol.subType === 'Disability Income';
+    const isPA = pol.subType === 'Personal Accident';
+    const isISP = /integrated shield|^isp/i.test(subLc);
+    const baseSA = num(pol.sumAssured);
+    const mult = parseFloat(pol.saMultiplier) || 1;
+    const effDeathSA = (isProt && mult > 1) ? baseSA * mult : baseSA;
+    let riderDeath = 0, riderTpd = 0, riderCi = 0, riderEci = 0, riderDi = 0, riderAcc = 0;
+    (pol.riders || []).forEach(rd => {
+      const sa = num(rd?.sa);
+      if (rd?.type === 'death') riderDeath += sa;
+      if (rd?.type === 'tpd') riderTpd += sa;
+      if (rd?.type === 'ci') riderCi += sa;
+      if (rd?.type === 'eci') riderEci += sa;
+      if (rd?.type === 'di') riderDi += sa;
+      if (rd?.type === 'accidental') riderAcc += sa;
+    });
+    const bundlesTpd = /whole\s*life|term\s*life|^term$|ilp\s*\(protection\)/i.test(subLc) ||
+                       pol.tpdBundled === true || pol.acceleratedTpd === true;
+    const tpdSA = riderTpd > 0 ? riderTpd : (isProt && bundlesTpd ? effDeathSA : 0);
+    const deathSA = isProt ? (effDeathSA + riderDeath) : riderDeath;
+    const ciSA = (isCI ? baseSA : 0) + riderCi;
+    const eciSA = (isECI ? baseSA : 0) + riderEci;
+    const diMonthly = (isDI ? num(pol.diMonthlyBenefit || pol.monthlyBenefit || baseSA) : 0) + riderDi;
+    const paSA = (isPA ? num(pol.addSA || baseSA) : 0) + riderAcc;
+    const cv = num(pol.cashValue);
+    if (deathSA > 0) { out.death += deathSA; out.counts.death++; }
+    if (tpdSA > 0) { out.tpd += tpdSA; out.counts.tpd++; }
+    if (ciSA > 0) { out.ci += ciSA; out.counts.ci++; }
+    if (eciSA > 0) { out.eci += eciSA; out.counts.eci++; }
+    if (diMonthly > 0) { out.di += diMonthly; out.counts.di++; }
+    if (paSA > 0) { out.pa += paSA; out.counts.pa++; }
+    if (cv > 0) { out.cv += cv; out.counts.cv++; }
+    if (isISP) { out.hasIsp = true; out.counts.isp++; if (pol.hasRider) out.ispWithRider = true; }
+  });
+  return out;
+}
+
+// rc2.75.24: short labels for the Type column in the policy register PDF.
+// Common SG-product subtypes are long ("Integrated Shield Plan" = 22 chars)
+// and the Type column is only 28mm wide → was truncating to "Integrated Shie..."
+// This map normalises to standard SG industry abbreviations.
+function shortSubTypeLabel(subType) {
+  if (!subType) return '-';
+  const s = String(subType).trim();
+  const map = {
+    'Integrated Shield Plan': 'ISP',
+    'Shield Rider': 'ISP Rider',
+    'Early Critical Illness': 'Early CI',
+    'Critical Illness': 'CI',
+    'Disability Income': 'DI',
+    'Personal Accident': 'PA',
+    'Long-term Care': 'LTC',
+    'CareShield Life / Supplement': 'CareShield',
+    'ElderShield 300': 'ElderShield',
+    'ElderShield 400': 'ElderShield',
+    'Hospital Income': 'Hosp Income',
+    'Universal Life (UL)': 'UL',
+    'Indexed UL (IUL)': 'IUL',
+    'Variable UL (VUL)': 'VUL',
+    'ILP (Protection)': 'ILP Prot',
+    'ILP (Investment)': 'ILP Inv',
+    'Single Premium Investment': 'SPI',
+    'Short-term Endowment': 'Short Endow',
+    'Lifetime Endowment': 'Lifetime End',
+    'Education Plan': 'Education',
+    'Retirement Income (Par WL)': 'Par WL Inc',
+    'Income Plan': 'Income Plan',
+    'Singapore Savings Bond': 'SSB',
+    'Fixed Coupon Note (FCN)': 'FCN',
+    'Equity Linked Note (ELN)': 'ELN',
+    'Regular Savings Plan (RSP)': 'RSP'
+  };
+  return map[s] || s;
 }
 
 function moneyNumber(value) {
@@ -57481,6 +57598,54 @@ function ReportTab() {
       const riderShort = (rd) => RIDER_CODE[(rd.type || '').toLowerCase().replace(/[^a-z_]/g, '')] || (rd.type || '').toUpperCase().slice(0, 3);
 
       let invY = startInventoryPage();
+
+      // ── rc2.75.24: Portfolio Coverage Totals strip ─────────────────────
+      // FC feedback: "the depiction of different coverages isn't really
+      // very clear (there should be a total CI, Total Death, total ECI,
+      // total DI etc. for all categories)." Shows aggregated current cover
+      // by benefit type at a glance before the per-category tables.
+      // Uses buildPortfolioCoverageTotals (module-level) so the same math
+      // can be reused by the family review later.
+      (function drawPortfolioCoverageStrip(){
+        const t = buildPortfolioCoverageTotals(activePolicies);
+        // 8 mini-cards: Death | TPD | CI | ECI | DI | PA | Hospital | CV
+        // Each card is CW/8 wide minus a small gap. Compact font.
+        const cardDefs = [
+          { key:'death', label:'TOTAL DEATH', val: t.death, count: t.counts.death, color: T.danger },
+          { key:'tpd',   label:'TOTAL TPD',   val: t.tpd,   count: t.counts.tpd,   color: T.danger },
+          { key:'ci',    label:'TOTAL CI',    val: t.ci,    count: t.counts.ci,    color: T.sun },
+          { key:'eci',   label:'TOTAL ECI',   val: t.eci,   count: t.counts.eci,   color: T.sun },
+          { key:'di',    label:'TOTAL DI/MO', val: t.di,    count: t.counts.di,    color: T.sky, suffix:'/mo' },
+          { key:'pa',    label:'TOTAL PA',    val: t.pa,    count: t.counts.pa,    color: T.lavender },
+          { key:'hosp',  label:'HOSPITAL',    val: null,    count: t.counts.isp,   color: T.danger,
+            valStr: t.hasIsp ? (t.ispWithRider ? 'ISP + rider' : 'ISP only') : 'not held',
+            countStr: t.hasIsp ? (t.counts.isp + ' plan' + (t.counts.isp===1?'':'s')) : '—' },
+          { key:'cv',    label:'CASH VALUE',  val: t.cv,    count: t.counts.cv,    color: T.sage },
+        ];
+        const gap = 2;
+        const cardW = (CW - gap * (cardDefs.length - 1)) / cardDefs.length;
+        const cardH = 16;
+        cardDefs.forEach((c, i) => {
+          const x = M + i * (cardW + gap);
+          card(x, invY, cardW, cardH, T.surface, T.border, 2);
+          // Color accent stripe (left)
+          doc.setFillColor(...c.color);
+          doc.roundedRect(x, invY, 1.4, cardH, 0.6, 0.6, 'F');
+          // Label
+          text(c.label, x + 4, invY + 4.2, { size: 5.2, style:'bold', color: T.text3, maxW: cardW - 6, maxLines: 1 });
+          // Value
+          const valStr = c.valStr != null
+            ? c.valStr
+            : (c.val > 0 ? money(c.val) + (c.suffix||'') : '—');
+          text(valStr, x + 4, invY + 9.4, { size: 8.2, style:'bold', color: c.val > 0 || c.valStr ? T.text : T.text3, maxW: cardW - 6, maxLines: 1 });
+          // Count sub-label
+          const countStr = c.countStr != null
+            ? c.countStr
+            : (c.count > 0 ? 'from ' + c.count + ' polic' + (c.count===1?'y':'ies') : 'no cover');
+          text(countStr, x + 4, invY + 13.6, { size: 5.0, color: T.text3, maxW: cardW - 6, maxLines: 1 });
+        });
+        invY += cardH + 4;
+      })();
       // v2.4.0-rc1.91 — landscape column widths include MATURES between
       // Prem end and Method (different from premEnd: when premiums STOP
       // vs when the policy WORKS UNTIL — these differ for whole-life,
@@ -57596,8 +57761,16 @@ function ReportTab() {
             return '-';
           })();
           const method = pol.paymentMethod ? safe(pol.paymentMethod, 14) : '-';
-          const type = safe(pol.subType || '-', 18);
+          // rc2.75.24: short-label long subTypes ("Integrated Shield Plan" → "ISP") so
+          // the 28mm Type column doesn't truncate mid-word ("Integrated Shie...").
+          const type = safe(shortSubTypeLabel(pol.subType), 14);
           const riderCodes = (pol.riders || []).map(riderShort).filter(Boolean).slice(0, 5).join(' ');
+          // rc2.75.24: when cover === single coverBreakdown chip ("ISP+rider" / "PA cover"),
+          // don't pass the breakdown — drawPolicyDetailRow would render it as a duplicate
+          // sub-label directly under the cover headline.
+          const coverBreakdownToShow = (coverBreakdown.length === 1 && cover === coverBreakdown[0])
+            ? []
+            : coverBreakdown;
 
           // Subline (policy # + years in force + status)
           const startAge = parseInt(pol.premStartAge) || parseInt(pol.ageAtEntry);
@@ -57623,7 +57796,8 @@ function ReportTab() {
             riders: riderCodes || '-',
             // rc2.75.6: per-benefit coverage breakdown chips (D / TPD / CI /
             // ECI / DI / PA / CV) rendered below the cover headline number.
-            coverBreakdown,
+            // rc2.75.24: drop chips that exactly duplicate the cover headline.
+            coverBreakdown: coverBreakdownToShow,
             subline, remarks, notes: ''
           }, { alt: i % 2 === 1, cols: polCols });
           invY += consumed;
@@ -58012,7 +58186,9 @@ function ReportTab() {
         return '-';
       };
 
-      const policyType = (pol) => safe(pol.subType || pol.category || 'Policy', 22);
+      // rc2.75.24: use short-label map so "Integrated Shield Plan" → "ISP" etc.
+      // Matches the Individual Executive Review for visual parity.
+      const policyType = (pol) => safe((typeof shortSubTypeLabel === 'function' ? shortSubTypeLabel(pol.subType) : (pol.subType || pol.category || 'Policy')), 14);
 
       const policyStatusLine = (pol) => {
         const bits = [];

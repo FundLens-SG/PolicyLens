@@ -1,4 +1,4 @@
-const SW_VERSION = 'v2.4.0-rc2.75.23-dashboard-deps-review-button-fixes';
+const SW_VERSION = 'v2.4.0-rc2.75.24-policy-register-coverage-totals';
 const DB_NAME = 'PolicyLensSW';
 const DB_VERSION = 1;
 const SESSION_STORE = 'sessions';
